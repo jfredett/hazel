@@ -1,0 +1,19 @@
+name: Hazel
+version: "0.1"
+author: Joe Fredette <jfredett@gmail.com>
+about: A Chess Engine
+args:
+  - quiet:
+      short: q
+      long: quiet
+      help: suppress all non-Error output
+      conflicts_with: [verbose]
+  - verbose:
+      short: v
+      long: verbose
+      help: increased diagnostic output
+      conflicts_with: [quiet]
+  - version:
+      short: V
+      long: version
+      help: display version information
