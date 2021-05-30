@@ -54,11 +54,15 @@ mod test {
             use super::*;
 
             #[quickcheck]
-            fn ands_two_bitboards(b_i: u64) -> bool {
-                let b1 = Bitboard::from(b_i);
-                let expected = Bitboard::from(!b_i);
+            fn ands_two_bitboards(b: Bitboard) -> bool {
+                let expected = Bitboard::from(!b.0);
 
-                !b1 == expected
+                !b == expected
+            }
+
+            #[quickcheck]
+            fn self_inverse(b: Bitboard) -> bool {
+                !!b == b
             }
         }
 
@@ -73,34 +77,94 @@ mod test {
 
                 b1 & b2 == expected
             }
+
+            #[quickcheck]
+            fn idempotence(b: Bitboard) -> bool {
+                b & b == b
+            }
+
+            #[quickcheck]
+            fn commutativity(b1: Bitboard, b2: Bitboard) -> bool {
+                b1 & b2 == b2 & b1
+            }
+
+            #[quickcheck]
+            fn associativity(a: Bitboard, b: Bitboard, c: Bitboard) -> bool {
+                (a & b) & c == a & (b & c)
+            }
         }
 
         mod bitor {
             use super::*;
 
             #[quickcheck]
-            fn ors_two_bitboards(b1_i: u64, b2_i: u64) -> bool {
-                let b1 = Bitboard::from(b1_i);
-                let b2 = Bitboard::from(b2_i);
-                let expected = Bitboard::from(b1_i | b2_i);
+            fn ors_two_bitboards(b1: Bitboard, b2: Bitboard) -> bool {
+                let expected = Bitboard::from(b1.0 | b2.0);
 
                 b1 | b2 == expected
             }
+
+            #[quickcheck]
+            fn idempotence(b: Bitboard) -> bool {
+                b | b == b
+            }
+
+            #[quickcheck]
+            fn commutativity(b1: Bitboard, b2: Bitboard) -> bool {
+                b1 | b2 == b2 | b1
+            }
+
+            #[quickcheck]
+            fn associativity(a: Bitboard, b: Bitboard, c: Bitboard) -> bool {
+                (a | b) | c == a | (b | c)
+            }
         }
+
 
         mod bitxor {
             use super::*;
 
             #[quickcheck]
-            fn xors_two_bitboards(b1_i: u64, b2_i: u64) -> bool {
-                let b1 = Bitboard::from(b1_i);
-                let b2 = Bitboard::from(b2_i);
-                let expected = Bitboard::from(b1_i ^ b2_i);
+            fn xors_two_bitboards(b1: Bitboard, b2: Bitboard) -> bool {
+                let expected = Bitboard::from(b1.0 ^ b2.0);
 
                 b1 ^ b2 == expected
             }
+
+            #[quickcheck]
+            fn commutativity(b1: Bitboard, b2: Bitboard) -> bool {
+                b1 ^ b2 == b2 ^ b1
+            }
+
+            #[quickcheck]
+            fn self_inverse(b: Bitboard) -> bool {
+                b ^ b ^ b == b
+            }
+
+            #[quickcheck]
+            fn associativity(a: Bitboard, b: Bitboard, c: Bitboard) -> bool {
+                (a ^ b) ^ c == a ^ (b ^ c)
+            }
         }
 
+        mod laws {
+            use super::*;
+
+            #[quickcheck]
+            fn ditributativity_of_or_over_and(a: Bitboard, b: Bitboard, c: Bitboard) -> bool {
+                a | (b & c) == (a | b) & (a | c)
+            }
+
+            #[quickcheck]
+            fn ditributativity_of_and_over_or(a: Bitboard, b: Bitboard, c: Bitboard) -> bool {
+                a & (b | c) == (a & b) | (a & c)
+            }
+
+            #[quickcheck]
+            fn ditributativity_of_and_over_xor(a: Bitboard, b: Bitboard, c: Bitboard) -> bool {
+                a & (b ^ c) == (a & b) ^ (a & c)
+            }
+        }
     }
 
     mod bitassignops {

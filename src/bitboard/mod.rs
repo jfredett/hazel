@@ -1,10 +1,11 @@
 /// Standard 64 bit bitboards
 ///
 /// By convention: a1 = (0,0) = bit 0, h8 = (7,7) = bit 63
-#[derive(Hash, PartialEq, Eq)]
+#[derive(Hash, PartialEq, Eq, Clone, Copy)]
 pub struct Bitboard(u64);
 
 mod bitops;
+mod arbitrary;
 mod debug;
 
 
@@ -27,20 +28,11 @@ mod debug;
 // queens). Also need to account for piece color in that.
 
 
-// traits to implement
-// Binary (formats to a binary string)
-// LowerHex
-// UpperHex (similar, format as hex)
-// Octal (similar, format as octal
-//
-// ^-- those maybe derivable?
-//
-// Ops::BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Not, Shifts?
+// Shifts?
 //
 // Probably want to split this into a mod.rs and folder.
 
 impl Bitboard {
-    // # Creation
     /// Creates an empty bitboard
     ///
     /// ```
@@ -61,6 +53,17 @@ impl Bitboard {
     /// ```
     pub fn from(b: u64) -> Bitboard {
         return Bitboard { 0: b }
+    }
+
+    /// Creates a bitboard with all bits set
+    ///
+    /// ```
+    /// # use hazel::bitboard::Bitboard;
+    /// let b = Bitboard::full();
+    /// assert!(b.is_full());
+    /// ```
+    pub fn full() -> Bitboard {
+        return !Bitboard::empty()
     }
 
     /// Sets the bit at the given coordinates, indexes from 0 to 7.
@@ -104,14 +107,6 @@ impl Bitboard {
     }
 
 
-    // #flip(x,y)
-    //
-    // # Setwise/Bitwise operations
-    //
-    // AND/Intersect
-    // OR/Union
-    // XOR, NOT
-    //
     // # Shift, Rotate, and Wrap
     //
     // #shift(DIRECTION) where DIRECTION is an enum
@@ -133,6 +128,17 @@ impl Bitboard {
     /// ```
     pub fn is_empty(&self) -> bool {
         self.0 == 0
+    }
+
+    /// True if the bitboard has all bits set.
+    ///
+    /// ```
+    /// # use hazel::bitboard::Bitboard;
+    /// let mut b = Bitboard::full();
+    /// assert!(b.is_full());
+    /// ```
+    pub fn is_full(&self) -> bool {
+        self.0 == !0
     }
 
     /// True if the given bit is set
