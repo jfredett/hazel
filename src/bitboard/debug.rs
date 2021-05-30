@@ -1,6 +1,7 @@
 use crate::bitboard::*;
 use std::fmt::{Formatter, Result, Debug};
 
+#[cfg(not(tarpaulin_include))]
 impl Debug for Bitboard {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         for x in 0..8 {
