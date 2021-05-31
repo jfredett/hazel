@@ -157,7 +157,6 @@ impl Bitboard {
 
     pub fn is_notation_set(&self, notation: &str) -> bool {
         let (rank, file) = Bitboard::notation_to_coords(notation);
-        dbg!((rank, file));
         self.is_set(rank, file)
     }
 

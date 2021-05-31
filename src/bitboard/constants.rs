@@ -49,8 +49,6 @@ lazy_static! {
             m[*idx] = *coords;
         }
 
-        dbg!(m);
-
         m
     };
 }
