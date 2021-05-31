@@ -19,11 +19,11 @@ packed_simd = { version = "0.3.4", package = "packed_simd_2" }
 clap = { version = "~2.33", features = ["yaml"]}
 bitflags = "~1.2"
 log = "~0.4"
-fern = "~0.5"
+fern = "~0.6"
 lazy_static = "~1.4"
 
 [dev-dependencies]
-rand = "~0.7"
+rand = "~0.8"
 criterion = "~0.3"
 criterion-macro = "~0.3"
 quickcheck = "~1.0"
@@ -42,4 +42,3 @@ debug-assertions = false
 codegen-units = 1
 incremental = false
 overflow-checks = false
-
