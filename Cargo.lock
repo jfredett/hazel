@@ -290,6 +290,7 @@ dependencies = [
  "criterion",
  "criterion-macro",
  "fern",
+ "lazy_static",
  "log",
  "packed_simd_2",
  "quickcheck",

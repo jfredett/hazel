@@ -1,4 +1,4 @@
-use crate::bitboard::*;
+use super::*;
 use std::ops::{Not, BitAnd, BitOr, BitXor, BitAndAssign, BitOrAssign, BitXorAssign};
 
 /// Implements the various bit-ops for Bitboards

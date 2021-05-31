@@ -1,12 +1,58 @@
 /// Standard 64 bit bitboards
 ///
-/// By convention: a1 = (0,0) = bit 0, h8 = (7,7) = bit 63
+/// By convention, each square is assigned indices as follows
+///
+/// hex:
+///
+/// 8| 38 39 3A 3B 3C 3D 3E 3F
+/// 7| 30 31 32 33 34 35 36 37
+/// 6| 28 29 2A 2B 2C 2D 2E 2F
+/// 5| 20 21 22 23 24 25 26 27
+/// 4| 18 19 1A 1B 1C 1D 1E 1F
+/// 3| 10 11 12 13 14 15 16 17
+/// 2| 8  9  A  B  C  D  E  F
+/// 1| 0  1  2  3  4  5  6  7
+///  ------------------------
+///    a  b  c  d  e  f  g  h
+///
+/// decimal:
+///
+/// 8| 56 57 58 59 60 61 62 63
+/// 7| 48 49 50 51 52 53 54 55
+/// 6| 40 41 42 43 44 45 46 47
+/// 5| 32 33 34 35 36 37 38 39
+/// 4| 24 25 26 27 28 29 30 31
+/// 3| 16 17 18 19 20 21 22 23
+/// 2| 8  9  10 11 12 13 14 15
+/// 1| 0  1  2  3  4  5  6  7
+///  ------------------------
+///    a  b  c  d  e  f  g  h
+///
+/// octal;
+///
+/// 8| 70 71 72 73 74 75 76 77
+/// 7| 60 61 62 63 64 65 66 67
+/// 6| 50 51 52 53 54 55 56 57
+/// 5| 40 41 42 43 44 45 46 47
+/// 4| 30 31 32 33 34 35 36 37
+/// 3| 20 21 22 23 24 25 26 27 
+/// 2| 10 11 12 13 14 15 16 17
+/// 1| 0  1  2  3  4  5  6  7
+///  ------------------------
+///    a  b  c  d  e  f  g  h
 #[derive(Hash, PartialEq, Eq, Clone, Copy)]
 pub struct Bitboard(u64);
 
+mod creation;
 mod bitops;
+mod util;
 mod arbitrary;
 mod debug;
+mod shifts;
+mod constants;
+
+pub use constants::*;
+
 
 
 // NOTE: Should make a bunch of arrays with all the bitboards for a piece at a given location, so
@@ -26,6 +72,7 @@ mod debug;
 // then we know there is a block there, and we can then calculate that those pieces are attacked,
 // and any 'behind' those pieces are not. Only matters for a few pieces (bishops, rooks, and
 // queens). Also need to account for piece color in that.
+//
 
 
 // Shifts?
@@ -33,90 +80,6 @@ mod debug;
 // Probably want to split this into a mod.rs and folder.
 
 impl Bitboard {
-    /// Creates an empty bitboard
-    ///
-    /// ```
-    /// # use hazel::bitboard::Bitboard;
-    /// let b = Bitboard::empty();
-    /// assert!(b.is_empty());
-    /// ```
-    pub fn empty() -> Bitboard {
-        return Bitboard { 0: 0 }
-    }
-
-    /// Creates a bitboard from the given u64
-    /// ```
-    /// # use hazel::bitboard::Bitboard;
-    /// let u = 0xC113_55B1_7B0A_2D55;
-    /// let b = Bitboard::from(u);
-    /// assert!(!b.is_empty());
-    /// ```
-    pub fn from(b: u64) -> Bitboard {
-        return Bitboard { 0: b }
-    }
-
-    /// Creates a bitboard with all bits set
-    ///
-    /// ```
-    /// # use hazel::bitboard::Bitboard;
-    /// let b = Bitboard::full();
-    /// assert!(b.is_full());
-    /// ```
-    pub fn full() -> Bitboard {
-        return !Bitboard::empty()
-    }
-
-    /// Sets the bit at the given coordinates, indexes from 0 to 7.
-    ///
-    /// ```
-    /// # use hazel::bitboard::Bitboard;
-    /// let mut b = Bitboard::empty();
-    /// assert!(!b.is_set(0,1));
-    /// b.set(0,1);
-    /// assert!(b.is_set(0,1));
-    /// ```
-    pub fn set(&mut self, x: usize, y: usize) {
-        self.0 |= 1 << (y * 8) + x;
-    }
-
-    /// unsets the bit at the given coordinates
-    ///
-    /// ```
-    /// # use hazel::bitboard::Bitboard;
-    /// let mut b = Bitboard::empty();
-    /// assert!(!b.is_set(0,1));
-    /// b.set(0,1);
-    /// assert!(b.is_set(0,1));
-    /// ```
-    pub fn unset(&mut self, x: usize, y: usize) {
-        self.0 &= !(1 << (y * 8) + x);
-    }
-
-    /// unsets the bit at the given coordinates
-    /// ```
-    /// # use hazel::bitboard::Bitboard;
-    /// let mut b = Bitboard::empty();
-    /// assert!(!b.is_set(0,1));
-    /// b.flip(0,1);
-    /// assert!(b.is_set(0,1));
-    /// b.flip(0,1);
-    /// assert!(!b.is_set(0,1));
-    /// ```
-    pub fn flip(&mut self, x: usize, y: usize) {
-        self.0 ^= 1 << (y * 8) + x;
-    }
-
-
-    // # Shift, Rotate, and Wrap
-    //
-    // #shift(DIRECTION) where DIRECTION is an enum
-    // #wrap(DIRECTION) where DIRECTION is an enum
-    // #rotate_cw() rotates 90 clockwise
-    // #rotate_acw(), #rotate_ccw() rotates 90 counterclockwise
-    //
-    //
-
-
     /// True if the bitboard has no set bits.
     ///
     /// ```
@@ -141,6 +104,63 @@ impl Bitboard {
         self.0 == !0
     }
 
+    /// Sets the bit at the given coordinates, indexes from 0 to 7.
+    ///
+    /// ```
+    /// # use hazel::bitboard::Bitboard;
+    /// let mut b = Bitboard::empty();
+    /// assert!(!b.is_set(0,1));
+    /// b.set(0,1);
+    /// assert!(b.is_set(0,1));
+    /// ```
+    pub fn set(&mut self, x: usize, y: usize) {
+        self.set_by_index(Bitboard::coords_to_index(x,y));
+    }
+
+    /// Set a bit located at the given index
+    #[inline]
+    pub fn set_by_index(&mut self, i: usize) {
+        self.0 |= 1 << i
+    }
+
+    pub fn set_by_notation(&mut self, notation: &str) {
+        let (x,y) = Bitboard::notation_to_coords(notation);
+        self.set(x,y);
+    }
+
+    /// unsets the bit at the given coordinates
+    ///
+    /// ```
+    /// # use hazel::bitboard::Bitboard;
+    /// let mut b = Bitboard::empty();
+    /// assert!(!b.is_set(0,1));
+    /// b.set(0,1);
+    /// assert!(b.is_set(0,1));
+    /// ```
+    pub fn unset(&mut self, x: usize, y: usize) {
+        self.0 &= !(1 << Bitboard::coords_to_index(x,y));
+    }
+
+    /// unsets the bit at the given coordinates
+    /// ```
+    /// # use hazel::bitboard::Bitboard;
+    /// let mut b = Bitboard::empty();
+    /// assert!(!b.is_set(0,1));
+    /// b.flip(0,1);
+    /// assert!(b.is_set(0,1));
+    /// b.flip(0,1);
+    /// assert!(!b.is_set(0,1));
+    /// ```
+    pub fn flip(&mut self, x: usize, y: usize) {
+        self.0 ^= 1 << Bitboard::coords_to_index(x,y);
+    }
+
+    pub fn is_notation_set(&self, notation: &str) -> bool {
+        let (rank, file) = Bitboard::notation_to_coords(notation);
+        dbg!((rank, file));
+        self.is_set(rank, file)
+    }
+
     /// True if the given bit is set
     ///
     /// ```
@@ -151,9 +171,29 @@ impl Bitboard {
     /// assert!(!b.is_set(0,1));
     /// ```
     pub fn is_set(&self, x: usize, y: usize) -> bool {
-        (self.0 & 1 << (y * 8) + x) != 0
+        (self.0 & (1 << Bitboard::coords_to_index(x,y))) != 0
     }
 
+    /// True if the given bit is set
+    ///
+    /// ```
+    /// # use hazel::bitboard::Bitboard;
+    /// let mut b = Bitboard::empty();
+    /// b.set(1,1);
+    /// assert!(b.is_set(1,1));
+    /// assert!(b.is_index_set(9));
+    /// ```
+    pub fn is_index_set(&self, i: usize) -> bool {
+        self.0 & (1 << i) != 0
+    }
+
+
+    // # Shift, Rotate, and Wrap
+    //
+    // #shift(DIRECTION) where DIRECTION is an enum
+    // #wrap(DIRECTION) where DIRECTION is an enum
+    // #rotate_cw() rotates 90 clockwise
+    // #rotate_acw(), #rotate_ccw() rotates 90 counterclockwise
 }
 
 

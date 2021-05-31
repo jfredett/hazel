@@ -20,6 +20,7 @@ clap = { version = "~2.33", features = ["yaml"]}
 bitflags = "~1.2"
 log = "~0.4"
 fern = "~0.5"
+lazy_static = "~1.4"
 
 [dev-dependencies]
 rand = "~0.7"
