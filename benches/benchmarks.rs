@@ -8,6 +8,10 @@ use rand::distributions::{Distribution, Uniform};
 
 use packed_simd::*;
 
+use hazel::bitboard::*;
+
+mod bitboard;
+
 fn config() -> Criterion {
     Criterion::default()
         .sample_size(5000)
