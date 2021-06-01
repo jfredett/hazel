@@ -168,6 +168,7 @@ impl Bitboard {
     /// b.set_by_notation("d4");
     /// assert!(b.is_notation_set("d4"));
     /// ```
+    #[inline]
     pub fn is_notation_set(&self, notation: &str) -> bool {
         let (rank, file) = Bitboard::notation_to_coords(notation);
         self.is_set(rank, file)
@@ -182,8 +183,9 @@ impl Bitboard {
     /// assert!(b.is_set(1,1));
     /// assert!(!b.is_set(0,1));
     /// ```
+    #[inline]
     pub fn is_set(&self, x: usize, y: usize) -> bool {
-        (self.0 & (1 << Bitboard::coords_to_index(x,y))) != 0
+        self.is_index_set(Bitboard::coords_to_index(x,y))
     }
 
     /// True if the given bit is set
@@ -195,10 +197,10 @@ impl Bitboard {
     /// assert!(b.is_set(1,1));
     /// assert!(b.is_index_set(9));
     /// ```
+    #[inline]
     pub fn is_index_set(&self, i: usize) -> bool {
         self.0 & (1 << i) != 0
     }
-
 
     /// Count the number of set squares
     ///
