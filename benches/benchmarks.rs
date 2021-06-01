@@ -47,3 +47,10 @@ pub fn random_usize() -> usize {
 
     range.sample(&mut rng)
 }
+
+pub fn random_u64() -> u64 {
+    let range = Uniform::new(u64::MIN, u64::MAX);
+    let mut rng = rand::thread_rng();
+
+    range.sample(&mut rng)
+}

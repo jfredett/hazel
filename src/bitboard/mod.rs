@@ -116,6 +116,7 @@ impl Bitboard {
     /// b.set(0,1);
     /// assert!(b.is_set(0,1));
     /// ```
+    #[inline]
     pub fn set(&mut self, x: usize, y: usize) {
         self.set_by_index(Bitboard::coords_to_index(x,y));
     }
@@ -126,6 +127,8 @@ impl Bitboard {
         self.0 |= 1 << i
     }
 
+    /// Set a bit located at the given notation
+    #[inline]
     pub fn set_by_notation(&mut self, notation: &str) {
         let (x,y) = Bitboard::notation_to_coords(notation);
         self.set(x,y);
@@ -158,6 +161,13 @@ impl Bitboard {
         self.0 ^= 1 << Bitboard::coords_to_index(x,y);
     }
 
+    /// True if the bit at the given notation is set
+    /// ```
+    /// # use hazel::bitboard::Bitboard;
+    /// let mut b = Bitboard::empty();
+    /// b.set_by_notation("d4");
+    /// assert!(b.is_notation_set("d4"));
+    /// ```
     pub fn is_notation_set(&self, notation: &str) -> bool {
         let (rank, file) = Bitboard::notation_to_coords(notation);
         self.is_set(rank, file)
