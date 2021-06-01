@@ -1,7 +1,5 @@
 use super::*;
 
-static A_FILE : u64     = 0x0101010101010101;
-static H_FILE : u64     = 0x0808080808080808;
 static NOT_A_FILE : u64 = 0xfefefefefefefefe;
 static NOT_H_FILE : u64 = 0x7f7f7f7f7f7f7f7f;
 
@@ -35,24 +33,14 @@ impl Bitboard {
     pub fn shift_mut(&mut self, d : Direction) {
         let offset = DIRECTION_INDEX_OFFSETS[d as usize];
         match d {
-            Direction::N    => { self.0 =  self.0 << 8               },
-            Direction::S    => { self.0 =  self.0 >> 8               },
-            Direction::E    => { self.0 = (self.0 << 1) & NOT_A_FILE },
-            Direction::NE   => { self.0 = (self.0 << 9) & NOT_A_FILE },
-            Direction::SE   => { self.0 = (self.0 >> 7) & NOT_A_FILE },
-            Direction::W    => { self.0 = (self.0 >> 1) & NOT_H_FILE },
-            Direction::SW   => { self.0 = (self.0 >> 9) & NOT_H_FILE },
-            Direction::NW   => { self.0 = (self.0 << 7) & NOT_H_FILE }
-            /*
-                U64 nortOne (U64 b) {return  b << 8;}
-                U64 soutOne (U64 b) {return  b >> 8;}
-                U64 eastOne (U64 b) {return (b << 1) & notAFile;}
-                U64 noEaOne (U64 b) {return (b << 9) & notAFile;}
-                U64 soEaOne (U64 b) {return (b >> 7) & notAFile;}
-                U64 westOne (U64 b) {return (b >> 1) & notHFile;}
-                U64 soWeOne (U64 b) {return (b >> 9) & notHFile;}
-                U64 noWeOne (U64 b) {return (b << 7) & notHFile;}
-             */
+            Direction::N    => { self.0 =  self.0 << offset               },
+            Direction::S    => { self.0 =  self.0 >> offset               },
+            Direction::E    => { self.0 = (self.0 << offset) & NOT_A_FILE },
+            Direction::NE   => { self.0 = (self.0 << offset) & NOT_A_FILE },
+            Direction::SE   => { self.0 = (self.0 >> offset) & NOT_A_FILE },
+            Direction::W    => { self.0 = (self.0 >> offset) & NOT_H_FILE },
+            Direction::SW   => { self.0 = (self.0 >> offset) & NOT_H_FILE },
+            Direction::NW   => { self.0 = (self.0 << offset) & NOT_H_FILE }
         }
     }
 }
