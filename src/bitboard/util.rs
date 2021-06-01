@@ -20,7 +20,7 @@ impl Bitboard {
 
     #[inline(always)]
     pub fn coords_to_index(rank: usize, file: usize) -> usize {
-        *COORDS_TO_INDEX.get(&(rank, file)).unwrap()
+        COORDS_TO_INDEX[rank][file]
     }
 
     #[inline(always)]
@@ -30,7 +30,7 @@ impl Bitboard {
 
     #[inline(always)]
     pub fn coords_to_offset(rank: usize, file: usize) -> usize {
-        1 << COORDS_TO_INDEX[&(rank, file)]
+        1 << COORDS_TO_INDEX[rank][file]
     }
 
     /// _For Test Convenience Only_, not performant at all.

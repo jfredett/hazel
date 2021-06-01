@@ -22,11 +22,11 @@ lazy_static! {
         m
     };
 
-    pub static ref COORDS_TO_INDEX: HashMap<(usize, usize), usize> = {
-        let mut m = HashMap::new();
+    pub static ref COORDS_TO_INDEX: [[usize; 8]; 8] = {
+        let mut m = [[0; 8]; 8];
 
         for idx in 0..64 {
-            m.insert((idx >> 3, idx % 8), idx);
+            m[idx >> 3][idx % 8] = idx
         }
 
         m
@@ -35,8 +35,12 @@ lazy_static! {
     pub static ref COORDS_TO_NOTATION: HashMap<(usize, usize), &'static str> = {
         let mut m = HashMap::new();
 
-        for (coords, idx) in COORDS_TO_INDEX.iter() {
-            m.insert(*coords, INDEX_TO_NOTATION[*idx]);
+        let mut idx = 0;
+        for (rank, rank_arr) in COORDS_TO_INDEX.iter().enumerate() {
+            for file in rank_arr {
+                m.insert((rank, *file), INDEX_TO_NOTATION[idx]);
+                idx += 1;
+            }
         }
 
         m
@@ -45,10 +49,14 @@ lazy_static! {
     pub static ref INDEX_TO_COORDS: [(usize, usize); 64] = {
         let mut m = [(0, 0); 64];
 
-        for (coords,idx) in COORDS_TO_INDEX.iter() {
-            m[*idx] = *coords;
-        }
+        let mut idx = 0;
+        for (rank, rank_arr) in COORDS_TO_INDEX.iter().enumerate() {
+            for file in rank_arr {
+                m[idx] = (rank, *file % 8);
+                idx += 1;
 
+            }
+        }
         m
     };
 }
