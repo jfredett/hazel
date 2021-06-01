@@ -190,12 +190,20 @@ impl Bitboard {
     }
 
 
-    // # Shift, Rotate, and Wrap
-    //
-    // #shift(DIRECTION) where DIRECTION is an enum
-    // #wrap(DIRECTION) where DIRECTION is an enum
-    // #rotate_cw() rotates 90 clockwise
-    // #rotate_acw(), #rotate_ccw() rotates 90 counterclockwise
+    /// Count the number of set squares
+    ///
+    /// ```
+    /// # use hazel::bitboard::Bitboard;
+    /// let mut b = Bitboard::empty();
+    /// assert_eq!(b.count(), 0);
+    /// b.set_by_notation("a1");
+    /// b.set_by_notation("b1");
+    /// b.set_by_notation("c1");
+    /// assert_eq!(b.count(), 3);
+    /// ```
+    pub fn count(&self) -> u32 {
+        self.0.count_ones()
+    }
 }
 
 
