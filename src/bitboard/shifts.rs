@@ -1,24 +1,29 @@
 use super::*;
 
+static A_FILE : u64     = 0x0101010101010101;
+static H_FILE : u64     = 0x0808080808080808;
+static NOT_A_FILE : u64 = 0xfefefefefefefefe;
+static NOT_H_FILE : u64 = 0x7f7f7f7f7f7f7f7f;
 
-static A_FILE : u64 = 0x0101010101010101;
-static H_FILE : u64 = 0x0808080808080808;
-static NOT_A_FILE : u64 = !A_FILE;
-static NOT_H_FILE : u64 = !H_FILE;
-
+// Note the lack of sign, that's handled below in the #shift and #shift_mut
+// methods
+//                                            N  NE E  SE S SW  W NW
+static DIRECTION_INDEX_OFFSETS: [usize; 8] = [8, 9, 1, 7, 8, 9, 1, 7];
 
 #[derive(Hash, PartialEq, Eq, Clone, Copy)]
 pub enum Direction {
-    NW =  7 , N =  8 , NE =  9 ,
-    W  = -1 ,           E =  1 ,
-    SW = -9 , S = -8 , SE = -7
+    N  = 0,
+    NE = 1,
+    E  = 2,
+    SE = 3,
+    S  = 4,
+    SW = 5,
+    W  = 6,
+    NW = 7
 }
 
 
 impl Bitboard {
-    //pub fn shift_north(&self) -> Bitboard { Bitboard::from(self.0 << 8) }
-    //pub fn shift_south(&self) -> Bitboard { Bitboard::from(self.0 >> 8) }
-
     #[inline]
     pub fn shift(&self, d : Direction) -> Bitboard {
         let mut new_b = *self; // new_b is a copy of self
@@ -28,12 +33,26 @@ impl Bitboard {
     }
 
     pub fn shift_mut(&mut self, d : Direction) {
-        let shift_value = d as isize;
-
-        if shift_value > 0 {
-            self.0 = (self.0 << shift_value.abs()) & NOT_A_FILE;
-        } else {
-            self.0 = (self.0 >> shift_value.abs()) & NOT_A_FILE;
+        let offset = DIRECTION_INDEX_OFFSETS[d as usize];
+        match d {
+            Direction::N    => { self.0 =  self.0 << 8               },
+            Direction::S    => { self.0 =  self.0 >> 8               },
+            Direction::E    => { self.0 = (self.0 << 1) & NOT_A_FILE },
+            Direction::NE   => { self.0 = (self.0 << 9) & NOT_A_FILE },
+            Direction::SE   => { self.0 = (self.0 >> 7) & NOT_A_FILE },
+            Direction::W    => { self.0 = (self.0 >> 1) & NOT_H_FILE },
+            Direction::SW   => { self.0 = (self.0 >> 9) & NOT_H_FILE },
+            Direction::NW   => { self.0 = (self.0 << 7) & NOT_H_FILE }
+            /*
+                U64 nortOne (U64 b) {return  b << 8;}
+                U64 soutOne (U64 b) {return  b >> 8;}
+                U64 eastOne (U64 b) {return (b << 1) & notAFile;}
+                U64 noEaOne (U64 b) {return (b << 9) & notAFile;}
+                U64 soEaOne (U64 b) {return (b >> 7) & notAFile;}
+                U64 westOne (U64 b) {return (b >> 1) & notHFile;}
+                U64 soWeOne (U64 b) {return (b >> 9) & notHFile;}
+                U64 noWeOne (U64 b) {return (b << 7) & notHFile;}
+             */
         }
     }
 }
@@ -48,15 +67,56 @@ mod test {
         let mut b = Bitboard::empty();
         b.set_by_notation("d4"); // Put a piece on d4.
         assert!(b.is_notation_set("d4")); // Put a piece on d4.
-        assert!(b.is_index_set(27));
-        dbg!(b);
+
         b.shift_mut(Direction::N);
-        dbg!(b);
+        assert!(!b.is_notation_set("d4"));
         assert!(b.is_notation_set("d5"));
 
+        b.shift_mut(Direction::NE);
+        assert!(!b.is_notation_set("d5"));
+        assert!(b.is_notation_set("e6"));
+
+        b.shift_mut(Direction::E);
+        assert!(!b.is_notation_set("e6"));
+        assert!(b.is_notation_set("f6"));
+
+        b.shift_mut(Direction::SE);
+        assert!(!b.is_notation_set("f6"));
+        assert!(b.is_notation_set("g5"));
+
+        b.shift_mut(Direction::S);
+        assert!(!b.is_notation_set("g5"));
+        assert!(b.is_notation_set("g4"));
+
+        b.shift_mut(Direction::SW);
+        assert!(!b.is_notation_set("g4"));
+        assert!(b.is_notation_set("f3"));
+
+        b.shift_mut(Direction::W);
+        assert!(!b.is_notation_set("f3"));
+        assert!(b.is_notation_set("e3"));
+
+        b.shift_mut(Direction::NW);
+        assert!(!b.is_notation_set("e3"));
+        assert!(b.is_notation_set("d4"));
     }
 
-    // slide test for each direction
-    // slide test with stuff falling off the edge for each direction
+    #[test]
+    fn sliding_off_the_edge_removes_bit() {
+        let mut b = Bitboard::empty();
+        b.set_by_notation("h4");
+        b.shift_mut(Direction::E);
+        assert!(b.is_empty());
+    }
 
+    #[test]
+    fn sliding_multiple_bits_works() {
+        let mut b = Bitboard::empty();
+        b.set_by_notation("g4");
+        b.set_by_notation("b5");
+        b.shift_mut(Direction::NE);
+
+        assert!(b.is_notation_set("h5"));
+        assert!(b.is_notation_set("c6"));
+    }
 }
