@@ -15,7 +15,7 @@ impl Bitboard {
 
     #[inline(always)]
     pub fn notation_to_index(notation: &str) -> usize {
-        *NOTATION_TO_INDEX.get(notation).unwrap()
+        NOTATION_TO_INDEX(notation)
     }
 
     #[inline(always)]

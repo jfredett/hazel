@@ -1,4 +1,19 @@
-use std::collections::HashMap;
+#[inline(always)]
+#[allow(non_snake_case)]
+pub fn NOTATION_TO_INDEX(notation: &str) -> usize {
+    match notation {
+        "a1" => { 0o00 }, "b1" => { 0o01 }, "c1" => { 0o02 }, "d1" => { 0o03 }, "e1" => { 0o04 }, "f1" => { 0o05 }, "g1" => { 0o06 }, "h1" => { 0o07 },
+        "a2" => { 0o10 }, "b2" => { 0o11 }, "c2" => { 0o12 }, "d2" => { 0o13 }, "e2" => { 0o14 }, "f2" => { 0o15 }, "g2" => { 0o16 }, "h2" => { 0o17 },
+        "a3" => { 0o20 }, "b3" => { 0o21 }, "c3" => { 0o22 }, "d3" => { 0o23 }, "e3" => { 0o24 }, "f3" => { 0o25 }, "g3" => { 0o26 }, "h3" => { 0o27 },
+        "a4" => { 0o30 }, "b4" => { 0o31 }, "c4" => { 0o32 }, "d4" => { 0o33 }, "e4" => { 0o34 }, "f4" => { 0o35 }, "g4" => { 0o36 }, "h4" => { 0o37 },
+        "a5" => { 0o40 }, "b5" => { 0o41 }, "c5" => { 0o42 }, "d5" => { 0o43 }, "e5" => { 0o44 }, "f5" => { 0o45 }, "g5" => { 0o46 }, "h5" => { 0o47 },
+        "a6" => { 0o50 }, "b6" => { 0o51 }, "c6" => { 0o52 }, "d6" => { 0o53 }, "e6" => { 0o54 }, "f6" => { 0o55 }, "g6" => { 0o56 }, "h6" => { 0o57 },
+        "a7" => { 0o60 }, "b7" => { 0o61 }, "c7" => { 0o62 }, "d7" => { 0o63 }, "e7" => { 0o64 }, "f7" => { 0o65 }, "g7" => { 0o66 }, "h7" => { 0o67 },
+        "a8" => { 0o70 }, "b8" => { 0o71 }, "c8" => { 0o72 }, "d8" => { 0o73 }, "e8" => { 0o74 }, "f8" => { 0o75 }, "g8" => { 0o76 }, "h8" => { 0o77 },
+        _ => { panic!("Unrecognized notation {}", notation) }
+    }
+}
+
 
 lazy_static! {
     pub static ref INDEX_TO_NOTATION: [&'static str; 64] = [
@@ -12,35 +27,11 @@ lazy_static! {
         "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8"
     ];
 
-    pub static ref NOTATION_TO_INDEX: HashMap<&'static str, usize> = {
-        let mut m = HashMap::new();
-
-        for (idx, notation) in INDEX_TO_NOTATION.iter().enumerate() {
-            m.insert(*notation, idx);
-        }
-
-        m
-    };
-
     pub static ref COORDS_TO_INDEX: [[usize; 8]; 8] = {
         let mut m = [[0; 8]; 8];
 
         for idx in 0..64 {
             m[idx >> 3][idx % 8] = idx
-        }
-
-        m
-    };
-
-    pub static ref COORDS_TO_NOTATION: HashMap<(usize, usize), &'static str> = {
-        let mut m = HashMap::new();
-
-        let mut idx = 0;
-        for (rank, rank_arr) in COORDS_TO_INDEX.iter().enumerate() {
-            for file in rank_arr {
-                m.insert((rank, *file), INDEX_TO_NOTATION[idx]);
-                idx += 1;
-            }
         }
 
         m
