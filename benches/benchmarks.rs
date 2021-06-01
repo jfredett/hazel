@@ -8,6 +8,10 @@ use rand::distributions::{Distribution, Uniform};
 
 use packed_simd::*;
 
+use hazel::bitboard::*;
+
+mod bitboard;
+
 fn config() -> Criterion {
     Criterion::default()
         .sample_size(5000)
@@ -39,6 +43,13 @@ pub fn random_double() -> f64 {
 
 pub fn random_usize() -> usize {
     let range = Uniform::new(usize::MIN, usize::MAX);
+    let mut rng = rand::thread_rng();
+
+    range.sample(&mut rng)
+}
+
+pub fn random_u64() -> u64 {
+    let range = Uniform::new(u64::MIN, u64::MAX);
     let mut rng = rand::thread_rng();
 
     range.sample(&mut rng)
