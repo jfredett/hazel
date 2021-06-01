@@ -1,6 +1,11 @@
 use super::*;
 
 mod creation;
+mod bitops;
+
+pub fn random_bitboard() -> Bitboard {
+    Bitboard::from(random_u64())
+}
 
 #[criterion(config())]
 pub fn is_empty(c: &mut Criterion) {
