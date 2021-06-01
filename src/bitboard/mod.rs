@@ -55,6 +55,7 @@ mod shifts;
 mod constants;
 
 pub use constants::*;
+pub use shifts::Direction;
 
 
 
