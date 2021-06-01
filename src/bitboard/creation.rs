@@ -23,6 +23,18 @@ impl Bitboard {
         return Bitboard { 0: b }
     }
 
+    /// Creates a bitboard from the given u64
+    /// ```
+    /// # use hazel::bitboard::Bitboard;
+    /// let b = Bitboard::from_notation("e4");
+    /// assert!(b.is_notation_set("e4"));
+    /// ```
+    pub fn from_notation(n: &str) -> Bitboard {
+        let mut b = Bitboard::empty();
+        b.set_by_notation(n);
+        b
+    }
+
     /// Creates a bitboard with all bits set
     ///
     /// ```
