@@ -14,7 +14,6 @@ pub fn NOTATION_TO_INDEX(notation: &str) -> usize {
     }
 }
 
-
 lazy_static! {
     pub static ref INDEX_TO_NOTATION: [&'static str; 64] = [
         "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
