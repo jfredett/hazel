@@ -25,6 +25,5 @@ pub fn from(c: &mut Criterion) {
 pub fn from_notation(c: &mut Criterion) {
     c.bench_function("Bitboard::from_notation/1", |b| b.iter(|| 
         black_box(Bitboard::from_notation("a4"))
-
     ));
 }
