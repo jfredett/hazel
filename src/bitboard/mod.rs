@@ -133,6 +133,26 @@ impl Bitboard {
         self.set(x,y);
     }
 
+    /// Return a vector containing all the indices which are set
+    ///
+    /// ```
+    /// # use hazel::bitboard::Bitboard;
+    /// let mut b = Bitboard::empty();
+    /// b.set_by_index(10);
+    /// b.set_by_index(20);
+    /// b.set_by_index(30);
+    /// assert_eq!(b.all_set_indices(), vec![10,20,30]);
+    /// ```
+    pub fn all_set_indices(&self) -> Vec<usize> {
+        let mut out = vec![];
+        for i in 0..63 { 
+            if self.is_index_set(i) {
+                out.push(i);
+            }
+        }
+        out
+    }
+
     /// unsets the bit at the given coordinates
     ///
     /// ```
