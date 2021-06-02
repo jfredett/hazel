@@ -1,15 +1,10 @@
-use std::fmt::{Display, Formatter, Result};
 
 use super::*;
 
 use bitboard::Bitboard;
+use constants::*;
 
 mod debug;
-
-pub enum Color {
-    WHITE = 0,
-    BLACK = 1
-}
 
 bitflags! {
     pub struct Metadata: u8 {
@@ -23,7 +18,6 @@ bitflags! {
         const UNUSED             = 0b01000000;
     }
 }
-
 #[derive(PartialEq, Eq, Hash)]
 pub struct Ply {
     // indexed by COLOR
@@ -37,36 +31,6 @@ pub struct Ply {
     en_passant: Option<Bitboard>,
     turn_count: u32, // we're aligned to 64b, so this is the biggest that'll fit conveniently
     meta: Metadata,
-}
-
-#[derive(PartialEq, Eq, Hash, Debug, Clone, Copy)]
-pub enum Piece {
-    King,
-    Queen,
-    Rook,
-    Bishop,
-    Knight,
-    Pawn
-}
-
-#[derive(PartialEq, Eq, Hash, Debug, Clone, Copy)]
-pub enum File {
-    A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7
-}
-
-impl Display for File {
-    fn fmt(&self, f: &mut Formatter) -> Result {
-        match self {
-            File::A => { write!(f, "a") }
-            File::B => { write!(f, "b") }
-            File::C => { write!(f, "c") }
-            File::D => { write!(f, "d") }
-            File::E => { write!(f, "e") }
-            File::F => { write!(f, "f") }
-            File::G => { write!(f, "g") }
-            File::H => { write!(f, "h") }
-        }
-    }
 }
 
 
@@ -103,10 +67,10 @@ impl Ply {
 
 
 #[cfg(test)]
-mod test {
+pub(crate) mod test {
     use super::*;
 
-    fn start_position() -> Ply {
+    pub fn start_position() -> Ply {
         Ply {
             pawns: [
                 Bitboard::from(0x00_00_00_00_00_00_FF_00),

@@ -52,11 +52,9 @@ mod util;
 mod arbitrary;
 mod debug;
 mod shifts;
-mod constants;
 
-pub use constants::*;
 pub use shifts::Direction;
-
+use crate::constants::conversion_tables::*;
 
 
 // NOTE: Should make a bunch of arrays with all the bitboards for a piece at a given location, so

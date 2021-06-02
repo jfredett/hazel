@@ -11,5 +11,6 @@ pub use packed_simd::*;
 #[macro_use] 
 extern crate bitflags;
 
+pub mod constants;
 pub mod bitboard;
 pub mod ply;
