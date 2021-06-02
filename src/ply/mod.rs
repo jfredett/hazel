@@ -18,7 +18,6 @@ bitflags! {
         const UNUSED             = 0b01000000;
         // convenience flags
         const DEFAULT            = 0b00001111;
-        const BLANK              = 0b00000000;
     }
 }
 #[derive(PartialEq, Eq, Hash)]
