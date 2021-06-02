@@ -1,32 +1,15 @@
 use super::*;
 use std::fmt::{Formatter, Result, Debug};
 
-use constants::{PIECES, FILES, COLORS, ASCII_PIECE_CHARS};
-
-
 impl Debug for Ply {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        let mut buf = [['.'; 8]; 8];
-
-        // Encode the board into a 8x8 array of chars.
-        for rank in 0..8 {
-            for file in FILES {
-                for piece in PIECES {
-                    for color in COLORS {
-                        if self.piece_at(file, rank + 1, piece, color) {
-                            buf[file as usize][rank] = ASCII_PIECE_CHARS[color as usize][piece as usize];
-                        }
-                    }
-                }
-            }
-        }
-
+        let buf = self.board_buffer();
         // We need to start on a8 and work _down_ to h1, left to right.
         writeln!(f)?;
         for rank in 0..8 {                
             write!(f, "{} |", 8 - rank)?; 
             for file in FILES {                                        
-                write!(f, " {}", buf[file as usize][7 - rank])?;
+                write!(f, " {}", buf[7 - rank][file as usize])?;
             }
             writeln!(f)?;
         }

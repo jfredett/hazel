@@ -53,7 +53,7 @@ impl Ply {
         }
     }
 
-    pub fn from_fen(fen: String) -> Ply {
+    pub fn from_fen(fen: &String) -> Ply {
         // A cheap and cheerful fen parser, very little error handling
         let fen_parts : Vec<&str> = fen.split(' ').collect();
         let mut ply = Ply::empty();
@@ -119,6 +119,70 @@ impl Ply {
         ply
     }
 
+    pub fn to_fen(&self) -> String {
+        let board = self.board_buffer();
+        let mut out = String::new();
+
+        for row in board.iter().rev() {
+            let mut skip = 0;
+            for &c in row {
+                // if there is no piece here, increment our skip counter
+                if c == '.' {
+                    skip += 1
+                // if we have an active skip counter and the current item is a piece
+                } else if skip > 0 && c != '.' {
+                    // push our skipcount
+                    out.push_str(&skip.to_string());
+                    // push the piece
+                    out.push(c);
+                    // reset skip count
+                    skip = 0;
+                } else {
+                    // no skip counter and the value is not empty, so just push it
+                    out.push(c);
+                }
+            }
+            // in the event the whole row is blank, we'll get here with an active skip, so we need to clear it now
+            if skip > 0 {
+                out.push_str(&skip.to_string());
+            }
+            out.push('/');
+        }
+        out.pop(); // we have an extra '/' so we need to remove it
+
+        out.push(' ');
+        if self.meta.contains(Metadata::BLACK_TO_MOVE) {
+            out.push('b');
+        } else {
+            out.push('w');
+        } 
+
+        out.push(' ');
+        if self.meta.contains(Metadata::WHITE_CASTLE_SHORT) { out.push('K'); }
+        if self.meta.contains(Metadata::WHITE_CASTLE_LONG)  { out.push('Q'); }
+        if self.meta.contains(Metadata::BLACK_CASTLE_SHORT) { out.push('k'); }
+        if self.meta.contains(Metadata::BLACK_CASTLE_LONG)  { out.push('q'); }
+
+        out.push(' ');
+        match self.en_passant {
+            None => { out.push('-'); }
+            // need to implement this
+            Some(bb) => { 
+                // If there are multiple en passant indices, then it's a broken state anyway
+                let idx = bb.all_set_indices()[0];
+                out.push_str(&INDEX_TO_NOTATION[idx]);
+            }
+        }
+
+        out.push(' ');
+        out.push_str(&self.half_move_clock.to_string());
+
+        out.push(' ');
+        out.push_str(&self.full_move_clock.to_string());
+
+        return out;
+    }
+
     pub fn piece_at(&self, file: File, rank: usize, piece: Piece, color: Color) -> bool {
         if rank < 1 || rank > 8 { panic!("Invalid position {:?}{:?}", file, rank); }
         let board = match piece {
@@ -130,6 +194,27 @@ impl Ply {
             Piece::Pawn => { self.pawns[color as usize] }
         };
         board.is_set(rank - 1, file as usize)
+    }
+
+
+    /// returns an 8x8 array with characters representing each piece in the proper locations
+    fn board_buffer(&self) -> [[char; 8]; 8] {
+        let mut buf = [['.'; 8]; 8];
+
+        // Encode the board into a 8x8 array of chars.
+        for rank in 0..8 {
+            for file in FILES {
+                for piece in PIECES {
+                    for color in COLORS {
+                        if self.piece_at(file, rank + 1, piece, color) {
+                            buf[rank][file as usize] = ASCII_PIECE_CHARS[color as usize][piece as usize];
+                        }
+                    }
+                }
+            }
+        }
+
+        buf
     }
 }
 
@@ -206,7 +291,8 @@ pub(crate) mod test {
             ],
             en_passant: None,
             meta: Metadata::BLACK_CASTLE_LONG | Metadata::BLACK_CASTLE_SHORT |
-                  Metadata::WHITE_CASTLE_LONG | Metadata::WHITE_CASTLE_SHORT,
+                  Metadata::WHITE_CASTLE_LONG | Metadata::WHITE_CASTLE_SHORT |
+                  Metadata::BLACK_TO_MOVE,
             full_move_clock: 7,
             half_move_clock: 0
         }
@@ -356,16 +442,44 @@ pub(crate) mod test {
         #[test]
         fn parses_starting_position_correctly() {
             let start_fen = String::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-            let ply = Ply::from_fen(start_fen);
+            let ply = Ply::from_fen(&start_fen);
             assert_eq!(ply, start_position());
         }
 
         #[test]
         fn parses_london_position_correctly() {
             let fen = String::from("r1bqk2r/pp2bppp/2n1pn2/2pp4/3P1B2/2P1PN1P/PP1N1PP1/R2QKB1R b KQkq - 0 7");
-            let ply = Ply::from_fen(fen);
-            dbg!(&ply);
-            assert_eq!(ply, start_position());
+            let ply = Ply::from_fen(&fen);
+            assert_eq!(ply, london_position());
         }
+    }
+
+    mod to_fen {
+        use super::*;
+
+        #[test]
+        fn round_trips_starting_position() {
+            let fen_in = String::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+            let ply = Ply::from_fen(&fen_in);
+            let fen_out = ply.to_fen();
+            assert_eq!(fen_in, fen_out);
+        }
+
+        #[test]
+        fn round_trips_london_position() {
+            let fen_in = String::from("r1bqk2r/pp2bppp/2n1pn2/2pp4/3P1B2/2P1PN1P/PP1N1PP1/R2QKB1R b KQkq - 0 7");
+            let ply = Ply::from_fen(&fen_in);
+            let fen_out = ply.to_fen();
+            assert_eq!(fen_in, fen_out);
+        }
+
+        #[test]
+        fn round_trips_position_with_en_passant() {
+            let fen_in = String::from("r1bqk2r/pp2bppp/2n1pn2/3p4/1PpP1B2/2P1PN1P/P2N1PP1/R2QKB1R b KQkq b3 0 8");
+            let ply = Ply::from_fen(&fen_in);
+            let fen_out = ply.to_fen();
+            assert_eq!(fen_in, fen_out);
+        }
+
     }
 }
