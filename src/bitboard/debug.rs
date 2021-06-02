@@ -1,4 +1,4 @@
-use crate::bitboard::*;
+use super::*;
 use std::fmt::{Formatter, Result, Debug};
 
 impl Debug for Bitboard {
