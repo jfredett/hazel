@@ -174,6 +174,45 @@ pub(crate) mod test {
         }
     }
 
+    pub fn london_position() -> Ply {
+        Ply {
+            pawns: [
+                Bitboard::from_notation("a2") | Bitboard::from_notation("b2") | Bitboard::from_notation("c3") | 
+                Bitboard::from_notation("d4") | Bitboard::from_notation("e3") | Bitboard::from_notation("f2") | 
+                Bitboard::from_notation("g2") | Bitboard::from_notation("h3")
+                ,
+                Bitboard::from_notation("a7") | Bitboard::from_notation("b7") | Bitboard::from_notation("c5") | 
+                Bitboard::from_notation("d5") | Bitboard::from_notation("e6") | Bitboard::from_notation("f7") | 
+                Bitboard::from_notation("g7") | Bitboard::from_notation("h7")
+            ],
+            kings: [
+                Bitboard::from_notation("e1"),
+                Bitboard::from_notation("e8")
+            ],
+            queens: [
+                Bitboard::from_notation("d1"),
+                Bitboard::from_notation("d8")
+            ],
+            rooks: [
+                Bitboard::from_notation("a1") | Bitboard::from_notation("h1"),
+                Bitboard::from_notation("a8") | Bitboard::from_notation("h8")
+            ],
+            bishops: [
+                Bitboard::from_notation("f1") | Bitboard::from_notation("f4"),
+                Bitboard::from_notation("c8") | Bitboard::from_notation("e7")
+            ],
+            knights: [
+                Bitboard::from_notation("d2")| Bitboard::from_notation("f3"),
+                Bitboard::from_notation("c6")| Bitboard::from_notation("f6")
+            ],
+            en_passant: None,
+            meta: Metadata::BLACK_CASTLE_LONG | Metadata::BLACK_CASTLE_SHORT |
+                  Metadata::WHITE_CASTLE_LONG | Metadata::WHITE_CASTLE_SHORT,
+            full_move_clock: 7,
+            half_move_clock: 0
+        }
+    }
+
     mod piece_at {
         use super::*;    
 
@@ -231,7 +270,7 @@ pub(crate) mod test {
 
             #[test]
             fn does_not_see_knight_where_there_are_no_knights() {
-                let ply = start_position();
+                let ply = london_position();
                 assert!(!ply.piece_at(File::A, 3, Piece::Knight, Color::WHITE));
                 assert!(!ply.piece_at(File::H, 6, Piece::Knight, Color::BLACK));
             }
@@ -319,6 +358,14 @@ pub(crate) mod test {
         fn parses_starting_position_correctly() {
             let start_fen = String::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
             let ply = Ply::from_fen(start_fen);
+            assert_eq!(ply, start_position());
+        }
+
+        #[test]
+        fn parses_london_position_correctly() {
+            let fen = String::from("r1bqk2r/pp2bppp/2n1pn2/2pp4/3P1B2/2P1PN1P/PP1N1PP1/R2QKB1R b KQkq - 0 7");
+            let ply = Ply::from_fen(fen);
+            dbg!(&ply);
             assert_eq!(ply, start_position());
         }
     }
