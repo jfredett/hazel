@@ -16,6 +16,9 @@ bitflags! {
         const BLACK_TO_MOVE      = 0b00100000;
         const IN_CHECK           = 0b01000000;
         const UNUSED             = 0b01000000;
+        // convenience flags
+        const DEFAULT            = 0b00001111;
+        const BLANK              = 0b00000000;
     }
 }
 #[derive(PartialEq, Eq, Hash)]
@@ -29,14 +32,14 @@ pub struct Ply {
     bishops: [Bitboard; 2],
     knights: [Bitboard; 2],
     en_passant: Option<Bitboard>,
-    turn_count: u32, // we're aligned to 64b, so this is the biggest that'll fit conveniently
+    full_move_clock: u32, // we're aligned to 64b, so this is the biggest that'll fit conveniently
+    half_move_clock: u8, // this is for the 50m rule
     meta: Metadata,
 }
 
-
 // parse a fen string and construct the ply
 impl Ply {
-    pub fn from_fen(_fen: String) -> Ply {
+    pub fn empty() -> Ply {
         Ply {
             pawns: [Bitboard::empty(); 2],
             kings: [Bitboard::empty(); 2],
@@ -45,9 +48,76 @@ impl Ply {
             bishops: [Bitboard::empty(); 2],
             knights: [Bitboard::empty(); 2],
             en_passant: None,
-            meta: Metadata { bits: 0 },
-            turn_count: 0
+            meta: Metadata::DEFAULT,
+            half_move_clock: 0,
+            full_move_clock: 1
         }
+    }
+
+    pub fn from_fen(fen: String) -> Ply {
+        // A cheap and cheerful fen parser, very little error handling
+        let fen_parts : Vec<&str> = fen.split(' ').collect();
+        let mut ply = Ply::empty();
+
+        // Board setup
+        let mut rank = 7;
+        let mut file = 0;
+        for ch in fen_parts[0].chars() {
+            match ch {
+                'p' => { ply.pawns[Color::BLACK as usize].set(rank,file);   file += 1; }
+                'k' => { ply.kings[Color::BLACK as usize].set(rank,file);   file += 1; }
+                'q' => { ply.queens[Color::BLACK as usize].set(rank,file);  file += 1; }
+                'r' => { ply.rooks[Color::BLACK as usize].set(rank,file);   file += 1; }
+                'b' => { ply.bishops[Color::BLACK as usize].set(rank,file); file += 1; }
+                'n' => { ply.knights[Color::BLACK as usize].set(rank,file); file += 1; }
+                'P' => { ply.pawns[Color::WHITE as usize].set(rank,file);   file += 1; }
+                'K' => { ply.kings[Color::WHITE as usize].set(rank,file);   file += 1; }
+                'Q' => { ply.queens[Color::WHITE as usize].set(rank,file);  file += 1; }
+                'R' => { ply.rooks[Color::WHITE as usize].set(rank,file);   file += 1; }
+                'B' => { ply.bishops[Color::WHITE as usize].set(rank,file); file += 1; }
+                'N' => { ply.knights[Color::WHITE as usize].set(rank,file); file += 1; }
+                '/' => { rank -= 1; file = 0; }
+                '1' => { file += 1; }
+                '2' => { file += 2; }
+                '3' => { file += 3; }
+                '4' => { file += 4; }
+                '5' => { file += 5; }
+                '6' => { file += 6; }
+                '7' => { file += 7; }
+                '8' => { /* the next character will either be `/` or result in a different error */ }
+                _ => { panic!("Invalid FEN board: {}", fen)}
+            }
+
+        }
+
+        match fen_parts[1] {
+            "w" => { /* intentionally blank */ }
+            "b" => { ply.meta |= Metadata::BLACK_TO_MOVE; }
+            _ => { panic!("Invalid FEN color: {}", fen); }
+        };
+
+        // castling rights
+        for ch in fen_parts[2].chars() {
+            match ch {
+                'K' => { ply.meta |= Metadata::WHITE_CASTLE_SHORT; }
+                'Q' => { ply.meta |= Metadata::WHITE_CASTLE_LONG; }
+                'k' => { ply.meta |= Metadata::BLACK_CASTLE_SHORT; }
+                'q' => { ply.meta |= Metadata::BLACK_CASTLE_LONG; }
+                _ => { panic!("Invalid FEN castling key: {}", fen); }
+            }
+        }
+
+        ply.en_passant = match fen_parts[3] {
+            "-" => None,
+            _ => Some(Bitboard::from_notation(fen_parts[3]))
+        };
+
+        ply.half_move_clock = fen_parts[4].parse().expect(&format!("Invalid FEN half-move: {}", fen));
+        ply.full_move_clock = fen_parts[5].parse().expect(&format!("Invalid FEN full-move: {}", fen));
+
+
+
+        ply
     }
 
     pub fn piece_at(&self, file: File, rank: usize, piece: Piece, color: Color) -> bool {
@@ -99,7 +169,8 @@ pub(crate) mod test {
             en_passant: None,
             meta: Metadata::BLACK_CASTLE_LONG | Metadata::BLACK_CASTLE_SHORT |
                   Metadata::WHITE_CASTLE_LONG | Metadata::WHITE_CASTLE_SHORT,
-            turn_count: 0
+            full_move_clock: 1,
+            half_move_clock: 0
         }
     }
 
