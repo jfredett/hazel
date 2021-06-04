@@ -8,9 +8,9 @@ pub use packed_simd::*;
 
 #[macro_use] extern crate lazy_static;
 
-#[macro_use] 
-extern crate bitflags;
+#[macro_use] extern crate bitflags;
 
+
+#[macro_use] pub mod bitboard;
 pub mod constants;
-pub mod bitboard;
 pub mod ply;

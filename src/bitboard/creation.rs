@@ -1,5 +1,24 @@
 use super::*;
 
+/// Used for easily making bitboards from a list of set squares, use as follows:
+///
+/// ```
+/// #[macro_use] extern crate hazel;
+/// use hazel::bitboard::Bitboard;
+/// let bb = bitboard!("d4", "c6");
+/// assert!(bb.is_notation_set("d4"));
+/// assert!(bb.is_notation_set("c6"));
+/// ```
+#[macro_export]
+macro_rules! bitboard {
+    () => (
+        Bitboard::empty()
+    );
+    ($n:expr $(, $ns:expr)*) => (
+        Bitboard::from_notation($n) | bitboard!($($ns),*)
+    );
+}
+
 impl Bitboard {
     /// Creates an empty bitboard
     ///
