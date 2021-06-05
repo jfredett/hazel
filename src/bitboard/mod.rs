@@ -77,10 +77,6 @@ use crate::constants::conversion_tables::*;
 //
 
 
-// Shifts?
-//
-// Probably want to split this into a mod.rs and folder.
-
 impl Bitboard {
     /// True if the bitboard has no set bits.
     ///
