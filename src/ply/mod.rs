@@ -39,19 +39,6 @@ pub struct Ply {
 
 // parse a fen string and construct the ply
 impl Ply {
-    pub fn empty() -> Ply {
-        Ply {
-            pawns: [Bitboard::empty(); 2],
-            kings: [Bitboard::empty(); 2],
-            queens: [Bitboard::empty(); 2],
-            rooks: [Bitboard::empty(); 2],
-            bishops: [Bitboard::empty(); 2],
-            knights: [Bitboard::empty(); 2],
-            en_passant: None,
-            meta: Metadata::DEFAULT,
-            half_move_clock: 0,
-            full_move_clock: 1
-        }
     }
 
     pub fn piece_at(&self, file: File, rank: usize, piece: Piece, color: Color) -> bool {

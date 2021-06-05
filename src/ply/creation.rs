@@ -2,6 +2,21 @@
 use super::*;
 
 impl Ply {
+    /// Produces a ply representing an empty board
+    pub fn empty() -> Ply {
+        Ply {
+            pawns: [Bitboard::empty(); 2],
+            kings: [Bitboard::empty(); 2],
+            queens: [Bitboard::empty(); 2],
+            rooks: [Bitboard::empty(); 2],
+            bishops: [Bitboard::empty(); 2],
+            knights: [Bitboard::empty(); 2],
+            en_passant: None,
+            meta: Metadata::DEFAULT,
+            half_move_clock: 0,
+            full_move_clock: 1
+        }
+    }
     pub fn from_fen(fen: &String) -> Ply {
         // A cheap and cheerful fen parser, very little error handling
         let fen_parts : Vec<&str> = fen.split(' ').collect();
