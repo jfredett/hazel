@@ -17,6 +17,10 @@ impl Ply {
             full_move_clock: 1
         }
     }
+
+    /// Produces a ply from the given FEN string
+    /// NOTE: Very little error checking is done on the FEN string. Make sure to provide it
+    /// with good input.
     pub fn from_fen(fen: &String) -> Ply {
         // A cheap and cheerful fen parser, very little error handling
         let fen_parts : Vec<&str> = fen.split(' ').collect();
@@ -66,6 +70,10 @@ impl Ply {
                 'Q' => { ply.meta |= Metadata::WHITE_CASTLE_LONG; }
                 'k' => { ply.meta |= Metadata::BLACK_CASTLE_SHORT; }
                 'q' => { ply.meta |= Metadata::BLACK_CASTLE_LONG; }
+                '-' => { 
+                    /* we don't need to do anything, this should only ever appear alone, and means
+                     * there are no castling rights for either side. */ 
+                }
                 _ => { panic!("Invalid FEN castling key: {}", fen); }
             }
         }
