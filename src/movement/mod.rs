@@ -20,24 +20,10 @@ const PROMOTE_BIT_MASK  : u16   = 0b000000_000000_1_000;
 const PROMOTE_BIT_SHIFT : usize = 3;
 const METADATA_MASK     : u16   = 0b000000_000000_0_111;
 
-bitflags! {
-    pub struct MoveType: u16 {
-        const CHECK = 0b100;
-        const CAPTURE = 0b010;
-        const ATTACK = 0b001;
-    }
-}
+mod move_type;
 
-impl MoveType {
-    /// True if the metadata encodes a check
-    pub fn is_check(&self) -> bool { self.contains(MoveType::CHECK) }
-    /// True if the metadata encodes a capture
-    pub fn is_capture(&self) -> bool { self.contains(MoveType::CAPTURE) }
-    /// True if the metadata encodes an attack on a piece
-    pub fn is_attack(&self) -> bool { self.contains(MoveType::ATTACK) }
-    /// True if the metadata is a quiet move
-    pub fn is_quiet(&self) -> bool { self.bits() == 0 }
-}
+pub use move_type::*;
+
 
 impl Move {
     pub fn empty() -> Move { Move { 0: 0 } }
@@ -112,115 +98,10 @@ impl Move {
     /// assert!(m2.move_metadata().is_check());
     /// ```
     pub fn move_metadata(&self) -> MoveType { MoveType::from_bits(self.0 & METADATA_MASK).unwrap() }
-
+    
+    // Some proxy methods
+    #[inline(always)] pub fn is_check(&self)   -> bool { self.move_metadata().is_check() }
+    #[inline(always)] pub fn is_capture(&self) -> bool { self.move_metadata().is_capture() }
+    #[inline(always)] pub fn is_attack(&self)  -> bool { self.move_metadata().is_attack() }
+    #[inline(always)] pub fn is_quiet(&self)   -> bool { self.move_metadata().is_quiet() }
 }
-
-/*
-
-Idea:
-
-A move == 16 bits broken up as follows:
-
-3b:SourceRank | NOTE: Maybe use 6 bits and do source index -> target index?
-3b:SourceFile | 
-3b:TargetRank |
-3b:TargetFile |
-1b:Black's turn? (1 = black, 0 = white)
-1b:Check? (1 = true)
-1b.Capture? (1 = true)
-1b:Attack? (1 = true) // true if this move would result in a new attack on one of your opponents pieces
-
-// TODO: How do we handle promotions?
-// -- perhaps restructure the metadata section to not be bitflags but rather an enum. Gets you 16
-// flags instead of 4. Should be enough for representing CCA, as well as promotion to any of the 4 pieces.
-// Structure would be like:
-/*
-// takes 2 bits
-enum MoveType {
-    Check = 3, 
-    Capture = 2, 
-    Attack = 1, 
-    Quiet = 0
-}
-
-// 3 bits
-enum Promotion {
-    Queen = 4,
-    Rook = 3 ,
-    Bishop = 2,
-    Knight = 1,
-    None = 0
-}
-
-Also, not sure I actually need to know who's turn it is. That's for the ply to care about?
-
-Maybe I just need to drop the movetype stuff, or reduce it to a single bit of "forcing move"? Or even just "Is it a check?" We should always consider those lines no matter what, for sure.
-
-----
-
-Here's an idea:
-
-6b:SourceIdx
-6b:TargetIdx
-1b:Is Promotion?
-{2b: If bit 13 is set, this is the promotion piece (K, B, R, Q = 2 bits)
-{  : If bit 13 is not set, this is the attack metadata (Check, Capture, Attack = 2 bits)
-1b: spare
-*/
-
-So 1. d4 d5, 2. Bf4 Nf3 would be:
-
-[0b0000_011_011_011_010] => [0b0000_0110_1101_1010] => 0x06DA
-[0b0000_011_101_011_110] => [0b0000_0111_0101_1110] => 0x085E
-[0b0000_101_011_010_001] => [0b0000_1010_1101_0001] => 0x0AD1
-[0b0000_101_101_110_111] => [0b0000_1011_0111_0111] => 0x0B88
-
-The four metadata bits at the end are worth explaining.
-
-There are, basically, 4 kinds of moves in chess. In order of how 'forcing' they are:
-
-1. Checks
-2. Captures
-3. Attacks
-4. All other moves ("Quiet" moves)
-
-A check checks the king. It may be a mating move, it may not be, we don't care.
-
-A capture captures a piece and is the second most forcing move because failure to respond in kind
-would result in a material imbalance.
-
-An attack adds an attacker to a piece. Attacking may provoke the need to defend the piece either
-positionally or tactically. Positional defenses include blocking with another piece, retreating the
-piece under attack, or creating a greater positional threat elsewhere ("Danger Levels" as IM Rozman
-puts it)
-
-All other so-called 'quiet' moves are moves which provide indirect benefit, either opening the
-position to new opportunities. Denying opportunities to your opponent, or resolving positional
-problems (e.g., pins, fork arrays, infiltrations, etc).
-
-By tagging the moves with this data we can easily sort our list in order of most forcing.
-Occasionally moves will fulfill two of these definitions so we want to inspect those moves first.
-So as we generate moves we assign this metadata and sort the resulting array of moves so that
-when evaluation comes, we are looking at the most forcing lines first.
-
-When we evaluate moves, the evalator will chose several lines and run a depth-first 'simulation' 
-playing 'random' (but weighted towards these forcing lines) moves 
-
----
-
-After building this up, the next thing to do is a move generator, this should be a function which
-takes a ply and produces a list of moves, I'm debating about dynamically allocating that list
-(really more like shrinking it and handing out pointers to the region of memory). 
-
-The movegen will need to understand attacks and stuff so that we can get those 4 bits in place.
-
-If the move generator basically just has a big ass array, and then runs a couple threads which it hands
-plies too and says "Enumerate all the moves", then evaluators and shit can just hold a reference into that
-memory and have a RO copy of the list of moves. When the last consumer gives up the pointer, we free that
-memory and re-use it.
-
-The movegen is it's own little actor that way, so we can tell it to happily start shitting out moves while 
-other things happen (or turn it off if ponder is off).
-
-First version though can just be a vec of moves.
-*/
