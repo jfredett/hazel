@@ -16,20 +16,22 @@ pub fn random_direction() -> Direction {
     }
 }
 
-#[criterion(config())]
-pub fn shift(c: &mut Criterion) {
-    let b1 = random_bitboard();
-    let dir = random_direction();
-    c.bench_function("Bitboard.shift/1", |b| b.iter(|| 
-        black_box(b1.shift(dir))
-    ));
-}
+bench!(
+        group: Bitboard,
+        pretty: "shift/1",
+        name: shift,
+        test: { b1.shift(dir) },
+        where:
+            b1 => random_bitboard();
+            dir => random_direction();
+);
 
-#[criterion(config())]
-pub fn shift_mut(c: &mut Criterion) {
-    let mut b1 = random_bitboard();
-    let dir = random_direction();
-    c.bench_function("Bitboard.shift_mut/1", |b| b.iter(|| 
-        black_box(b1.shift_mut(dir))
-    ));
-}
+bench!(
+        group: Bitboard,
+        pretty: "shift_mut/1",
+        name: shift_mut,
+        test: { b1.shift_mut(dir) },
+        where:
+            b1 => random_bitboard();
+            dir => random_direction();
+);

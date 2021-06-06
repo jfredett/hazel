@@ -28,6 +28,7 @@ criterion = "~0.3"
 criterion-macro = "~0.3"
 quickcheck = "~1.0"
 quickcheck_macros = "~1.0"
+paste = "~1.0"
 
 [[bench]]
 name = "benchmarks"

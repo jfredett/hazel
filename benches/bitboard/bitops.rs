@@ -1,63 +1,70 @@
 use super::*;
 
-#[criterion(config())]
-pub fn and_op(c: &mut Criterion) {
-    let b1 = random_bitboard();
-    let b2 = random_bitboard();
-    c.bench_function("Bitboard::&/2", |b| b.iter(|| 
-        black_box(b1 & b2)
-    ));
-}
+bench!(
+    group: Bitboard, 
+    pretty: "&/2",
+    name: and_op,
+    test: { b1 & b2 },
+    where:
+         b1 => random_bitboard();
+         b2 => random_bitboard();
+);
 
-#[criterion(config())]
-pub fn or_op(c: &mut Criterion) {
-    let b1 = random_bitboard();
-    let b2 = random_bitboard();
-    c.bench_function("Bitboard::|/2", |b| b.iter(|| 
-        black_box(b1 | b2)
-    ));
-}
+bench!(
+    group: Bitboard, 
+    pretty: "|/2",
+    name: or_op,
+    test: { b1 | b2 },
+    where:
+         b1 => random_bitboard();
+         b2 => random_bitboard();
+);
 
-#[criterion(config())]
-pub fn xor_op(c: &mut Criterion) {
-    let b1 = random_bitboard();
-    let b2 = random_bitboard();
-    c.bench_function("Bitboard::^/2", |b| b.iter(|| 
-        black_box(b1 ^ b2)
-    ));
-}
+bench!(
+    group: Bitboard, 
+    pretty: "^/2",
+    name: xor_op,
+    test: { b1 ^ b2 },
+    where:
+         b1 => random_bitboard();
+         b2 => random_bitboard();
+);
 
-#[criterion(config())]
-pub fn not_op(c: &mut Criterion) {
-    let b1 = random_bitboard();
-    c.bench_function("Bitboard::!/2", |b| b.iter(|| 
-        black_box(!b1)
-    ));
-}
+bench!(
+    group: Bitboard, 
+    pretty: "!/1",
+    name: and_op,
+    test: { !b1 },
+    where:
+         b1 => random_bitboard();
+);
 
-#[criterion(config())]
-pub fn and_assign_op(c: &mut Criterion) {
-    let mut b1 = random_bitboard();
-    let b2 = random_bitboard();
-    c.bench_function("Bitboard::&=/2", |b| b.iter(|| 
-        black_box(b1 &= b2)
-    ));
-}
+bench!(
+    group: Bitboard,
+    pretty: "&=/2",
+    name: and_assign_op,
+    test: { b1 &= b2 },
+    where:
+        b1 => random_bitboard();
+        b2 => random_bitboard();
+);
 
-#[criterion(config())]
-pub fn or_assign_op(c: &mut Criterion) {
-    let mut b1 = random_bitboard();
-    let b2 = random_bitboard();
-    c.bench_function("Bitboard::|=/2", |b| b.iter(|| 
-        black_box(b1 |= b2)
-    ));
-}
+bench!(
+    group: Bitboard,
+    pretty: "|=/2",
+    name: or_assign_op,
+    test: { b1 |= b2 },
+    where:
+        b1 => random_bitboard();
+        b2 => random_bitboard();
+);
 
-#[criterion(config())]
-pub fn xor_assign_op(c: &mut Criterion) {
-    let mut b1 = random_bitboard();
-    let b2 = random_bitboard();
-    c.bench_function("Bitboard::^=/2", |b| b.iter(|| 
-        black_box(b1 ^= b2)
-    ));
-}
+bench!(
+    group: Bitboard,
+    pretty: "^=/2",
+    name: xor_assign_op,
+    test: { b1 ^= b2 },
+    where:
+        b1 => random_bitboard();
+        b2 => random_bitboard();
+);

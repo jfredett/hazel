@@ -8,99 +8,105 @@ pub fn random_bitboard() -> Bitboard {
     Bitboard::from(random_u64())
 }
 
-#[criterion(config())]
-pub fn is_empty(c: &mut Criterion) {
-    let bb = Bitboard::empty();
-    c.bench_function("Bitboard.is_empty/0", |b| b.iter(|| 
-            black_box(bb.is_empty())
-    ));
-}
+bench!(
+    group: Bitboard,
+    pretty: "is_empty/0",
+    name: is_empty,
+    test: { bb.is_empty() },
+    where:
+        bb => Bitboard::empty();
+);
 
-#[criterion(config())]
-pub fn is_full(c: &mut Criterion) {
-    let bb = Bitboard::empty();
-    c.bench_function("Bitboard.is_full/0", |b| b.iter(|| 
-            black_box(bb.is_full())
-    ));
-}
+bench!(
+    group: Bitboard,
+    pretty: "is_full/0",
+    name: is_full,
+    test: { bb.is_full() },
+    where:
+        bb => Bitboard::full();
+);
 
-#[criterion(config())]
-pub fn set(c: &mut Criterion) {
-    let mut bb = Bitboard::empty();
-    let rank = random_usize() % 8;
-    let file = random_usize() % 8;
-    c.bench_function("Bitboard.set/2", |b| b.iter(|| 
-            black_box(bb.set(rank, file))
-    ));
-}
+bench!(
+    group: Bitboard,
+    pretty: "set/2",
+    name: set,
+    test: { bb.set(rank,file) },
+    where:
+        bb => Bitboard::empty();
+        rank => random_usize() % 8;
+        file => random_usize() % 8;
+);
 
-#[criterion(config())]
-pub fn set_by_index(c: &mut Criterion) {
-    let mut bb = Bitboard::empty();
-    let index = random_usize() % 64;
-    c.bench_function("Bitboard.set_by_index/1", |b| b.iter(|| 
-            black_box(bb.set_by_index(index))
-    ));
-}
+bench!(
+    group: Bitboard,
+    pretty: "set_by_index/2",
+    name: set_by_index,
+    test: { bb.set_by_index(index) },
+    where:
+        bb => Bitboard::empty();
+        index => random_usize() % 64;
+);
 
-#[criterion(config())]
-pub fn set_by_notation(c: &mut Criterion) {
-    let mut bb = Bitboard::empty();
-    let notation = "d4";
-    c.bench_function("Bitboard.set_by_notation/1", |b| b.iter(|| 
-            black_box(bb.set_by_notation(notation))
-    ));
-}
+bench!(
+    group: Bitboard,
+    pretty: "set_by_notation/2",
+    name: set_by_notation,
+    test: { bb.set_by_notation(notation) },
+    where:
+        bb => Bitboard::empty();
+        notation => "d4";
+);
 
-#[criterion(config())]
-pub fn unset(c: &mut Criterion) {
-    let mut bb = Bitboard::empty();
-    bb.set_by_notation("d4");
-    c.bench_function("Bitboard.unset/2", |b| b.iter(|| 
-            black_box(bb.unset(3,3))
-    ));
-}
+bench!(
+    group: Bitboard,
+    pretty: "unset/2",
+    name: unset,
+    test: { bb.unset(3,3) },
+    where:
+        bb => Bitboard::from_notation("d4");
+);
 
-#[criterion(config())]
-pub fn flip(c: &mut Criterion) {
-    let mut bb = Bitboard::empty();
-    bb.set_by_notation("d4");
-    c.bench_function("Bitboard.flip/2", |b| b.iter(|| 
-            black_box(bb.flip(3,3))
-    ));
-}
+bench!(
+    group: Bitboard,
+    pretty: "flip/2",
+    name: unset,
+    test: { bb.flip(3,3) },
+    where:
+        bb => Bitboard::from_notation("d4");
+);
 
-#[criterion(config())]
-pub fn is_set(c: &mut Criterion) {
-    let mut bb = Bitboard::empty();
-    bb.set_by_notation("d4");
-    c.bench_function("Bitboard.is_set/2", |b| b.iter(|| 
-            black_box(bb.is_set(3,3))
-    ));
-}
+bench!(
+    group: Bitboard,
+    pretty: "is_set/2",
+    name: is_set,
+    test: { bb.is_set(3,3) },
+    where:
+        bb => Bitboard::from_notation("d4");
+);
 
-#[criterion(config())]
-pub fn is_index_set(c: &mut Criterion) {
-    let mut bb = Bitboard::empty();
-    bb.set_by_notation("d4");
-    c.bench_function("Bitboard.is_index_set/1", |b| b.iter(|| 
-            black_box(bb.is_index_set(0o33))
-    ));
-}
+bench!(
+    group: Bitboard,
+    pretty: "is_index_set/1",
+    name: is_index_set,
+    test: { bb.is_index_set(0o33) },
+    where:
+        bb => Bitboard::from_notation("d4");
+);
 
-#[criterion(config())]
-pub fn is_notation_set(c: &mut Criterion) {
-    let mut bb = Bitboard::empty();
-    bb.set_by_notation("d4");
-    c.bench_function("Bitboard.is_notation_set/1", |b| b.iter(|| 
-            black_box(bb.is_notation_set("d4"))
-    ));
-}
+bench!(
+    group: Bitboard,
+    pretty: "is_notation_set/1",
+    name: is_notation_set,
+    test: { bb.is_notation_set("d4") },
+    where:
+        bb => Bitboard::from_notation("d4");
+);
 
-#[criterion(config())]
-pub fn count(c: &mut Criterion) {
-    let bb = Bitboard::from(random_u64());
-    c.bench_function("Bitboard.count/0", |b| b.iter(|| 
-        black_box(bb.count())
-    ));
-}
+bench!(
+    group: Bitboard,
+    pretty: "count/0",
+    name: count,
+    test: { bb.count() },
+    where:
+        bb => Bitboard::from(random_u64());
+);
