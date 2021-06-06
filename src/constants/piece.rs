@@ -12,8 +12,7 @@ pub enum Piece {
 
 impl From<u16> for Piece {
     fn from(v: u16) -> Self {
-        let val = v & 0x0007;
-        PIECES[(val) as usize]
+        PIECES[(v & 0x0007) as usize]
     }
 }
 
