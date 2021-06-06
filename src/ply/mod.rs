@@ -92,40 +92,6 @@ impl Ply {
         board.is_set(rank - 1, file as usize)
     }
 
-    /// moves a piece without respecting any rules whatsoever. Will happily screw up a ply.
-    pub fn move_piece(&self, from: (usize, File), to: (usize, File), piece: Piece, color: Color) -> Ply {
-        let mut new_ply = *self;
-
-        match piece {
-            Piece::Rook   => { 
-                new_ply.rooks[color as usize].unset(from.0, from.1 as usize) ;
-                new_ply.rooks[color as usize].set(to.0, to.1 as usize);
-            }
-            Piece::Bishop => {
-                new_ply.bishops[color as usize].unset(from.0, from.1 as usize);
-                new_ply.bishops[color as usize].set(to.0, to.1 as usize);
-            }
-            Piece::Knight => {
-                new_ply.knights[color as usize].unset(from.0, from.1 as usize);
-                new_ply.knights[color as usize].set(to.0, to.1 as usize);
-            }
-            Piece::King   => { 
-                new_ply.kings[color as usize].unset(from.0, from.1 as usize);
-                new_ply.kings[color as usize].set(to.0, to.1 as usize);
-            }
-            Piece::Queen  => { 
-                new_ply.queens[color as usize].unset(from.0, from.1 as usize);
-                new_ply.queens[color as usize].set(to.0, to.1 as usize);
-            }
-            Piece::Pawn   => {
-                new_ply.pawns[color as usize].unset(from.0, from.1 as usize);
-                new_ply.pawns[color as usize].set(to.0, to.1 as usize);
-            }
-        }
-
-        return new_ply;
-    }
-
     /// returns an 8x8 array with characters representing each piece in the proper locations
     fn board_buffer(&self) -> [[char; 8]; 8] {
         let mut buf = [['.'; 8]; 8];
@@ -226,16 +192,6 @@ pub(crate) mod test {
             half_move_clock: 0
         }
     }
-
-    mod move_piece {
-        use super::*;
-            
-        #[test]
-        fn moves_rooks() {
-            let ply = london_position();
-        }
-    }
-
 
     mod piece_at {
         use super::*;    
