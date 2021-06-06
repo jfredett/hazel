@@ -156,19 +156,6 @@ impl Move {
 #[cfg(test)]
 mod test {
     use super::*;
-
-        /// let m = Move::from_notation("d2", "d4", Either::Left(MoveType::quiet()));
-    ///
-    /// assert_eq!(m.source_idx(), 0o13);
-    /// assert_eq!(m.target_idx(), 0o33);
-    /// assert!(!m.is_promotion());
-    /// assert!(m.move_metadata().is_quiet());
-    ///
-    /// let pm = Move::from_notation("d7", "d8", Either::Right(Piece::Queen));
-    /// assert_eq!(m.source_idx(), 0o63);
-    /// assert_eq!(m.target_idx(), 0o73);
-    /// assert!(m.is_promotion());
-    /// assert_eq!(m.promotion_piece(), Piece::Queen)
     
     mod from_notation {
         use super::*;
