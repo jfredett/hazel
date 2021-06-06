@@ -14,3 +14,4 @@ pub use packed_simd::*;
 #[macro_use] pub mod bitboard;
 pub mod constants;
 pub mod ply;
+pub mod movement;
