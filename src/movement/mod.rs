@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use crate::constants::Piece;
+use crate::constants::{NOTATION_TO_INDEX, Piece};
 
 ///! This module defines a compact representation of chess moves from a given ply.
 ///!
