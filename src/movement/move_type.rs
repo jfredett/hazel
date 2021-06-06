@@ -1,5 +1,3 @@
-use super::*;
-
 bitflags! {
     pub struct MoveType: u16 {
         const CHECK = 0b100;
