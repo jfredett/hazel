@@ -21,6 +21,7 @@ const PROMOTE_BIT_SHIFT : usize = 3;
 const METADATA_MASK     : u16   = 0b000000_000000_0_111;
 
 mod move_type;
+mod debug;
 
 use either::Either;
 pub use move_type::*;

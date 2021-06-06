@@ -119,6 +119,8 @@ impl Ply {
 pub(crate) mod test {
     use super::*;
 
+    // NOTE: these are left as functions because they are used to test the `from_fen` and `to_fen`
+    // functions elsewhere. Most tests should use the constants defined in constants/test.rs
     pub fn start_position() -> Ply {
         Ply {
             pawns: [
@@ -152,7 +154,6 @@ pub(crate) mod test {
             half_move_clock: 0
         }
     }
-
     pub fn london_position() -> Ply {
         Ply {
             pawns: [

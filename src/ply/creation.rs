@@ -165,14 +165,14 @@ mod test {
 
         #[test]
         fn parses_starting_position_correctly() {
-            let start_fen = String::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+            let start_fen = String::from(START_POSITION_FEN);
             let ply = Ply::from_fen(&start_fen);
             assert_eq!(ply, ply::test::start_position());
         }
 
         #[test]
         fn parses_london_position_correctly() {
-            let fen = String::from("r1bqk2r/pp2bppp/2n1pn2/2pp4/3P1B2/2P1PN1P/PP1N1PP1/R2QKB1R b KQkq - 0 7");
+            let fen = String::from(LONDON_POSITION_FEN);
             let ply = Ply::from_fen(&fen);
             assert_eq!(ply, ply::test::london_position());
         }
@@ -183,7 +183,7 @@ mod test {
 
         #[test]
         fn round_trips_starting_position() {
-            let fen_in = String::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+            let fen_in = String::from(START_POSITION_FEN);
             let ply = Ply::from_fen(&fen_in);
             let fen_out = ply.to_fen();
             assert_eq!(fen_in, fen_out);
@@ -191,7 +191,7 @@ mod test {
 
         #[test]
         fn round_trips_london_position() {
-            let fen_in = String::from("r1bqk2r/pp2bppp/2n1pn2/2pp4/3P1B2/2P1PN1P/PP1N1PP1/R2QKB1R b KQkq - 0 7");
+            let fen_in = String::from(LONDON_POSITION_FEN);
             let ply = Ply::from_fen(&fen_in);
             let fen_out = ply.to_fen();
             assert_eq!(fen_in, fen_out);
@@ -199,7 +199,7 @@ mod test {
 
         #[test]
         fn round_trips_position_with_en_passant() {
-            let fen_in = String::from("r1bqk2r/pp2bppp/2n1pn2/3p4/1PpP1B2/2P1PN1P/P2N1PP1/R2QKB1R b KQkq b3 0 8");
+            let fen_in = String::from(EN_PASSANT_POSITION_FEN);
             let ply = Ply::from_fen(&fen_in);
             let fen_out = ply.to_fen();
             assert_eq!(fen_in, fen_out);
