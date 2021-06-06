@@ -10,6 +10,7 @@ pub use packed_simd::*;
 
 #[macro_use] extern crate bitflags;
 
+extern crate either;
 
 #[macro_use] pub mod bitboard;
 pub mod constants;

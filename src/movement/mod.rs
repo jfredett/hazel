@@ -22,6 +22,7 @@ const METADATA_MASK     : u16   = 0b000000_000000_0_111;
 
 mod move_type;
 
+use either::Either;
 pub use move_type::*;
 
 
@@ -47,6 +48,50 @@ impl Move {
         Move { 0: 
             move_val 
         } 
+    }
+    
+    /// Creates a move from the given source and target squares (given in notation), and
+    /// the provided metadata. If a Right(Piece) is provided, the move is assumed to be a 
+    /// valid promotion. No error checking is done.
+    ///
+    /// NOTE: do not use this internally, this is for testing convenience! 
+    /// ```
+    /// # use hazel::movement::*;
+    /// # use hazel::constants::*;
+    /// # use either::Either;
+    /// // the move from d2 -> d4
+    /// let m = Move::from_notation("d2", "d4", Either::Left(MoveType::quiet()));
+    ///
+    /// assert_eq!(m.source_idx(), 0o13);
+    /// assert_eq!(m.target_idx(), 0o33);
+    /// assert!(!m.is_promotion());
+    /// assert!(m.move_metadata().is_quiet());
+    ///
+    /// let pm = Move::from_notation("d7", "d8", Either::Right(Piece::Queen));
+    /// assert_eq!(pm.source_idx(), 0o63);
+    /// assert_eq!(pm.target_idx(), 0o73);
+    /// assert!(pm.is_promotion());
+    /// assert_eq!(pm.promotion_piece(), Piece::Queen);
+    /// ```
+    pub fn from_notation(source: &str, target: &str, metadata: Either<MoveType, Piece>) -> Move {
+        match metadata {
+            Either::Left(mt) => { 
+                Move::from(
+                    NOTATION_TO_INDEX(source) as u16, 
+                    NOTATION_TO_INDEX(target) as u16,
+                    false,
+                    mt.bits()
+                )
+            },
+            Either::Right(p) => {
+                Move::from(
+                    NOTATION_TO_INDEX(source) as u16, 
+                    NOTATION_TO_INDEX(target) as u16,
+                    true,
+                    p as u16
+                )
+            }
+        }
     }
     
     /// Gets the source index from the compact move representation
@@ -104,4 +149,48 @@ impl Move {
     #[inline(always)] pub fn is_capture(&self) -> bool { self.move_metadata().is_capture() }
     #[inline(always)] pub fn is_attack(&self)  -> bool { self.move_metadata().is_attack() }
     #[inline(always)] pub fn is_quiet(&self)   -> bool { self.move_metadata().is_quiet() }
+}
+
+
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+        /// let m = Move::from_notation("d2", "d4", Either::Left(MoveType::quiet()));
+    ///
+    /// assert_eq!(m.source_idx(), 0o13);
+    /// assert_eq!(m.target_idx(), 0o33);
+    /// assert!(!m.is_promotion());
+    /// assert!(m.move_metadata().is_quiet());
+    ///
+    /// let pm = Move::from_notation("d7", "d8", Either::Right(Piece::Queen));
+    /// assert_eq!(m.source_idx(), 0o63);
+    /// assert_eq!(m.target_idx(), 0o73);
+    /// assert!(m.is_promotion());
+    /// assert_eq!(m.promotion_piece(), Piece::Queen)
+    
+    mod from_notation {
+        use super::*;
+
+        #[test]
+        fn quiet_move_parses_correctly() {
+            let m = Move::from_notation("d2", "d4", Either::Left(MoveType::quiet()));
+
+            assert_eq!(m.source_idx(), 0o13);
+            assert_eq!(m.target_idx(), 0o33);
+            assert!(!m.is_promotion());
+            assert!(m.move_metadata().is_quiet());
+        }
+        
+        #[test]
+        fn promotion_move_parses_correctly() {
+            let pm = Move::from_notation("d7", "d8", Either::Right(Piece::Queen));
+            assert_eq!(pm.source_idx(), 0o63);
+            assert_eq!(pm.target_idx(), 0o73);
+            assert!(pm.is_promotion());
+            assert_eq!(pm.promotion_piece(), Piece::Queen)
+        }
+
+    }
 }
