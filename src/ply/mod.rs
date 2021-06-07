@@ -24,17 +24,17 @@ bitflags! {
 #[derive(PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Ply {
     // indexed by COLOR
-    pawns: [Bitboard; 2],
-    kings: [Bitboard; 2],
-    queens: [Bitboard; 2],
+    pub pawns: [Bitboard; 2],
+    pub kings: [Bitboard; 2],
+    pub queens: [Bitboard; 2],
     // indexed by COLOR, then it's a/h rook
-    rooks: [Bitboard; 2],
-    bishops: [Bitboard; 2],
-    knights: [Bitboard; 2],
-    en_passant: Option<Bitboard>,
-    full_move_clock: u32, // we're aligned to 64b, so this is the biggest that'll fit conveniently
-    half_move_clock: u8, // this is for the 50m rule
-    meta: Metadata,
+    pub rooks: [Bitboard; 2],
+    pub bishops: [Bitboard; 2],
+    pub knights: [Bitboard; 2],
+    pub en_passant: Option<Bitboard>,
+    pub full_move_clock: u32, // we're aligned to 64b, so this is the biggest that'll fit conveniently
+    pub half_move_clock: u8, // this is for the 50m rule
+    pub meta: Metadata,
 }
 
 // parse a fen string and construct the ply

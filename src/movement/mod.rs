@@ -9,7 +9,7 @@ use crate::constants::{NOTATION_TO_INDEX, Piece};
 ///! memory safety or something.
 ///!
 
-#[derive(Hash, PartialEq, Eq, Clone, Copy)]
+#[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub struct Move(u16);
 
 const SOURCE_IDX_MASK   : u16   = 0b111111_000000_0_000;
@@ -21,6 +21,7 @@ const PROMOTE_BIT_SHIFT : usize = 3;
 const METADATA_MASK     : u16   = 0b000000_000000_0_111;
 
 mod move_type;
+mod generator;
 mod debug;
 
 use either::Either;

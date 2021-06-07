@@ -16,6 +16,17 @@ lazy_static! {
     pub static ref G_FILE : Bitboard = F_FILE.shift(Direction::E);
     pub static ref H_FILE : Bitboard = G_FILE.shift(Direction::E);
     
+    pub static ref FILE_MASKS : [Bitboard; 8] = [
+        *A_FILE,
+        *B_FILE,
+        *C_FILE,
+        *D_FILE,
+        *E_FILE,
+        *F_FILE,
+        *G_FILE,
+        *H_FILE
+    ];
+    
     pub static ref RANK_1 : Bitboard = bitboard!("a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1");
     
     pub static ref RANK_2 : Bitboard = RANK_1.shift(Direction::N);
@@ -26,6 +37,16 @@ lazy_static! {
     pub static ref RANK_7 : Bitboard = RANK_6.shift(Direction::N);
     pub static ref RANK_8 : Bitboard = RANK_7.shift(Direction::N);
     
+    pub static ref RANK_MASKS : [Bitboard; 8] = [
+        *RANK_1,
+        *RANK_2,
+        *RANK_3,
+        *RANK_4,
+        *RANK_5,
+        *RANK_6,
+        *RANK_7,
+        *RANK_8,
+    ];
     
     // Taken from: https://www.chess.com/forum/view/general/which-diagonals-have-names
     //    a8-a8

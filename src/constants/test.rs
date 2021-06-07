@@ -33,7 +33,7 @@ lazy_static! {
         Move::from_notation("h2", "h3", Either::Left(MoveType::quiet())),
         Move::from_notation("b1", "a3", Either::Left(MoveType::quiet())),
         Move::from_notation("b1", "c3", Either::Left(MoveType::quiet())),
-        Move::from_notation("g2", "f3", Either::Left(MoveType::quiet())),
-        Move::from_notation("g2", "h3", Either::Left(MoveType::quiet())),
+        Move::from_notation("g1", "f3", Either::Left(MoveType::quiet())),
+        Move::from_notation("g1", "h3", Either::Left(MoveType::quiet())),
     ];
 }
