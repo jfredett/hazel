@@ -56,27 +56,6 @@ mod shifts;
 pub use shifts::Direction;
 use crate::constants::conversion_tables::*;
 
-
-// NOTE: Should make a bunch of arrays with all the bitboards for a piece at a given location, so
-// all the queen-boards w/ the squares they attack, etc. Can basically create all these bitboard
-// libraries and have the Bitboard object just look up the right things. Each library would only
-// have ~64 entries each. We'd need two per piece -- plus a couple extra for the color-distinct
-// moves.
-//
-// They'd fall into "Attack Boards" -- showing all squares the piece could attack on a blank board,
-// and "Move Boards" -- showing all squares they could attack on a blank board.
-//
-// We'd want some way to incorporate blocking as well I suppose the algorithm would be something
-// like:
-//
-//
-// Take the position's bitboard, AND it with the pieces bitboard, if we see any values still high
-// then we know there is a block there, and we can then calculate that those pieces are attacked,
-// and any 'behind' those pieces are not. Only matters for a few pieces (bishops, rooks, and
-// queens). Also need to account for piece color in that.
-//
-
-
 impl Bitboard {
     /// True if the bitboard has no set bits.
     ///
@@ -232,8 +211,6 @@ impl Bitboard {
         self.0.count_ones()
     }
 }
-
-
 
 #[cfg(test)]
 mod test {
