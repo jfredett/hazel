@@ -53,8 +53,9 @@ mod arbitrary;
 mod debug;
 mod shifts;
 
-pub use shifts::Direction;
 use crate::constants::conversion_tables::*;
+
+pub use shifts::*;
 
 impl Bitboard {
     /// True if the bitboard has no set bits.

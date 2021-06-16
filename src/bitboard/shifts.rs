@@ -1,25 +1,6 @@
 use super::*;
 
-static NOT_A_FILE : u64 = 0xfefefefefefefefe;
-static NOT_H_FILE : u64 = 0x7f7f7f7f7f7f7f7f;
-
-// Note the lack of sign, that's handled below in the #shift and #shift_mut
-// methods
-//                                            N  NE E  SE S SW  W NW
-static DIRECTION_INDEX_OFFSETS: [usize; 8] = [8, 9, 1, 7, 8, 9, 1, 7];
-
-#[derive(Hash, PartialEq, Eq, Clone, Copy)]
-pub enum Direction {
-    N  = 0,
-    NE = 1,
-    E  = 2,
-    SE = 3,
-    S  = 4,
-    SW = 5,
-    W  = 6,
-    NW = 7
-}
-
+use crate::constants::*;
 
 impl Bitboard {
     #[inline]
