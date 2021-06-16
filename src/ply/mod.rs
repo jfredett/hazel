@@ -16,7 +16,8 @@ bitflags! {
         const EN_PASSANT         = 0b00010000;
         const BLACK_TO_MOVE      = 0b00100000;
         const IN_CHECK           = 0b01000000;
-        const UNUSED             = 0b01000000;
+        // NOTE: Maybe this should be used for 'seen this position before?' if 1, then we need to lookup in the 3-fold transpo table or w/e
+        const UNUSED             = 0b10000000;
         // convenience flags
         const DEFAULT            = 0b00001111;
     }
@@ -33,6 +34,8 @@ pub struct Ply {
     pub knights: [Bitboard; 2],
     pub en_passant: Option<Bitboard>,
     pub full_move_clock: u32, // we're aligned to 64b, so this is the biggest that'll fit conveniently
+    // NOTE: Maybe mask this off to 6 bits (halfmove count should never go > 50), then use the top two bits for 3-fold repetition? Stick the whole thing
+    // in the metadata struct?
     pub half_move_clock: u8, // this is for the 50m rule
     pub meta: Metadata,
 }
@@ -78,7 +81,7 @@ impl Ply {
     pub fn occupancy(&self) -> Bitboard {
         self.occupancy_for(Color::WHITE) | self.occupancy_for(Color::BLACK)
     }
-
+    
     /// Returns the color of the player who will make the next move.
     pub fn current_player(&self) -> Color {
         if self.meta.contains(Metadata::BLACK_TO_MOVE) {
