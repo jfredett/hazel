@@ -79,6 +79,15 @@ impl Ply {
         self.occupancy_for(Color::WHITE) | self.occupancy_for(Color::BLACK)
     }
 
+    /// Returns the color of the player who will make the next move.
+    pub fn current_player(&self) -> Color {
+        if self.meta.contains(Metadata::BLACK_TO_MOVE) {
+            Color::BLACK
+        } else {
+            Color::WHITE
+        }
+    }
+
     pub fn piece_at(&self, file: File, rank: usize, piece: Piece, color: Color) -> bool {
         if rank < 1 || rank > 8 { panic!("Invalid position {:?}{:?}", file, rank); }
         let board = match piece {
