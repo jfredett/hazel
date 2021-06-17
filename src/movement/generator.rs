@@ -1,9 +1,5 @@
 use super::*;
-use crate::{
-    bitboard::Bitboard,
-    constants::*,
-    ply::*
-};
+use crate::{bitboard::Bitboard, constants::*, moveset::MoveSet, ply::*};
 
 pub fn calculate_knight_moves() -> [Bitboard; 64] {
     let mut out : [Bitboard; 64] = [Bitboard::empty(); 64];
@@ -12,14 +8,14 @@ pub fn calculate_knight_moves() -> [Bitboard; 64] {
             bb.set_by_index(i);
             
             let position_board = bb.shift(Direction::N).shift(Direction::N).shift(Direction::E) // NNE
-                               | bb.shift(Direction::N).shift(Direction::N).shift(Direction::W) // NNW
-                               | bb.shift(Direction::W).shift(Direction::W).shift(Direction::N) // WWN
-                               | bb.shift(Direction::W).shift(Direction::W).shift(Direction::S) // WWS
-                               | bb.shift(Direction::S).shift(Direction::S).shift(Direction::W) // SSW
-                               | bb.shift(Direction::S).shift(Direction::S).shift(Direction::E) // SSE
-                               | bb.shift(Direction::E).shift(Direction::E).shift(Direction::S) // EES
-                               | bb.shift(Direction::E).shift(Direction::E).shift(Direction::N) // EEN
-                               ;
+                                       | bb.shift(Direction::N).shift(Direction::N).shift(Direction::W) // NNW
+                                       | bb.shift(Direction::W).shift(Direction::W).shift(Direction::N) // WWN
+                                       | bb.shift(Direction::W).shift(Direction::W).shift(Direction::S) // WWS
+                                       | bb.shift(Direction::S).shift(Direction::S).shift(Direction::W) // SSW
+                                       | bb.shift(Direction::S).shift(Direction::S).shift(Direction::E) // SSE
+                                       | bb.shift(Direction::E).shift(Direction::E).shift(Direction::S) // EES
+                                       | bb.shift(Direction::E).shift(Direction::E).shift(Direction::N) // EEN
+                                       ;
             out[i] = position_board;
     }
     out
@@ -89,8 +85,8 @@ impl Move {
     /// Generates all valid moves from the given ply.
     /// NOTE: Initial version is quite naive and does no precomputation. This is intentional.
     ///     Future versions will be refactored from this to build a faster algorithm.
-    pub fn generate(&ply : &Ply, color: Color) -> Vec<Move> {
-        let mut out : Vec<Move> = vec![];
+    pub fn generate(&ply : &Ply, color: Color) -> MoveSet {
+        let mut out : MoveSet = MoveSet::empty();
         let other_color = match color {
             Color::WHITE => Color::BLACK,
             Color::BLACK => Color::WHITE
@@ -102,23 +98,20 @@ impl Move {
             for target in target_board.all_set_indices() {
                 // if it's a promotion, push the promotion moves
                 if target >= 56 || target <= 8 { // on the first or last rank
-                    out.push(Move::from(source as u16, target as u16, true, 0b00));
-                    out.push(Move::from(source as u16, target as u16, true, 0b01));
-                    out.push(Move::from(source as u16, target as u16, true, 0b10));
-                    out.push(Move::from(source as u16, target as u16, true, 0b11));
+                    out.add_promotion(source, target);
                 } 
                 
                 // the bottom 3 bits of an index determine it's file.
                 if (source & 0b0111) == (target & 0b0111) { // advances
                     if !(ply.occupancy_for(color) & target_board).is_empty() {
                         if !ply.occupancy_for(color).all_set_indices().contains(&target) { 
-                            out.push(Move::from(source as u16, target as u16, false, 0b000));
+                            out.add_move(source, target);
                         }
                     } 
-                } else { // attacks
+                } else { // captures
                     if !(ply.occupancy_for(other_color) & target_board).is_empty() {
                         if ply.occupancy_for(other_color).all_set_indices().contains(&target) { 
-                            out.push(Move::from(source as u16, target as u16, false, 0b000));
+                            out.add_capture(source, target);
                         }
                     }
                 }
@@ -134,7 +127,11 @@ impl Move {
 
             if (m & ply.occupancy_for(color)).is_empty() {
                 let target = m.all_set_indices()[0];
-                out.push(Move::from(source as u16, target as u16, false, 0b000));
+                if ply.occupancy_for(other_color).is_index_set(target) {
+                    out.add_capture(source, target);
+                } else {
+                    out.add_move(source, target);
+                }
             }
         }
         // knight moves
@@ -142,7 +139,7 @@ impl Move {
         for k in knights.all_set_indices() {
             let unblocked_squares = KNIGHT_MOVES[k] & !ply.occupancy_for(color);
             for square in unblocked_squares.all_set_indices() {
-                out.push(Move::from(k as u16, square as u16, false, 0b000));
+                out.add_move(k, square);
             }
         }
         // rook moves

@@ -3,36 +3,49 @@ use crate::{constants::Piece, movement::{Move, MoveType}};
 
 /// a container for moves
 #[derive(PartialEq, Eq, Hash, Debug)]
-pub struct MoveList {
+pub struct MoveSet {
     moves: Vec<Move>
 }
 
-impl MoveList {
-    pub fn empty() -> MoveList {
-        return MoveList { moves: vec![] };
+impl MoveSet {
+    pub fn empty() -> MoveSet {
+        return MoveSet { moves: vec![] };
     }
     
+    /// Adds a quiet move from the source square to the target square
     pub fn add_move(&mut self, source: usize, target: usize) {
         self.moves.push(Move::from(source as u16, target as u16, false, MoveType::quiet().bits()));
     }
     
+    /// Adds a capture move from the source square to the target square
     pub fn add_capture(&mut self, source: usize, target: usize) {
         self.moves.push(Move::from(source as u16, target as u16, false, MoveType::capture().bits()));
     }
 
+    /// Adds a check move from the source square to the target square
     pub fn add_check(&mut self, source: usize, target: usize) {
         self.moves.push(Move::from(source as u16, target as u16, false, MoveType::check().bits()));
     }
 
+    /// Adds a attacking move from the source square to the target square
     pub fn add_attack(&mut self, source: usize, target: usize) {
         self.moves.push(Move::from(source as u16, target as u16, false, MoveType::attack().bits()));
     }
     
+    /// Adds all promotion moves from the source square to the target square
     pub fn add_promotion(&mut self, source: usize, target: usize) {
         self.moves.push(Move::from(source as u16, target as u16, true, Piece::Queen as u16));
         self.moves.push(Move::from(source as u16, target as u16, true, Piece::Rook as u16));
         self.moves.push(Move::from(source as u16, target as u16, true, Piece::Bishop as u16));
         self.moves.push(Move::from(source as u16, target as u16, true, Piece::Knight as u16));
+    }
+    
+    pub fn contains(&self, m : &Move) -> bool {
+        self.moves.contains(m)
+    }
+    
+    pub fn len(&self) -> usize {
+        self.moves.len()
     }
 }
 
@@ -71,7 +84,7 @@ mod test {
     
     #[test]
     fn add_promotion_adds_promtion_moves_refactor() {
-        let mut ml = MoveList::empty();
+        let mut ml = MoveSet::empty();
         // h7->h8
         ml.add_promotion(56, 64);
         
@@ -87,7 +100,7 @@ mod test {
     
     #[test]
     fn add_capture_adds_capture() {
-        let mut ml = MoveList::empty();
+        let mut ml = MoveSet::empty();
         let expected_move = Move::from_notation("b4", "d5", Either::Left(MoveType::CAPTURE));
 
         ml.add_capture(
@@ -101,7 +114,7 @@ mod test {
 
     #[test]
     fn add_move_adds_move() {
-        let mut ml = MoveList::empty();
+        let mut ml = MoveSet::empty();
         let expected_move = Move::from_notation("b4", "d5", Either::Left(MoveType::quiet()));
 
         ml.add_move(
@@ -115,7 +128,7 @@ mod test {
 
     #[test]
     fn add_attack_adds_attack() {
-        let mut ml = MoveList::empty();
+        let mut ml = MoveSet::empty();
         let expected_move = Move::from_notation("b4", "d5", Either::Left(MoveType::ATTACK));
 
         ml.add_attack(
@@ -128,7 +141,7 @@ mod test {
     }
     #[test]
     fn add_check_adds_check() {
-        let mut ml = MoveList::empty();
+        let mut ml = MoveSet::empty();
         let expected_move = Move::from_notation("b4", "d5", Either::Left(MoveType::CHECK));
 
         ml.add_check(
