@@ -91,6 +91,15 @@ impl Ply {
         }
     }
 
+    /// Returns the color of the player who is not currently making the next move.
+    pub fn inactive_player(&self) -> Color {
+        if self.meta.contains(Metadata::BLACK_TO_MOVE) {
+            Color::WHITE
+        } else {
+            Color::BLACK
+        }
+    }
+    
     pub fn piece_at(&self, file: File, rank: usize, piece: Piece, color: Color) -> bool {
         if rank < 1 || rank > 8 { panic!("Invalid position {:?}{:?}", file, rank); }
         let board = match piece {
