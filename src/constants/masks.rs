@@ -37,6 +37,8 @@ lazy_static! {
     pub static ref RANK_7 : Bitboard = RANK_6.shift(Direction::N);
     pub static ref RANK_8 : Bitboard = RANK_7.shift(Direction::N);
     
+    pub static ref INITIAL_PAWN_RANK : [Bitboard; 2] = [*RANK_2, *RANK_7];
+
     pub static ref RANK_MASKS : [Bitboard; 8] = [
         *RANK_1,
         *RANK_2,
