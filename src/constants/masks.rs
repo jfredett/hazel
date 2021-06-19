@@ -75,7 +75,7 @@ lazy_static! {
     //    a3-f8
     pub static ref A3_F8_DIAG : Bitboard = bitboard!("a3", "b4", "c5", "d6", "e7", "f8");
     //    a1-h8 "Larsen Diagonal"
-    pub static ref A1_H8_DIAG : Bitboard = bitboard!("a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1");
+    pub static ref A1_H8_DIAG : Bitboard = bitboard!("a1", "b2", "c3", "d4", "e5", "f6", "g7", "h8");
     //    c1-h6
     pub static ref C1_H6_DIAG : Bitboard = bitboard!("c1", "d2", "e3", "f4", "g5", "h6");
     //    e1-h4 "Fool's Mate Diagonal"
