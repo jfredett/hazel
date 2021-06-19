@@ -58,7 +58,7 @@ lazy_static! {
     //    a6-c8
     pub static ref A6_A8_DIAG : Bitboard = bitboard!("a6", "b7", "c8");
     //    a4-e8 "Spanish Diagonal"
-    pub static ref A4_E8_DIAG : Bitboard = bitboard!("a4","b5","c6","d7","e8");
+    pub static ref A4_E8_DIAG : Bitboard = bitboard!("a4", "b5", "c6", "d7", "e8");
     //    a2-g8 "Italian Diagonal"
     pub static ref A2_G8_DIAG : Bitboard = bitboard!("a2", "b3", "c4", "d5", "e6", "f7", "g8");
     //    b1-h7
