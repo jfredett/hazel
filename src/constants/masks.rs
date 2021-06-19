@@ -27,6 +27,8 @@ lazy_static! {
         *H_FILE
     ];
     
+    pub static ref EDGES : Bitboard = *A_FILE | *H_FILE | *RANK_1 | *RANK_8;
+    
     pub static ref RANK_1 : Bitboard = bitboard!("a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1");
     
     pub static ref RANK_2 : Bitboard = RANK_1.shift(Direction::N);
