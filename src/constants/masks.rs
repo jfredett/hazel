@@ -28,6 +28,7 @@ lazy_static! {
     ];
     
     pub static ref EDGES : Bitboard = *A_FILE | *H_FILE | *RANK_1 | *RANK_8;
+    pub static ref CORNERS : Bitboard = bitboard!("a1", "a8", "h1", "h8");
     
     pub static ref RANK_1 : Bitboard = bitboard!("a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1");
     
