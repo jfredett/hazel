@@ -5,6 +5,7 @@ pub mod piece;
 pub mod masks;
 pub mod shifts;
 pub mod move_tables;
+pub mod magic;
 
 #[cfg(test)] pub use test::*;
 #[cfg(test)] pub mod test;
