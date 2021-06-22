@@ -2,7 +2,7 @@
 use super::*;
 
 use bitboard::Bitboard;
-use constants::*;
+use constants::{move_tables::KNIGHT_MOVES,*};
 
 mod debug;
 mod creation;
@@ -90,7 +90,7 @@ impl Ply {
             Color::WHITE
         }
     }
-
+    
     /// Returns the color of the player who is not currently making the next move.
     pub fn inactive_player(&self) -> Color {
         if self.meta.contains(Metadata::BLACK_TO_MOVE) {
@@ -100,6 +100,30 @@ impl Ply {
         }
     }
     
+    pub fn attacked_squares(&self, color: Color) -> Bitboard {
+        let pawns = self.pawns[color as usize];
+        let knights = self.knights[color as usize];
+        let mut attacked_squares = Bitboard::empty();
+
+        // Pawn attacks
+        attacked_squares |= pawns.shift(color.pawn_direction()).shift(Direction::E);
+        attacked_squares |= pawns.shift(color.pawn_direction()).shift(Direction::W);
+        
+        // Knight attacks
+        for s in knights.all_set_indices() {
+            attacked_squares |= KNIGHT_MOVES[s];
+        }
+        // Bishop attacks
+        // Rook attacks
+        // Queen attacks
+        // King attacks
+            // need to account for pieces which are protected
+            
+        // remove an attacked square if it is occupied by our color
+        // NOTE: `attacked_squares & self.occupancy_for(color)` == set of pieces we defend with another piece (i.e., a self-attack is the same as a defense)
+        attacked_squares & !self.occupancy_for(color)
+    }
+
     pub fn piece_at(&self, file: File, rank: usize, piece: Piece, color: Color) -> bool {
         if rank < 1 || rank > 8 { panic!("Invalid position {:?}{:?}", file, rank); }
         let board = match piece {
