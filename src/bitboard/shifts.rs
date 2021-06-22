@@ -24,12 +24,32 @@ impl Bitboard {
             Direction::NW   => { self.0 = (self.0 << offset) & NOT_H_FILE }
         }
     }
+    
+    pub fn shift_by(&self, d: Direction, amt: usize) -> Bitboard {
+        let mut out = *self;
+        for _ in 0..amt { out.shift_mut(d); }
+        out
+    }
 }
 
 
 #[cfg(test)]
 mod test {
     use super::*;
+    
+    #[test]
+    fn shift_by_shifts_by_given_amount() {
+        let mut b = Bitboard::empty();
+        b.set_by_notation("d4"); // Put a piece on d4.
+        assert!(b.is_notation_set("d4")); // Put a piece on d4.
+        
+        let bb_after_shift = b.shift_by(Direction::N, 2);
+        
+        assert!(bb_after_shift.is_notation_set("d6"));
+
+        assert!(!bb_after_shift.is_notation_set("d4"));
+        assert!(!bb_after_shift.is_notation_set("d5"));
+    }
 
     #[test]
     fn slide_moves_pieces_appropriately() {
