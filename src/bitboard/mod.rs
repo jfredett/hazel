@@ -98,8 +98,8 @@ impl Bitboard {
 
     /// Set a bit located at the given index
     #[inline]
-    pub fn set_by_index(&mut self, i: usize) {
-        self.0 |= 1 << i
+    pub fn set_by_index(&mut self, idx: usize) {
+        self.0 |= 1 << idx
     }
 
     /// Set a bit located at the given notation
@@ -137,9 +137,25 @@ impl Bitboard {
     /// assert!(!b.is_set(0,1));
     /// b.set(0,1);
     /// assert!(b.is_set(0,1));
+    /// b.unset(0,1);
+    /// assert!(!b.is_set(0,1));
     /// ```
-    pub fn unset(&mut self, x: usize, y: usize) {
-        self.0 &= !(1 << Bitboard::coords_to_index(x,y));
+    pub fn unset(&mut self, rank: usize, file: usize) {
+        self.unset_by_index(Bitboard::coords_to_index(rank,file));
+    }
+    
+    /// unsets the bit at the given index
+    /// ```
+    /// # use hazel::bitboard::Bitboard;
+    /// let mut b = Bitboard::empty();
+    /// assert!(!b.is_index_set(43));
+    /// b.set_by_index(43);
+    /// assert!(b.is_index_set(43));
+    /// b.unset_by_index(43);
+    /// assert!(!b.is_index_set(43));
+    /// ```
+    pub fn unset_by_index(&mut self, idx: usize) {
+        self.0 &= !(1 << idx)
     }
 
     /// unsets the bit at the given coordinates
@@ -152,8 +168,8 @@ impl Bitboard {
     /// b.flip(0,1);
     /// assert!(!b.is_set(0,1));
     /// ```
-    pub fn flip(&mut self, x: usize, y: usize) {
-        self.0 ^= 1 << Bitboard::coords_to_index(x,y);
+    pub fn flip(&mut self, rank: usize, file: usize) {
+        self.0 ^= 1 << Bitboard::coords_to_index(rank,file);
     }
 
     /// True if the bit at the given notation is set
@@ -179,8 +195,8 @@ impl Bitboard {
     /// assert!(!b.is_set(0,1));
     /// ```
     #[inline]
-    pub fn is_set(&self, x: usize, y: usize) -> bool {
-        self.is_index_set(Bitboard::coords_to_index(x,y))
+    pub fn is_set(&self, rank: usize, file: usize) -> bool {
+        self.is_index_set(Bitboard::coords_to_index(rank,file))
     }
 
     /// True if the given bit is set
