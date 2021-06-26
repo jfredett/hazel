@@ -1,5 +1,5 @@
 use super::*;
-use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Mul, Not};
+use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Mul, Not, Shl, Shr};
 
 /// Implements the various bit-ops for Bitboards
 macro_rules! binop_trait {
@@ -55,6 +55,22 @@ impl Mul<Bitboard> for u64 {
 
     fn mul(self, rhs: Bitboard) -> Bitboard {
         Bitboard::from(self.overflowing_mul(rhs.0).0)
+    }
+}
+
+impl Shl<u64> for Bitboard {
+    type Output = Bitboard;
+
+    fn shl(self, rhs: u64) -> Self::Output {
+        Bitboard::from(self.0 << rhs)
+    }
+}
+
+impl Shr<u64> for Bitboard {
+    type Output = Bitboard;
+
+    fn shr(self, rhs: u64) -> Self::Output {
+        Bitboard::from(self.0 >> rhs)
     }
 }
 
