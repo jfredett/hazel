@@ -52,6 +52,7 @@ mod util;
 mod arbitrary;
 mod debug;
 mod shifts;
+mod from_into;
 
 use crate::constants::conversion_tables::*;
 
