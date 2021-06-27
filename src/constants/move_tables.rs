@@ -1,5 +1,7 @@
+use std::mem::{self, MaybeUninit};
+
 use super::*;
-use crate::bitboard::Bitboard;
+use crate::{bitboard::Bitboard, constants::magic::Magic};
 
 
 
@@ -77,9 +79,6 @@ lazy_static! {
     
 
     /// A lookup table to convert a rook on an index -> it's unblocked attack squares, needed for magics
-    /// 
-    /// NOTE: This is probably not a great implementation of this, but also it
-    /// doesn't matter because it works and gets generated once and never again
     pub static ref NOMINAL_ROOK_ATTACKS : [Bitboard; 64] = {
         let mut out = [Bitboard::empty(); 64];
         for rank in 0..8 {
@@ -121,8 +120,24 @@ lazy_static! {
         }
         return out
     };
+    
+    pub static ref ROOK_ATTACKS : [Magic; 64] = {
+        // NOTE: This is unsafe because rust is _very_ weird about array initialization. There should be 
+        // some way to work with an uninitialized array safely, and have the final block 'check' to make 
+        // sure it's fully initialized at the end. This is a non-safe way of just doing that, it's unfortunate
+        // you can't reference the index in the array initialization syntax.
+        unsafe {
+            let mut out: [MaybeUninit<Magic>; 64] = MaybeUninit::uninit().assume_init();
+            let mut i = 0;
+            for e in &mut out {
+                *e = MaybeUninit::new(Magic::new_rook(i));
+                i += 1;
+            }
+            
+            mem::transmute::<_, [Magic; 64]>(out)
+        }
+    };
 }
-
 
 #[cfg(test)]
 mod test {
@@ -131,6 +146,7 @@ mod test {
     use super::*;
     
     mod bishops {
+
         use super::*; 
 
         #[test]
@@ -153,6 +169,16 @@ mod test {
     
     mod rooks {
         use super::*; 
+        use crate::constants::magic::slow_rook_attacks;
+
+        
+        #[quickcheck]
+        fn rook_magic_attacks_calculate_attacks_correctly(rook_in: u64, occupancy:Bitboard) -> bool {
+            let rook_idx = rook_in % 64;
+            let rook_pos = Bitboard::from(1 << rook_idx);
+            
+            ROOK_ATTACKS[rook_idx as usize].attacks_for(occupancy) == slow_rook_attacks(rook_pos, occupancy)
+        }
 
         #[test]
         fn nominal_rook_attacks_calculate_correctly_in_middle_of_board() {
