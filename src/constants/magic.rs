@@ -75,10 +75,7 @@ impl Magic {
     }
     
     pub fn attacks_for(&self, blockers: Bitboard) -> Bitboard {
-        dbg!(blockers);
         let key = self.key_for(blockers);
-        dbg!(key);
-        dbg!(self.attacks[key]);
         if let Some(a) = self.attacks[key] {
             return a;
         } else {
@@ -129,7 +126,6 @@ pub fn slow_rook_attacks(rook_pos: Bitboard, occupancy: Bitboard) -> Bitboard {
     
     let mut squares = vec![];
     
-    // FIXME: I think this might search in the wrong direction sometimes. Double check.
     for i in 1..=(8-rook_rank) {
         let try_move = rook_pos.shift_by(Direction::N, i);
         if try_move.is_empty() { break; }
@@ -244,7 +240,6 @@ mod test {
         
         let rook_attacks = m.attacks_for(board.occupancy() & !rook_pos);
         
-        dbg!(rook_attacks);
         assert_eq!(rook_attacks, expected);
     }
 
