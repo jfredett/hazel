@@ -104,3 +104,7 @@ pub fn random_u64() -> u64 {
 
     range.sample(&mut rng)
 }
+
+pub fn random_bitboard() -> Bitboard {
+    Bitboard::from(random_u64())
+}

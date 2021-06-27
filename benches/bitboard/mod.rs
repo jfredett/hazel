@@ -4,10 +4,6 @@ mod creation;
 mod bitops;
 mod shifts; 
 
-pub fn random_bitboard() -> Bitboard {
-    Bitboard::from(random_u64())
-}
-
 bench!(
     group: Bitboard,
     pretty: "is_empty/0",
