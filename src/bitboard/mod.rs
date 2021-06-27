@@ -122,7 +122,7 @@ impl Bitboard {
     /// ```
     pub fn all_set_indices(&self) -> Vec<usize> {
         let mut out = vec![];
-        for i in 0..63 { 
+        for i in 0..64 { 
             if self.is_index_set(i) {
                 out.push(i);
             }
