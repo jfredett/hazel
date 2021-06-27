@@ -1,5 +1,3 @@
-use crate::bitboard;
-
 use super::*;
 
 impl From<u64> for Bitboard {
