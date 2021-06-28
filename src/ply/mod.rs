@@ -65,6 +65,30 @@ impl Ply {
         self.pawns[color as usize]
     }
     
+    /// True if the current player both has the right to castle long and the ability.
+    pub fn can_castle_long(&self) -> bool {
+        match self.current_player() {
+            Color::WHITE => { 
+                self.meta.contains(Metadata::WHITE_CASTLE_LONG) & (self.occupancy() & bitboard!("b1", "c1", "d1")).is_empty()
+            }
+            Color::BLACK => { 
+                self.meta.contains(Metadata::BLACK_CASTLE_LONG) & (self.occupancy() & bitboard!("b8", "c8", "d8")).is_empty()
+            }
+        }
+    }
+    
+    /// True if the current player both has the right to castle short and the ability.
+    pub fn can_castle_short(&self) -> bool {
+        match self.current_player() {
+            Color::WHITE => { 
+                self.meta.contains(Metadata::WHITE_CASTLE_SHORT) & (self.occupancy() & bitboard!("f1", "g1")).is_empty()
+            }
+            Color::BLACK => { 
+                self.meta.contains(Metadata::BLACK_CASTLE_SHORT) & (self.occupancy() & bitboard!("f8", "g8")).is_empty()
+            }
+        }
+    }
+    
     /// Provides a bitboard which shows the location of all squares occupied by pieces of any
     /// color
     /// ```

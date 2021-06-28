@@ -1,12 +1,12 @@
 #![allow(non_snake_case)]
 
-use crate::constants::{NOTATION_TO_INDEX, Piece};
+use crate::constants::{Color, NOTATION_TO_INDEX, Piece};
 
 ///! This module defines a compact representation of chess moves from a given ply.
 ///!
-///! Note on the name of this module. Ideally, this would be named 'move', like the struct it
-///! defines, but alas, we are limited by rust reserving the `move` keyword for silly things like
-///! memory safety or something.
+///! NOTE: With respect to the name of this module. Ideally, this would be named 'move', like the
+///! struct it ! defines, but alas, we are limited by rust reserving the `move` keyword for silly
+///! things like memory safety or something.
 ///!
 
 #[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
@@ -96,9 +96,40 @@ impl Move {
         }
     }
     
-    /// Gets the source index from the compact move representation
-    /// ```
-    /// # use hazel::movement::*;
+    pub fn long_castle(color: Color) -> Move {
+        match color {
+            Color::WHITE => { Move::from(
+                NOTATION_TO_INDEX("e1") as u16,
+                NOTATION_TO_INDEX("c1") as u16,
+                false,
+                0b110 as u16
+            )},
+            Color::BLACK => { Move::from(
+                NOTATION_TO_INDEX("e8") as u16,
+                NOTATION_TO_INDEX("c8") as u16,
+                false,
+                MoveType::LONG_CASTLE.bits()
+            )}
+        }
+    }
+    
+    pub fn short_castle(color: Color) -> Move {
+        match color {
+            Color::WHITE => { Move::from(
+                NOTATION_TO_INDEX("e1") as u16,
+                NOTATION_TO_INDEX("g1") as u16,
+                false,
+                MoveType::SHORT_CASTLE.bits()
+            )},
+            Color::BLACK => { Move::from(
+                NOTATION_TO_INDEX("e8") as u16,
+                NOTATION_TO_INDEX("g8") as u16,
+                false,
+                MoveType::SHORT_CASTLE.bits()
+            )}
+        }
+    }
+
     /// // the move from d2 -> d4
     /// let m = Move::from(0o13, 0o33, false, 0o00);
     /// assert_eq!(m.source_idx(), 0o13);
@@ -147,10 +178,12 @@ impl Move {
     pub fn move_metadata(&self) -> MoveType { MoveType::from_bits(self.0 & METADATA_MASK).unwrap() }
     
     // Some proxy methods
-    #[inline(always)] pub fn is_check(&self)   -> bool { self.move_metadata().is_check() }
-    #[inline(always)] pub fn is_capture(&self) -> bool { self.move_metadata().is_capture() }
-    #[inline(always)] pub fn is_attack(&self)  -> bool { self.move_metadata().is_attack() }
-    #[inline(always)] pub fn is_quiet(&self)   -> bool { self.move_metadata().is_quiet() }
+    #[inline(always)] pub fn is_check(&self)        -> bool { self.move_metadata().is_check() }
+    #[inline(always)] pub fn is_capture(&self)      -> bool { self.move_metadata().is_capture() }
+    #[inline(always)] pub fn is_attack(&self)       -> bool { self.move_metadata().is_attack() }
+    #[inline(always)] pub fn is_quiet(&self)        -> bool { self.move_metadata().is_quiet() }
+    #[inline(always)] pub fn is_short_castle(&self) -> bool { self.move_metadata().is_short_castle() }
+    #[inline(always)] pub fn is_long_castle(&self)  -> bool { self.move_metadata().is_long_castle() }
 }
 
 

@@ -1,4 +1,4 @@
-use crate::{constants::{Color, DIRECTIONS}, moveset::MoveSet, ply::Ply};
+use crate::{constants::{Color, DIRECTIONS, Direction, RANK_1, RANK_2, RANK_7, RANK_8, A_FILE, H_FILE}, moveset::MoveSet, ply::Ply};
 
 use super::Move;
 use crate::constants::move_tables::*;
@@ -6,42 +6,38 @@ use crate::constants::move_tables::*;
 
 impl Move {
     /// Generates all valid moves from the given ply.
-    /// NOTE: Initial version is quite naive and does no precomputation. This is intentional.
-    ///     Future versions will be refactored from this to build a faster algorithm.
     pub fn generate(&ply : &Ply, color: Color) -> MoveSet {
         let mut out : MoveSet = MoveSet::empty();
-        let other_color = match color {
-            Color::WHITE => Color::BLACK,
-            Color::BLACK => Color::WHITE
+        let (other_color, pawn_direction, promotion_rank, double_jump_rank) = match color {
+            Color::WHITE => (Color::BLACK, Direction::N, *RANK_8, *RANK_2),
+            Color::BLACK => (Color::WHITE, Direction::S, *RANK_1, *RANK_7)
         };
 
         // pawn moves
-        for source in ply.pawns[color as usize].all_set_indices() {
-            let target_board = PAWN_MOVES[color as usize][source];
-            for target in target_board.all_set_indices() {
-                // if it's a promotion, push the promotion moves
-                if target >= 56 || target <= 8 { // on the first or last rank
-                    out.add_promotion(source, target);
-                } 
-                
-                // the bottom 3 bits of an index determine it's file.
-                if (source & 0b0111) == (target & 0b0111) { // advances
-                    if !(ply.occupancy_for(color) & target_board).is_empty() {
-                        if !ply.occupancy_for(color).all_set_indices().contains(&target) { 
-                            out.add_move(source, target);
-                        }
-                    } 
-                } else { // captures
-                    if !(ply.occupancy_for(other_color) & target_board).is_empty() {
-                        if ply.occupancy_for(other_color).all_set_indices().contains(&target) { 
-                            out.add_capture(source, target);
-                        }
-                    }
-                }
-            }
-        }
+        let pawns = ply.pawns[color as usize];
+        let raw_advances = pawns.shift(pawn_direction) & !ply.occupancy();
+        let promotions = raw_advances & promotion_rank;
+        let advances = raw_advances & !promotion_rank;
+        let double_moves = ((pawns & double_jump_rank).shift(pawn_direction) & !ply.occupancy())
+                                 .shift(pawn_direction) & !ply.occupancy();
+        let east_attacks = (pawns & !*H_FILE).shift(pawn_direction).shift(Direction::E) & ply.occupancy_for(other_color);
+        let west_attacks = (pawns & !*A_FILE).shift(pawn_direction).shift(Direction::W) & ply.occupancy_for(other_color);
+
+        let deshift = match pawn_direction {
+            Direction::N => |e: usize| e - 8,
+            Direction::S => |e: usize| e + 8,
+            _ => unreachable!()
+        };
+        
+        for sq in promotions.all_set_indices() { out.add_promotion(deshift(sq), sq); }
+        for sq in advances.all_set_indices() { out.add_move(deshift(sq), sq); }
+        for sq in double_moves.all_set_indices() { out.add_move(deshift(deshift(sq)), sq); }
+        for sq in east_attacks.all_set_indices() { out.add_capture(deshift(sq) - 1, sq); }
+        for sq in west_attacks.all_set_indices() { out.add_capture(deshift(sq) + 1, sq); }
+
         // king moves
         // FIXME: Doesn't account for checks yet.
+        // NOTE: We should check king moves first to see if we're in check, since we can bail earlier if we are.
         let king = ply.kings[color as usize];
         let source = king.all_set_indices()[0];
         for d in DIRECTIONS {
@@ -57,6 +53,11 @@ impl Move {
                 }
             }
         }
+        
+        // Castling
+        if ply.can_castle_short() { out.add_short_castle(color); }
+        if ply.can_castle_long() { out.add_long_castle(color); }
+
         // knight moves
         let knights = ply.knights[color as usize];
         for k in knights.all_set_indices() {
@@ -65,6 +66,7 @@ impl Move {
                 out.add_move(k, square);
             }
         }
+
         // rook moves
         for source in ply.rooks[color as usize].all_set_indices() {
             let attacks = ROOK_ATTACKS[source].attacks_for(ply.occupancy()) & !ply.occupancy_for(color);
@@ -76,8 +78,32 @@ impl Move {
                 }
             }
         }
+
         // bishop moves
+        for source in ply.bishops[color as usize].all_set_indices() {
+            let attacks = BISHOP_ATTACKS[source].attacks_for(ply.occupancy()) & !ply.occupancy_for(color);
+            for target in attacks.all_set_indices() {
+                if ply.occupancy_for(other_color).is_index_set(target) {
+                    out.add_capture(source, target)    
+                } else {
+                    out.add_move(source, target);
+                }
+            }
+        }
+
         // queen moves
+        for source in ply.queens[color as usize].all_set_indices() {
+            let attacks = ( BISHOP_ATTACKS[source].attacks_for(ply.occupancy())
+                                  | ROOK_ATTACKS[source].attacks_for(ply.occupancy())
+                                  ) & !ply.occupancy_for(color);
+            for target in attacks.all_set_indices() {
+                if ply.occupancy_for(other_color).is_index_set(target) {
+                    out.add_capture(source, target)    
+                } else {
+                    out.add_move(source, target);
+                }
+            }
+        }
         out
     }
 }
@@ -85,7 +111,7 @@ impl Move {
 
 #[cfg(test)]
 mod test {
-    use crate::constants::*;
+    use crate::{assert_is_subset, constants::*};
     use super::*;
     
 
@@ -123,10 +149,10 @@ mod test {
     fn calculates_moves_for_kiwipete_position_at_depth_1() {
         let ply = Ply::from_fen(&String::from(POS2_KIWIPETE_FEN));
         let moves = Move::generate(&ply, ply.current_player());
-        for m in POS2_KIWIPETE_MOVES.iter() {
-            if !moves.contains(&m) { dbg!("missing move", m); }
-            assert!(moves.contains(&m));
-        }
+
+        assert_is_subset!(&moves.moves, *POS2_KIWIPETE_MOVES);
+        dbg!("Missing Moves");
+        assert_is_subset!(POS2_KIWIPETE_MOVES.iter(), &moves.moves);
     }
     
 }

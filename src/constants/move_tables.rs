@@ -137,6 +137,20 @@ lazy_static! {
             mem::transmute::<_, [Magic; 64]>(out)
         }
     };
+    
+    pub static ref BISHOP_ATTACKS : [Magic; 64] = {
+        // NOTE: This is unsafe because rust is _very_ weird... <snip see comment in ROOK_ATTACKS>
+        unsafe {
+            let mut out: [MaybeUninit<Magic>; 64] = MaybeUninit::uninit().assume_init();
+            let mut i = 0;
+            for e in &mut out {
+                *e = MaybeUninit::new(Magic::new_bishop(i));
+                i += 1;
+            }
+            
+            mem::transmute::<_, [Magic; 64]>(out)
+        }
+    };
 }
 
 #[cfg(test)]
@@ -147,7 +161,17 @@ mod test {
     
     mod bishops {
 
+        use crate::constants::magic::slow_bishop_attacks;
+
         use super::*; 
+
+        #[quickcheck]
+        fn bishop_magic_attacks_work_correctly(bishop_in: u64, occupancy:Bitboard) -> bool {
+            let bishop_idx = bishop_in % 64;
+            let bishop_pos = Bitboard::from(1 << bishop_idx);
+            
+            BISHOP_ATTACKS[bishop_idx as usize].attacks_for(occupancy) == slow_bishop_attacks(bishop_pos, occupancy)
+        }
 
         #[test]
         fn nominal_bishop_attacks_calculate_correctly() {
@@ -169,8 +193,12 @@ mod test {
     
     mod rooks {
         use super::*; 
-        use crate::constants::magic::slow_rook_attacks;
-
+        use crate::{constants::magic::slow_rook_attacks, ply::Ply};
+        
+        #[quickcheck]
+        fn rook_works_from_a1_square(occupancy: Bitboard) -> bool {
+            ROOK_ATTACKS[0o00].attacks_for(occupancy) == slow_rook_attacks(bitboard!("a1"), occupancy)
+        }
         
         #[quickcheck]
         fn rook_magic_attacks_calculate_attacks_correctly(rook_in: u64, occupancy:Bitboard) -> bool {

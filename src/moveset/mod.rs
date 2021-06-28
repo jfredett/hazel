@@ -1,10 +1,10 @@
-use crate::{constants::Piece, movement::{Move, MoveType}};
+use crate::{constants::{Color, Piece}, movement::{Move, MoveType}};
 
 
 /// a container for moves
 #[derive(PartialEq, Eq, Hash, Debug)]
 pub struct MoveSet {
-    moves: Vec<Move>
+    pub(crate) moves: Vec<Move>
 }
 
 impl MoveSet {
@@ -14,26 +14,41 @@ impl MoveSet {
     
     /// Adds a quiet move from the source square to the target square
     pub fn add_move(&mut self, source: usize, target: usize) {
+        // dbg!("shh", source, target);
         self.moves.push(Move::from(source as u16, target as u16, false, MoveType::quiet().bits()));
+    }
+    
+    /// Adds a short castle move
+    pub fn add_short_castle(&mut self, color: Color) {
+        self.moves.push(Move::short_castle(color));
+    }
+    
+    /// Adds a long castle move
+    pub fn add_long_castle(&mut self, color: Color) {
+        self.moves.push(Move::long_castle(color));     
     }
     
     /// Adds a capture move from the source square to the target square
     pub fn add_capture(&mut self, source: usize, target: usize) {
+        // dbg!("cap", source, target);
         self.moves.push(Move::from(source as u16, target as u16, false, MoveType::capture().bits()));
     }
 
     /// Adds a check move from the source square to the target square
     pub fn add_check(&mut self, source: usize, target: usize) {
+        // dbg!("chk", source, target);
         self.moves.push(Move::from(source as u16, target as u16, false, MoveType::check().bits()));
     }
 
     /// Adds a attacking move from the source square to the target square
     pub fn add_attack(&mut self, source: usize, target: usize) {
+        // dbg!("att", source, target);
         self.moves.push(Move::from(source as u16, target as u16, false, MoveType::attack().bits()));
     }
     
     /// Adds all promotion moves from the source square to the target square
     pub fn add_promotion(&mut self, source: usize, target: usize) {
+        // dbg!("prom", source, target);
         self.moves.push(Move::from(source as u16, target as u16, true, Piece::Queen as u16));
         self.moves.push(Move::from(source as u16, target as u16, true, Piece::Rook as u16));
         self.moves.push(Move::from(source as u16, target as u16, true, Piece::Bishop as u16));
@@ -49,43 +64,32 @@ impl MoveSet {
     }
 }
 
+impl Iterator for MoveSet {
+    type Item = Move;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(&m) = self.moves.iter().next() {
+            Some(m)
+        } else {
+            None
+        }
+    }
+}
+
 
 #[cfg(test)]
 mod test {
     use either::Either;
 
-    use crate::{constants::{NOTATION_TO_INDEX, Piece}, movement::Move};
+    use crate::{assert_is_subset, constants::{NOTATION_TO_INDEX, Piece}, movement::Move};
 
     use super::*;
     
-    /// passes if the left is a subset of the right
-    macro_rules! assert_is_subset {
-        ($left:expr, $right:expr) => (
-            let mut missing = vec![];
-            for m in $left {
-               if !$right.contains(&m) {
-                    missing.push(m);
-               } 
-            } 
-            
-            if missing.len() > 0 {
-                panic!("assertion failed, set difference: {:?}", missing);
-            }
-        );
-    }
-    
-    /// This is essentially assert_eq but doesn't care about order differences
-    macro_rules! assert_are_equal_sets {
-        ($left:expr, $right:expr) => (
-            assert_is_subset!(&$left, &$right);
-            assert_is_subset!(&$right, &$left);
-        );
-    }
     
     #[test]
     fn add_promotion_adds_promtion_moves_refactor() {
         let mut ml = MoveSet::empty();
-        // h7->h8
+        
         ml.add_promotion(56, 64);
         
         let expected = vec![
@@ -95,8 +99,11 @@ mod test {
             Move::from(56, 64, true, Piece::Knight as u16)
         ];
 
-        assert_are_equal_sets!(ml.moves, expected);
+        assert_is_subset!(&ml.moves, &expected);
+        assert_is_subset!(&expected, &ml.moves);
     }
+    
+    
     
     #[test]
     fn add_capture_adds_capture() {
