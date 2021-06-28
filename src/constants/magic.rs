@@ -82,8 +82,6 @@ impl Magic {
             panic!("Failed lookup for Magic #: #{:?}", self.magic);
         }
     } 
-    
-    
 }
 
 fn rook_block_and_attack_board_for(sq: usize, mask: Bitboard) -> Vec<(Bitboard, Bitboard)> {

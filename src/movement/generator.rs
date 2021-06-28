@@ -66,6 +66,16 @@ impl Move {
             }
         }
         // rook moves
+        for source in ply.rooks[color as usize].all_set_indices() {
+            let attacks = ROOK_ATTACKS[source].attacks_for(ply.occupancy()) & !ply.occupancy_for(color);
+            for target in attacks.all_set_indices() {
+                if ply.occupancy_for(other_color).is_index_set(target) {
+                    out.add_capture(source, target)    
+                } else {
+                    out.add_move(source, target);
+                }
+            }
+        }
         // bishop moves
         // queen moves
         out
