@@ -87,7 +87,12 @@ impl Magic {
 }
 
 fn rook_block_and_attack_board_for(sq: usize, mask: Bitboard) -> Vec<(Bitboard, Bitboard)> {
-    let rook_pos = Bitboard::from(1 << sq);
+    block_and_attack_board_for(sq, mask, slow_rook_attacks)
+}
+
+fn block_and_attack_board_for<F>(sq: usize, mask: Bitboard, attack_fn: F) -> Vec<(Bitboard, Bitboard)> 
+    where F : Fn(Bitboard, Bitboard) -> Bitboard {
+    let pos = Bitboard::from(1 << sq);
     let blocker_indexes = mask.all_set_indices();
     let mask_count = blocker_indexes.len();
     let mut out = vec![];
@@ -97,7 +102,7 @@ fn rook_block_and_attack_board_for(sq: usize, mask: Bitboard) -> Vec<(Bitboard, 
         for idx in select_subset(i, &blocker_indexes) {
             occupancy_board.set_by_index(idx);            
         }
-        let attack_board = slow_rook_attacks(rook_pos, occupancy_board);
+        let attack_board = attack_fn(pos, occupancy_board);
         out.push((occupancy_board, attack_board));
 
     }
