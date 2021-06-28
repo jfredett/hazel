@@ -1,25 +1,6 @@
 use super::*;
 
-static NOT_A_FILE : u64 = 0xfefefefefefefefe;
-static NOT_H_FILE : u64 = 0x7f7f7f7f7f7f7f7f;
-
-// Note the lack of sign, that's handled below in the #shift and #shift_mut
-// methods
-//                                            N  NE E  SE S SW  W NW
-static DIRECTION_INDEX_OFFSETS: [usize; 8] = [8, 9, 1, 7, 8, 9, 1, 7];
-
-#[derive(Hash, PartialEq, Eq, Clone, Copy)]
-pub enum Direction {
-    N  = 0,
-    NE = 1,
-    E  = 2,
-    SE = 3,
-    S  = 4,
-    SW = 5,
-    W  = 6,
-    NW = 7
-}
-
+use crate::constants::*;
 
 impl Bitboard {
     #[inline]
@@ -43,12 +24,32 @@ impl Bitboard {
             Direction::NW   => { self.0 = (self.0 << offset) & NOT_H_FILE }
         }
     }
+    
+    pub fn shift_by(&self, d: Direction, amt: usize) -> Bitboard {
+        let mut out = *self;
+        for _ in 0..amt { out.shift_mut(d); }
+        out
+    }
 }
 
 
 #[cfg(test)]
 mod test {
     use super::*;
+    
+    #[test]
+    fn shift_by_shifts_by_given_amount() {
+        let mut b = Bitboard::empty();
+        b.set_by_notation("d4"); // Put a piece on d4.
+        assert!(b.is_notation_set("d4")); // Put a piece on d4.
+        
+        let bb_after_shift = b.shift_by(Direction::N, 2);
+        
+        assert!(bb_after_shift.is_notation_set("d6"));
+
+        assert!(!bb_after_shift.is_notation_set("d4"));
+        assert!(!bb_after_shift.is_notation_set("d5"));
+    }
 
     #[test]
     fn slide_moves_pieces_appropriately() {

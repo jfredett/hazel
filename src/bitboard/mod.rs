@@ -52,36 +52,11 @@ mod util;
 mod arbitrary;
 mod debug;
 mod shifts;
-mod constants;
+mod from_into;
 
-pub use constants::*;
-pub use shifts::Direction;
+use crate::constants::conversion_tables::*;
 
-
-
-// NOTE: Should make a bunch of arrays with all the bitboards for a piece at a given location, so
-// all the queen-boards w/ the squares they attack, etc. Can basically create all these bitboard
-// libraries and have the Bitboard object just look up the right things. Each library would only
-// have ~64 entries each. We'd need two per piece -- plus a couple extra for the color-distinct
-// moves.
-//
-// They'd fall into "Attack Boards" -- showing all squares the piece could attack on a blank board,
-// and "Move Boards" -- showing all squares they could attack on a blank board.
-//
-// We'd want some way to incorporate blocking as well I suppose the algorithm would be something
-// like:
-//
-//
-// Take the position's bitboard, AND it with the pieces bitboard, if we see any values still high
-// then we know there is a block there, and we can then calculate that those pieces are attacked,
-// and any 'behind' those pieces are not. Only matters for a few pieces (bishops, rooks, and
-// queens). Also need to account for piece color in that.
-//
-
-
-// Shifts?
-//
-// Probably want to split this into a mod.rs and folder.
+pub use shifts::*;
 
 impl Bitboard {
     /// True if the bitboard has no set bits.
@@ -124,8 +99,8 @@ impl Bitboard {
 
     /// Set a bit located at the given index
     #[inline]
-    pub fn set_by_index(&mut self, i: usize) {
-        self.0 |= 1 << i
+    pub fn set_by_index(&mut self, idx: usize) {
+        self.0 |= 1 << idx
     }
 
     /// Set a bit located at the given notation
@@ -133,6 +108,26 @@ impl Bitboard {
     pub fn set_by_notation(&mut self, notation: &str) {
         let (x,y) = Bitboard::notation_to_coords(notation);
         self.set(x,y);
+    }
+
+    /// Return a vector containing all the indices which are set
+    ///
+    /// ```
+    /// # use hazel::bitboard::Bitboard;
+    /// let mut b = Bitboard::empty();
+    /// b.set_by_index(10);
+    /// b.set_by_index(20);
+    /// b.set_by_index(30);
+    /// assert_eq!(b.all_set_indices(), vec![10,20,30]);
+    /// ```
+    pub fn all_set_indices(&self) -> Vec<usize> {
+        let mut out = vec![];
+        for i in 0..64 { 
+            if self.is_index_set(i) {
+                out.push(i);
+            }
+        }
+        out
     }
 
     /// unsets the bit at the given coordinates
@@ -143,9 +138,25 @@ impl Bitboard {
     /// assert!(!b.is_set(0,1));
     /// b.set(0,1);
     /// assert!(b.is_set(0,1));
+    /// b.unset(0,1);
+    /// assert!(!b.is_set(0,1));
     /// ```
-    pub fn unset(&mut self, x: usize, y: usize) {
-        self.0 &= !(1 << Bitboard::coords_to_index(x,y));
+    pub fn unset(&mut self, rank: usize, file: usize) {
+        self.unset_by_index(Bitboard::coords_to_index(rank,file));
+    }
+    
+    /// unsets the bit at the given index
+    /// ```
+    /// # use hazel::bitboard::Bitboard;
+    /// let mut b = Bitboard::empty();
+    /// assert!(!b.is_index_set(43));
+    /// b.set_by_index(43);
+    /// assert!(b.is_index_set(43));
+    /// b.unset_by_index(43);
+    /// assert!(!b.is_index_set(43));
+    /// ```
+    pub fn unset_by_index(&mut self, idx: usize) {
+        self.0 &= !(1 << idx)
     }
 
     /// unsets the bit at the given coordinates
@@ -158,8 +169,8 @@ impl Bitboard {
     /// b.flip(0,1);
     /// assert!(!b.is_set(0,1));
     /// ```
-    pub fn flip(&mut self, x: usize, y: usize) {
-        self.0 ^= 1 << Bitboard::coords_to_index(x,y);
+    pub fn flip(&mut self, rank: usize, file: usize) {
+        self.0 ^= 1 << Bitboard::coords_to_index(rank,file);
     }
 
     /// True if the bit at the given notation is set
@@ -185,8 +196,8 @@ impl Bitboard {
     /// assert!(!b.is_set(0,1));
     /// ```
     #[inline]
-    pub fn is_set(&self, x: usize, y: usize) -> bool {
-        self.is_index_set(Bitboard::coords_to_index(x,y))
+    pub fn is_set(&self, rank: usize, file: usize) -> bool {
+        self.is_index_set(Bitboard::coords_to_index(rank,file))
     }
 
     /// True if the given bit is set
@@ -218,8 +229,6 @@ impl Bitboard {
         self.0.count_ones()
     }
 }
-
-
 
 #[cfg(test)]
 mod test {

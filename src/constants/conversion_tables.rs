@@ -1,3 +1,10 @@
+/// ! Conversion tables and functions which allow conversion between:
+/// ! 
+/// ! Algebraic Notation: "c6", "d4", etc.
+/// ! Bitboard Index: 0o52, 0o33, etc.
+/// ! Rank/File: (5,2), (3,3), etc.
+
+
 #[inline(always)]
 #[allow(non_snake_case)]
 pub fn NOTATION_TO_INDEX(notation: &str) -> usize {
@@ -50,5 +57,4 @@ lazy_static! {
         m
     };
 }
-
 

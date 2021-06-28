@@ -1,5 +1,5 @@
 use super::*;
-use std::ops::{Not, BitAnd, BitOr, BitXor, BitAndAssign, BitOrAssign, BitXorAssign};
+use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Mul, Not, Shl, Shr};
 
 /// Implements the various bit-ops for Bitboards
 macro_rules! binop_trait {
@@ -34,6 +34,46 @@ impl Not for Bitboard {
     }
 }
 
+impl Mul for Bitboard {
+    type Output = Bitboard;
+    
+    fn mul(self, rhs: Bitboard) -> Bitboard {
+        Bitboard::from(self.0.overflowing_mul(rhs.0).0)
+    }
+}
+
+impl Mul<u64> for Bitboard {
+    type Output = Bitboard;
+
+    fn mul(self, rhs: u64) -> Bitboard {
+        Bitboard::from(self.0.overflowing_mul(rhs).0)
+    }
+}
+
+impl Mul<Bitboard> for u64 {
+    type Output = Bitboard;
+
+    fn mul(self, rhs: Bitboard) -> Bitboard {
+        Bitboard::from(self.overflowing_mul(rhs.0).0)
+    }
+}
+
+impl Shl<u64> for Bitboard {
+    type Output = Bitboard;
+
+    fn shl(self, rhs: u64) -> Self::Output {
+        Bitboard::from(self.0 << rhs)
+    }
+}
+
+impl Shr<u64> for Bitboard {
+    type Output = Bitboard;
+
+    fn shr(self, rhs: u64) -> Self::Output {
+        Bitboard::from(self.0 >> rhs)
+    }
+}
+
 binop_trait!(BitAnd, bitand);
 binop_trait!(BitXor, bitxor);
 binop_trait!(BitOr, bitor);
@@ -42,13 +82,31 @@ binop_assign_trait!(BitOrAssign, bitor_assign);
 binop_assign_trait!(BitXorAssign, bitxor_assign);
 binop_assign_trait!(BitAndAssign, bitand_assign);
 
-
 #[cfg(test)]
 mod test {
     use super::*;
 
     mod bitops {
         use super::*;
+
+        mod mul {
+            use super::*;
+
+            #[quickcheck]
+            fn multiply_bitboard_by_bitboard(b1: u64, b2: u64) -> bool {
+                Bitboard::from(b1) * Bitboard::from(b2) == Bitboard::from(b1.overflowing_mul(b2).0)
+            }
+            
+            #[quickcheck]
+            fn multiply_bitboard_by_u64(b1: u64, b2: u64) -> bool {
+                Bitboard::from(b1) * b2 == Bitboard::from(b1.overflowing_mul(b2).0) 
+            }
+            
+            #[quickcheck]
+            fn multiply_u64_by_bitboard(b1: u64, b2: u64) -> bool {
+                b1 * Bitboard::from(b2) == Bitboard::from(b1.overflowing_mul(b2).0)
+            }
+        }
 
         mod not {
             use super::*;

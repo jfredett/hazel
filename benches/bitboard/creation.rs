@@ -1,29 +1,17 @@
 use super::*;
 
-#[criterion(config())]
-pub fn empty(c: &mut Criterion) {
-    c.bench_function("Bitboard::empty/0", |b| b.iter(|| 
-        black_box(Bitboard::empty())
-    ));
-}
+bench!(
+    group: Bitboard,
+    pretty: "full/0",
+    name: full,
+    test: { Bitboard::full() },
+    where:
+);
 
-#[criterion(config())]
-pub fn full(c: &mut Criterion) {
-    c.bench_function("Bitboard::full/0", |b| b.iter(|| 
-        black_box(Bitboard::full())
-    ));
-}
-
-#[criterion(config())]
-pub fn from(c: &mut Criterion) {
-    c.bench_function("Bitboard::from/1", |b| b.iter(|| 
-        black_box(Bitboard::from(random_u64()))
-    ));
-}
-
-#[criterion(config())]
-pub fn from_notation(c: &mut Criterion) {
-    c.bench_function("Bitboard::from_notation/1", |b| b.iter(|| 
-        black_box(Bitboard::from_notation("a4"))
-    ));
-}
+bench!(
+    group: Bitboard,
+    pretty: "from_notation/0",
+    name: from_notation,
+    test: { Bitboard::from_notation("d4") },
+    where:
+);
