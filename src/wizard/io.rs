@@ -1,4 +1,4 @@
-use serde::{Deserializer, de::{Error, SeqAccess, Visitor}, ser::SerializeTuple};
+use serde::{de::{SeqAccess, Visitor}, ser::SerializeTuple};
 
 use super::*;
 
