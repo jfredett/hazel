@@ -43,7 +43,7 @@
 ///
 /// Octal is the most handy representation for understanding where things are located, but the
 /// literature usually uses decimal.
-#[derive(Hash, PartialEq, Eq, Clone, Copy)]
+#[derive(Hash, PartialEq, Eq, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub struct Bitboard(u64);
 
 mod creation;
