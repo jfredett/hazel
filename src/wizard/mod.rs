@@ -8,6 +8,7 @@ mod utils;
 mod consts;
 mod spell;
 mod initialization;
+mod debug;
 
 use tables::*;
 use utils::*;
@@ -17,7 +18,7 @@ use consts::*;
 use serde::{Serialize, Deserialize};
 
 
-#[derive(PartialEq, Eq, Debug, Hash, Clone)]
+#[derive(PartialEq, Eq, Hash, Clone)]
 pub struct Wizard {
     // Metadata -- 13b * 128 ~ 1.625KiB
     rooks: [Spell; BOARD_SIZE],
