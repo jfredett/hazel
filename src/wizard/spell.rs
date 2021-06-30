@@ -26,7 +26,8 @@ impl Spell {
         // The maximum offset should be less than the greater piece-table size. It also needs to fit 
         // within the table itself, which is around ~2meg in size.
         // NOTE: Make the modulus, offset value subject to selection?
-        self.offset = (rand::random::<u32>() % TABLE_SIZE as u32) - ROOK_TABLE_SIZE as u32;
+        self.offset = rand::random::<u32>() % TABLE_SIZE as u32;
+        if self.offset > ROOK_TABLE_SIZE as u32 { self.offset -= ROOK_TABLE_SIZE as u32 }
         // The shift should not allow it to create out-of-bounds indices, and the minimum shift should
         // be `5` (the minimum shift of a bishop). It's max is 21 so it cannot select more bits than 
         // we can index within TABLE_SIZE (which is ~2.125MiB)
