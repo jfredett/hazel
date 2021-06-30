@@ -14,6 +14,10 @@ extern crate either;
 extern crate rand;
 
 pub use rand::prelude::*;
+pub use tracing::{info, debug, error, warn, instrument};
+
+#[cfg(test)]
+pub use tracing_test;
 
 #[macro_use] pub mod bitboard;
 pub mod constants;

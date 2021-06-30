@@ -18,11 +18,10 @@ path="src/main.rs"
 packed_simd = { version = "0.3.4", package = "packed_simd_2" }
 clap = { version = "~2.33", features = ["yaml"]}
 bitflags = "~1.2"
-log = "~0.4"
-fern = "~0.6"
 lazy_static = "~1.4"
 either = "~1.6"
 rand = "~0.8"
+tracing = "*"
 
 [dev-dependencies]
 criterion = "~0.3"
@@ -30,6 +29,7 @@ criterion-macro = "~0.3"
 quickcheck = "~1.0"
 quickcheck_macros = "~1.0"
 paste = "~1.0"
+tracing-test = "*"
 
 [[bench]]
 name = "benchmarks"
