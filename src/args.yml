@@ -17,3 +17,20 @@ args:
       short: V
       long: version
       help: display version information
+
+subcommands:
+  - magics:
+        about: Searches for new, more compact and/or more performant magic bitboards
+        args: 
+            - resume:
+                  help: Resumes a search with a given context directory
+                  long: resume
+                  value_name: PATH 
+                  conflicts_with: [start]
+                  takes_value: true
+            - start:
+                  help: Starts a new search in the given directory
+                  long: start
+                  value_name: PATH 
+                  conflicts_with: [resume]
+                  takes_value: true
