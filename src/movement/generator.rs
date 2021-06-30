@@ -67,6 +67,7 @@ impl Move {
             }
         }
 
+/*
         // rook moves
         for source in ply.rooks[color as usize].all_set_indices() {
             let attacks = ROOK_ATTACKS[source].attacks_for(ply.occupancy()) & !ply.occupancy_for(color);
@@ -104,6 +105,7 @@ impl Move {
                 }
             }
         }
+ */
         out
     }
 }

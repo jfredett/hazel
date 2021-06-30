@@ -186,8 +186,6 @@ impl Move {
     #[inline(always)] pub fn is_long_castle(&self)  -> bool { self.move_metadata().is_long_castle() }
 }
 
-
-
 #[cfg(test)]
 mod test {
     use super::*;

@@ -16,12 +16,12 @@ extern crate rand;
 pub use rand::prelude::*;
 
 #[macro_use] pub mod bitboard;
+pub mod util;
 pub mod constants;
 pub mod ply;
 pub mod movement;
 pub mod moveset;
-
-
+pub mod wizard;
 
 /// passes if the left is a subset of the right
 #[macro_export] macro_rules! assert_is_subset {

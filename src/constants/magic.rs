@@ -1,3 +1,4 @@
+/*
 use crate::{
     bitboard::Bitboard, constants::{
         Direction,   
@@ -5,10 +6,9 @@ use crate::{
             NOMINAL_ROOK_ATTACKS,
             NOMINAL_BISHOP_ATTACKS
         }
-    }
+    },
+    util::select_subset
 };
-
-
 
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
 pub struct Magic {
@@ -120,127 +120,6 @@ impl Magic {
             panic!("Failed lookup for Magic #: #{:?}", self.magic);
         }
     } 
-}
-
-fn rook_block_and_attack_board_for(sq: usize, mask: Bitboard) -> Vec<(Bitboard, Bitboard)> {
-    block_and_attack_board_for(sq, mask, slow_rook_attacks)
-}
-
-fn bishop_block_and_attack_board_for(sq: usize, mask: Bitboard) -> Vec<(Bitboard, Bitboard)> {
-    block_and_attack_board_for(sq, mask, slow_bishop_attacks)
-}
-
-fn block_and_attack_board_for<F>(sq: usize, mask: Bitboard, attack_fn: F) -> Vec<(Bitboard, Bitboard)> 
-    where F : Fn(Bitboard, Bitboard) -> Bitboard {
-    let pos = Bitboard::from(1 << sq);
-    let blocker_indexes = mask.all_set_indices();
-    let mask_count = blocker_indexes.len();
-    let mut out = vec![];
-    
-    for i in 0..2u64.pow(mask_count as u32) {
-        let mut occupancy_board = Bitboard::empty();
-        for idx in select_subset(i, &blocker_indexes) {
-            occupancy_board.set_by_index(idx);            
-        }
-        let attack_board = attack_fn(pos, occupancy_board);
-        out.push((occupancy_board, attack_board));
-
-    }
-    out
-}
-
-/// Selects a subset from a vector using the given `selection` bitset as a
-/// selection mask -- if the `nth` bit is high, then the `nth` element will be
-/// chosen
-/// TODO: Send this to a util module
-fn select_subset<T>(selection: u64, vector: &Vec<T>) -> Vec<T> 
-   where T : Copy {
-   let mut out = vec![];
-   for i in 0..64 {
-       if selection & (1 << i) > 0 {
-           out.push(vector[i]) 
-       }
-   }
-   out
-}
-
-pub fn slow_bishop_attacks(bishop_pos: Bitboard, occupancy: Bitboard) -> Bitboard {
-    let bishop_idx = bishop_pos.all_set_indices()[0];
-    let bishop_rank = bishop_idx % 8;
-    let bishop_file = bishop_idx / 8;
-
-    let mut squares = vec![];
-
-    for i in 1..=(8-bishop_rank) {
-        let try_move = bishop_pos.shift_by(Direction::NW, i);
-        if try_move.is_empty() { break; }
-        if !(try_move & occupancy).is_empty() {
-            squares.push(try_move.all_set_indices()[0]);
-            break;
-        } else {
-            squares.push(try_move.all_set_indices()[0])
-        }
-    }
-
-    for i in 1..=bishop_rank {
-        let try_move = bishop_pos.shift_by(Direction::SW, i);
-        if try_move.is_empty() { break; }
-        if !(try_move & occupancy).is_empty() {
-            squares.push(try_move.all_set_indices()[0]);
-            break;
-        } else {
-            squares.push(try_move.all_set_indices()[0])
-        }
-    }
-
-    for i in 1..=(8-bishop_file) {
-        let try_move = bishop_pos.shift_by(Direction::NE, i);
-        if try_move.is_empty() { break; }
-        if !(try_move & occupancy).is_empty() {
-            squares.push(try_move.all_set_indices()[0]);
-            break;
-        } else {
-            squares.push(try_move.all_set_indices()[0])
-        }
-    }
-
-    for i in 1..=bishop_file {
-        let try_move = bishop_pos.shift_by(Direction::SE, i);
-        if try_move.is_empty() { break; }
-        if !(try_move & occupancy).is_empty() {
-            squares.push(try_move.all_set_indices()[0]);
-            break;
-        } else {
-            squares.push(try_move.all_set_indices()[0]);
-        }
-    }
-
-    let mut out = Bitboard::empty();
-    for s in squares {
-        out.set_by_index(s);
-    }
-
-    return out;
-}
-
-pub fn slow_rook_attacks(rook_pos: Bitboard, occupancy: Bitboard) -> Bitboard {
-    let mut squares = vec![];
-    
-    for dir in [Direction::N, Direction::S, Direction::E, Direction::W] {
-        'next_dir: for i in 1..8 {
-            let try_move = rook_pos.shift_by(dir, i);
-            if try_move.is_empty() { break 'next_dir; }
-            squares.push(try_move.all_set_indices()[0]);
-            if !(try_move & occupancy).is_empty() { break 'next_dir; }
-        }
-    }
-    
-    let mut out = Bitboard::empty();
-    for s in squares {
-        out.set_by_index(s);
-    }
-
-    return out;
 }
 
 
@@ -373,3 +252,4 @@ mod test {
     }
 
 }
+ */
