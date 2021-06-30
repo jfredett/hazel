@@ -14,6 +14,9 @@ use utils::*;
 use spell::*;
 use consts::*;
 
+use serde::{Serialize, Deserialize};
+
+
 #[derive(PartialEq, Eq, Debug, Hash, Clone)]
 pub struct Wizard {
     // Metadata -- 13b * 128 ~ 1.625KiB

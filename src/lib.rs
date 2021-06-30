@@ -7,8 +7,8 @@ pub use packed_simd::*;
 #[macro_use] extern crate quickcheck_macros;
 
 #[macro_use] extern crate lazy_static;
-
 #[macro_use] extern crate bitflags;
+extern crate serde;
 
 extern crate either;
 extern crate rand;
@@ -18,6 +18,7 @@ pub use tracing::{info, debug, error, warn, instrument};
 
 #[cfg(test)]
 pub use tracing_test;
+
 
 #[macro_use] pub mod bitboard;
 pub mod util;

@@ -1,10 +1,10 @@
 use std::ops::Range;
 use rand::distributions::uniform::SampleRange;
 use crate::bitboard::Bitboard;
-use super::consts::*;
+use super::*;
 
 // 13b
-#[derive(PartialEq, Eq, Hash, Debug, Clone, Copy)]
+#[derive(PartialEq, Eq, Hash, Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Spell {
     magic: u64,
     shift: u8,
@@ -41,5 +41,22 @@ impl Spell {
 
     fn low_bit_random_u64() -> u64 {
         rand::random::<u64>() & rand::random::<u64>() & rand::random::<u64>()
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn serializing_to_bincode_round_trips() {
+        let mut expected = Spell::empty();
+
+        expected.initialize(10..22);
+
+        let serialized = bincode::serialize(&expected).unwrap();
+        let deserialized : Spell = bincode::deserialize(&serialized).unwrap();
+        assert_eq!(deserialized, expected);
     }
 }
