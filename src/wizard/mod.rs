@@ -8,6 +8,7 @@ mod utils;
 mod consts;
 mod spell;
 mod initialization;
+mod io;
 mod debug;
 
 use tables::*;
