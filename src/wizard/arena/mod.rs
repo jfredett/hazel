@@ -1,4 +1,4 @@
-use std::{fs::File, io::{Read, Write}, path::{self, PathBuf}};
+use std::{fs::File, io::{Read, Write}, path::{PathBuf}};
 
 use tracing::{error, debug, info, instrument};
 
@@ -63,6 +63,8 @@ impl Arena {
         info!("Arena Loading Complete");
         des.unwrap()
     }
+    
+    pub fn size(&self) -> usize { self.size }
 }
 
 #[cfg(test)]
