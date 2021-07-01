@@ -137,11 +137,13 @@ mod test {
             }
 
             #[quickcheck]
+            #[allow(clippy::eq_op)]
             fn idempotence(b: Bitboard) -> bool {
                 b & b == b
             }
 
             #[quickcheck]
+            #[allow(clippy::eq_op)]
             fn commutativity(b1: Bitboard, b2: Bitboard) -> bool {
                 b1 & b2 == b2 & b1
             }
@@ -163,11 +165,13 @@ mod test {
             }
 
             #[quickcheck]
+            #[allow(clippy::eq_op)]
             fn idempotence(b: Bitboard) -> bool {
                 b | b == b
             }
 
             #[quickcheck]
+            #[allow(clippy::eq_op)]
             fn commutativity(b1: Bitboard, b2: Bitboard) -> bool {
                 b1 | b2 == b2 | b1
             }
@@ -190,11 +194,13 @@ mod test {
             }
 
             #[quickcheck]
+            #[allow(clippy::eq_op)]
             fn commutativity(b1: Bitboard, b2: Bitboard) -> bool {
                 b1 ^ b2 == b2 ^ b1
             }
 
             #[quickcheck]
+            #[allow(clippy::eq_op)]
             fn self_inverse(b: Bitboard) -> bool {
                 b ^ b ^ b == b
             }

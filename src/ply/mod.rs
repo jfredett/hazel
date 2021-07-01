@@ -149,7 +149,7 @@ impl Ply {
     }
 
     pub fn piece_at(&self, file: File, rank: usize, piece: Piece, color: Color) -> bool {
-        if rank < 1 || rank > 8 { panic!("Invalid position {:?}{:?}", file, rank); }
+        if !(1..=8).contains(&rank) { panic!("Invalid position {:?}{:?}", file, rank); }
         let board = match piece {
             Piece::Rook => { self.rooks[color as usize] }
             Piece::Bishop => { self.bishops[color as usize] }

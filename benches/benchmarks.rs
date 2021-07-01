@@ -16,8 +16,7 @@ use packed_simd::*;
 use hazel::bitboard::*;
 use hazel::ply::*;
 use hazel::constants::*;
-use hazel::constants::magic::*;
-
+//use hazel::constants::magic::*;
 mod bitboard;
 mod ply;
 mod movegen;

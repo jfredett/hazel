@@ -15,14 +15,14 @@ lazy_static! {
                 bb.set_by_index(i);
                 
                 let position_board = bb.shift(Direction::N).shift(Direction::N).shift(Direction::E) // NNE
-                                           | bb.shift(Direction::N).shift(Direction::N).shift(Direction::W) // NNW
-                                           | bb.shift(Direction::W).shift(Direction::W).shift(Direction::N) // WWN
-                                           | bb.shift(Direction::W).shift(Direction::W).shift(Direction::S) // WWS
-                                           | bb.shift(Direction::S).shift(Direction::S).shift(Direction::W) // SSW
-                                           | bb.shift(Direction::S).shift(Direction::S).shift(Direction::E) // SSE
-                                           | bb.shift(Direction::E).shift(Direction::E).shift(Direction::S) // EES
-                                           | bb.shift(Direction::E).shift(Direction::E).shift(Direction::N) // EEN
-                                           ;
+                                   | bb.shift(Direction::N).shift(Direction::N).shift(Direction::W) // NNW
+                                   | bb.shift(Direction::W).shift(Direction::W).shift(Direction::N) // WWN
+                                   | bb.shift(Direction::W).shift(Direction::W).shift(Direction::S) // WWS
+                                   | bb.shift(Direction::S).shift(Direction::S).shift(Direction::W) // SSW
+                                   | bb.shift(Direction::S).shift(Direction::S).shift(Direction::E) // SSE
+                                   | bb.shift(Direction::E).shift(Direction::E).shift(Direction::S) // EES
+                                   | bb.shift(Direction::E).shift(Direction::E).shift(Direction::N) // EEN
+                                   ;
                 out[i] = position_board;
         }
         out

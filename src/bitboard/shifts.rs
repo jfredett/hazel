@@ -8,14 +8,14 @@ impl Bitboard {
         let mut new_b = *self; // new_b is a copy of self
 
         new_b.shift_mut(d);
-        return new_b;
+        new_b
     }
 
     pub fn shift_mut(&mut self, d : Direction) {
         let offset = DIRECTION_INDEX_OFFSETS[d as usize];
         match d {
-            Direction::N    => { self.0 =  self.0 << offset               },
-            Direction::S    => { self.0 =  self.0 >> offset               },
+            Direction::N    => { self.0 <<= offset               },
+            Direction::S    => { self.0 >>= offset               },
             Direction::E    => { self.0 = (self.0 << offset) & NOT_A_FILE },
             Direction::NE   => { self.0 = (self.0 << offset) & NOT_A_FILE },
             Direction::SE   => { self.0 = (self.0 >> offset) & NOT_A_FILE },

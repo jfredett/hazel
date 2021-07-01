@@ -28,7 +28,7 @@ impl Bitboard {
     /// assert!(b.is_empty());
     /// ```
     pub fn empty() -> Bitboard {
-        return Bitboard { 0: 0 }
+        Bitboard { 0: 0 }
     }
 
     /// Creates a bitboard from the given u64
@@ -39,7 +39,7 @@ impl Bitboard {
     /// assert!(!b.is_empty());
     /// ```
     pub fn from(b: u64) -> Bitboard {
-        return Bitboard { 0: b }
+        Bitboard { 0: b }
     }
 
     /// Creates a bitboard from the given u64
@@ -62,6 +62,6 @@ impl Bitboard {
     /// assert!(b.is_full());
     /// ```
     pub fn full() -> Bitboard {
-        return !Bitboard::empty()
+        !Bitboard::empty()
     }
 }

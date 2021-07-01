@@ -102,7 +102,7 @@ impl Move {
                 NOTATION_TO_INDEX("e1") as u16,
                 NOTATION_TO_INDEX("c1") as u16,
                 false,
-                0b110 as u16
+                0b110_u16
             )},
             Color::BLACK => { Move::from(
                 NOTATION_TO_INDEX("e8") as u16,

@@ -1,6 +1,19 @@
 #![feature(nll, box_syntax)]
 #![cfg_attr(test, allow(unused_imports))]
 
+// NOTE: These lints are disabled for the following reasons:
+//
+// 1. unusual byte groupings are helpful when notating the values of masks. See
+// src/movement/mod.rs and it's masks for an example. It's much easier to see which
+// bits are being masked this way, IMO.
+//
+// 2. There are a number of loops which require indexing into multi-dimensional arrays
+// in various ways and doing rank/file math. It's very convenient to just specify the index
+// and 'do it the old-fashioned way'. In theory, #enumerate() should be able to do this, but
+// about 20 minutes of trying couldn't grok the trait bound error I was getting so I left it
+// as is.
+#![allow(clippy::unusual_byte_groupings, clippy::needless_range_loop)]
+
 pub use packed_simd::*;
 
 #[cfg(test)]

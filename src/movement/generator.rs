@@ -123,8 +123,8 @@ mod test {
         let ply = Ply::from_fen(&String::from(START_POSITION_FEN));
         let moves = Move::generate(&ply, Color::WHITE);
         for m in STARTING_MOVES.iter() {
-            if !moves.contains(&m) { dbg!("missing move", m); }
-            assert!(moves.contains(&m));
+            if !moves.contains(m) { dbg!("missing move", m); }
+            assert!(moves.contains(m));
         }
     }
     
@@ -133,8 +133,8 @@ mod test {
         let ply = Ply::from_fen(&String::from(D4_POSITION_FEN));
         let moves = Move::generate(&ply, Color::BLACK);
         for m in D4_MOVES.iter() {
-            if !moves.contains(&m) { dbg!("missing move", m); }
-            assert!(moves.contains(&m));
+            if !moves.contains(m) { dbg!("missing move", m); }
+            assert!(moves.contains(m));
         }
     }
     

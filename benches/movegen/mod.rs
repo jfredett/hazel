@@ -1,5 +1,6 @@
-use super::*;
 
+
+/*
 use hazel::constants::move_tables::ROOK_ATTACKS;
 
 bench!(
@@ -21,3 +22,4 @@ bench!(
         rook_idx => random_u64() % 64; 
         occupancy => random_bitboard();
 );
+*/

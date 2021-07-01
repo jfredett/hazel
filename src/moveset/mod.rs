@@ -9,7 +9,7 @@ pub struct MoveSet {
 
 impl MoveSet {
     pub fn empty() -> MoveSet {
-        return MoveSet { moves: vec![] };
+        MoveSet { moves: vec![] }
     }
     
     /// Adds a quiet move from the source square to the target square
@@ -62,13 +62,17 @@ impl MoveSet {
     pub fn len(&self) -> usize {
         self.moves.len()
     }
+    
+    pub fn is_empty(&self) -> bool {
+        self.moves.is_empty()
+    }
 }
 
 impl Iterator for MoveSet {
     type Item = Move;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some(&m) = self.moves.iter().next() {
+        if let Some(&m) = self.moves.get(0) {
             Some(m)
         } else {
             None

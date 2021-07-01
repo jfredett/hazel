@@ -298,7 +298,7 @@ mod test {
             assert!(board.is_set(x,y));
             board.flip(x,y);
             assert!(!board.is_set(x,y));
-            return board == Bitboard::empty();
+            board == Bitboard::empty()
         }
 
         #[quickcheck]
@@ -309,7 +309,7 @@ mod test {
             assert!(board.is_set(x,y));
             board.flip(x,y);
             assert!(!board.is_set(x,y));
-            return board == Bitboard::empty();
+            board == Bitboard::empty()
         }
     }
 }
