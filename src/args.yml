@@ -22,6 +22,13 @@ subcommands:
   - magics:
         about: Searches for new, more compact and/or more performant magic bitboards
         args: 
+            - size:
+                  help: Specify the number of Wizard objects to run in the arena
+                  long: size
+                  short: n
+                  default_value: "100"
+                  takes_value: true
+                  value_name: COUNT
             - resume:
                   help: Resumes a search with a given context directory
                   long: resume

@@ -10,7 +10,7 @@ mod spell;
 mod initialization;
 mod io;
 mod debug;
-mod arena;
+pub mod arena;
 
 use tables::*;
 use utils::*;
