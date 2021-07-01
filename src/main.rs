@@ -2,14 +2,15 @@
 
 use std::path::PathBuf;
 
-use hazel::wizard;
+use anyhow::Error;
+use clap::App;
 use tracing::{*};
 use tracing::Level;
 use tracing_subscriber;
 
-use clap::App;
+use hazel::wizard;
 
-fn main() {
+fn main() -> Result<(), Error> {
     let yaml = load_yaml!("args.yml");
     let matches = App::from_yaml(yaml).get_matches();
     
@@ -29,7 +30,7 @@ fn main() {
                 let location = sub_args.value_of("resume").unwrap();
                 info!("Resuming previous Arena at {}", location);
                 // create a "Wizard::Arena" object and load the relevant files from the given directory
-                let arena = wizard::arena::Arena::load(PathBuf::from(location));
+                let arena = wizard::arena::Arena::load(PathBuf::from(location))?;
                 debug!("Arena loaded with size: {:?}", arena.size());
             } else {
                 // if it lacks that option, take the path and initialize a new arena
@@ -38,9 +39,10 @@ fn main() {
                 // if find-magics has the --resume option, take the path and load it
                 info!("Starting new Arena at {}", location);
                 // create a "Wizard::Arena" object and initialize it with some number of wizards.
-                let arena = wizard::arena::Arena::new(size,PathBuf::from(location));
+                let arena = wizard::arena::Arena::new(size,PathBuf::from(location))?;
                 debug!("Arena loaded with size: {:?}", arena.size());
             }
+            return Ok(());
         }
         (_, _) => {
             info!("Startup complete, awaiting instructions");

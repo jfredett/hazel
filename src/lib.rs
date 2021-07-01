@@ -13,8 +13,14 @@ extern crate serde;
 extern crate either;
 extern crate rand;
 
+extern crate anyhow;
+extern crate thiserror;
+
 pub use rand::prelude::*;
 pub use tracing::{info, debug, error, warn, instrument};
+
+pub use anyhow::{Context, Result};
+pub use thiserror::Error;
 
 #[cfg(test)]
 pub use tracing_test;
