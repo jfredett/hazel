@@ -6,9 +6,9 @@ impl From<u64> for Bitboard {
     }
 }
 
-impl Into<u64> for Bitboard {
-    fn into(self) -> u64 {
-        self.0
+impl From<Bitboard> for u64 {
+    fn from(val: Bitboard) -> Self {
+        val.0
     }
 }
 
@@ -20,9 +20,9 @@ impl From<usize> for Bitboard {
 }
 
 // NOTE: hazel expects to be run on a 64b machine. If you want to run it on a 32b machine. Don't.
-impl Into<usize> for Bitboard {
-    fn into(self) -> usize {
-        self.0 as usize
+impl From<Bitboard> for usize {
+    fn from(val: Bitboard) -> Self {
+        val.0 as usize
     }
 }
 

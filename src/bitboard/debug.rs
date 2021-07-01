@@ -3,7 +3,7 @@ use std::fmt::{Formatter, Result, Debug};
 
 impl Debug for Bitboard {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(f, "\n")?;
+        writeln!(f)?;
         for rank in (0..=7).rev() {
             write!(f, " {}", rank + 1)?;
             for file in 0..=7 {
@@ -13,10 +13,10 @@ impl Debug for Bitboard {
                     write!(f, " .")?;
                 }
             }
-            write!(f, "\n")?;
+            writeln!(f)?;
         }
         write!(f, "   a b c d e f g h")?;
-        write!(f, "\n")
+        writeln!(f)
     }
 }
 

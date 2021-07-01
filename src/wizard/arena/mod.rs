@@ -30,7 +30,7 @@ impl Arena {
     
     #[instrument]
     pub fn new(size: usize, path: PathBuf) -> ArenaResult<Arena> {
-        info!("Initializing new {}-wizard arena at: {:?}", size, path.clone());
+        info!("Initializing new {}-wizard arena at: {:?}", size, path);
         let mut arena = Arena {
             size,
             population: vec![],
@@ -43,12 +43,12 @@ impl Arena {
         }
 
         info!("Saving Arena to disk");
-        let mut f = if let Ok(f) = File::create(path.clone()) { 
+        let mut f = if let Ok(f) = File::create(&path) { 
             debug!("Created new file for storage");
             f 
         } else {
-            error!("Failed to create file at {:?}", path.clone());
-            return Err(ArenaError::InvalidPath(path.clone()));
+            error!("Failed to create file at {:?}", &path);
+            return Err(ArenaError::InvalidPath(path));
         };
         let bytes = bincode::serialize(&arena)?;
         f.write_all(&bytes)?;
@@ -60,8 +60,8 @@ impl Arena {
     
     #[instrument]
     pub fn load(path: PathBuf) -> ArenaResult<Arena> {
-        info!("Loading Wizard arena from {:?}", path.clone());
-        let mut f= File::open(path.clone())?;
+        info!("Loading Wizard arena from {:?}", path);
+        let mut f= File::open(path)?;
         let mut bytes: Vec<u8> = vec![];
         f.read_to_end(&mut bytes)?;
 
@@ -93,7 +93,7 @@ mod tests {
     fn can_round_trip_to_disk() -> ArenaResult<()> {
         let path = PathBuf::from("/tmp/hazel-arena");
         let arena = Arena::new(100, path.clone())?;
-        let loaded_arena = Arena::load(path.clone())?;
+        let loaded_arena = Arena::load(path)?;
         assert_eq!(arena, loaded_arena);
         Ok(())
     }

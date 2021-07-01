@@ -21,7 +21,7 @@ impl Ply {
     /// Produces a ply from the given FEN string
     /// NOTE: Very little error checking is done on the FEN string. Make sure to provide it
     /// with good input.
-    pub fn from_fen(fen: &String) -> Ply {
+    pub fn from_fen(fen: &str) -> Ply {
         // A cheap and cheerful fen parser, very little error handling
         let fen_parts : Vec<&str> = fen.split(' ').collect();
         let mut ply = Ply::empty();
@@ -83,8 +83,8 @@ impl Ply {
             _ => Some(Bitboard::from_notation(fen_parts[3]))
         };
 
-        ply.half_move_clock = fen_parts[4].parse().expect(&format!("Invalid FEN half-move: {}", fen));
-        ply.full_move_clock = fen_parts[5].parse().expect(&format!("Invalid FEN full-move: {}", fen));
+        ply.half_move_clock = fen_parts[4].parse().unwrap_or_else(|_| panic!("Invalid FEN half-move: {}", fen));
+        ply.full_move_clock = fen_parts[5].parse().unwrap_or_else(|_| panic!("Invalid FEN full-move: {}", fen));
 
 
 
@@ -142,7 +142,7 @@ impl Ply {
             Some(bb) => { 
                 // If there are multiple en passant indices, then it's a broken state anyway
                 let idx = bb.all_set_indices()[0];
-                out.push_str(&INDEX_TO_NOTATION[idx]);
+                out.push_str(INDEX_TO_NOTATION[idx]);
             }
         }
 
@@ -152,7 +152,7 @@ impl Ply {
         out.push(' ');
         out.push_str(&self.full_move_clock.to_string());
 
-        return out;
+        out
     }
 }
 

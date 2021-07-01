@@ -29,7 +29,7 @@ lazy_static! {
                 out[idx] &= !Bitboard::from(1 << idx);
             }
         }
-        return out
+        out
     };
     
     /// A lookup table to conver a bishop on an index -> it's unblocked attack squares, needed for magics
@@ -39,9 +39,9 @@ lazy_static! {
             for file in 0..8 {
                 let idx = rank * 8 + file;
                 let bishop = Bitboard::from(1 << idx);
-                let mut attacks = bishop.clone();
+                let mut attacks = bishop;
                 for d in [Direction::NW, Direction::NE, Direction::SW, Direction::SE] {
-                    let mut bb = bishop.clone();
+                    let mut bb = bishop;
                     for _ in 0..8 {
                         bb |= bb.shift(d);
                     }
@@ -50,7 +50,7 @@ lazy_static! {
                 out[idx] = attacks & !*EDGES & !bishop;
             }
         }
-        return out
+        out
     };
 }
 

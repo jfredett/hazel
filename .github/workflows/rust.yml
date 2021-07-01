@@ -45,5 +45,4 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: clippy
-          # Allowing unusual byte groupings makes masks a little easier to read, IMO.
-          args: -- -D warnings -A clippy::unusual_byte_groupings
+          args: -- -D warnings

@@ -2,8 +2,7 @@
 
 // I don't know why this triggers this lint, this fails if I don't import the macro.
 // Macro imports are blerg.
-#[allow(unused_attributes)]
-#[macro_use] use crate::bitboard;
+use crate::bitboard;
 use crate::{bitboard::Bitboard, constants::Direction};
 
 lazy_static! {

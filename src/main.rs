@@ -6,7 +6,6 @@ use anyhow::Error;
 use clap::App;
 use tracing::{*};
 use tracing::Level;
-use tracing_subscriber;
 
 use hazel::wizard;
 
@@ -42,10 +41,11 @@ fn main() -> Result<(), Error> {
                 let arena = wizard::arena::Arena::new(size,PathBuf::from(location))?;
                 debug!("Arena loaded with size: {:?}", arena.size());
             }
-            return Ok(());
+            Ok(())
         }
         (_, _) => {
             info!("Startup complete, awaiting instructions");
+            #[allow(clippy::empty_loop)]
             loop {
                 // intentionally blank.
             }

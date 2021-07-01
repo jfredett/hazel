@@ -1,7 +1,7 @@
 /// Selects a subset from a vector using the given `selection` bitset as a
 /// selection mask -- if the `nth` bit is high, then the `nth` element will be
 /// chosen
-pub fn select_subset<T>(selection: u64, vector: &Vec<T>) -> Vec<T> 
+pub fn select_subset<T>(selection: u64, vector: &[T]) -> Vec<T> 
    where T : Copy {
    let mut out = vec![];
    for i in 0..64 {

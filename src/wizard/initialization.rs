@@ -97,10 +97,8 @@ mod tests {
         let mut w = Wizard::empty();
         w.initialize();
         for &e in w.table.iter() {
-           match e {
-                Some(_) => assert!(true),
-                _ => { }
-           } 
+           if e.is_some() { return } 
         }
+        panic!("No items set");
     }
 }

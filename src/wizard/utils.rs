@@ -39,7 +39,7 @@ pub fn slow_attacks(pos: Bitboard, occupancy: Bitboard, dirs: [Direction; 4]) ->
         }
     }
     
-    return out;
+    out
 }
 
 pub fn slow_bishop_attacks(bishop_pos: Bitboard, occupancy: Bitboard) -> Bitboard {
