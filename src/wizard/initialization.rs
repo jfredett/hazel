@@ -1,3 +1,5 @@
+use tracing::{instrument};
+
 use super::*;
 
 impl Wizard {
@@ -8,6 +10,7 @@ impl Wizard {
     
     // FIXME: There is probably an efficient way to do these both at once, but I can't be arsed
     // today.
+    #[instrument]
     fn initialize_bishops(&mut self) {
         for i in 0..64 {
             loop {
@@ -19,27 +22,27 @@ impl Wizard {
                 for (blockers, attacks) in bishop_block_and_attack_board_for(i, mask) {
                     let key = spell.key_for(blockers);
 
-                    match self.table[key as usize] {
+                    match self.table[key] {
                         Some(attack_board) => { 
                             if attack_board != attacks {
                                 restart = true;
-                                break
+                                break;
                             }
                             entries.push((key, true))
                         }
                         None => {
-                            self.table[key as usize] = Some(attacks);    
+                            self.table[key] = Some(attacks);    
                             entries.push((key, false))
                         }
                     }
                 }
-                if !restart {
+                if restart {
                     // Clean up everything
                     for (entry, dup) in entries {
                         if dup { continue; }
                         self.table[entry] = None
                     }
-                    self.bishops[i].initialize(5..22);
+                    self.bishops[i].initialize(5..MAX_SHIFT);
                 } else {
                     break;
                 }
@@ -47,6 +50,7 @@ impl Wizard {
         }
     }
     
+    #[instrument]
     fn initialize_rooks(&mut self) {
         for i in 0..64 {
             loop {
@@ -79,7 +83,7 @@ impl Wizard {
                         if dup { continue; }
                         self.table[entry] = None
                     }
-                    self.rooks[i].initialize(10..22);
+                    self.rooks[i].initialize(10..MAX_SHIFT);
                 } else {
                     break;
                 }

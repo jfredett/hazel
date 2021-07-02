@@ -11,6 +11,7 @@ mod initialization;
 mod io;
 mod debug;
 pub mod arena;
+mod fitness;
 
 use tables::*;
 use utils::*;
@@ -41,10 +42,16 @@ impl Wizard {
     pub fn new() -> Wizard { 
        let mut acolyte = Wizard::empty();
        for i in 0..64 {
-           acolyte.rooks[i].initialize(10..22);
-           acolyte.bishops[i].initialize(5..22);
+           acolyte.rooks[i].initialize(10..MAX_SHIFT);
+           acolyte.bishops[i].initialize(5..MAX_SHIFT);
        }
        
        acolyte
+    }
+}
+
+impl Default for Wizard {
+    fn default() -> Self {
+        Self::new()
     }
 }
