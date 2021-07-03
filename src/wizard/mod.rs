@@ -12,6 +12,7 @@ mod io;
 mod debug;
 pub mod arena;
 mod fitness;
+mod combine;
 
 use tables::*;
 use utils::*;
@@ -42,8 +43,8 @@ impl Wizard {
     pub fn new() -> Wizard { 
        let mut acolyte = Wizard::empty();
        for i in 0..64 {
-           acolyte.rooks[i].initialize(10..MAX_SHIFT);
-           acolyte.bishops[i].initialize(5..MAX_SHIFT);
+           acolyte.rooks[i].initialize(ROOK_INDEX_MINS[i]..MAX_SHIFT);
+           acolyte.bishops[i].initialize(BISHOP_INDEX_MINS[i]..MAX_SHIFT);
        }
        
        acolyte
