@@ -1,5 +1,5 @@
 use super::*;
-use std::fmt::{Formatter, Result, Debug};
+use std::fmt::{Debug, Display, Formatter, Result};
 
 impl Debug for Bitboard {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
@@ -17,6 +17,12 @@ impl Debug for Bitboard {
         }
         write!(f, "   a b c d e f g h")?;
         writeln!(f)
+    }
+}
+
+impl Display for Bitboard {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "{:?}", self)
     }
 }
 
@@ -40,7 +46,7 @@ mod test {
 */
 
 
-    macro_rules! debug_test {
+    macro_rules! debug_display_test {
         ($method:ident, $notation:tt, $expected:tt) => {
             #[test]
             fn $method() {
@@ -50,11 +56,16 @@ mod test {
                     format!("{:?}", b),
                     $expected
                 );
+                
+                assert_eq!(
+                    format!("{}", b),
+                    $expected
+                );
             }
         };
     }
 
-    debug_test!(e4, "e4", "
+    debug_display_test!(e4, "e4", "
  8 . . . . . . . .
  7 . . . . . . . .
  6 . . . . . . . .
@@ -65,7 +76,7 @@ mod test {
  1 . . . . . . . .
    a b c d e f g h\n");
 
-    debug_test!(d4, "d4", "
+    debug_display_test!(d4, "d4", "
  8 . . . . . . . .
  7 . . . . . . . .
  6 . . . . . . . .
@@ -76,7 +87,7 @@ mod test {
  1 . . . . . . . .
    a b c d e f g h\n");
 
-    debug_test!(a8, "a8", "
+    debug_display_test!(a8, "a8", "
  8 * . . . . . . .
  7 . . . . . . . .
  6 . . . . . . . .
@@ -87,7 +98,7 @@ mod test {
  1 . . . . . . . .
    a b c d e f g h\n");
 
-    debug_test!(f6, "f6", "
+    debug_display_test!(f6, "f6", "
  8 . . . . . . . .
  7 . . . . . . . .
  6 . . . . . * . .
@@ -97,7 +108,7 @@ mod test {
  2 . . . . . . . .
  1 . . . . . . . .
    a b c d e f g h\n");
-    debug_test!(h8, "h8", "
+    debug_display_test!(h8, "h8", "
  8 . . . . . . . *
  7 . . . . . . . .
  6 . . . . . . . .
@@ -108,7 +119,7 @@ mod test {
  1 . . . . . . . .
    a b c d e f g h\n");
 
-    debug_test!(h1, "h1", "
+    debug_display_test!(h1, "h1", "
  8 . . . . . . . .
  7 . . . . . . . .
  6 . . . . . . . .
@@ -119,7 +130,7 @@ mod test {
  1 . . . . . . . *
    a b c d e f g h\n");
 
-    debug_test!(c2, "c2", "
+    debug_display_test!(c2, "c2", "
  8 . . . . . . . .
  7 . . . . . . . .
  6 . . . . . . . .
