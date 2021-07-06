@@ -91,7 +91,7 @@ impl Ply {
         ply
     }
 
-    pub fn to_fen(&self) -> String {
+    pub fn to_fen(self) -> String {
         let board = self.board_buffer();
         let mut out = String::new();
 

@@ -102,9 +102,9 @@ impl Magic {
     pub fn count_entries(&self) -> usize {
         let mut count = 0;
         for e in self.attacks.iter() {
-            if let Some(_) = e { count += 1; }
+            if e.is_some() { count += 1; }
         }
-        return count;
+        count
     }
     
     #[inline(always)]
@@ -115,7 +115,7 @@ impl Magic {
     pub fn attacks_for(&self, blockers: Bitboard) -> Bitboard {
         let key = self.key_for(blockers);
         if let Some(a) = self.attacks[key] {
-            return a;
+            a
         } else {
             panic!("Failed lookup for Magic #: #{:?}", self.magic);
         }
@@ -153,7 +153,7 @@ fn block_and_attack_board_for<F>(sq: usize, mask: Bitboard, attack_fn: F) -> Vec
 /// selection mask -- if the `nth` bit is high, then the `nth` element will be
 /// chosen
 /// TODO: Send this to a util module
-fn select_subset<T>(selection: u64, vector: &Vec<T>) -> Vec<T> 
+fn select_subset<T>(selection: u64, vector: &[T]) -> Vec<T> 
    where T : Copy {
    let mut out = vec![];
    for i in 0..64 {
@@ -207,8 +207,8 @@ pub fn slow_bishop_attacks(bishop_pos: Bitboard, occupancy: Bitboard) -> Bitboar
     for i in 1..=bishop_file {
         let try_move = bishop_pos.shift_by(Direction::SE, i);
         if try_move.is_empty() { break; }
+        squares.push(try_move.all_set_indices()[0]);
         if !(try_move & occupancy).is_empty() {
-            squares.push(try_move.all_set_indices()[0]);
             break;
         } else {
             squares.push(try_move.all_set_indices()[0]);
@@ -220,7 +220,7 @@ pub fn slow_bishop_attacks(bishop_pos: Bitboard, occupancy: Bitboard) -> Bitboar
         out.set_by_index(s);
     }
 
-    return out;
+    out
 }
 
 pub fn slow_rook_attacks(rook_pos: Bitboard, occupancy: Bitboard) -> Bitboard {
@@ -240,7 +240,7 @@ pub fn slow_rook_attacks(rook_pos: Bitboard, occupancy: Bitboard) -> Bitboard {
         out.set_by_index(s);
     }
 
-    return out;
+    out
 }
 
 

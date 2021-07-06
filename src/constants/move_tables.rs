@@ -97,7 +97,7 @@ lazy_static! {
                 out[idx] &= !Bitboard::from(1 << idx);
             }
         }
-        return out
+        out
     };
     
     /// A lookup table to conver a bishop on an index -> it's unblocked attack squares, needed for magics
@@ -107,9 +107,9 @@ lazy_static! {
             for file in 0..8 {
                 let idx = rank * 8 + file;
                 let bishop = Bitboard::from(1 << idx);
-                let mut attacks = bishop.clone();
+                let mut attacks = bishop;
                 for d in [Direction::NW, Direction::NE, Direction::SW, Direction::SE] {
-                    let mut bb = bishop.clone();
+                    let mut bb = bishop;
                     for _ in 0..8 {
                         bb |= bb.shift(d);
                     }
@@ -118,7 +118,7 @@ lazy_static! {
                 out[idx] = attacks & !*EDGES & !bishop;
             }
         }
-        return out
+        out
     };
     
     pub static ref ROOK_ATTACKS : [Magic; 64] = {
@@ -128,10 +128,8 @@ lazy_static! {
         // you can't reference the index in the array initialization syntax.
         unsafe {
             let mut out: [MaybeUninit<Magic>; 64] = MaybeUninit::uninit().assume_init();
-            let mut i = 0;
-            for e in &mut out {
+            for (i, e) in out.iter_mut().enumerate() {
                 *e = MaybeUninit::new(Magic::new_rook(i));
-                i += 1;
             }
             
             mem::transmute::<_, [Magic; 64]>(out)
@@ -142,10 +140,8 @@ lazy_static! {
         // NOTE: This is unsafe because rust is _very_ weird... <snip see comment in ROOK_ATTACKS>
         unsafe {
             let mut out: [MaybeUninit<Magic>; 64] = MaybeUninit::uninit().assume_init();
-            let mut i = 0;
-            for e in &mut out {
+            for (i, e) in out.iter_mut().enumerate() {
                 *e = MaybeUninit::new(Magic::new_bishop(i));
-                i += 1;
             }
             
             mem::transmute::<_, [Magic; 64]>(out)
