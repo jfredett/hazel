@@ -1,6 +1,5 @@
-use std::ops::{BitAndAssign, Range};
-use rand::{distributions::{Standard, uniform::SampleRange}, prelude::Distribution};
-use crate::bitboard::Bitboard;
+use std::ops::BitAndAssign;
+use rand::{distributions::Standard, prelude::Distribution};
 use super::*;
 use tracing::instrument;
 
@@ -25,19 +24,15 @@ impl Spell {
     
     // NOTE: This is really just for tests. It might be worth refactoring away later.
     #[allow(dead_code)]
-    pub fn new(shift_range: Range<u8>) -> Spell {
+    pub fn new(shift: u8) -> Spell {
         let mut r = Spell::empty();
-        r.initialize(shift_range);
+        r.initialize(shift);
         r
     }
     
-    pub fn initialize(&mut self, shift_range: Range<u8>) {
-        let mut rng = rand::thread_rng();
+    pub fn initialize(&mut self, shift: u8) {
         self.magic = Spell::low_bit_random(3);
-        // The shift should not allow it to create out-of-bounds indices, and the minimum shift should
-        // be `5` (the minimum shift of a bishop).
-        // NOTE: Make this range subject to selection?
-        self.shift = shift_range.sample_single(&mut rng);
+        self.shift = shift;
         // Used for constraining the key
         self.shift_mask = 2u64.pow(self.shift.into()) - 1;
         // The maximum offset should be less than the greater piece-table size. It also needs to fit 
@@ -56,7 +51,7 @@ impl Spell {
     pub fn mutate(&mut self) {
         self.magic = Spell::low_bit_random::<u64>(3);
 
-        match rand::random::<u8>() % 4 {
+        match rand::random::<u8>() % 32 {
             0 => { self.shift -= 1; }
             1 => { self.shift += 1; }
             _ => {} 
@@ -90,7 +85,7 @@ mod tests {
     fn serializing_to_bincode_round_trips() {
         let mut expected = Spell::empty();
 
-        expected.initialize(10..MAX_SHIFT);
+        expected.initialize(10);
 
         let serialized = bincode::serialize(&expected).unwrap();
         let deserialized : Spell = bincode::deserialize(&serialized).unwrap();
@@ -99,7 +94,7 @@ mod tests {
     
     #[test]
     fn mutation_changes_values() {
-        let original = Spell::new(5..18); 
+        let original = Spell::new(5); 
         let mut mutated = original;
         
         assert_eq!(original, mutated);
@@ -112,14 +107,14 @@ mod tests {
     // This test expects a panic if it's broken.
     #[quickcheck]
     fn key_for_does_not_violate_table_boundaries(blockers: Bitboard) {
-        let s = Spell::new(5..18);
+        let s = Spell::new(5);
         s.key_for(blockers);
     }
     
     // This test expects a panic if it's broken.
     #[quickcheck]
     fn key_for_does_not_violate_table_boundaries_even_after_mutation(blockers: Bitboard) {
-        let mut s = Spell::new(5..18);
+        let mut s = Spell::new(5);
         s.mutate();
         s.key_for(blockers);
     }

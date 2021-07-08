@@ -1,4 +1,4 @@
-use tracing::{info, instrument};
+use tracing::{debug, instrument};
 use crate::constants::Piece;
 
 use super::*;
@@ -6,7 +6,7 @@ use super::*;
 impl Wizard {
     #[instrument(skip(self))]
     pub fn initialize(&mut self) {
-        info!("Initializing wizard");
+        debug!("Initializing wizard");
         self.collisions = 0;
         for e in self.table.iter_mut() {
             *e = None;
@@ -15,12 +15,12 @@ impl Wizard {
         self.initialize_piece(Piece::Bishop);
         self.initialize_piece(Piece::Rook);
 
-        info!("Wizard initialized with {} collisions", self.collisions)
+        debug!("Wizard initialized with {} collisions", self.collisions)
     }
     
     #[instrument(skip(self))]
     fn initialize_piece(&mut self, piece: Piece) {
-        info!("Initializing table for {:?}", piece);
+        debug!("Initializing table for {:?}", piece);
         let (iters, shift_min) = match piece {
             Piece::Bishop => (self.bishops.iter_mut(), BISHOP_INDEX_MINS),
             Piece::Rook   => (self.rooks.iter_mut(), ROOK_INDEX_MINS),
@@ -28,7 +28,7 @@ impl Wizard {
         };
         
         for (i, spell) in iters.enumerate() {
-            spell.initialize(shift_min[i]..MAX_SHIFT);
+            spell.initialize(shift_min[i]);
             
             // NOTE: have to match twice since we can't put two closures with the same signature into the same variable for some reason.
             let attacks = match piece {

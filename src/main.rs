@@ -25,12 +25,13 @@ fn main() -> Result<(), Error> {
     match matches.subcommand() {
         ("magics", Some(sub_args)) => { 
             info!("Starting Wizard Arena");
-            if sub_args.is_present("resume") {
+            let mut arena = if sub_args.is_present("resume") {
                 let location = sub_args.value_of("resume").unwrap();
                 info!("Resuming previous Arena at {}", location);
                 // create a "Wizard::Arena" object and load the relevant files from the given directory
                 let arena = wizard::arena::Arena::load(PathBuf::from(location))?;
                 debug!("Arena loaded with size: {:?}", arena.size());
+                arena
             } else {
                 // if it lacks that option, take the path and initialize a new arena
                 let location = sub_args.value_of("start").unwrap();
@@ -40,8 +41,12 @@ fn main() -> Result<(), Error> {
                 // create a "Wizard::Arena" object and initialize it with some number of wizards.
                 let arena = wizard::arena::Arena::new(size,PathBuf::from(location))?;
                 debug!("Arena loaded with size: {:?}", arena.size());
+                arena
+            };
+            
+            loop {
+                arena.step()?;
             }
-            Ok(())
         }
         (_, _) => {
             info!("Startup complete, awaiting instructions");

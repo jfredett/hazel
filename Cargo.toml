@@ -27,6 +27,7 @@ bincode = "1.3.3"
 tracing-subscriber = "*"
 anyhow = "*"
 thiserror = "*"
+rayon = "*"
 
 [dev-dependencies]
 criterion = "~0.3"

@@ -49,8 +49,8 @@ impl Wizard {
     pub fn new() -> Wizard { 
        let mut acolyte = Wizard::empty();
        for i in 0..64 {
-           acolyte.rooks[i].initialize(ROOK_INDEX_MINS[i]..MAX_SHIFT);
-           acolyte.bishops[i].initialize(BISHOP_INDEX_MINS[i]..MAX_SHIFT);
+           acolyte.rooks[i].initialize(ROOK_INDEX_MINS[i]);
+           acolyte.bishops[i].initialize(BISHOP_INDEX_MINS[i]);
        }
        acolyte.initialize();
        

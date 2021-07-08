@@ -1,4 +1,4 @@
-use tracing::info;
+use tracing::trace;
 
 use super::*;
 
@@ -9,15 +9,32 @@ impl Wizard {
         // want this function to be minimized so collisions = 0 is critical. However, particularly
         // bad collisions might reduce the space_occupied significantly, so this may need tweaking
         // if we get unstable collision counts
-        self.space_occupied() * (1 + self.collisions)
+        //
+        // Taking the cube of collisions should make it _way_ worse to admit collisions than not.
+        self.space_occupied() + (1 + self.collisions * self.collisions * self.collisions)
     } 
+    
+    pub fn mutate(&mut self) {
+        // ~3% chance of mutation, this should be controllable
+        for spell in self.rooks.iter_mut() {
+            if rand::random::<u8>() % 32 == 0 {
+                spell.mutate();        
+            }
+        }
+        
+        for spell in self.bishops.iter_mut() {
+            if rand::random::<u8>() % 32 == 0 {
+                spell.mutate();        
+            }
+        }
+    }
 
     /// Takes two wizards and combines them into a new wizard.
     pub fn combine(&self, other: &Wizard) -> Wizard {
-        info!("Combining wizards");
+        trace!("Combining wizards");
         let mut new_wizard = Wizard::empty();
 
-        info!("Weaving wizard spellbooks");
+        trace!("Weaving wizard spellbooks");
         // create 2 64b numbers, if high, choose spell from left, if low, choose from right
         let bishop_selection = rand::random::<u64>();
         let rook_selection = rand::random::<u64>();
@@ -35,17 +52,17 @@ impl Wizard {
             }
         }
         
-        info!("Mutating bishop spells");
+        trace!("Mutating bishop spells");
         for b in &mut new_wizard.bishops {
             b.mutate();
         }
         
-        info!("Mutating rook spells");
+        trace!("Mutating rook spells");
         for r in &mut new_wizard.rooks {
             r.mutate();
         }
         
-        info!("Initializing new wizard");
+        trace!("Initializing new wizard");
         new_wizard.initialize();
         
         // run a 'mutate' step over all the spells, randomly tweaking a few bits of
