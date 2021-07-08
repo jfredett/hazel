@@ -12,7 +12,10 @@
 // and 'do it the old-fashioned way'. In theory, #enumerate() should be able to do this, but
 // about 20 minutes of trying couldn't grok the trait bound error I was getting so I left it
 // as is.
-#![allow(clippy::unusual_byte_groupings, clippy::needless_range_loop)]
+// 
+// 3. The new (as of 8-JUL-2021) lint for 'nonstandard_macro_braces' seems to fire off on proc-macro/
+// attribute-macro invokes. So it's off.
+#![allow(clippy::unusual_byte_groupings, clippy::needless_range_loop, clippy::nonstandard_macro_braces)]
 
 pub use packed_simd::*;
 
