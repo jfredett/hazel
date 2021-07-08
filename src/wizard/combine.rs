@@ -3,6 +3,15 @@ use tracing::info;
 use super::*;
 
 impl Wizard {
+    /// The function to be minimized
+    pub fn fitness(&self) -> usize {
+        // one collision should double the effective fitness (really lack of fitness), over time we
+        // want this function to be minimized so collisions = 0 is critical. However, particularly
+        // bad collisions might reduce the space_occupied significantly, so this may need tweaking
+        // if we get unstable collision counts
+        self.space_occupied() * (1 + self.collisions)
+    } 
+
     /// Takes two wizards and combines them into a new wizard.
     pub fn combine(&self, other: &Wizard) -> Wizard {
         info!("Combining wizards");
@@ -47,11 +56,11 @@ impl Wizard {
 #[cfg(test)]
 mod tests {
     use tracing_test::traced_test;
+    use tracing::debug;
 
     use super::*;
     
     #[test]
-    #[traced_test]
     fn combining_wizards_creates_a_new_wizard() {
         let wiz1 = Wizard::new();
         let wiz2 = Wizard::new();
@@ -59,5 +68,13 @@ mod tests {
         let wiz_combined = wiz1.combine(&wiz2);
         assert_ne!(wiz1, wiz_combined);
         assert_ne!(wiz2, wiz_combined);
+    }
+    
+    #[test]
+    fn two_wizards_have_different_fitness_in_general() {
+        let wiz1 = Wizard::new();
+        let wiz2 = Wizard::new();
+        
+        assert_ne!(wiz1.fitness(), wiz2.fitness());
     }
 }
