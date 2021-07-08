@@ -2,7 +2,7 @@ use std::ops::{BitAndAssign, Range};
 use rand::{distributions::{Standard, uniform::SampleRange}, prelude::Distribution};
 use crate::bitboard::Bitboard;
 use super::*;
-use tracing::{debug, info, instrument};
+use tracing::instrument;
 
 // 13b
 #[derive(PartialEq, Eq, Hash, Debug, Clone, Copy, Serialize, Deserialize)]
@@ -23,6 +23,8 @@ impl Spell {
         }
     }
     
+    // NOTE: This is really just for tests. It might be worth refactoring away later.
+    #[allow(dead_code)]
     pub fn new(shift_range: Range<u8>) -> Spell {
         let mut r = Spell::empty();
         r.initialize(shift_range);
