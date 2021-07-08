@@ -34,6 +34,9 @@ pub struct Wizard {
 }
 
 impl Wizard {
+    /// Size of a serialized wizard in bytes
+    const SERIALIZED_SIZE: usize = { TABLE_SIZE + (2 * BOARD_SIZE) + std::mem::size_of::<usize>() };
+
     pub fn empty() -> Wizard {
         Wizard {
             rooks: [Spell::empty(); BOARD_SIZE],
@@ -49,6 +52,7 @@ impl Wizard {
            acolyte.rooks[i].initialize(ROOK_INDEX_MINS[i]..MAX_SHIFT);
            acolyte.bishops[i].initialize(BISHOP_INDEX_MINS[i]..MAX_SHIFT);
        }
+       acolyte.initialize();
        
        acolyte
     }
