@@ -28,7 +28,9 @@ pub struct Wizard {
     rooks: [Spell; BOARD_SIZE],
     bishops: [Spell; BOARD_SIZE],
     // Attack Table -- 2.215MiB
-    table: Box<[Option<Bitboard>; TABLE_SIZE]>
+    table: Box<[Option<Bitboard>; TABLE_SIZE]>,
+    // Count of collisions in the table
+    collisions: usize
 }
 
 impl Wizard {
@@ -36,7 +38,8 @@ impl Wizard {
         Wizard {
             rooks: [Spell::empty(); BOARD_SIZE],
             bishops: [Spell::empty(); BOARD_SIZE],
-            table: box [None; TABLE_SIZE]
+            table: box [None; TABLE_SIZE],
+            collisions: 0
         }
     }
     
