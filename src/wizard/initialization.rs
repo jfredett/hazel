@@ -1,10 +1,12 @@
-use tracing::{debug, info, instrument, trace};
+use tracing::{info, instrument};
 use crate::constants::Piece;
 
 use super::*;
 
 impl Wizard {
+    #[instrument(skip(self))]
     pub fn initialize(&mut self) {
+        info!("Initializing wizard");
         self.collisions = 0;
         for e in self.table.iter_mut() {
             *e = None;
@@ -12,6 +14,8 @@ impl Wizard {
 
         self.initialize_piece(Piece::Bishop);
         self.initialize_piece(Piece::Rook);
+
+        info!("Wizard initialized with {} collisions", self.collisions)
     }
     
     #[instrument(skip(self))]
@@ -75,31 +79,5 @@ mod tests {
         let mut w = Wizard::empty();
         w.initialize();
         assert!(w.collisions > 0);
-    }
-
-    #[test]
-    fn quick_bish() {
-        let mut count = 0;
-        for sq in 0..64 {
-            let mask = NOMINAL_BISHOP_ATTACKS[sq];
-            for _ in bishop_block_and_attack_board_for(sq, mask) {
-                count += 1;
-            }
-        }
-        dbg!(count);
-        assert!(false);
-    }
-
-    #[test]
-    fn quick_rook() {
-        let mut count = 0;
-        for sq in 0..64 {
-            let mask = NOMINAL_ROOK_ATTACKS[sq];
-            for _ in rook_block_and_attack_board_for(sq, mask) {
-                count += 1;
-            }
-        }
-        dbg!(count);
-        assert!(false);
     }
 }
