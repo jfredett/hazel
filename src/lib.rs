@@ -37,6 +37,7 @@ pub mod constants;
 pub mod ply;
 pub mod movement;
 pub mod moveset;
+pub mod util;
 
 
 
