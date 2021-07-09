@@ -74,6 +74,7 @@ impl Shr<u64> for Bitboard {
     }
 }
 
+
 binop_trait!(BitAnd, bitand);
 binop_trait!(BitXor, bitxor);
 binop_trait!(BitOr, bitor);
@@ -83,9 +84,8 @@ binop_assign_trait!(BitXorAssign, bitxor_assign);
 binop_assign_trait!(BitAndAssign, bitand_assign);
 
 #[cfg(test)]
-mod test {
+mod tests {
     use super::*;
-
     mod bitops {
         use super::*;
 
