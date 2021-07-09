@@ -14,7 +14,7 @@ pub mod error;
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug, Serialize, Deserialize)]
 pub struct Arena {
-    size: usize,
+    pub size: usize,
     generations: usize,
     path: Option<PathBuf>,
     population: Vec<Wizard>
@@ -37,7 +37,8 @@ impl Arena {
         self.population.sort_by_key(|e| usize::MAX - e.fitness());
         while self.population.len() > self.size {
             // occasionally let more through
-            if rand::random::<u8>() % 64 == 0 { break }
+            if self.population.len() < (self.size * 3) && rand::random::<u8>() % 64 == 0 { break }
+
             self.population.remove(0);
         }
     }
@@ -49,9 +50,8 @@ impl Arena {
     
     fn new_wizard(&self) -> Wizard {
         trace!("Building new wizard");
-        let weighted_population = WeightedIndex::new(
-            self.population.iter().map(|e| e.fitness())
-        ).unwrap();
+        let weights : Vec<usize> = self.population.par_iter().map(|e| e.fitness()).collect();
+        let weighted_population = WeightedIndex::new(weights).unwrap();
         
         let parent1 = &self.population[weighted_population.sample(&mut thread_rng())];
         let parent2 = &self.population[weighted_population.sample(&mut thread_rng())];
@@ -65,14 +65,12 @@ impl Arena {
     
     fn breed(&mut self) {
         let mut new_wizards: Vec<Wizard> = vec![];
-        let num_new = rand::random::<usize>() % self.size;
+        let num_new = self.size;
         (0..num_new).into_par_iter().map(|_| {
             self.new_wizard()
         }).collect_into_vec(&mut new_wizards);
-
-        for w in new_wizards {
-            self.population.push(w)
-        }
+        
+        self.population.append(&mut new_wizards);
     }
 
     /// Executes a combine/mutate step on the population of the arena
@@ -168,6 +166,7 @@ impl Arena {
     }
     
     pub fn size(&self) -> usize { self.size }
+    pub fn set_size(&mut self, amt: usize) { self.size = amt; }
 }
 
 #[cfg(test)]

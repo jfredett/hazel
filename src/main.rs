@@ -27,11 +27,19 @@ fn main() -> Result<(), Error> {
             info!("Starting Wizard Arena");
             let mut arena = if sub_args.is_present("resume") {
                 let location = sub_args.value_of("resume").unwrap();
+                let size = sub_args.value_of("size").unwrap().parse().unwrap();
                 info!("Resuming previous Arena at {}", location);
                 // create a "Wizard::Arena" object and load the relevant files from the given directory
-                let arena = wizard::arena::Arena::load(PathBuf::from(location))?;
-                debug!("Arena loaded with size: {:?}", arena.size());
-                arena
+                let mut loaded_arena = wizard::arena::Arena::load(PathBuf::from(location))?;
+                debug!("Arena loaded with size: {:?}", loaded_arena.size());
+                
+                if loaded_arena.size() != size {
+                    info!("Resizing arena to match provided value");
+                    loaded_arena.set_size(size);
+                    debug!("Resized, saving");
+                    loaded_arena.save();
+                }
+                loaded_arena
             } else {
                 // if it lacks that option, take the path and initialize a new arena
                 let location = sub_args.value_of("start").unwrap();

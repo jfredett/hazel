@@ -5,13 +5,12 @@ use crate::constants::Piece;
 use super::*;
 
 impl Wizard {
+
     #[instrument(skip(self))]
     pub fn initialize(&mut self) {
         debug!("Initializing wizard");
         self.collisions = 0;
-        for e in self.table.iter_mut() {
-            *e = None;
-        }
+        self.table.iter_mut().par_bridge().for_each(|e| { *e = None; });
 
         self.initialize_piece(Piece::Bishop);
         self.initialize_piece(Piece::Rook);

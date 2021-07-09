@@ -51,18 +51,10 @@ impl Spell {
     pub fn mutate(&mut self) {
         self.magic = Spell::low_bit_random::<u64>(3);
 
-        match rand::random::<u8>() % 32 {
-            0 => { self.shift -= 1; }
-            1 => { self.shift += 1; }
-            _ => {} 
-        }
-        if self.shift < 5 { self.shift = 5; }
-        if self.shift > MAX_SHIFT { self.shift = MAX_SHIFT; }
-        
         self.shift_mask = 2u64.pow(self.shift.into()) - 1;
 
         self.offset ^= Spell::low_bit_random::<u32>(2);
-        self.offset &= self.shift_mask as u32;
+        self.offset = (self.offset % TABLE_SIZE as u32) - 8192;
     }
 
     /// Produce a low-bit-count random number by generating ANDing-bitwise multiple random numbers together

@@ -1,3 +1,4 @@
+use rayon::iter::{IntoParallelRefMutIterator, ParallelBridge, ParallelIterator};
 use tracing::trace;
 
 use super::*;
@@ -5,13 +6,7 @@ use super::*;
 impl Wizard {
     /// The function to be minimized
     pub fn fitness(&self) -> usize {
-        // one collision should double the effective fitness (really lack of fitness), over time we
-        // want this function to be minimized so collisions = 0 is critical. However, particularly
-        // bad collisions might reduce the space_occupied significantly, so this may need tweaking
-        // if we get unstable collision counts
-        //
-        // Taking the cube of collisions should make it _way_ worse to admit collisions than not.
-        self.space_occupied() + (1 + self.collisions * self.collisions * self.collisions)
+        (self.collisions * 1_000_000) + self.space_occupied() 
     } 
     
     pub fn mutate(&mut self) {
@@ -53,14 +48,14 @@ impl Wizard {
         }
         
         trace!("Mutating bishop spells");
-        for b in &mut new_wizard.bishops {
+        new_wizard.bishops.iter_mut().par_bridge().for_each(|b: &mut Spell| {
             b.mutate();
-        }
+        });
         
         trace!("Mutating rook spells");
-        for r in &mut new_wizard.rooks {
+        new_wizard.rooks.iter_mut().par_bridge().for_each(|r: &mut Spell| {
             r.mutate();
-        }
+        });
         
         trace!("Initializing new wizard");
         new_wizard.initialize();
