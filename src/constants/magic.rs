@@ -165,7 +165,7 @@ fn select_subset<T>(selection: u64, vector: &[T]) -> Vec<T>
 }
 
 pub fn slow_bishop_attacks(bishop_pos: Bitboard, occupancy: Bitboard) -> Bitboard {
-    let bishop_idx = bishop_pos.all_set_indices()[0];
+    let bishop_idx = bishop_pos.first_index();
     let bishop_rank = bishop_idx % 8;
     let bishop_file = bishop_idx / 8;
 
@@ -175,10 +175,10 @@ pub fn slow_bishop_attacks(bishop_pos: Bitboard, occupancy: Bitboard) -> Bitboar
         let try_move = bishop_pos.shift_by(Direction::NW, i);
         if try_move.is_empty() { break; }
         if !(try_move & occupancy).is_empty() {
-            squares.push(try_move.all_set_indices()[0]);
+            squares.push(try_move.first_index());
             break;
         } else {
-            squares.push(try_move.all_set_indices()[0])
+            squares.push(try_move.first_index())
         }
     }
 
@@ -186,10 +186,10 @@ pub fn slow_bishop_attacks(bishop_pos: Bitboard, occupancy: Bitboard) -> Bitboar
         let try_move = bishop_pos.shift_by(Direction::SW, i);
         if try_move.is_empty() { break; }
         if !(try_move & occupancy).is_empty() {
-            squares.push(try_move.all_set_indices()[0]);
+            squares.push(try_move.first_index());
             break;
         } else {
-            squares.push(try_move.all_set_indices()[0])
+            squares.push(try_move.first_index())
         }
     }
 
@@ -197,21 +197,21 @@ pub fn slow_bishop_attacks(bishop_pos: Bitboard, occupancy: Bitboard) -> Bitboar
         let try_move = bishop_pos.shift_by(Direction::NE, i);
         if try_move.is_empty() { break; }
         if !(try_move & occupancy).is_empty() {
-            squares.push(try_move.all_set_indices()[0]);
+            squares.push(try_move.first_index());
             break;
         } else {
-            squares.push(try_move.all_set_indices()[0])
+            squares.push(try_move.first_index())
         }
     }
 
     for i in 1..=bishop_file {
         let try_move = bishop_pos.shift_by(Direction::SE, i);
         if try_move.is_empty() { break; }
-        squares.push(try_move.all_set_indices()[0]);
+        squares.push(try_move.first_index());
         if !(try_move & occupancy).is_empty() {
             break;
         } else {
-            squares.push(try_move.all_set_indices()[0]);
+            squares.push(try_move.first_index());
         }
     }
 
@@ -230,7 +230,7 @@ pub fn slow_rook_attacks(rook_pos: Bitboard, occupancy: Bitboard) -> Bitboard {
         'next_dir: for i in 1..8 {
             let try_move = rook_pos.shift_by(dir, i);
             if try_move.is_empty() { break 'next_dir; }
-            squares.push(try_move.all_set_indices()[0]);
+            squares.push(try_move.first_index());
             if !(try_move & occupancy).is_empty() { break 'next_dir; }
         }
     }
@@ -314,7 +314,7 @@ mod test {
             let rook_pos = board.rooks[Color::WHITE as usize];
             let expected = bitboard!("e2", "e3", "e5", "e6", "b4", "c4", "d4", "f4", "g4", "h4");
             
-            let m = Magic::new_rook(rook_pos.all_set_indices()[0]);
+            let m = Magic::new_rook(rook_pos.first_index());
             
             let rook_attacks = m.attacks_for(board.occupancy() & !rook_pos);
             

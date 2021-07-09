@@ -39,13 +39,13 @@ impl Move {
         // FIXME: Doesn't account for checks yet.
         // NOTE: We should check king moves first to see if we're in check, since we can bail earlier if we are.
         let king = ply.kings[color as usize];
-        let source = king.all_set_indices()[0];
+        let source = king.first_index();
         for d in DIRECTIONS {
             let m = king.shift(d);
             if m.is_empty() { continue; }
 
             if (m & ply.occupancy_for(color)).is_empty() {
-                let target = m.all_set_indices()[0];
+                let target = m.first_index();
                 if ply.occupancy_for(other_color).is_index_set(target) {
                     out.add_capture(source, target);
                 } else {

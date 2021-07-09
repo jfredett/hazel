@@ -141,7 +141,7 @@ impl Ply {
             // need to implement this
             Some(bb) => { 
                 // If there are multiple en passant indices, then it's a broken state anyway
-                let idx = bb.all_set_indices()[0];
+                let idx = bb.first_index();
                 out.push_str(INDEX_TO_NOTATION[idx]);
             }
         }
