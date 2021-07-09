@@ -47,7 +47,7 @@ impl Arena {
         self.population.par_iter_mut().for_each(|e| e.mutate());
     }
     
-    fn new_wizard(&mut self) -> Wizard {
+    fn new_wizard(&self) -> Wizard {
         trace!("Building new wizard");
         let weighted_population = WeightedIndex::new(
             self.population.iter().map(|e| e.fitness())
@@ -64,11 +64,14 @@ impl Arena {
     }
     
     fn breed(&mut self) {
-        loop {
-            if rand::random::<u8>() % 32 == 0 { break }
-            let new_wizard = self.new_wizard();
-            
-            self.population.push(new_wizard)
+        let mut new_wizards: Vec<Wizard> = vec![];
+        let num_new = rand::random::<usize>() % self.size;
+        (0..num_new).into_par_iter().map(|_| {
+            self.new_wizard()
+        }).collect_into_vec(&mut new_wizards);
+
+        for w in new_wizards {
+            self.population.push(w)
         }
     }
 

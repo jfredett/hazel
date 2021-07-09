@@ -20,6 +20,7 @@ use hazel::constants::*;
 mod bitboard;
 mod ply;
 mod movegen;
+mod wizard;
 
 /// A helper macro for quickly defining benchmarks. Invoke as follows:
 ///

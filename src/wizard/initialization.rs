@@ -1,3 +1,4 @@
+use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelBridge, ParallelIterator};
 use tracing::{debug, instrument};
 use crate::constants::Piece;
 
@@ -19,7 +20,7 @@ impl Wizard {
     }
     
     #[instrument(skip(self))]
-    fn initialize_piece(&mut self, piece: Piece) {
+    pub fn initialize_piece(&mut self, piece: Piece) {
         debug!("Initializing table for {:?}", piece);
         let (iters, shift_min) = match piece {
             Piece::Bishop => (self.bishops.iter_mut(), BISHOP_INDEX_MINS),
@@ -27,29 +28,28 @@ impl Wizard {
             _ => panic!("Do not call this with anything other than bishop or rook, this should be an error type")
         };
         
-        for (i, spell) in iters.enumerate() {
+        let images : Vec<Vec<(usize, Bitboard)>> = iters.enumerate().par_bridge().map(|(i, spell)| {
             spell.initialize(shift_min[i]);
-            
             // NOTE: have to match twice since we can't put two closures with the same signature into the same variable for some reason.
             let attacks = match piece {
                 Piece::Bishop => bishop_block_and_attack_board_for(i, NOMINAL_BISHOP_ATTACKS[i]),
                 Piece::Rook   => rook_block_and_attack_board_for(i, NOMINAL_ROOK_ATTACKS[i]),
                 _ => panic!("Do not call this with anything other than bishop or rook, this should be an error type")
             };
-
-            for (blockers, attacks) in attacks {
-                let key = spell.key_for(blockers);
-                
-                match self.table[key] {
-                    Some(attack_board) => { 
-                        if attack_board != attacks {
-                            self.collisions += 1;
-                        }
-                    },
-                    None => { self.table[key] = Some(attacks); }
-                };
+            
+            let mut image = vec![];
+            attacks.par_iter().map(|(blockers, attacks)| (spell.key_for(*blockers), *attacks)).collect_into_vec(&mut image);
+            image
+        }).collect();
+        
+        for image in images {
+            for (idx, attacks) in image {
+                match self.table[idx] {
+                    Some(attack_board) => if attack_board != attacks { self.collisions += 1; }
+                    None => { self.table[idx] = Some(attacks); }
+                }
             }
-        }
+        } 
     }
 }
 
