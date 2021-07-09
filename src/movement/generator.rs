@@ -1,4 +1,6 @@
-use crate::{constants::{Color, DIRECTIONS, Direction, RANK_1, RANK_2, RANK_7, RANK_8, A_FILE, H_FILE}, moveset::MoveSet, ply::Ply};
+use crate::{constants::{A_FILE, Color, DIRECTIONS, Direction, H_FILE, Piece, RANK_1, RANK_2, RANK_7, RANK_8}, moveset::MoveSet, pextboard, ply::Ply};
+
+
 
 use super::Move;
 use crate::constants::move_tables::*;
@@ -69,7 +71,7 @@ impl Move {
 
         // rook moves
         for source in ply.rooks[color as usize].all_set_indices() {
-            let attacks = ROOK_ATTACKS[source].attacks_for(ply.occupancy()) & !ply.occupancy_for(color);
+            let attacks = pextboard::attacks_for(Piece::Rook, source, ply.occupancy()) & !ply.occupancy_for(color);
             for target in attacks.all_set_indices() {
                 if ply.occupancy_for(other_color).is_index_set(target) {
                     out.add_capture(source, target)    
@@ -81,7 +83,7 @@ impl Move {
 
         // bishop moves
         for source in ply.bishops[color as usize].all_set_indices() {
-            let attacks = BISHOP_ATTACKS[source].attacks_for(ply.occupancy()) & !ply.occupancy_for(color);
+            let attacks = pextboard::attacks_for(Piece::Bishop, source, ply.occupancy()) & !ply.occupancy_for(color);
             for target in attacks.all_set_indices() {
                 if ply.occupancy_for(other_color).is_index_set(target) {
                     out.add_capture(source, target)    
@@ -93,9 +95,7 @@ impl Move {
 
         // queen moves
         for source in ply.queens[color as usize].all_set_indices() {
-            let attacks = ( BISHOP_ATTACKS[source].attacks_for(ply.occupancy())
-                                  | ROOK_ATTACKS[source].attacks_for(ply.occupancy())
-                                  ) & !ply.occupancy_for(color);
+            let attacks = pextboard::attacks_for(Piece::Queen, source, ply.occupancy()) & !ply.occupancy_for(color);
             for target in attacks.all_set_indices() {
                 if ply.occupancy_for(other_color).is_index_set(target) {
                     out.add_capture(source, target)    

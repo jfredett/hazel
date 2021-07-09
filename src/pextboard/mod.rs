@@ -1,0 +1,308 @@
+use crate::{bitboard::Bitboard, constants::{Direction, Piece}, util::*};
+use nominal_attacks::*;
+
+use super::*;
+
+pub(super) const BISHOP_INDEX_MINS: [u8; 64] = [
+    6, 5, 5, 5, 5, 5, 5, 6,
+    5, 5, 5, 5, 5, 5, 5, 5,
+    5, 5, 7, 7, 7, 7, 5, 5,
+    5, 5, 7, 9, 9, 7, 5, 5,
+    5, 5, 7, 9, 9, 7, 5, 5,
+    5, 5, 7, 7, 7, 7, 5, 5,
+    5, 5, 5, 5, 5, 5, 5, 5,
+    6, 5, 5, 5, 5, 5, 5, 6
+];
+
+pub(super) const ROOK_INDEX_MINS: [u8; 64] = [
+    12, 11, 11, 11, 11, 11, 11, 12,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    12, 11, 11, 11, 11, 11, 11, 12
+];
+
+/// 800KiB, equal to the sum of 2^i where i is all the shifts in ROOK_INDEX_MINS
+pub const ROOK_TABLE_SIZE : usize = 819200;
+/// 41KiB, see ROOK_TABLE_SIZE for details on how it's calculated.
+pub const BISHOP_TABLE_SIZE : usize = 41984;
+
+/// A PEXT-based magic bitboard
+#[derive(PartialEq, Eq, Hash, Debug)]
+pub struct PEXTBoard<const SIZE: usize> {
+    table: Box<[Bitboard; SIZE]>
+}
+
+mod nominal_attacks;
+
+/*
+
+TODO: Store Compact Movesets instead of Bitboards (for a fairly low cost, using a 12 bit move
+representation) we can store 6 moves in the space of 1 bitboard. That means we only pay a little
+bit to avoid having to compute the moves for each bitboard. If we make moveset have a very 
+fast merge / append system, then we're in a good spot to save some cycles.
+
+TODO: Rip out the old magic bitboard code (again)
+
+*/
+
+pub fn slow_attacks(pos: Bitboard, occupancy: Bitboard, dirs: [Direction; 4]) -> Bitboard {
+    let mut out = Bitboard::empty();
+
+    for dir in dirs {
+        'next_dir: for i in 1..8 {
+            let try_move = pos.shift_by(dir, i);
+            if try_move.is_empty() { break 'next_dir; }
+            out.set_by_index(try_move.all_set_indices()[0]);
+            if !(try_move & occupancy).is_empty() { break 'next_dir; }
+        }
+    }
+    
+    out
+}
+
+pub fn slow_bishop_attacks(bishop_pos: Bitboard, occupancy: Bitboard) -> Bitboard {
+    slow_attacks(bishop_pos, occupancy, [Direction::NW, Direction::SW, Direction::NE, Direction::SE])
+}
+
+pub fn slow_rook_attacks(rook_pos: Bitboard, occupancy: Bitboard) -> Bitboard {
+    slow_attacks(rook_pos, occupancy, [Direction::N, Direction::E, Direction::S, Direction::W] )
+}
+
+pub fn attacks_for(piece: Piece, sq: usize, blocks: Bitboard) -> Bitboard {
+    let pos = Bitboard::from(1 << sq);
+    match piece {
+        Piece::Rook => { ROOK_PEXTBOARD._attacks_for(Piece::Rook, pos, blocks) }
+        Piece::Bishop => { BISHOP_PEXTBOARD._attacks_for(Piece::Bishop, pos, blocks) }
+        Piece::Queen => { attacks_for(Piece::Rook, sq, blocks) | attacks_for(Piece::Bishop, sq, blocks) }
+        _ => { panic!("Can only be called with Piece == Rook, Bishop, or Queen") }
+    }
+}
+
+impl<const SIZE: usize> PEXTBoard<SIZE> {
+    fn _attacks_for(&self, piece: Piece, pos: Bitboard, blocks: Bitboard) -> Bitboard {
+        let sq = pos.first_index();
+        let pext_mask = Self::mask_for(sq, piece);
+
+        let key = Self::key_for(pext_mask, blocks);
+        let offset = Self::offset_for(piece, sq);
+
+        self.table[key + offset]
+    } 
+    
+    pub fn mask_for(sq: usize, piece: Piece) -> Bitboard {
+        match piece {
+            Piece::Rook => { NOMINAL_ROOK_ATTACKS[sq] }
+            Piece::Bishop => { NOMINAL_BISHOP_ATTACKS[sq] }
+            _ => panic!("Do not call with anything other than Rook or Bishop")
+        }
+    }
+
+
+    pub fn rook() -> PEXTBoard<ROOK_TABLE_SIZE> {
+        let mut board = PEXTBoard {
+            table: box [Bitboard::empty(); ROOK_TABLE_SIZE]
+        };
+        board.initialize_piece(Piece::Rook);
+        board
+    }
+    
+    pub fn bishop() -> PEXTBoard<BISHOP_TABLE_SIZE> {
+        let mut board = PEXTBoard {
+            table: box [Bitboard::empty(); BISHOP_TABLE_SIZE]
+        };
+        board.initialize_piece(Piece::Bishop);
+        board
+    }
+    
+    // determines the offset into the table for the given square
+    #[inline(always)]
+    fn offset_for(piece: Piece, sq: usize) -> usize {
+        let mut offset = 0;
+        
+        // TOOD: Replace INDEX_MINS w/ OFFSETS and just do a lookup
+        for i in 0..sq {
+            let exp = match piece {
+                Piece::Rook => { ROOK_INDEX_MINS[i] }
+                Piece::Bishop => { BISHOP_INDEX_MINS[i] }
+                _ => panic!("Do not call with anything other than Rook or Bishop")
+            };
+            offset += 2usize.pow(exp.into());
+        }
+        offset
+    }
+
+    fn initialize_piece(&mut self, piece: Piece) {
+        debug!("Initializing table for {:?}", piece);
+        for sq in 0..64 {
+            debug!("Initializing table for square {}", sq);
+            let (pext_mask, entries) = Self::block_and_attack_board_for(piece, sq);
+            for (blocks, attacks) in entries {
+                let key = Self::key_for(pext_mask, blocks) + Self::offset_for(piece, sq);
+                self.table[key] = attacks
+            }
+        }
+    }
+    
+    fn key_for(pext_mask: Bitboard, blocks: Bitboard) -> usize {
+        blocks.pext(pext_mask) as usize
+    }
+    
+    #[inline(always)]
+    fn block_and_attack_board_for(piece: Piece, sq: usize) -> (Bitboard, Vec<(Bitboard, Bitboard)>) {
+        match piece {
+            Piece::Rook => { 
+                let nom_attacks = NOMINAL_ROOK_ATTACKS[sq];
+                let entries = Self::calculate_block_and_attack_board_for(sq, nom_attacks, slow_rook_attacks);
+                (nom_attacks, entries) 
+            }
+            Piece::Bishop => { 
+                let nom_attacks = NOMINAL_BISHOP_ATTACKS[sq];
+                let entries = Self::calculate_block_and_attack_board_for(sq, nom_attacks, slow_bishop_attacks);
+                (nom_attacks, entries) 
+            }
+            _ => panic!("Don't call with anything other than Rook or Bishop")
+        }
+    }
+
+    fn calculate_block_and_attack_board_for<F>(sq: usize, nominal_attacks: Bitboard, attack_fn: F) -> Vec<(Bitboard, Bitboard)>
+        where F : Fn(Bitboard, Bitboard) -> Bitboard {
+        let pos = Bitboard::from(1 << sq);
+        let blocker_indexes = nominal_attacks.all_set_indices();
+        let mask_count = blocker_indexes.len();
+        let mut out = vec![];
+        
+        for i in 0..2u64.pow(mask_count as u32) {
+            let mut occupancy_board = Bitboard::empty();
+            for idx in select_subset(i, &blocker_indexes) {
+                occupancy_board.set_by_index(idx);            
+            }
+            let attack_board = attack_fn(pos, occupancy_board);
+            out.push((occupancy_board, attack_board));
+
+        }
+        out
+    }
+}
+
+lazy_static! {
+    pub static ref ROOK_PEXTBOARD : PEXTBoard<ROOK_TABLE_SIZE> = PEXTBoard::<ROOK_TABLE_SIZE>::rook();
+    pub static ref BISHOP_PEXTBOARD : PEXTBoard<BISHOP_TABLE_SIZE> = PEXTBoard::<BISHOP_TABLE_SIZE>::bishop();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{constants::Color, ply::Ply};
+    
+    
+    mod rooks {
+        use crate::constants::POS2_KIWIPETE_FEN;
+
+        use super::*;
+
+        #[test]
+        fn offsets_for_rooks_calculate_correctly() {
+            assert_eq!(PEXTBoard::<ROOK_TABLE_SIZE>::offset_for(Piece::Rook, 0), 0);
+            assert_eq!(PEXTBoard::<ROOK_TABLE_SIZE>::offset_for(Piece::Rook, 1), 4096);
+            assert_eq!(PEXTBoard::<ROOK_TABLE_SIZE>::offset_for(Piece::Rook, 2), 4096+2048);
+            assert_eq!(PEXTBoard::<ROOK_TABLE_SIZE>::offset_for(Piece::Rook, 3), 4096+2048+2048);
+        }
+
+        #[quickcheck]
+        fn rook_pextboard_correctly_calculates_rook_attacks(sq_in: u64, blocks_in: Bitboard) -> bool {
+            let pos = Bitboard::from(1 << (sq_in % 64));
+            // make sure we aren't claiming the rook's square is already occupied
+            let blocks = blocks_in & !pos;
+            
+            let slow_attacks = slow_rook_attacks(pos, blocks);
+            let fast_attacks = ROOK_PEXTBOARD._attacks_for(Piece::Rook, pos, blocks);
+            
+            slow_attacks == fast_attacks
+        }
+        
+        #[test]
+        fn slow_rook_attacks_kiwipete_a1_position() {
+            let ply = Ply::from_fen(&String::from(POS2_KIWIPETE_FEN));
+            assert_eq!(
+                slow_rook_attacks(bitboard!("a1"), ply.occupancy()),
+                bitboard!("a2", "b1", "c1", "d1", "e1")
+            );
+        }
+
+        #[test]
+        fn correctly_calculates_rook_attacks_via_slow_method() {
+
+            /* A board what looks like:
+             * 
+             * 8 k . . . . . . .
+             * 7 . . . . . . . .
+             * 6 . . . . p . . .
+             * 5 . . . . . . . .
+             * 4 . p . . R . . .
+             * 3 . . . . . . . .
+             * 2 . . . . P . . .
+             * 1 K . . . . . . .
+             *   a b c d e f g h
+             * 
+             */
+            let board = Ply::from_fen(&String::from("k7/8/4p3/8/1p2R3/8/4P3/K7 w - - 0 1"));
+            
+            // this is fine here since we know there is only 1 rook on the board, this'd bust if there were two.
+            let rook_pos = board.rooks[Color::WHITE as usize];
+            let expected = bitboard!("e2", "e3", "e5", "e6", "b4", "c4", "d4", "f4", "g4", "h4");
+            
+            let rook_attacks = slow_rook_attacks(rook_pos, board.occupancy());
+            
+            assert_eq!(rook_attacks, expected);
+        }
+    }
+    
+    mod bishops {
+
+        use super::*;
+
+        #[quickcheck]
+        fn bishop_pextboard_correctly_calculates_bishop_attacks(sq_in: u64, blocks_in: Bitboard) -> bool {
+            let pos = Bitboard::from(1 << (sq_in % 64));
+            // make sure we aren't claiming the bishop's square is already occupied
+            let blocks = blocks_in & !pos;
+            
+            let slow_attacks = slow_bishop_attacks(pos, blocks);
+            let fast_attacks = BISHOP_PEXTBOARD._attacks_for(Piece::Bishop, pos, blocks);
+            
+            slow_attacks == fast_attacks
+        }
+
+        #[test]
+        fn correctly_calculates_bishop_attacks_via_slow_method() {
+
+            /* A board what looks like:
+             * 
+             * 8 k . . . . . . .
+             * 7 . . . . . . . .
+             * 6 . . . . . . p .
+             * 5 . . . . . . . .
+             * 4 . p . . B . . .
+             * 3 . . . . . P . .
+             * 2 . . . . . . . .
+             * 1 K . . . . . . .
+             *   a b c d e f g h
+             * 
+             */
+            let board = Ply::from_fen(&String::from("k7/8/6p1/8/1p2B3/5P2/8/K7 w - - 0 1"));
+            
+            // this is fine here since we know there is only 1 bishop on the board, this'd bust if there were two.
+            let bishop_pos = board.bishops[Color::WHITE as usize];
+            let expected = bitboard!("f3","f5","g6","d5","c6","b7","a8","d3","c2","b1");
+            
+            let bishop_attacks = slow_bishop_attacks(bishop_pos, board.occupancy());
+            
+            assert_eq!(bishop_attacks, expected);
+        }
+    }
+
+}
