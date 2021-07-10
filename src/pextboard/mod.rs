@@ -3,32 +3,32 @@ use nominal_attacks::*;
 
 use super::*;
 
-pub(super) const BISHOP_INDEX_MINS: [u8; 64] = [
-    6, 5, 5, 5, 5, 5, 5, 6,
-    5, 5, 5, 5, 5, 5, 5, 5,
-    5, 5, 7, 7, 7, 7, 5, 5,
-    5, 5, 7, 9, 9, 7, 5, 5,
-    5, 5, 7, 9, 9, 7, 5, 5,
-    5, 5, 7, 7, 7, 7, 5, 5,
-    5, 5, 5, 5, 5, 5, 5, 5,
-    6, 5, 5, 5, 5, 5, 5, 6
+const BISHOP_OFFSETS: [usize; 64] = [
+        0,     64,    96,  128,  160,  192,  224,  256,
+        320,   352,  384,  416,  448,  480,  512,  544,
+        576,   608,  640,  768,  896, 1024, 1152, 1184,
+        1216, 1248, 1280, 1408, 1920, 2432, 2560, 2592,
+        2624, 2656, 2688, 2816, 3328, 3840, 3968, 4000,
+        4032, 4064, 4096, 4224, 4352, 4480, 4608, 4640,
+        4672, 4704, 4736, 4768, 4800, 4832, 4864, 4896,
+        4928, 4992, 5024, 5056, 5088, 5120, 5152, 5184,
 ];
 
-pub(super) const ROOK_INDEX_MINS: [u8; 64] = [
-    12, 11, 11, 11, 11, 11, 11, 12,
-    11, 10, 10, 10, 10, 10, 10, 11,
-    11, 10, 10, 10, 10, 10, 10, 11,
-    11, 10, 10, 10, 10, 10, 10, 11,
-    11, 10, 10, 10, 10, 10, 10, 11,
-    11, 10, 10, 10, 10, 10, 10, 11,
-    11, 10, 10, 10, 10, 10, 10, 11,
-    12, 11, 11, 11, 11, 11, 11, 12
+const ROOK_OFFSETS: [usize; 64] = [
+    0,      4096,  6144,  8192, 10240, 12288, 14336, 16384,
+    20480, 22528, 23552, 24576, 25600, 26624, 27648, 28672,
+    30720, 32768, 33792, 34816, 35840, 36864, 37888, 38912,
+    40960, 43008, 44032, 45056, 46080, 47104, 48128, 49152,
+    51200, 53248, 54272, 55296, 56320, 57344, 58368, 59392,
+    61440, 63488, 64512, 65536, 66560, 67584, 68608, 69632,
+    71680, 73728, 74752, 75776, 76800, 77824, 78848, 79872,
+    81920, 86016, 88064, 90112, 92160, 94208, 96256, 98304,
 ];
 
 /// 800KiB, equal to the sum of 2^i where i is all the shifts in ROOK_INDEX_MINS
-pub const ROOK_TABLE_SIZE : usize = 819200;
+pub const ROOK_TABLE_SIZE : usize = 819200 / 8;
 /// 41KiB, see ROOK_TABLE_SIZE for details on how it's calculated.
-pub const BISHOP_TABLE_SIZE : usize = 41984;
+pub const BISHOP_TABLE_SIZE : usize = 41984 / 8;
 
 /// A PEXT-based magic bitboard
 #[derive(PartialEq, Eq, Hash, Debug)]
@@ -44,8 +44,6 @@ TODO: Store Compact Movesets instead of Bitboards (for a fairly low cost, using 
 representation) we can store 6 moves in the space of 1 bitboard. That means we only pay a little
 bit to avoid having to compute the moves for each bitboard. If we make moveset have a very 
 fast merge / append system, then we're in a good spot to save some cycles.
-
-TODO: Rip out the old magic bitboard code (again)
 
 */
 
@@ -121,18 +119,11 @@ impl<const SIZE: usize> PEXTBoard<SIZE> {
     // determines the offset into the table for the given square
     #[inline(always)]
     fn offset_for(piece: Piece, sq: usize) -> usize {
-        let mut offset = 0;
-        
-        // TOOD: Replace INDEX_MINS w/ OFFSETS and just do a lookup
-        for i in 0..sq {
-            let exp = match piece {
-                Piece::Rook => { ROOK_INDEX_MINS[i] }
-                Piece::Bishop => { BISHOP_INDEX_MINS[i] }
-                _ => panic!("Do not call with anything other than Rook or Bishop")
-            };
-            offset += 2usize.pow(exp.into());
+        match piece {
+            Piece::Rook => { ROOK_OFFSETS[sq] }
+            Piece::Bishop => { BISHOP_OFFSETS[sq] }
+            _ => { panic!("Don't call w/ blah blah look at the code") }
         }
-        offset
     }
 
     fn initialize_piece(&mut self, piece: Piece) {
@@ -304,5 +295,4 @@ mod tests {
             assert_eq!(bishop_attacks, expected);
         }
     }
-
 }
