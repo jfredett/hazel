@@ -1,6 +1,6 @@
 use super::*;
 
-use hazel::{pextboard::*, random};
+use hazel::pextboard::{slow_rook_attacks, slow_bishop_attacks};
 
 bench!(
     group: MoveGen,
@@ -18,8 +18,6 @@ bench!(
     test: { hazel::pextboard::attacks_for(Piece::Rook, rook_idx, random_bitboard()) },
     where:
         rook_idx => random_usize() % 64; 
-        preload => black_box(hazel::pextboard::attacks_for(Piece::Rook, rook_idx, random_bitboard()));
-
 );
 
 bench!(

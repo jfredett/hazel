@@ -81,6 +81,7 @@ pub fn attacks_for(piece: Piece, sq: usize, blocks: Bitboard) -> Bitboard {
 }
 
 impl<const SIZE: usize> PEXTBoard<SIZE> {
+    #[inline(always)]
     fn _attacks_for(&self, piece: Piece, pos: Bitboard, blocks: Bitboard) -> Bitboard {
         let sq = pos.first_index();
         let pext_mask = Self::mask_for(sq, piece);
@@ -90,7 +91,8 @@ impl<const SIZE: usize> PEXTBoard<SIZE> {
 
         self.table[key + offset]
     } 
-    
+
+    #[inline(always)]
     pub fn mask_for(sq: usize, piece: Piece) -> Bitboard {
         match piece {
             Piece::Rook => { NOMINAL_ROOK_ATTACKS[sq] }
@@ -99,6 +101,20 @@ impl<const SIZE: usize> PEXTBoard<SIZE> {
         }
     }
 
+    // determines the offset into the table for the given square
+    #[inline(always)]
+    fn offset_for(piece: Piece, sq: usize) -> usize {
+        match piece {
+            Piece::Rook => { ROOK_OFFSETS[sq] }
+            Piece::Bishop => { BISHOP_OFFSETS[sq] }
+            _ => { panic!("Don't call w/ blah blah look at the code") }
+        }
+    }
+
+    #[inline(always)]
+    fn key_for(pext_mask: Bitboard, blocks: Bitboard) -> usize {
+        blocks.pext(pext_mask) as usize
+    }
 
     pub fn rook() -> PEXTBoard<ROOK_TABLE_SIZE> {
         let mut board = PEXTBoard {
@@ -116,16 +132,6 @@ impl<const SIZE: usize> PEXTBoard<SIZE> {
         board
     }
     
-    // determines the offset into the table for the given square
-    #[inline(always)]
-    fn offset_for(piece: Piece, sq: usize) -> usize {
-        match piece {
-            Piece::Rook => { ROOK_OFFSETS[sq] }
-            Piece::Bishop => { BISHOP_OFFSETS[sq] }
-            _ => { panic!("Don't call w/ blah blah look at the code") }
-        }
-    }
-
     fn initialize_piece(&mut self, piece: Piece) {
         debug!("Initializing table for {:?}", piece);
         for sq in 0..64 {
@@ -136,10 +142,6 @@ impl<const SIZE: usize> PEXTBoard<SIZE> {
                 self.table[key] = attacks
             }
         }
-    }
-    
-    fn key_for(pext_mask: Bitboard, blocks: Bitboard) -> usize {
-        blocks.pext(pext_mask) as usize
     }
     
     #[inline(always)]
