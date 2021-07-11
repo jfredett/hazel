@@ -39,10 +39,14 @@ harness = true
 
 [profile.bench]
 opt-level = 3
-debug = false
+debug = true
 rpath = false
 lto = false
 debug-assertions = false
 codegen-units = 1
 incremental = false
 overflow-checks = false
+
+[profile.release]
+opt-level = 3
+debug = true

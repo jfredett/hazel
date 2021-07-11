@@ -81,7 +81,6 @@ pub fn attacks_for(piece: Piece, sq: usize, blocks: Bitboard) -> Bitboard {
 }
 
 impl<const SIZE: usize> PEXTBoard<SIZE> {
-    #[inline(always)]
     fn _attacks_for(&self, piece: Piece, pos: Bitboard, blocks: Bitboard) -> Bitboard {
         let sq = pos.first_index();
         let pext_mask = Self::mask_for(sq, piece);
@@ -92,7 +91,6 @@ impl<const SIZE: usize> PEXTBoard<SIZE> {
         self.table[key + offset]
     } 
 
-    #[inline(always)]
     pub fn mask_for(sq: usize, piece: Piece) -> Bitboard {
         match piece {
             Piece::Rook => { NOMINAL_ROOK_ATTACKS[sq] }
@@ -102,7 +100,6 @@ impl<const SIZE: usize> PEXTBoard<SIZE> {
     }
 
     // determines the offset into the table for the given square
-    #[inline(always)]
     fn offset_for(piece: Piece, sq: usize) -> usize {
         match piece {
             Piece::Rook => { ROOK_OFFSETS[sq] }
@@ -111,7 +108,6 @@ impl<const SIZE: usize> PEXTBoard<SIZE> {
         }
     }
 
-    #[inline(always)]
     fn key_for(pext_mask: Bitboard, blocks: Bitboard) -> usize {
         blocks.pext(pext_mask) as usize
     }
@@ -144,7 +140,6 @@ impl<const SIZE: usize> PEXTBoard<SIZE> {
         }
     }
     
-    #[inline(always)]
     fn block_and_attack_board_for(piece: Piece, sq: usize) -> (Bitboard, Vec<(Bitboard, Bitboard)>) {
         match piece {
             Piece::Rook => { 
