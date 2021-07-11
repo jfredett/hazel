@@ -1,6 +1,6 @@
 /target
 launch.json
 .vscode/settings.json
-NOTES.mkdperf.data
+NOTES.mkd
 flamegraph.svg
 perf.*
