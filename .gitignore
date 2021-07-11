@@ -2,3 +2,5 @@
 launch.json
 .vscode/settings.json
 NOTES.mkdperf.data
+flamegraph.svg
+perf.*
