@@ -39,6 +39,7 @@ pub mod movement;
 pub mod moveset;
 pub mod pextboard;
 pub mod util;
+pub mod game;
 
 
 
