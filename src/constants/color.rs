@@ -1,6 +1,7 @@
 use super::Direction;
+use serde::{Deserialize, Serialize};
 
-#[derive(Hash, PartialEq, Eq, Clone, Copy)]
+#[derive(Hash, PartialEq, Eq, Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum Color {
     WHITE = 0,
     BLACK = 1

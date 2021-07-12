@@ -6,8 +6,7 @@ pub mod masks;
 pub mod shifts;
 pub mod move_tables;
 
-#[cfg(test)] pub use test::*;
-#[cfg(test)] pub mod test;
+pub mod test;
 
 pub use conversion_tables::*;
 pub use file::*;
@@ -15,3 +14,4 @@ pub use color::*;
 pub use piece::*;
 pub use masks::*;
 pub use shifts::*;
+pub use test::*;

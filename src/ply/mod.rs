@@ -1,4 +1,6 @@
 #![allow(non_snake_case)]
+use crate::{movement::Move, moveset::MoveSet};
+
 use super::*;
 
 use bitboard::Bitboard;
@@ -65,6 +67,11 @@ impl Ply {
         self.bishops[color as usize] |
         self.knights[color as usize] |
         self.pawns[color as usize]
+    }
+    
+    /// 
+    pub fn moves(&self) -> MoveSet {
+        Move::generate(self, self.current_player())
     }
     
     /// True if the current player both has the right to castle long and the ability.
@@ -162,6 +169,55 @@ impl Ply {
         };
         board.is_set(rank - 1, file as usize)
     }
+    
+    /// Returns the piece at the index provided, if no piece is present, returns none.
+    pub fn piece_at_index(&self, idx: usize) -> Option<(Color, Piece)> {
+        for color in COLORS {
+            if self.rooks[color as usize].is_index_set(idx) { return Some((color, Piece::Rook)) }
+            if self.bishops[color as usize].is_index_set(idx) { return Some((color, Piece::Bishop)) }
+            if self.knights[color as usize].is_index_set(idx) { return Some((color, Piece::Knight)) }
+            if self.kings[color as usize].is_index_set(idx) { return Some((color, Piece::King)) }
+            if self.queens[color as usize].is_index_set(idx) { return Some((color, Piece::Queen)) }
+            if self.pawns[color as usize].is_index_set(idx) { return Some((color, Piece::Pawn)) }
+        }
+        None
+    }
+    
+    pub fn make(&mut self, mov: Move) {
+        if let Some((color, piece)) = self.piece_at_index(mov.source_idx().into()) {
+            let other_color = match color {
+                Color::WHITE => Color::BLACK,
+                Color::BLACK => Color::WHITE
+            };
+
+            if mov.is_capture() {
+                // remove the piece of the other color at target_idx
+                self.get_piece(other_color, piece).unset_by_index(mov.target_idx().into());
+            } 
+            // just move the piece
+            self.get_piece(color, piece).unset_by_index(mov.source_idx().into());
+            self.get_piece(color, piece).set_by_index(mov.target_idx().into());
+        } else {
+            panic!("Could not find piece at index: {}", mov.source_idx());
+        }
+        
+        self.full_move_clock += 1;
+        // flip the player-turn bit
+        self.meta ^= Metadata::BLACK_TO_MOVE;
+    }
+    
+    /// A helper for digging into the ply structure to touch the right pieces.
+    fn get_piece(&mut self, color: Color, piece: Piece) -> &mut Bitboard {
+        match piece {
+            Piece::Knight => &mut self.knights[color as usize],
+            Piece::Bishop => &mut self.bishops[color as usize],
+            Piece::Rook   => &mut self.rooks[color as usize],
+            Piece::Queen  => &mut self.queens[color as usize],
+            Piece::King   => &mut self.kings[color as usize],
+            Piece::Pawn   => &mut self.pawns[color as usize],
+        }
+    }
+
 
     /// returns an 8x8 array with characters representing each piece in the proper locations
     fn board_buffer(&self) -> [[char; 8]; 8] {

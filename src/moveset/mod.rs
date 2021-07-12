@@ -66,6 +66,27 @@ impl MoveSet {
     pub fn is_empty(&self) -> bool {
         self.moves.is_empty()
     }
+    
+    pub fn find_by_target(&self, idx: u16) -> Search {
+        let mut movs = vec![];
+        for mov in &self.moves {
+            if mov.target_idx() == idx {
+                movs.push(*mov);
+            }
+        }
+        
+        if movs.len() == 1 {
+            Search::Unambiguous(movs[0])
+        } else {
+            Search::Ambiguous(movs)
+        }
+    }
+}
+
+#[derive(PartialEq, Eq, Debug, Hash)]
+pub enum Search {
+    Unambiguous(Move),
+    Ambiguous(Vec<Move>)
 }
 
 impl Iterator for MoveSet {
