@@ -1,6 +1,7 @@
 #![allow(non_snake_case)]
 
 use crate::constants::{Color, NOTATION_TO_INDEX, Piece};
+use serde::{Serialize, Deserialize};
 
 ///! This module defines a compact representation of chess moves from a given ply.
 ///!
@@ -9,7 +10,7 @@ use crate::constants::{Color, NOTATION_TO_INDEX, Piece};
 ///! things like memory safety or something.
 ///!
 
-#[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+#[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Serialize, Deserialize)]
 pub struct Move(u16);
 
 const SOURCE_IDX_MASK   : u16   = 0b111111_000000_0_000;

@@ -3,11 +3,13 @@ use super::*;
 
 use bitboard::Bitboard;
 use constants::{move_tables::KNIGHT_MOVES,*};
+use serde::{Serialize, Deserialize};
 
 mod debug;
 mod creation;
 
 bitflags! {
+    #[derive(Serialize, Deserialize)]
     pub struct Metadata: u8 {
         const WHITE_CASTLE_LONG  = 0b00000001;
         const WHITE_CASTLE_SHORT = 0b00000010;
@@ -22,7 +24,7 @@ bitflags! {
         const DEFAULT            = 0b00001111;
     }
 }
-#[derive(PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(PartialEq, Eq, Hash, Clone, Copy, Serialize, Deserialize)]
 pub struct Ply {
     // indexed by COLOR
     pub pawns: [Bitboard; 2],

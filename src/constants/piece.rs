@@ -1,6 +1,8 @@
+use serde::{Serialize, Deserialize};
+
 /// Represents a piece, the ordering is important since in move generation the promotion piecetype is
 /// encoded in 2 bits, this ordering allows us to cast it directly into this enum.
-#[derive(Hash, PartialEq, Eq, Debug, Clone, Copy)]
+#[derive(Hash, PartialEq, Eq, Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum Piece {
     Knight  = 0,
     Bishop  = 1,
