@@ -1,9 +1,11 @@
-use pgn_reader::{CastlingSide, Role, San, Visitor};
+use pgn_reader::{CastlingSide, San, Visitor};
 
 
 use crate::{constants::Piece, moveset::Search};
 
 use super::*;
+
+mod from;
 
 struct MainlineVisitor {
     game: Game
@@ -74,24 +76,11 @@ impl Visitor for MainlineVisitor {
     }
 }
 
-impl From<pgn_reader::Role> for Piece {
-    fn from(val: pgn_reader::Role) -> Self {
-        match val {
-            Role::Pawn => Piece::Pawn, 
-            Role::Knight => Piece::Knight, 
-            Role::Bishop => Piece::Bishop, 
-            Role::Rook => Piece::Rook, 
-            Role::Queen => Piece::Queen, 
-            Role::King => Piece::King, 
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     
-    const TEST_PGN: &str = include_str!("../../../tests/fixtures/no-variations.pgn");
+    const TEST_PGN: &str = include_str!("../../../../tests/fixtures/no-variations.pgn");
 
     mod creation {
         use super::*;
