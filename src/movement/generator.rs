@@ -72,9 +72,6 @@ impl Move {
         for piece in [Piece::Bishop, Piece::Rook, Piece::Queen] {
             for source in ply.get_piece(color, piece).all_set_indices() {
                 let attacks = pextboard::attacks_for(piece, source, ply.occupancy()) & !ply.occupancy_for(color);
-                if piece == Piece::Queen {
-                    dbg!(attacks);
-                }
 
                 for capture in (attacks & ply.occupancy_for(other_color)).all_set_indices() {
                     out.add_capture(piece, source, capture)

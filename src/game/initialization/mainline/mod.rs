@@ -71,7 +71,6 @@ impl Visitor for MainlineVisitor {
             San::Put { role: _, to: _ } => panic!("Put moves are not supported"),
             San::Null => panic!("got null move")
         };
-        dbg!(mov);
         self.game.make(mov);
     }
 }
@@ -89,15 +88,6 @@ mod tests {
         fn parses_pgn_without_variations() {
             let g = Game::from_pgn(TEST_PGN);
             assert_eq!(g.moves.len(), 29*2);
-        }
-        
-        #[test]
-        fn repro() {
-            let ply = Ply::from_fen("r4rk1/1bq3p1/p2bp2p/1p1nNp2/2pPn3/PP4Q1/5PPP/RBB2RK1 b KQkq - 0 20");
-            let movset = Move::generate(&ply, Color::BLACK);
-            // should contain Qc3
-            dbg!(ply);
-            dbg!(movset.moves[Piece::Queen as usize].clone());
         }
     }
 }

@@ -35,7 +35,6 @@ impl MoveSet {
 
     /// Adds all promotion moves from the source square to the target square
     pub fn add_promotion(&mut self, source: usize, target: usize) {
-        // dbg!("prom", source, target);
         self.moves[Piece::Pawn as usize].push(Move::from(source as u16, target as u16, true, Piece::Queen as u16));
         self.moves[Piece::Pawn as usize].push(Move::from(source as u16, target as u16, true, Piece::Rook as u16));
         self.moves[Piece::Pawn as usize].push(Move::from(source as u16, target as u16, true, Piece::Bishop as u16));
