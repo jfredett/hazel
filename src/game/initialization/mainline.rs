@@ -1,4 +1,4 @@
-use pgn_reader::{CastlingSide, Role, San, SanPlus, Visitor};
+use pgn_reader::{CastlingSide, Role, San, Square, Visitor};
 
 
 use crate::{constants::Piece, moveset::Search};
@@ -27,6 +27,10 @@ impl MainlineVisitor {
             game: Game::start_position()
         }
     }
+    
+    fn find_by_target(&self, piece: Piece, to: u16) -> Search {
+        self.game.moves().find_by_target(piece, to)
+    }
 }
 
 impl Visitor for MainlineVisitor {
@@ -44,15 +48,16 @@ impl Visitor for MainlineVisitor {
     }
 
     fn san(&mut self, san_plus: pgn_reader::SanPlus) { 
-        let mov = match san_plus.san {
-            San::Normal { role , file, rank, capture, to, promotion } => {
-                // look through all legal moves in current position, find the ones w/ the given target square.
-                match self.game.moves().find_by_target(to as u16) {
-                    Search::Unambiguous(m) => { m },
-                    Search::Ambiguous(ms) => { 
-                        dbg!(self.game.moves());
-                        dbg!(self.game.position);
-                        dbg!(san_plus); dbg!(ms); panic!("NYI") }
+        let mov: Move = match san_plus.san {
+            San::Normal { role , file: _, rank: _, capture: _, to, promotion: _ } => {
+                match self.find_by_target(role.into(), to as u16) {
+                    Search::Unambiguous(m) => m,
+                    Search::Ambiguous(ms) => {
+                        ms.into_iter().find(|&e| e.target_idx() == to as u16).unwrap()
+                    }
+                    Search::Empty => { 
+                        panic!("Could not find move") 
+                    }
                 }
             },
             San::Castle(side) => {
@@ -64,14 +69,23 @@ impl Visitor for MainlineVisitor {
             San::Put { role: _, to: _ } => panic!("Put moves are not supported"),
             San::Null => panic!("got null move")
         };
+        dbg!(mov);
         self.game.make(mov);
     }
 }
 
-fn rank_and_file_to_index(rank: pgn_reader::Rank, file: pgn_reader::File) -> usize {
-    (rank as usize) * 8 + file as usize
+impl From<pgn_reader::Role> for Piece {
+    fn from(val: pgn_reader::Role) -> Self {
+        match val {
+            Role::Pawn => Piece::Pawn, 
+            Role::Knight => Piece::Knight, 
+            Role::Bishop => Piece::Bishop, 
+            Role::Rook => Piece::Rook, 
+            Role::Queen => Piece::Queen, 
+            Role::King => Piece::King, 
+        }
+    }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -86,6 +100,15 @@ mod tests {
         fn parses_pgn_without_variations() {
             let g = Game::from_pgn(TEST_PGN);
             assert_eq!(g.moves.len(), 29*2);
+        }
+        
+        #[test]
+        fn repro() {
+            let ply = Ply::from_fen("r4rk1/1bq3p1/p2bp2p/1p1nNp2/2pPn3/PP4Q1/5PPP/RBB2RK1 b KQkq - 0 20");
+            let movset = Move::generate(&ply, Color::BLACK);
+            // should contain Qc3
+            dbg!(ply);
+            dbg!(movset.moves[Piece::Queen as usize].clone());
         }
     }
 }

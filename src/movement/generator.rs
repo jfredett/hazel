@@ -1,4 +1,6 @@
-use crate::{constants::{A_FILE, Color, DIRECTIONS, Direction, H_FILE, Piece, RANK_1, RANK_2, RANK_7, RANK_8}, moveset::MoveSet, pextboard, ply::Ply};
+use tracing::info;
+
+use crate::{bitboard::Bitboard, constants::{A_FILE, Color, DIRECTIONS, Direction, H_FILE, NOTATION_TO_INDEX, Piece, RANK_1, RANK_2, RANK_7, RANK_8}, moveset::MoveSet, pextboard::{self, slow_bishop_attacks}, ply::Ply};
 
 
 
@@ -31,11 +33,11 @@ impl Move {
             _ => unreachable!()
         };
         
-        for sq in promotions.all_set_indices() { out.add_promotion(deshift(sq), sq); }
-        for sq in advances.all_set_indices() { out.add_move(deshift(sq), sq); }
-        for sq in double_moves.all_set_indices() { out.add_move(deshift(deshift(sq)), sq); }
-        for sq in east_attacks.all_set_indices() { out.add_capture(deshift(sq) - 1, sq); }
-        for sq in west_attacks.all_set_indices() { out.add_capture(deshift(sq) + 1, sq); }
+        for sq in promotions.all_set_indices()   { out.add_promotion(deshift(sq), sq); }
+        for sq in advances.all_set_indices()     { out.add_move(Piece::Pawn, deshift(sq), sq); }
+        for sq in double_moves.all_set_indices() { out.add_move(Piece::Pawn, deshift(deshift(sq)), sq); }
+        for sq in east_attacks.all_set_indices() { out.add_capture(Piece::Pawn, deshift(sq) - 1, sq); }
+        for sq in west_attacks.all_set_indices() { out.add_capture(Piece::Pawn, deshift(sq) + 1, sq); }
 
         // king moves
         // FIXME: Doesn't account for checks yet.
@@ -49,9 +51,9 @@ impl Move {
             if (m & ply.occupancy_for(color)).is_empty() {
                 let target = m.first_index();
                 if ply.occupancy_for(other_color).is_index_set(target) {
-                    out.add_capture(source, target);
+                    out.add_capture(Piece::King, source, target);
                 } else {
-                    out.add_move(source, target);
+                    out.add_move(Piece::King, source, target);
                 }
             }
         }
@@ -65,42 +67,23 @@ impl Move {
         for k in knights.all_set_indices() {
             let unblocked_squares = KNIGHT_MOVES[k] & !ply.occupancy_for(color);
             for square in unblocked_squares.all_set_indices() {
-                out.add_move(k, square);
+                out.add_move(Piece::Knight, k, square);
             }
         }
 
-        // rook moves
-        for source in ply.rooks[color as usize].all_set_indices() {
-            let attacks = pextboard::attacks_for(Piece::Rook, source, ply.occupancy()) & !ply.occupancy_for(color);
-            for target in attacks.all_set_indices() {
-                if ply.occupancy_for(other_color).is_index_set(target) {
-                    out.add_capture(source, target)    
-                } else {
-                    out.add_move(source, target);
+        for piece in [Piece::Bishop, Piece::Rook, Piece::Queen] {
+            for source in ply.get_piece(color, piece).all_set_indices() {
+                let attacks = pextboard::attacks_for(piece, source, ply.occupancy()) & !ply.occupancy_for(color);
+                if piece == Piece::Queen {
+                    dbg!(attacks);
                 }
-            }
-        }
 
-        // bishop moves
-        for source in ply.bishops[color as usize].all_set_indices() {
-            let attacks = pextboard::attacks_for(Piece::Bishop, source, ply.occupancy()) & !ply.occupancy_for(color);
-            for target in attacks.all_set_indices() {
-                if ply.occupancy_for(other_color).is_index_set(target) {
-                    out.add_capture(source, target)    
-                } else {
-                    out.add_move(source, target);
+                for capture in (attacks & ply.occupancy_for(other_color)).all_set_indices() {
+                    out.add_capture(piece, source, capture)
                 }
-            }
-        }
-
-        // queen moves
-        for source in ply.queens[color as usize].all_set_indices() {
-            let attacks = pextboard::attacks_for(Piece::Queen, source, ply.occupancy()) & !ply.occupancy_for(color);
-            for target in attacks.all_set_indices() {
-                if ply.occupancy_for(other_color).is_index_set(target) {
-                    out.add_capture(source, target)    
-                } else {
-                    out.add_move(source, target);
+                
+                for target in (attacks & !ply.occupancy_for(other_color)).all_set_indices() {
+                    out.add_move(piece, source, target);
                 }
             }
         }
@@ -111,6 +94,8 @@ impl Move {
 
 #[cfg(test)]
 mod test {
+    use tracing_test::traced_test;
+
     use crate::{assert_is_subset, constants::*};
     use super::*;
     
@@ -150,9 +135,17 @@ mod test {
         let ply = Ply::from_fen(&String::from(POS2_KIWIPETE_FEN));
         let moves = Move::generate(&ply, ply.current_player());
 
-        assert_is_subset!(&moves.moves, *POS2_KIWIPETE_MOVES);
+        for movset in moves.clone().moves {
+            assert_is_subset!(movset, *POS2_KIWIPETE_MOVES);
+        }
         dbg!("Missing Moves");
-        assert_is_subset!(POS2_KIWIPETE_MOVES.iter(), &moves.moves);
+        for mov in POS2_KIWIPETE_MOVES.iter() {
+            assert!(
+                moves.moves.iter().any(|movset| 
+                    movset.contains(mov)
+                )
+            )
+        }
     }
     
 }

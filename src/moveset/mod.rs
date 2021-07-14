@@ -1,106 +1,80 @@
-use crate::{constants::{Color, Piece}, movement::{Move, MoveType}};
+use crate::{constants::{Color, NOTATION_TO_INDEX, Piece}, movement::{Move, MoveType}};
 
 
 /// a container for moves
-#[derive(PartialEq, Eq, Hash, Debug)]
+#[derive(PartialEq, Eq, Hash, Debug, Clone)]
 pub struct MoveSet {
-    pub(crate) moves: Vec<Move>
+    // FIXME: Move this to a smallvec/stack allocated vector
+    pub(crate) moves: [Vec<Move>; 6]
 }
 
 impl MoveSet {
     pub fn empty() -> MoveSet {
-        MoveSet { moves: vec![] }
+        MoveSet { moves: [vec![], vec![], vec![], vec![], vec![], vec![]] }
     }
     
     /// Adds a quiet move from the source square to the target square
-    pub fn add_move(&mut self, source: usize, target: usize) {
-        // dbg!("shh", source, target);
-        self.moves.push(Move::from(source as u16, target as u16, false, MoveType::quiet().bits()));
+    pub fn add_move(&mut self, piece: Piece, source: usize, target: usize) {
+        self.moves[piece as usize].push(Move::from(source as u16, target as u16, false, MoveType::quiet().bits()));
     }
     
     /// Adds a short castle move
     pub fn add_short_castle(&mut self, color: Color) {
-        self.moves.push(Move::short_castle(color));
+        self.moves[Piece::King as usize].push(Move::short_castle(color));
     }
     
     /// Adds a long castle move
     pub fn add_long_castle(&mut self, color: Color) {
-        self.moves.push(Move::long_castle(color));     
+        self.moves[Piece::King as usize].push(Move::long_castle(color));     
     }
     
     /// Adds a capture move from the source square to the target square
-    pub fn add_capture(&mut self, source: usize, target: usize) {
-        // dbg!("cap", source, target);
-        self.moves.push(Move::from(source as u16, target as u16, false, MoveType::capture().bits()));
+    pub fn add_capture(&mut self, piece: Piece, source: usize, target: usize) {
+        self.moves[piece as usize].push(Move::from(source as u16, target as u16, false, MoveType::capture().bits()));
     }
 
-    /// Adds a check move from the source square to the target square
-    pub fn add_check(&mut self, source: usize, target: usize) {
-        // dbg!("chk", source, target);
-        self.moves.push(Move::from(source as u16, target as u16, false, MoveType::check().bits()));
-    }
-
-    /// Adds a attacking move from the source square to the target square
-    pub fn add_attack(&mut self, source: usize, target: usize) {
-        // dbg!("att", source, target);
-        self.moves.push(Move::from(source as u16, target as u16, false, MoveType::attack().bits()));
-    }
-    
     /// Adds all promotion moves from the source square to the target square
     pub fn add_promotion(&mut self, source: usize, target: usize) {
         // dbg!("prom", source, target);
-        self.moves.push(Move::from(source as u16, target as u16, true, Piece::Queen as u16));
-        self.moves.push(Move::from(source as u16, target as u16, true, Piece::Rook as u16));
-        self.moves.push(Move::from(source as u16, target as u16, true, Piece::Bishop as u16));
-        self.moves.push(Move::from(source as u16, target as u16, true, Piece::Knight as u16));
+        self.moves[Piece::Pawn as usize].push(Move::from(source as u16, target as u16, true, Piece::Queen as u16));
+        self.moves[Piece::Pawn as usize].push(Move::from(source as u16, target as u16, true, Piece::Rook as u16));
+        self.moves[Piece::Pawn as usize].push(Move::from(source as u16, target as u16, true, Piece::Bishop as u16));
+        self.moves[Piece::Pawn as usize].push(Move::from(source as u16, target as u16, true, Piece::Knight as u16));
     }
     
     pub fn contains(&self, m : &Move) -> bool {
-        self.moves.contains(m)
+        self.moves.iter().any(|v| v.contains(m))
     }
     
     pub fn len(&self) -> usize {
-        self.moves.len()
+        self.moves.iter().map(|e| e.len()).sum()
     }
     
     pub fn is_empty(&self) -> bool {
-        self.moves.is_empty()
+        self.moves.iter().all(|e| e.is_empty())
     }
     
-    pub fn find_by_target(&self, idx: u16) -> Search {
+    pub fn find_by_target(&self, piece: Piece, idx: u16) -> Search {
         let mut movs = vec![];
-        for mov in &self.moves {
-            if mov.target_idx() == idx {
+        for mov in &self.moves[piece as usize] {
+            let target_idx = mov.target_idx();
+            if target_idx == idx {
                 movs.push(*mov);
             }
         }
-        
-        if movs.len() == 1 {
-            Search::Unambiguous(movs[0])
-        } else {
-            Search::Ambiguous(movs)
-        }
+
+        if movs.is_empty() { return Search::Empty }
+        if movs.len() == 1 { return Search::Unambiguous(movs[0]) }
+        Search::Ambiguous(movs)
     }
 }
 
 #[derive(PartialEq, Eq, Debug, Hash)]
 pub enum Search {
     Unambiguous(Move),
-    Ambiguous(Vec<Move>)
+    Ambiguous(Vec<Move>),
+    Empty
 }
-
-impl Iterator for MoveSet {
-    type Item = Move;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if let Some(&m) = self.moves.get(0) {
-            Some(m)
-        } else {
-            None
-        }
-    }
-}
-
 
 #[cfg(test)]
 mod test {
@@ -124,8 +98,8 @@ mod test {
             Move::from(56, 64, true, Piece::Knight as u16)
         ];
 
-        assert_is_subset!(&ml.moves, &expected);
-        assert_is_subset!(&expected, &ml.moves);
+        assert_is_subset!(&ml.moves[Piece::Pawn as usize], &expected);
+        assert_is_subset!(&expected, &ml.moves[Piece::Pawn as usize]);
     }
     
     
@@ -136,12 +110,13 @@ mod test {
         let expected_move = Move::from_notation("b4", "d5", Either::Left(MoveType::CAPTURE));
 
         ml.add_capture(
+            Piece::Bishop, 
             NOTATION_TO_INDEX("b4"),
             NOTATION_TO_INDEX("d5")
         );
         
-        assert_eq!(ml.moves.len(), 1);
-        assert!(ml.moves.contains(&expected_move));
+        assert_eq!(ml.moves[Piece::Bishop as usize].len(), 1);
+        assert!(ml.moves[Piece::Bishop as usize].contains(&expected_move));
     }
 
     #[test]
@@ -150,38 +125,12 @@ mod test {
         let expected_move = Move::from_notation("b4", "d5", Either::Left(MoveType::quiet()));
 
         ml.add_move(
+            Piece::Pawn,
             NOTATION_TO_INDEX("b4"),
             NOTATION_TO_INDEX("d5")
         );
         
-        assert_eq!(ml.moves.len(), 1);
-        assert!(ml.moves.contains(&expected_move));
-    }
-
-    #[test]
-    fn add_attack_adds_attack() {
-        let mut ml = MoveSet::empty();
-        let expected_move = Move::from_notation("b4", "d5", Either::Left(MoveType::ATTACK));
-
-        ml.add_attack(
-            NOTATION_TO_INDEX("b4"),
-            NOTATION_TO_INDEX("d5")
-        );
-        
-        assert_eq!(ml.moves.len(), 1);
-        assert!(ml.moves.contains(&expected_move));
-    }
-    #[test]
-    fn add_check_adds_check() {
-        let mut ml = MoveSet::empty();
-        let expected_move = Move::from_notation("b4", "d5", Either::Left(MoveType::CHECK));
-
-        ml.add_check(
-            NOTATION_TO_INDEX("b4"),
-            NOTATION_TO_INDEX("d5")
-        );
-        
-        assert_eq!(ml.moves.len(), 1);
-        assert!(ml.moves.contains(&expected_move));
+        assert_eq!(ml.moves[Piece::Pawn as usize].len(), 1);
+        assert!(ml.moves[Piece::Pawn as usize].contains(&expected_move));
     }
 }

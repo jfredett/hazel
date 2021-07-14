@@ -3,7 +3,7 @@ use crate::{constants::START_POSITION_FEN, moveset::MoveSet};
 use super::*;
 
 mod mainline;
-mod with_variations;
+// mod with_variations;
 
 impl Game {
     /// ::from_fen/1

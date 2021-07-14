@@ -132,30 +132,6 @@ impl Ply {
             Color::BLACK
         }
     }
-    
-    pub fn attacked_squares(&self, color: Color) -> Bitboard {
-        let pawns = self.pawns[color as usize];
-        let knights = self.knights[color as usize];
-        let mut attacked_squares = Bitboard::empty();
-
-        // Pawn attacks
-        attacked_squares |= pawns.shift(color.pawn_direction()).shift(Direction::E);
-        attacked_squares |= pawns.shift(color.pawn_direction()).shift(Direction::W);
-        
-        // Knight attacks
-        for s in knights.all_set_indices() {
-            attacked_squares |= KNIGHT_MOVES[s];
-        }
-        // Bishop attacks
-        // Rook attacks
-        // Queen attacks
-        // King attacks
-            // need to account for pieces which are protected
-            
-        // remove an attacked square if it is occupied by our color
-        // NOTE: `attacked_squares & self.occupancy_for(color)` == set of pieces we defend with another piece (i.e., a self-attack is the same as a defense)
-        attacked_squares & !self.occupancy_for(color)
-    }
 
     pub fn piece_at(&self, file: File, rank: usize, piece: Piece, color: Color) -> bool {
         if !(1..=8).contains(&rank) { panic!("Invalid position {:?}{:?}", file, rank); }
@@ -184,30 +160,59 @@ impl Ply {
     }
     
     pub fn make(&mut self, mov: Move) {
-        if let Some((color, piece)) = self.piece_at_index(mov.source_idx().into()) {
-            let other_color = match color {
-                Color::WHITE => Color::BLACK,
-                Color::BLACK => Color::WHITE
-            };
-
-            if mov.is_capture() {
-                // remove the piece of the other color at target_idx
-                self.get_piece(other_color, piece).unset_by_index(mov.target_idx().into());
-            } 
+        if mov.is_short_castle() {
+            match self.current_player() {
+                Color::WHITE => {
+                    self.kings[Color::WHITE as usize].unset_by_index(0o04);
+                    self.kings[Color::WHITE as usize].set_by_index(0o06);
+                    self.rooks[Color::WHITE as usize].unset_by_index(0o07);
+                    self.rooks[Color::WHITE as usize].set_by_index(0o05);
+                },
+                Color::BLACK => {
+                    self.kings[Color::BLACK as usize].unset_by_index(0o74);
+                    self.kings[Color::BLACK as usize].set_by_index(0o76);
+                    self.rooks[Color::BLACK as usize].unset_by_index(0o77);
+                    self.rooks[Color::BLACK as usize].set_by_index(0o75);
+                }
+            }
+        } else if mov.is_long_castle() {
+            match self.current_player() {
+                Color::WHITE => {
+                    self.kings[Color::WHITE as usize].unset_by_index(0o04);
+                    self.kings[Color::WHITE as usize].set_by_index(0o02);
+                    self.rooks[Color::WHITE as usize].unset_by_index(0o00);
+                    self.rooks[Color::WHITE as usize].set_by_index(0o03);
+                },
+                Color::BLACK => {
+                    self.kings[Color::BLACK as usize].unset_by_index(0o74);
+                    self.kings[Color::BLACK as usize].set_by_index(0o72);
+                    self.rooks[Color::BLACK as usize].unset_by_index(0o70);
+                    self.rooks[Color::BLACK as usize].set_by_index(0o73);
+                }
+            }
+            return;
+        } else if let Some((color, piece)) = self.piece_at_index(mov.source_idx().into()) {
+            // remove the piece of the other color at target_idx
+            if let Some((other_color, target_piece)) = self.piece_at_index(mov.target_idx().into()) {
+                self.get_mut_piece(other_color, target_piece).unset_by_index(mov.target_idx().into());
+            }
             // just move the piece
-            self.get_piece(color, piece).unset_by_index(mov.source_idx().into());
-            self.get_piece(color, piece).set_by_index(mov.target_idx().into());
+            self.get_mut_piece(color, piece).unset_by_index(mov.source_idx().into());
+            self.get_mut_piece(color, piece).set_by_index(mov.target_idx().into());
         } else {
             panic!("Could not find piece at index: {}", mov.source_idx());
         }
         
-        self.full_move_clock += 1;
+        // just completed black's turn, another full move down
+        if self.meta.contains(Metadata::BLACK_TO_MOVE) { self.full_move_clock += 1; }
+        // TODO: Half-move counting
+
         // flip the player-turn bit
         self.meta ^= Metadata::BLACK_TO_MOVE;
     }
     
     /// A helper for digging into the ply structure to touch the right pieces.
-    fn get_piece(&mut self, color: Color, piece: Piece) -> &mut Bitboard {
+    pub fn get_mut_piece(&mut self, color: Color, piece: Piece) -> &mut Bitboard {
         match piece {
             Piece::Knight => &mut self.knights[color as usize],
             Piece::Bishop => &mut self.bishops[color as usize],
@@ -215,6 +220,18 @@ impl Ply {
             Piece::Queen  => &mut self.queens[color as usize],
             Piece::King   => &mut self.kings[color as usize],
             Piece::Pawn   => &mut self.pawns[color as usize],
+        }
+    }
+
+    /// A helper for digging into the ply structure to touch the right pieces.
+    pub fn get_piece(&self, color: Color, piece: Piece) -> Bitboard {
+        match piece {
+            Piece::Knight => self.knights[color as usize],
+            Piece::Bishop => self.bishops[color as usize],
+            Piece::Rook   => self.rooks[color as usize],
+            Piece::Queen  => self.queens[color as usize],
+            Piece::King   => self.kings[color as usize],
+            Piece::Pawn   => self.pawns[color as usize],
         }
     }
 

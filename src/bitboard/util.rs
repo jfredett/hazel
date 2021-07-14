@@ -217,21 +217,5 @@ mod test {
                 Bitboard::coords_to_notation(rank, file)
             ) == (rank, file)
         }
-
-        #[test]
-        fn broken_example() {
-            let (rank, file) = (0, 7);
-
-            dbg!((rank, file));
-            dbg!(Bitboard::notation_to_coords("g7"));
-            dbg!(Bitboard::coords_to_notation(rank, file));
-            dbg!(Bitboard::coords_to_index(rank, file));
-            dbg!(Bitboard::notation_to_coords( Bitboard::coords_to_notation(rank, file)));
-
-            assert_eq!(
-                Bitboard::notation_to_coords( Bitboard::coords_to_notation(rank, file)),
-                (rank, file)
-            );
-        }
     }
 }

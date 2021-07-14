@@ -131,11 +131,15 @@ impl Move {
         }
     }
 
+    /// ```
+    /// # use hazel::movement::*;
     /// // the move from d2 -> d4
+    ///
     /// let m = Move::from(0o13, 0o33, false, 0o00);
     /// assert_eq!(m.source_idx(), 0o13);
     /// ```
     pub fn source_idx(&self) -> u16 { (self.0 & SOURCE_IDX_MASK) >> SOURCE_IDX_SHIFT }
+
     /// Gets the target index from the compact move representation
     /// ```
     /// # use hazel::movement::*;
@@ -144,6 +148,7 @@ impl Move {
     /// assert_eq!(m.target_idx(), 0o33);
     /// ```
     pub fn target_idx(&self) -> u16 { (self.0 & TARGET_IDX_MASK) >> TARGET_IDX_SHIFT }
+
     /// True if the move indicates a promotion
     /// ```
     /// # use hazel::movement::*;
@@ -154,6 +159,7 @@ impl Move {
     /// assert!(m2.is_promotion());
     /// ```
     pub fn is_promotion(&self) -> bool { (self.0 & PROMOTE_BIT_MASK) > 0 }
+
     /// Calculates the promotion piece is there is a promotion to be done.
     /// NOTE: Will return garbage for non-promotion moves. No checking is done ahead of time.
     /// ```
@@ -166,23 +172,19 @@ impl Move {
     /// assert_eq!(m2.promotion_piece(), Piece::Queen);
     /// ```
     pub fn promotion_piece(&self) -> Piece { Piece::from(self.0 & METADATA_MASK) }
+
     /// Interprets the metadata bits when the piece is not a promotion. Use the provided `is_` functions
     /// on MoveType to interpret the data.
     /// ```
     /// # use hazel::movement::*;
     /// // the move from d2 -> d4
     /// let m1 = Move::from(0o13, 0o33, false, 0b000);
-    /// let m2 = Move::from(0o13, 0o33, false, 0b100);
     /// assert!(m1.move_metadata().is_quiet());
-    /// assert!(m2.move_metadata().is_check());
     /// ```
     pub fn move_metadata(&self) -> MoveType { MoveType::from_bits(self.0 & METADATA_MASK).unwrap() }
     
     // Some proxy methods
-    #[inline(always)] pub fn is_check(&self)        -> bool { self.move_metadata().is_check() }
     #[inline(always)] pub fn is_capture(&self)      -> bool { self.move_metadata().is_capture() }
-    #[inline(always)] pub fn is_attack(&self)       -> bool { self.move_metadata().is_attack() }
-    #[inline(always)] pub fn is_quiet(&self)        -> bool { self.move_metadata().is_quiet() }
     #[inline(always)] pub fn is_short_castle(&self) -> bool { self.move_metadata().is_short_castle() }
     #[inline(always)] pub fn is_long_castle(&self)  -> bool { self.move_metadata().is_long_castle() }
 }

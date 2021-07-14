@@ -13,7 +13,13 @@ impl Debug for Ply {
             }
             writeln!(f)?;
         }
-        writeln!(f, "    a b c d e f g h")
+        writeln!(f, "    a b c d e f g h")?;
+        if self.current_player() == Color::BLACK {
+            writeln!(f, "    Black to play")
+        } else {
+            writeln!(f, "    White to play")
+        }
+
     }
 }
 
@@ -35,6 +41,7 @@ mod test {
 2 | P P P P P P P P
 1 | R N B Q K B N R
     a b c d e f g h
+    White to play
 ";
 
         assert_eq!(res, expected);
