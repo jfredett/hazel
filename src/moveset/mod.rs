@@ -1,4 +1,4 @@
-use crate::{constants::{Color, NOTATION_TO_INDEX, Piece}, movement::{Move, MoveType}};
+use crate::{constants::{Color, Piece}, movement::{Move, MoveType}};
 
 
 /// a container for moves

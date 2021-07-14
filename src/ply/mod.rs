@@ -4,7 +4,7 @@ use crate::{movement::Move, moveset::MoveSet};
 use super::*;
 
 use bitboard::Bitboard;
-use constants::{move_tables::KNIGHT_MOVES,*};
+use constants::*;
 use serde::{Serialize, Deserialize};
 
 mod debug;

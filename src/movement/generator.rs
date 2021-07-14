@@ -1,6 +1,4 @@
-use tracing::info;
-
-use crate::{bitboard::Bitboard, constants::{A_FILE, Color, DIRECTIONS, Direction, H_FILE, NOTATION_TO_INDEX, Piece, RANK_1, RANK_2, RANK_7, RANK_8}, moveset::MoveSet, pextboard::{self, slow_bishop_attacks}, ply::Ply};
+use crate::{constants::{A_FILE, Color, DIRECTIONS, Direction, H_FILE, Piece, RANK_1, RANK_2, RANK_7, RANK_8}, moveset::MoveSet, pextboard::{self}, ply::Ply};
 
 
 

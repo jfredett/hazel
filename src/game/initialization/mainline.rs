@@ -1,4 +1,4 @@
-use pgn_reader::{CastlingSide, Role, San, Square, Visitor};
+use pgn_reader::{CastlingSide, Role, San, Visitor};
 
 
 use crate::{constants::Piece, moveset::Search};
