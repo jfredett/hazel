@@ -66,6 +66,10 @@ impl MoveSet {
         if movs.len() == 1 { return Search::Unambiguous(movs[0]) }
         Search::Ambiguous(movs)
     }
+    
+    pub fn as_vec(&self) -> Vec<Move> {
+        self.moves.concat()
+    }
 }
 
 #[derive(PartialEq, Eq, Debug, Hash)]
@@ -74,7 +78,6 @@ pub enum Search {
     Ambiguous(Vec<Move>),
     Empty
 }
-
 #[cfg(test)]
 mod test {
     use either::Either;

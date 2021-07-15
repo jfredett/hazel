@@ -12,6 +12,12 @@ pub enum Piece {
     Pawn    = 5
 }
 
+impl Piece {
+    pub fn last_piece() -> Piece {
+        Piece::Pawn
+    }
+}
+
 impl From<u16> for Piece {
     fn from(v: u16) -> Self {
         PIECES[(v & 0x0007) as usize]

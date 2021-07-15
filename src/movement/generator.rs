@@ -94,6 +94,13 @@ mod test {
     use crate::{assert_is_subset, constants::*};
     use super::*;
     
+    #[test]
+    fn repro() {
+        let ply = Ply::from_fen("2b5/2rnr3/1p1ppPpk/2P5/p2P1NP1/P4B1p/2P1P1KP/1RB1Q2R b KQkq - 0 31");
+        let moves = Move::generate(&ply, Color::BLACK);
+        dbg!(&moves.moves[Piece::Rook as usize]);
+        unimplemented!()
+    }
 
     // TODO: Have a yaml file which describes a bunch of test positions and the valid moves they entail, load them, then generate tests 
     // from them, we can do this by taking random positions from a database, using stockfish to perft 1 them, then grab the results.
@@ -119,7 +126,7 @@ mod test {
     }
     
     #[test]
-    fn calculates_correct_movecount_kiwipete() {
+    fn calculates_correct_movecount_kiwipete_at_depth_1() {
         let ply = Ply::from_fen(&String::from(POS2_KIWIPETE_FEN));
         let moves = Move::generate(&ply, ply.current_player());
         assert_eq!(moves.len(), POS2_KIWIPETE_PERFT_COUNTS[0]);
@@ -142,5 +149,4 @@ mod test {
             )
         }
     }
-    
 }

@@ -184,6 +184,7 @@ impl Move {
     pub fn move_metadata(&self) -> MoveType { MoveType::from_bits(self.0 & METADATA_MASK).unwrap() }
     
     // Some proxy methods
+    // TODO: Maybe move metadata to a simple enum we can just match on, would make the #make/unmake implementations nicer
     #[inline(always)] pub fn is_capture(&self)      -> bool { self.move_metadata().is_capture() }
     #[inline(always)] pub fn is_short_castle(&self) -> bool { self.move_metadata().is_short_castle() }
     #[inline(always)] pub fn is_long_castle(&self)  -> bool { self.move_metadata().is_long_castle() }

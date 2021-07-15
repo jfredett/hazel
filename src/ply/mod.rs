@@ -5,7 +5,7 @@ use super::*;
 
 use bitboard::Bitboard;
 use constants::*;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize, de::IntoDeserializer};
 
 mod debug;
 mod creation;
@@ -190,22 +190,91 @@ impl Ply {
                     self.rooks[Color::BLACK as usize].set_by_index(0o73);
                 }
             }
-            return;
-        } else if let Some((color, piece)) = self.piece_at_index(mov.source_idx().into()) {
-            // remove the piece of the other color at target_idx
-            if let Some((other_color, target_piece)) = self.piece_at_index(mov.target_idx().into()) {
-                self.get_mut_piece(other_color, target_piece).unset_by_index(mov.target_idx().into());
-            }
-            // just move the piece
+        } else if let Some((color, piece_in)) = self.piece_at_index(mov.source_idx().into()) {
+            let piece = if mov.is_promotion() {
+                mov.promotion_piece()
+            } else {
+                piece_in
+            };
+
+            if mov.is_capture() {
+                // remove the piece of the other color at target_idx
+                if let Some((other_color, target_piece)) = self.piece_at_index(mov.target_idx().into()) {
+                    self.get_mut_piece(other_color, target_piece).unset_by_index(mov.target_idx().into());
+                } else {
+                    dbg!(mov);
+                    dbg!(&self);
+                    dbg!(&self.to_fen());
+                    unimplemented!();
+                }
+            } 
+
             self.get_mut_piece(color, piece).unset_by_index(mov.source_idx().into());
             self.get_mut_piece(color, piece).set_by_index(mov.target_idx().into());
         } else {
+            // TODO: Promotions
+            dbg!(mov);
             panic!("Could not find piece at index: {}", mov.source_idx());
         }
         
         // just completed black's turn, another full move down
         if self.meta.contains(Metadata::BLACK_TO_MOVE) { self.full_move_clock += 1; }
-        // TODO: Half-move counting
+
+        /* TODO: Half-move clock
+        // Halfmove count goes up every move and resets on pawn move or capture
+        self.half_move_clock += 1;
+        // FIXME: This is gross.
+        if self.piece_at_index(mov.source_idx().into()).unwrap().1 == Piece::Pawn || mov.is_capture() { self.half_move_clock = 0; }
+        */
+
+        // flip the player-turn bit
+        self.meta ^= Metadata::BLACK_TO_MOVE;
+    }
+    
+    pub fn unmake(&mut self, mov: Move, captured_piece: Option<(Color, Piece)>) {
+
+        let pat = self.piece_at_index(mov.target_idx().into());
+        if pat.is_none() {
+            dbg!(mov);
+            dbg!(self);
+            unimplemented!()
+        }
+        let (color, piece) = pat.unwrap();
+
+        let rank_mask = if self.current_player() == Color::BLACK { 0o07 } else { 0o00 };
+
+        if mov.is_short_castle() {
+            self.kings[color as usize].move_piece(0o04 | rank_mask, 0o06 | rank_mask);
+            self.rooks[color as usize].move_piece(0o07 | rank_mask, 0o05 | rank_mask);
+        } else if mov.is_long_castle() {
+            self.kings[color as usize].move_piece(0o04 | rank_mask, 0o02 | rank_mask);
+            // NOTE: since the source for the rook is 0, we can omit the 0o00.
+            self.rooks[color as usize].move_piece(rank_mask, 0o03 | rank_mask);
+        } else if mov.is_promotion() {
+            self.get_mut_piece(color, mov.promotion_piece()).unset_by_index(mov.target_idx().into());
+        } else {
+            if mov.is_capture() {
+                // put the piece back
+                let (other_color, cap_piece) = captured_piece.unwrap();
+                self.get_mut_piece(other_color, cap_piece).set_by_index(mov.target_idx().into());
+            }
+            
+            if mov.is_promotion() {
+                // remove the promotion piece
+                self.get_mut_piece(color, mov.promotion_piece()).unset_by_index(mov.target_idx().into());
+            }
+
+            // move the piece back to it's source square
+            self.get_mut_piece(color, piece).move_piece(mov.target_idx().into(), mov.source_idx().into());
+        }
+
+        // if it was white's turn, then we need to decrement the clock
+        if !self.meta.contains(Metadata::BLACK_TO_MOVE) { self.full_move_clock -= 1; }
+        
+        /* TODO:
+        Half-move clock
+        */
+        
 
         // flip the player-turn bit
         self.meta ^= Metadata::BLACK_TO_MOVE;
@@ -262,7 +331,7 @@ impl Ply {
 #[cfg(test)]
 pub(crate) mod test {
     use super::*;
-
+    
     // NOTE: these are left as functions because they are used to test the `from_fen` and `to_fen`
     // functions elsewhere. Most tests should use the constants defined in constants/test.rs
     pub fn start_position() -> Ply {

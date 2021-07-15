@@ -159,6 +159,12 @@ impl Bitboard {
     pub fn unset_by_index(&mut self, idx: usize) {
         self.0 &= !(1 << idx)
     }
+    
+    /// Logically 'moves' a piece from the 'from' square to the 'to' square
+    pub fn move_piece(&mut self, from: usize, to: usize) {
+        self.unset_by_index(from);
+        self.set_by_index(to);
+    }
 
     /// unsets the bit at the given coordinates
     /// ```
