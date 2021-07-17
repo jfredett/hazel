@@ -28,6 +28,8 @@ extern crate rand;
 
 pub use rand::prelude::*;
 pub use tracing::{info, debug, error, warn, instrument};
+pub use anyhow::*;
+pub use thiserror::Error;
 
 #[cfg(test)]
 pub use tracing_test;

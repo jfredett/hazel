@@ -9,8 +9,7 @@ use super::*;
 /// assert!(bb.is_notation_set("d4"));
 /// assert!(bb.is_notation_set("c6"));
 /// ```
-#[macro_export]
-macro_rules! bitboard {
+#[macro_export] macro_rules! bitboard {
     () => (
         Bitboard::empty()
     );

@@ -14,6 +14,14 @@ impl Color {
             Color::BLACK => { Direction::S }
         }
     }
+    
+    pub fn is_black(self) -> bool {
+        self == Color::BLACK
+    }
+    
+    pub fn is_white(self) -> bool {
+        self == Color::WHITE
+    }
 }
 
 pub const COLORS : [Color; 2] = [

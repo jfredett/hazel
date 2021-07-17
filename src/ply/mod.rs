@@ -1,31 +1,20 @@
 #![allow(non_snake_case)]
-use crate::{movement::Move, moveset::MoveSet};
+
+use crate::{movement::{Move, MoveType}, moveset::MoveSet};
 
 use super::*;
 
 use bitboard::Bitboard;
 use constants::*;
-use serde::{Deserialize, Serialize, de::IntoDeserializer};
+use serde::{Deserialize, Serialize};
 
 mod debug;
 mod creation;
+mod make;
+mod metadata;
 
-bitflags! {
-    #[derive(Serialize, Deserialize)]
-    pub struct Metadata: u8 {
-        const WHITE_CASTLE_LONG  = 0b00000001;
-        const WHITE_CASTLE_SHORT = 0b00000010;
-        const BLACK_CASTLE_LONG  = 0b00000100;
-        const BLACK_CASTLE_SHORT = 0b00001000;
-        const EN_PASSANT         = 0b00010000;
-        const BLACK_TO_MOVE      = 0b00100000;
-        const IN_CHECK           = 0b01000000;
-        // NOTE: Maybe this should be used for 'seen this position before?' if 1, then we need to lookup in the 3-fold transpo table or w/e
-        const UNUSED             = 0b10000000;
-        // convenience flags
-        const DEFAULT            = 0b00001111;
-    }
-}
+use metadata::*;
+
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Serialize, Deserialize)]
 pub struct Ply {
     // indexed by COLOR
@@ -78,10 +67,10 @@ impl Ply {
     pub fn can_castle_long(&self) -> bool {
         match self.current_player() {
             Color::WHITE => { 
-                self.meta.contains(Metadata::WHITE_CASTLE_LONG) & (self.occupancy() & bitboard!("b1", "c1", "d1")).is_empty()
+                self.meta.contains(Metadata::WHITE_CASTLE_LONG) && (self.occupancy() & bitboard!("b1", "c1", "d1")).is_empty()
             }
             Color::BLACK => { 
-                self.meta.contains(Metadata::BLACK_CASTLE_LONG) & (self.occupancy() & bitboard!("b8", "c8", "d8")).is_empty()
+                self.meta.contains(Metadata::BLACK_CASTLE_LONG) && (self.occupancy() & bitboard!("b8", "c8", "d8")).is_empty()
             }
         }
     }
@@ -90,10 +79,10 @@ impl Ply {
     pub fn can_castle_short(&self) -> bool {
         match self.current_player() {
             Color::WHITE => { 
-                self.meta.contains(Metadata::WHITE_CASTLE_SHORT) & (self.occupancy() & bitboard!("f1", "g1")).is_empty()
+                self.meta.contains(Metadata::WHITE_CASTLE_SHORT) && (self.occupancy() & bitboard!("f1", "g1")).is_empty()
             }
             Color::BLACK => { 
-                self.meta.contains(Metadata::BLACK_CASTLE_SHORT) & (self.occupancy() & bitboard!("f8", "g8")).is_empty()
+                self.meta.contains(Metadata::BLACK_CASTLE_SHORT) && (self.occupancy() & bitboard!("f8", "g8")).is_empty()
             }
         }
     }
@@ -125,7 +114,7 @@ impl Ply {
     }
     
     /// Returns the color of the player who is not currently making the next move.
-    pub fn inactive_player(&self) -> Color {
+    pub fn other_player(&self) -> Color {
         if self.meta.contains(Metadata::BLACK_TO_MOVE) {
             Color::WHITE
         } else {
@@ -159,125 +148,26 @@ impl Ply {
         None
     }
     
-    pub fn make(&mut self, mov: Move) {
-        if mov.is_short_castle() {
-            match self.current_player() {
-                Color::WHITE => {
-                    self.kings[Color::WHITE as usize].unset_by_index(0o04);
-                    self.kings[Color::WHITE as usize].set_by_index(0o06);
-                    self.rooks[Color::WHITE as usize].unset_by_index(0o07);
-                    self.rooks[Color::WHITE as usize].set_by_index(0o05);
-                },
-                Color::BLACK => {
-                    self.kings[Color::BLACK as usize].unset_by_index(0o74);
-                    self.kings[Color::BLACK as usize].set_by_index(0o76);
-                    self.rooks[Color::BLACK as usize].unset_by_index(0o77);
-                    self.rooks[Color::BLACK as usize].set_by_index(0o75);
-                }
-            }
-        } else if mov.is_long_castle() {
-            match self.current_player() {
-                Color::WHITE => {
-                    self.kings[Color::WHITE as usize].unset_by_index(0o04);
-                    self.kings[Color::WHITE as usize].set_by_index(0o02);
-                    self.rooks[Color::WHITE as usize].unset_by_index(0o00);
-                    self.rooks[Color::WHITE as usize].set_by_index(0o03);
-                },
-                Color::BLACK => {
-                    self.kings[Color::BLACK as usize].unset_by_index(0o74);
-                    self.kings[Color::BLACK as usize].set_by_index(0o72);
-                    self.rooks[Color::BLACK as usize].unset_by_index(0o70);
-                    self.rooks[Color::BLACK as usize].set_by_index(0o73);
-                }
-            }
-        } else if let Some((color, piece_in)) = self.piece_at_index(mov.source_idx().into()) {
-            let piece = if mov.is_promotion() {
-                mov.promotion_piece()
-            } else {
-                piece_in
-            };
-
-            if mov.is_capture() {
-                // remove the piece of the other color at target_idx
-                if let Some((other_color, target_piece)) = self.piece_at_index(mov.target_idx().into()) {
-                    self.get_mut_piece(other_color, target_piece).unset_by_index(mov.target_idx().into());
-                } else {
-                    dbg!(mov);
-                    dbg!(&self);
-                    dbg!(&self.to_fen());
-                    unimplemented!();
-                }
-            } 
-
-            self.get_mut_piece(color, piece).unset_by_index(mov.source_idx().into());
-            self.get_mut_piece(color, piece).set_by_index(mov.target_idx().into());
-        } else {
-            // TODO: Promotions
-            dbg!(mov);
-            panic!("Could not find piece at index: {}", mov.source_idx());
-        }
-        
-        // just completed black's turn, another full move down
-        if self.meta.contains(Metadata::BLACK_TO_MOVE) { self.full_move_clock += 1; }
-
-        /* TODO: Half-move clock
-        // Halfmove count goes up every move and resets on pawn move or capture
-        self.half_move_clock += 1;
-        // FIXME: This is gross.
-        if self.piece_at_index(mov.source_idx().into()).unwrap().1 == Piece::Pawn || mov.is_capture() { self.half_move_clock = 0; }
-        */
-
-        // flip the player-turn bit
-        self.meta ^= Metadata::BLACK_TO_MOVE;
+    /// Returns the piece at the given index iff that piece is of the current player's color.
+    pub fn friendly_piece_at_index(&self, idx: usize) -> Option<Piece> {
+        if self.rooks[self.current_player() as usize].is_index_set(idx) { return Some(Piece::Rook) }
+        if self.bishops[self.current_player() as usize].is_index_set(idx) { return Some(Piece::Bishop) }
+        if self.knights[self.current_player() as usize].is_index_set(idx) { return Some(Piece::Knight) }
+        if self.kings[self.current_player() as usize].is_index_set(idx) { return Some(Piece::King) }
+        if self.queens[self.current_player() as usize].is_index_set(idx) { return Some(Piece::Queen) }
+        if self.pawns[self.current_player() as usize].is_index_set(idx) { return Some(Piece::Pawn) }
+        None
     }
     
-    pub fn unmake(&mut self, mov: Move, captured_piece: Option<(Color, Piece)>) {
-
-        let pat = self.piece_at_index(mov.target_idx().into());
-        if pat.is_none() {
-            dbg!(mov);
-            dbg!(self);
-            unimplemented!()
-        }
-        let (color, piece) = pat.unwrap();
-
-        let rank_mask = if self.current_player() == Color::BLACK { 0o07 } else { 0o00 };
-
-        if mov.is_short_castle() {
-            self.kings[color as usize].move_piece(0o04 | rank_mask, 0o06 | rank_mask);
-            self.rooks[color as usize].move_piece(0o07 | rank_mask, 0o05 | rank_mask);
-        } else if mov.is_long_castle() {
-            self.kings[color as usize].move_piece(0o04 | rank_mask, 0o02 | rank_mask);
-            // NOTE: since the source for the rook is 0, we can omit the 0o00.
-            self.rooks[color as usize].move_piece(rank_mask, 0o03 | rank_mask);
-        } else if mov.is_promotion() {
-            self.get_mut_piece(color, mov.promotion_piece()).unset_by_index(mov.target_idx().into());
-        } else {
-            if mov.is_capture() {
-                // put the piece back
-                let (other_color, cap_piece) = captured_piece.unwrap();
-                self.get_mut_piece(other_color, cap_piece).set_by_index(mov.target_idx().into());
-            }
-            
-            if mov.is_promotion() {
-                // remove the promotion piece
-                self.get_mut_piece(color, mov.promotion_piece()).unset_by_index(mov.target_idx().into());
-            }
-
-            // move the piece back to it's source square
-            self.get_mut_piece(color, piece).move_piece(mov.target_idx().into(), mov.source_idx().into());
-        }
-
-        // if it was white's turn, then we need to decrement the clock
-        if !self.meta.contains(Metadata::BLACK_TO_MOVE) { self.full_move_clock -= 1; }
-        
-        /* TODO:
-        Half-move clock
-        */
-        
-
-        // flip the player-turn bit
-        self.meta ^= Metadata::BLACK_TO_MOVE;
+    /// Returns the piece at the given index iff that piece is of the other player's color.
+    pub fn enemy_piece_at_index(&self, idx: usize) -> Option<Piece> {
+        if self.rooks[self.other_player() as usize].is_index_set(idx) { return Some(Piece::Rook) }
+        if self.bishops[self.other_player() as usize].is_index_set(idx) { return Some(Piece::Bishop) }
+        if self.knights[self.other_player() as usize].is_index_set(idx) { return Some(Piece::Knight) }
+        if self.kings[self.other_player() as usize].is_index_set(idx) { return Some(Piece::King) }
+        if self.queens[self.other_player() as usize].is_index_set(idx) { return Some(Piece::Queen) }
+        if self.pawns[self.other_player() as usize].is_index_set(idx) { return Some(Piece::Pawn) }
+        None
     }
     
     /// A helper for digging into the ply structure to touch the right pieces.
@@ -303,7 +193,6 @@ impl Ply {
             Piece::Pawn   => self.pawns[color as usize],
         }
     }
-
 
     /// returns an 8x8 array with characters representing each piece in the proper locations
     fn board_buffer(&self) -> [[char; 8]; 8] {
@@ -331,6 +220,39 @@ impl Ply {
 #[cfg(test)]
 pub(crate) mod test {
     use super::*;
+    
+    mod make_and_unmake {
+        use crate::ply::make::MoveResult;
+
+        use super::*;
+        
+        //TODO: Remove this test when we're done bughunting
+        #[test]
+        fn repro() -> MoveResult<()>{
+            let mut p = Ply::from_fen(START_POSITION_FEN);
+
+            // set up the eventual position we want to test for
+            p.make(Move::from(1,16,MoveType::QUIET))?;
+            p.make(Move::from(57,40, MoveType::QUIET))?;
+            p.make(Move::from(13,29,MoveType::QUIET))?;         
+
+            // // copy it
+            let original = p;
+
+            // // make the problematic move
+
+            dbg!(Move::generate(&p, Color::BLACK));
+
+            // // unmake it
+            // p.unmake(Move::from(1, 47, false, 0b100), Some((Color::BLACK, Piece::Knight)));
+            
+            // check to see if it works now
+            assert_eq!(p, original);
+
+            Ok(())
+        }
+
+    }
     
     // NOTE: these are left as functions because they are used to test the `from_fen` and `to_fen`
     // functions elsewhere. Most tests should use the constants defined in constants/test.rs

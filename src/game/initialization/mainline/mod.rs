@@ -30,7 +30,7 @@ impl MainlineVisitor {
         }
     }
     
-    fn find_by_target(&self, piece: Piece, to: u16) -> Search {
+    fn find_by_target(&self, piece: Piece, to: usize) -> Search {
         self.game.moves().find_by_target(piece, to)
     }
 }
@@ -52,10 +52,10 @@ impl Visitor for MainlineVisitor {
     fn san(&mut self, san_plus: pgn_reader::SanPlus) { 
         let mov: Move = match san_plus.san {
             San::Normal { role , file: _, rank: _, capture: _, to, promotion: _ } => {
-                match self.find_by_target(role.into(), to as u16) {
+                match self.find_by_target(role.into(), to as usize) {
                     Search::Unambiguous(m) => m,
                     Search::Ambiguous(ms) => {
-                        ms.into_iter().find(|&e| e.target_idx() == to as u16).unwrap()
+                        ms.into_iter().find(|&e| e.target_idx() == to as usize).unwrap()
                     }
                     Search::Empty => { 
                         panic!("Could not find move") 
@@ -87,7 +87,7 @@ mod tests {
         #[test]
         fn parses_pgn_without_variations() {
             let g = Game::from_pgn(TEST_PGN);
-            assert_eq!(g.moves.len(), 29*2);
+            assert_eq!(g.played.len(), 29*2);
         }
     }
 }

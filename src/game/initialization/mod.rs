@@ -12,7 +12,7 @@ impl Game {
     pub fn from_fen(fen: &str) -> Game {
         Game {
             position: Ply::from_fen(fen),
-            moves: vec![],
+            played: vec![],
             captures: vec![],
             metadata: vec![]
         }

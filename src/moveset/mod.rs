@@ -15,7 +15,7 @@ impl MoveSet {
     
     /// Adds a quiet move from the source square to the target square
     pub fn add_move(&mut self, piece: Piece, source: usize, target: usize) {
-        self.moves[piece as usize].push(Move::from(source as u16, target as u16, false, MoveType::quiet().bits()));
+        self.moves[piece as usize].push(Move::from(source as u16, target as u16,  MoveType::QUIET));
     }
     
     /// Adds a short castle move
@@ -30,15 +30,23 @@ impl MoveSet {
     
     /// Adds a capture move from the source square to the target square
     pub fn add_capture(&mut self, piece: Piece, source: usize, target: usize) {
-        self.moves[piece as usize].push(Move::from(source as u16, target as u16, false, MoveType::capture().bits()));
+        self.moves[piece as usize].push(Move::from(source as u16, target as u16,  MoveType::CAPTURE));
     }
 
     /// Adds all promotion moves from the source square to the target square
-    pub fn add_promotion(&mut self, source: usize, target: usize) {
-        self.moves[Piece::Pawn as usize].push(Move::from(source as u16, target as u16, true, Piece::Queen as u16));
-        self.moves[Piece::Pawn as usize].push(Move::from(source as u16, target as u16, true, Piece::Rook as u16));
-        self.moves[Piece::Pawn as usize].push(Move::from(source as u16, target as u16, true, Piece::Bishop as u16));
-        self.moves[Piece::Pawn as usize].push(Move::from(source as u16, target as u16, true, Piece::Knight as u16));
+    /// FIXME: Don't pass a bool, have a separate method for promotion-captures.
+    pub fn add_promotion(&mut self, source: usize, target: usize, is_capture: bool) {
+        if is_capture {
+            self.moves[Piece::Pawn as usize].push(Move::from(source as u16, target as u16,  MoveType::PROMOTION_CAPTURE_QUEEN ));
+            self.moves[Piece::Pawn as usize].push(Move::from(source as u16, target as u16,  MoveType::PROMOTION_CAPTURE_ROOK ));
+            self.moves[Piece::Pawn as usize].push(Move::from(source as u16, target as u16,  MoveType::PROMOTION_CAPTURE_BISHOP ));
+            self.moves[Piece::Pawn as usize].push(Move::from(source as u16, target as u16,  MoveType::PROMOTION_CAPTURE_KNIGHT ));
+        } else {
+            self.moves[Piece::Pawn as usize].push(Move::from(source as u16, target as u16,  MoveType::PROMOTION_QUEEN ));
+            self.moves[Piece::Pawn as usize].push(Move::from(source as u16, target as u16,  MoveType::PROMOTION_ROOK ));
+            self.moves[Piece::Pawn as usize].push(Move::from(source as u16, target as u16,  MoveType::PROMOTION_BISHOP ));
+            self.moves[Piece::Pawn as usize].push(Move::from(source as u16, target as u16,  MoveType::PROMOTION_KNIGHT ));
+        }
     }
     
     pub fn contains(&self, m : &Move) -> bool {
@@ -53,7 +61,7 @@ impl MoveSet {
         self.moves.iter().all(|e| e.is_empty())
     }
     
-    pub fn find_by_target(&self, piece: Piece, idx: u16) -> Search {
+    pub fn find_by_target(&self, piece: Piece, idx: usize) -> Search {
         let mut movs = vec![];
         for mov in &self.moves[piece as usize] {
             let target_idx = mov.target_idx();
@@ -91,13 +99,13 @@ mod test {
     fn add_promotion_adds_promtion_moves_refactor() {
         let mut ml = MoveSet::empty();
         
-        ml.add_promotion(56, 64);
+        ml.add_promotion(56, 64, false);
         
         let expected = vec![
-            Move::from(56, 64, true, Piece::Queen as u16),
-            Move::from(56, 64, true, Piece::Rook as u16),
-            Move::from(56, 64, true, Piece::Bishop as u16),
-            Move::from(56, 64, true, Piece::Knight as u16)
+            Move::from(56, 64, MoveType::PROMOTION_QUEEN),
+            Move::from(56, 64, MoveType::PROMOTION_ROOK),
+            Move::from(56, 64, MoveType::PROMOTION_BISHOP),
+            Move::from(56, 64, MoveType::PROMOTION_KNIGHT)
         ];
 
         assert_is_subset!(&ml.moves[Piece::Pawn as usize], &expected);
@@ -109,7 +117,7 @@ mod test {
     #[test]
     fn add_capture_adds_capture() {
         let mut ml = MoveSet::empty();
-        let expected_move = Move::from_notation("b4", "d5", Either::Left(MoveType::CAPTURE));
+        let expected_move = Move::from_notation("b4", "d5", MoveType::CAPTURE);
 
         ml.add_capture(
             Piece::Bishop, 
@@ -124,7 +132,7 @@ mod test {
     #[test]
     fn add_move_adds_move() {
         let mut ml = MoveSet::empty();
-        let expected_move = Move::from_notation("b4", "d5", Either::Left(MoveType::quiet()));
+        let expected_move = Move::from_notation("b4", "d5", MoveType::QUIET);
 
         ml.add_move(
             Piece::Pawn,

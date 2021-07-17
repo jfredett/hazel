@@ -1,6 +1,9 @@
 use crate::{bitboard::Bitboard, constants::{Direction, Piece}, util::*};
 use nominal_attacks::*;
 
+// NOTE: This is actually necessary, but rust-analyzer thinks it's not. I think it has to do with it only really being
+// used to get the `bitboard!` macro
+#[allow(unused_imports)]
 use super::*;
 
 const BISHOP_OFFSETS: [usize; 64] = [
@@ -129,9 +132,7 @@ impl<const SIZE: usize> PEXTBoard<SIZE> {
     }
     
     fn initialize_piece(&mut self, piece: Piece) {
-        debug!("Initializing table for {:?}", piece);
         for sq in 0..64 {
-            debug!("Initializing table for square {}", sq);
             let (pext_mask, entries) = Self::block_and_attack_board_for(piece, sq);
             for (blocks, attacks) in entries {
                 let key = Self::key_for(pext_mask, blocks) + Self::offset_for(piece, sq);

@@ -31,9 +31,11 @@ impl Move {
             _ => unreachable!()
         };
         
-        for sq in promotions.all_set_indices()   { out.add_promotion(deshift(sq), sq); }
+        // this kind of promotion _cannot_ be a capture since it's a forward move
+        for sq in promotions.all_set_indices()   { out.add_promotion(deshift(sq), sq, false); }
         for sq in advances.all_set_indices()     { out.add_move(Piece::Pawn, deshift(sq), sq); }
         for sq in double_moves.all_set_indices() { out.add_move(Piece::Pawn, deshift(deshift(sq)), sq); }
+        // TODO: Separate out promoting-captures and non-promoting captures
         for sq in east_attacks.all_set_indices() { out.add_capture(Piece::Pawn, deshift(sq) - 1, sq); }
         for sq in west_attacks.all_set_indices() { out.add_capture(Piece::Pawn, deshift(sq) + 1, sq); }
 
@@ -93,14 +95,6 @@ mod test {
 
     use crate::{assert_is_subset, constants::*};
     use super::*;
-    
-    #[test]
-    fn repro() {
-        let ply = Ply::from_fen("2b5/2rnr3/1p1ppPpk/2P5/p2P1NP1/P4B1p/2P1P1KP/1RB1Q2R b KQkq - 0 31");
-        let moves = Move::generate(&ply, Color::BLACK);
-        dbg!(&moves.moves[Piece::Rook as usize]);
-        unimplemented!()
-    }
 
     // TODO: Have a yaml file which describes a bunch of test positions and the valid moves they entail, load them, then generate tests 
     // from them, we can do this by taking random positions from a database, using stockfish to perft 1 them, then grab the results.
