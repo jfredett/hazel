@@ -2,6 +2,7 @@ use super::*;
 use std::convert::TryInto;
 
 impl Bitboard {
+    /// Executes a Parallel Extract using the given bitboard as a mask. Requires the BMI2 instruction set to be supported.
     #[cfg(target_feature = "bmi2")]
     pub fn pext(&self, mask: Bitboard) -> u64 {
         unsafe { core::arch::x86_64::_pext_u64(self.0, mask.0) }
@@ -9,6 +10,7 @@ impl Bitboard {
     
     #[cfg(not(target_feature = "bmi2"))]
     pub fn pext(&self, _mask: Bitboard) -> u64 {
+        // TODO: Write CPU-REQUIREMENTS
         panic!("Hazel currently requires CPUs which support the BMI2 instruction set, see CPU-REQUIREMENTS from the README for details")
     }
     
@@ -22,6 +24,8 @@ impl Bitboard {
     /// assert_eq!(b.all_set_indices()[0], 10);
     /// assert_eq!(b.first_index(), 10)
     /// ```
+    /// 
+    /// Uses the tzcnt instruction to avoid slow loops. This requires the BMI1 instruction set to be available.
     #[cfg(target_feature = "bmi1")]
     pub fn first_index(&self) -> usize {
         unsafe { (core::arch::x86_64::_mm_tzcnt_64(self.0)).try_into().unwrap() }     
@@ -29,6 +33,7 @@ impl Bitboard {
     
     #[cfg(not(target_feature = "bmi1"))]
     pub fn first_index(&self) -> usize {
+        // TODO: Write CPU-REQUIREMENTS
         panic!("Hazel currently requires CPUs which support the BMI1 instruction set, see CPU-REQUIREMENTS from the README for details")
     }
 }
