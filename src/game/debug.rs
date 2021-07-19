@@ -12,6 +12,13 @@ impl Debug for Game {
             writeln!(f, "{}. {:?}", (i / 2) + 1, m)?;
         }
         
+        writeln!(f)?;
+        writeln!(f, "History")?;
+        writeln!(f)?;
+        for (i, m) in self.history.iter().enumerate() {
+            writeln!(f, "{}. {:?}", i, m)?;
+        }
+        
         Ok(())
     }
 }

@@ -13,6 +13,7 @@ impl Game {
         Game {
             position: Ply::from_fen(fen),
             played: vec![],
+            history: vec![],
             captures: vec![],
             metadata: vec![]
         }

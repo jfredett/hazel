@@ -221,39 +221,6 @@ impl Ply {
 pub(crate) mod test {
     use super::*;
     
-    mod make_and_unmake {
-        use crate::ply::make::MoveResult;
-
-        use super::*;
-        
-        //TODO: Remove this test when we're done bughunting
-        #[test]
-        fn repro() -> MoveResult<()>{
-            let mut p = Ply::from_fen(START_POSITION_FEN);
-
-            // set up the eventual position we want to test for
-            p.make(Move::from(1,16,MoveType::QUIET))?;
-            p.make(Move::from(57,40, MoveType::QUIET))?;
-            p.make(Move::from(13,29,MoveType::QUIET))?;         
-
-            // // copy it
-            let original = p;
-
-            // // make the problematic move
-
-            dbg!(Move::generate(&p, Color::BLACK));
-
-            // // unmake it
-            // p.unmake(Move::from(1, 47, false, 0b100), Some((Color::BLACK, Piece::Knight)));
-            
-            // check to see if it works now
-            assert_eq!(p, original);
-
-            Ok(())
-        }
-
-    }
-    
     // NOTE: these are left as functions because they are used to test the `from_fen` and `to_fen`
     // functions elsewhere. Most tests should use the constants defined in constants/test.rs
     pub fn start_position() -> Ply {

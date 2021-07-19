@@ -37,6 +37,6 @@ mod test {
     fn displays_as_intended() {
         let m = Move::from_notation("d2", "d4", MoveType::QUIET);
         let debug_out = format!("{:?}", m);
-        assert_eq!(debug_out, "d2 (11) -> d4 (27) (., 0)");
+        assert_eq!(debug_out, "d2 (11) -> d4 (27) (0b0000) [0o026660]");
     }
 }

@@ -22,8 +22,12 @@ impl Move {
         let advances = raw_advances & !promotion_rank;
         let double_moves = ((pawns & double_jump_rank).shift(pawn_direction) & !ply.occupancy())
                                  .shift(pawn_direction) & !ply.occupancy();
-        let east_attacks = (pawns & !*H_FILE).shift(pawn_direction).shift(Direction::E) & ply.occupancy_for(other_color);
-        let west_attacks = (pawns & !*A_FILE).shift(pawn_direction).shift(Direction::W) & ply.occupancy_for(other_color);
+        let east_attacks_raw = (pawns & !*H_FILE).shift(pawn_direction).shift(Direction::E) & ply.occupancy_for(other_color);
+        let west_attacks_raw = (pawns & !*A_FILE).shift(pawn_direction).shift(Direction::W) & ply.occupancy_for(other_color);
+        let east_attacks = east_attacks_raw & !promotion_rank;
+        let west_attacks = west_attacks_raw & !promotion_rank;
+        let east_attack_promotions = east_attacks_raw & promotion_rank;
+        let west_attack_promotions = west_attacks_raw & promotion_rank;
 
         let deshift = match pawn_direction {
             Direction::N => |e: usize| e - 8,
@@ -34,10 +38,13 @@ impl Move {
         // this kind of promotion _cannot_ be a capture since it's a forward move
         for sq in promotions.all_set_indices()   { out.add_promotion(deshift(sq), sq, false); }
         for sq in advances.all_set_indices()     { out.add_move(Piece::Pawn, deshift(sq), sq); }
-        for sq in double_moves.all_set_indices() { out.add_move(Piece::Pawn, deshift(deshift(sq)), sq); }
-        // TODO: Separate out promoting-captures and non-promoting captures
+        for sq in double_moves.all_set_indices() { out.add_pawn_double_move( deshift(deshift(sq)), color); }
         for sq in east_attacks.all_set_indices() { out.add_capture(Piece::Pawn, deshift(sq) - 1, sq); }
         for sq in west_attacks.all_set_indices() { out.add_capture(Piece::Pawn, deshift(sq) + 1, sq); }
+        for sq in east_attack_promotions.all_set_indices() { out.add_promotion(deshift(sq) - 1, sq, true); }
+        for sq in west_attack_promotions.all_set_indices() { out.add_promotion(deshift(sq) + 1, sq, true); }
+        
+        // TODO: en passant
 
         // king moves
         // FIXME: Doesn't account for checks yet.
@@ -64,10 +71,15 @@ impl Move {
 
         // knight moves
         let knights = ply.knights[color as usize];
-        for k in knights.all_set_indices() {
-            let unblocked_squares = KNIGHT_MOVES[k] & !ply.occupancy_for(color);
-            for square in unblocked_squares.all_set_indices() {
-                out.add_move(Piece::Knight, k, square);
+        for source in knights.all_set_indices() {
+            let attacks = KNIGHT_MOVES[source] & !ply.occupancy_for(color);
+
+            for capture in (attacks & ply.occupancy_for(other_color)).all_set_indices() {
+                out.add_capture(Piece::Knight, source, capture);
+            }
+            
+            for target in (attacks & !ply.occupancy_for(other_color)).all_set_indices() {
+                out.add_move(Piece::Knight, source, target);
             }
         }
 

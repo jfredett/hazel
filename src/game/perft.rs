@@ -39,24 +39,11 @@ mod tests {
     #[test]
     #[traced_test]
     fn perft_start_position_to_depth_6() {
-        // assert_eq!(perft_start_position(1), 20);
-        // assert_eq!(perft_start_position(2), 400);
-        // assert_eq!(perft_start_position(3), 8_902);
+        assert_eq!(perft_start_position(1), 20);
+        assert_eq!(perft_start_position(2), 400);
+        assert_eq!(perft_start_position(3), 8_902);
         assert_eq!(perft_start_position(4), 197_281);
         // assert_eq!(perft_start_position(5), 4_865_609);
         // assert_eq!(perft_start_position(6), 119_060_324);
-    }
-    
-    #[test]
-    // #[traced_test]
-    fn repro() {
-        let mut g = Game::from_fen(START_POSITION_FEN);
-        g.make(Move::from(1, 16, MoveType::QUIET));
-        for m in g.moves().as_vec() {
-            let mut new_g = g.clone();
-            new_g.make(m);
-            new_g.perft(2);
-        }
-
     }
 }

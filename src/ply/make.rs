@@ -35,18 +35,15 @@ pub enum MoveError {
 
 impl Ply {
     pub fn make(&mut self, mov: Move) -> MoveResult<Option<Piece>> {
-        let source_piece = self.friendly_piece_at_index(mov.source_idx());
+        let source_piece = match self.friendly_piece_at_index(mov.source_idx()) {
+            Some(s) => s,
+            None => return Err(MoveError::MissingSourcePiece(MoveMode::Make, *self, mov)), 
+        };
         let target_piece = self.enemy_piece_at_index(mov.target_idx());
         
         // probably want to remove the .and stuff and just resolve the error, return a None if needed.
         let result: Option<Piece> = match mov.move_metadata() {
-            MoveType::QUIET                     => { 
-                match source_piece {
-                    Some(s) => self.move_piece(s, mov)?,
-                    None => return Err(MoveError::MissingSourcePiece(MoveMode::Make, *self, mov)), 
-                };
-                None
-            }
+            MoveType::QUIET                     => { self.move_piece(source_piece, mov)?; None },
             MoveType::SHORT_CASTLE              => { self.short_castle()?; None },
             MoveType::LONG_CASTLE               => { self.long_castle()?; None },
             MoveType::CAPTURE => {
@@ -54,11 +51,8 @@ impl Ply {
                     Some(t) => self.remove_enemy_piece(t, mov.target_idx())?,
                     None => return Err(MoveError::MissingTargetPiece(MoveMode::Make, *self, mov)), 
                 }
-                match source_piece {
-                    Some(s) => self.move_piece(s, mov)?,
-                    None => return Err(MoveError::MissingSourcePiece(MoveMode::Make, *self, mov)), 
-                };
-                None
+                self.move_piece(source_piece, mov)?;
+                target_piece
             },
             MoveType::EP_CAPTURE => todo!(),
             MoveType::PROMOTION_KNIGHT          => { self.execute_promotion(mov, Piece::Knight)?; None },
@@ -69,38 +63,29 @@ impl Ply {
             MoveType::PROMOTION_CAPTURE_BISHOP  => { Some(self.execute_promotion_capture(mov, Piece::Bishop)?) },
             MoveType::PROMOTION_CAPTURE_ROOK    => { Some(self.execute_promotion_capture(mov, Piece::Rook)?) },
             MoveType::PROMOTION_CAPTURE_QUEEN   => { Some(self.execute_promotion_capture(mov, Piece::Queen)?) },
-            MoveType::DOUBLE_PAWN               => None, // NOTE: This is unused right now, may be changed later
+            MoveType::DOUBLE_PAWN               => { self.move_piece(source_piece, mov)?; None },
             _ => return Err(MoveError::UnrecognizedMove(MoveMode::Make, mov))
         };
         
-        /*
-         * TODO: Half-move clock
-         * This is a rough version, the #and_then call doesn't work. I really want a way to say, "If the thing is_some, then do this thing, otherwise do nothing"
-        self.half_move_clock += 1;
-        source_piece.and_then(|p| { if p == Piece::Pawn { self.half_move_clock = 0; }; None });
-        target_piece.and_then(|_| { self.half_move_clock = 0; None });
-        */
-
-        // just completed black's turn, another full move down
-        if self.meta.contains(Metadata::BLACK_TO_MOVE) { self.full_move_clock += 1; }
-
-        // flip the player-turn bit
-        self.meta ^= Metadata::BLACK_TO_MOVE;
+        self.tick(source_piece, result.is_some())?;
         
         Ok(result)
     }
 
+    #[instrument(skip(self))]
     pub fn unmake(&mut self, mov: Move, target_piece: Option<Piece>) -> MoveResult<()> {
-        let source_piece = self.friendly_piece_at_index(mov.source_idx());
-        
-        // probably want to remove the .and stuff and just resolve the error, return a None if needed.
+        // Untick _first_ so that the 'current_player' becomes the correct color.
+        // TODO: half-move clock memory
+        self.untick(None)?;
+
+        // note how it's target -- this is _after_ the mov has been made, so we have to work backwards
+        let source_piece = match self.friendly_piece_at_index(mov.target_idx()) {
+            Some(s) => s,
+            None => { return Err(MoveError::MissingSourcePiece(MoveMode::Unmake, *self, mov)) }
+        };
+
         match mov.move_metadata() {
-            MoveType::QUIET                     => {
-                match source_piece {
-                    Some(s) => self.unmove_piece(s, mov)?,
-                    None => { return Err(MoveError::MissingSourcePiece(MoveMode::Unmake, *self, mov)) }
-                }
-            },
+            MoveType::QUIET                     => self.unmove_piece(source_piece, mov)?,
             MoveType::SHORT_CASTLE              => self.unshort_castle()?,
             MoveType::LONG_CASTLE               => self.unlong_castle()?,
             MoveType::CAPTURE => {
@@ -108,10 +93,7 @@ impl Ply {
                     Some(t) => self.place_enemy_piece(t, mov.target_idx())?,
                     None => { return Err(MoveError::MissingTargetPiece(MoveMode::Unmake, *self, mov)) },
                 }
-                match source_piece {
-                    Some(s) => self.unmove_piece(s, mov)?,
-                    None => { return Err(MoveError::MissingSourcePiece(MoveMode::Unmake, *self, mov)) }
-                }
+                self.unmove_piece(source_piece, mov)?
             },
             MoveType::EP_CAPTURE => todo!(),
             MoveType::PROMOTION_KNIGHT          => self.unexecute_promotion(mov, Piece::Knight)?,
@@ -122,27 +104,13 @@ impl Ply {
             MoveType::PROMOTION_CAPTURE_BISHOP  => self.unexecute_promotion_capture(mov, Piece::Bishop, target_piece)?,
             MoveType::PROMOTION_CAPTURE_ROOK    => self.unexecute_promotion_capture(mov, Piece::Rook, target_piece)?,
             MoveType::PROMOTION_CAPTURE_QUEEN   => self.unexecute_promotion_capture(mov, Piece::Queen, target_piece)?,
-            MoveType::DOUBLE_PAWN               => (), // NOTE: This is unused right now, may be changed later
+            MoveType::DOUBLE_PAWN               => self.unmove_piece(source_piece, mov)?,
             _ => return Err(MoveError::UnrecognizedMove(MoveMode::Unmake, mov))
         };
         
-        /*
-         * TODO: Half-move clock
-         * This is a rough version, the #and_then call doesn't work. I really want a way to say, "If the thing is_some, then do this thing, otherwise do nothing"
-        self.half_move_clock -= 1;
-        source_piece.and_then(|p| { if p == Piece::Pawn { self.half_move_clock = 0; }; None });
-        target_piece.and_then(|_| { self.half_move_clock = 0; None });
-        */
-
-        // just completed black's turn, another full move down
-        if self.meta.contains(Metadata::BLACK_TO_MOVE) { self.full_move_clock += 1; }
-
-        // flip the player-turn bit
-        self.meta ^= Metadata::BLACK_TO_MOVE;
-        
         Ok(())
     }
-    
+
     pub fn make_by_notation(&mut self, source: &str, target: &str, metadata: MoveType) -> MoveResult<Option<Piece>> {
         self.make(Move::from(
             NOTATION_TO_INDEX(source) as u16,
@@ -157,6 +125,33 @@ impl Ply {
             NOTATION_TO_INDEX(target) as u16,
             metadata
         ), captured_piece)
+    }
+
+    
+    fn tick(&mut self, piece_moved: Piece, had_capture: bool) -> MoveResult<()> {
+        // Half-move clock resets on capture or pawn move.
+        self.half_move_clock += 1;
+        if piece_moved == Piece::Pawn || had_capture { self.half_move_clock = 0; }
+        
+        // Full Move Clock
+        if self.current_player() == Color::BLACK { self.full_move_clock += 1; }
+        // Current Player Switch
+        self.meta ^= Metadata::BLACK_TO_MOVE;
+    
+        Ok(())
+    }
+    
+    fn untick(&mut self, previous_half_move_count: Option<usize>) -> MoveResult<()> {
+        // Half move clock unwinds
+        if let Some(count) = previous_half_move_count { self.half_move_clock = count as u8; }
+        
+        // Full Move Clock
+        if self.current_player() == Color::WHITE { self.full_move_clock -= 1; }
+
+        // Current Player Switch
+        self.meta ^= Metadata::BLACK_TO_MOVE;
+        
+        Ok(())
     }
 
     fn castle_rank_mask(&self) -> usize {

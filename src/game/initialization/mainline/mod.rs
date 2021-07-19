@@ -7,6 +7,7 @@ use super::*;
 
 mod from;
 
+#[derive(Debug)]
 struct MainlineVisitor {
     game: Game
 }
@@ -57,9 +58,7 @@ impl Visitor for MainlineVisitor {
                     Search::Ambiguous(ms) => {
                         ms.into_iter().find(|&e| e.target_idx() == to as usize).unwrap()
                     }
-                    Search::Empty => { 
-                        panic!("Could not find move") 
-                    }
+                    Search::Empty => { panic!("Could not find move") }
                 }
             },
             San::Castle(side) => {

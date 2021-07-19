@@ -28,6 +28,14 @@ impl MoveSet {
         self.moves[Piece::King as usize].push(Move::long_castle(color));     
     }
     
+    pub fn add_pawn_double_move(&mut self, source: usize, color: Color) {
+        let offset: isize = match color {
+            Color::WHITE =>  16,
+            Color::BLACK => -16,
+        };
+        self.moves[Piece::Pawn as usize].push(Move::from(source as u16, (source as isize + offset) as u16, MoveType::DOUBLE_PAWN))    
+    }
+    
     /// Adds a capture move from the source square to the target square
     pub fn add_capture(&mut self, piece: Piece, source: usize, target: usize) {
         self.moves[piece as usize].push(Move::from(source as u16, target as u16,  MoveType::CAPTURE));
