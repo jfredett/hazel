@@ -156,7 +156,7 @@ impl Ply {
 
     fn castle_rank_mask(&self) -> usize {
         if self.current_player().is_black() {
-            0o07
+            0o70
         } else {
             0o00
         }
@@ -266,4 +266,108 @@ impl Ply {
         self.place_enemy_piece(t, mov.target_idx())
     }
 
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn short_castle_is_done_correctly() -> MoveResult<()> {
+        let mut p = Ply::from_fen(START_POSITION_FEN);
+        // This encodes the following game:
+        // 1. d4 d5
+        // 2. e3 e6
+        // 3. Be2 Be7
+        // 4. Nf3 Nf6
+        // 5. O-O O-O
+        p.make_by_notation("d2", "d4", MoveType::QUIET)?;
+        p.make_by_notation("d7", "d5", MoveType::QUIET)?;
+        p.make_by_notation("e2", "e3", MoveType::QUIET)?;
+        p.make_by_notation("e7", "e6", MoveType::QUIET)?;
+        p.make_by_notation("f1", "e2", MoveType::QUIET)?;
+        p.make_by_notation("f8", "e7", MoveType::QUIET)?;
+        p.make_by_notation("g1", "f3", MoveType::QUIET)?;
+        p.make_by_notation("g8", "f6", MoveType::QUIET)?;
+        
+        // Before castle, white king is on e1 and kingside rook on h1
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("g1")), None);
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("f1")), None);
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("h1")), Some((Color::WHITE, Piece::Rook)));
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("e1")), Some((Color::WHITE, Piece::King)));
+        
+        p.make(Move::short_castle(Color::WHITE))?;
+
+        // After, king is on g1 and rook on f1
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("g1")), Some((Color::WHITE, Piece::King)));
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("f1")), Some((Color::WHITE, Piece::Rook)));
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("h1")), None);
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("e1")), None);
+
+        // Black King on e8, Black KS Rook on h8
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("g8")), None);
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("f8")), None);
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("h8")), Some((Color::BLACK, Piece::Rook)));
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("e8")), Some((Color::BLACK, Piece::King)));
+
+        p.make(Move::short_castle(Color::BLACK))?;
+
+        // After, black king on g8 and rook on f8
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("g8")), Some((Color::BLACK, Piece::King)));
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("f8")), Some((Color::BLACK, Piece::Rook)));
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("h8")), None);
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("e8")), None);
+
+        Ok(())
+    }
+    
+    #[test]
+    fn long_castle_is_done_correctly() -> MoveResult<()> {
+        let mut p = Ply::from_fen(START_POSITION_FEN);
+        // This encodes the following game:
+        // 1. d4 d5
+        // 2. Bf4 Bf5
+        // 3. Nc3 Nc6
+        // 4. Qd2 Qd7
+        // 5. O-O-O O-O-O
+        p.make_by_notation("d2", "d4", MoveType::QUIET)?;
+        p.make_by_notation("d7", "d5", MoveType::QUIET)?;
+        p.make_by_notation("c1", "f4", MoveType::QUIET)?;
+        p.make_by_notation("c8", "f5", MoveType::QUIET)?;
+        p.make_by_notation("b1", "c3", MoveType::QUIET)?;
+        p.make_by_notation("b8", "c6", MoveType::QUIET)?;
+        p.make_by_notation("d1", "d2", MoveType::QUIET)?;
+        p.make_by_notation("d8", "d7", MoveType::QUIET)?;
+        
+        // Before castle, white king is on e1 and queenside rook on a1
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("c1")), None);
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("d1")), None);
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("a1")), Some((Color::WHITE, Piece::Rook)));
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("e1")), Some((Color::WHITE, Piece::King)));
+        
+        p.make(Move::long_castle(Color::WHITE))?;
+
+        // After, king is on g1 and rook on f1
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("c1")), Some((Color::WHITE, Piece::King)));
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("d1")), Some((Color::WHITE, Piece::Rook)));
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("a1")), None);
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("e1")), None);
+
+        // Black King on e8, Black KS Rook on h8
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("c8")), None);
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("d8")), None);
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("a8")), Some((Color::BLACK, Piece::Rook)));
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("e8")), Some((Color::BLACK, Piece::King)));
+
+        p.make(Move::long_castle(Color::BLACK))?;
+
+        // After, black king on g8 and rook on f8
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("c8")), Some((Color::BLACK, Piece::King)));
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("d8")), Some((Color::BLACK, Piece::Rook)));
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("a8")), None);
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("e8")), None);
+
+        Ok(())
+    }
 }
