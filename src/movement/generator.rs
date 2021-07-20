@@ -10,10 +10,15 @@ impl Move {
     /// Generates all valid moves from the given ply.
     pub fn generate(&ply : &Ply, color: Color) -> MoveSet {
         let mut out : MoveSet = MoveSet::empty();
-        let (other_color, pawn_direction, promotion_rank, double_jump_rank) = match color {
-            Color::WHITE => (Color::BLACK, Direction::N, *RANK_8, *RANK_2),
-            Color::BLACK => (Color::WHITE, Direction::S, *RANK_1, *RANK_7)
+        // TODO: Move this into ply
+        let (promotion_rank, double_jump_rank) = match color {
+            Color::WHITE => (*RANK_8, *RANK_2),
+            Color::BLACK => (*RANK_1, *RANK_7)
         };
+        
+        let pawn_direction = ply.pawn_direction();
+        let enemy_pawn_direction = ply.enemy_pawn_direction();
+        let other_color = ply.other_player();
 
         // pawn moves
         let pawns = ply.pawns[color as usize];
@@ -28,6 +33,15 @@ impl Move {
         let west_attacks = west_attacks_raw & !promotion_rank;
         let east_attack_promotions = east_attacks_raw & promotion_rank;
         let west_attack_promotions = west_attacks_raw & promotion_rank;
+        
+        if let Some(ep_square) = ply.en_passant {
+            let ep_attackers = ( ep_square.shift(enemy_pawn_direction).shift(Direction::E) 
+                                       | ep_square.shift(enemy_pawn_direction).shift(Direction::W)) 
+                                     & pawns;
+            for sq in ep_attackers.all_set_indices() {
+                out.add_en_passant_capture(sq, ep_square.first_index());
+            }
+        }
 
         let deshift = match pawn_direction {
             Direction::N => |e: usize| e - 8,
@@ -105,7 +119,7 @@ impl Move {
 mod test {
     use tracing_test::traced_test;
 
-    use crate::{assert_is_subset, constants::*};
+    use crate::{assert_is_subset, bitboard::Bitboard, constants::*, movement::MoveType};
     use super::*;
 
     // TODO: Have a yaml file which describes a bunch of test positions and the valid moves they entail, load them, then generate tests 
@@ -154,5 +168,25 @@ mod test {
                 )
             )
         }
+    }
+    
+    #[test]
+    fn calculated_en_passant_capture() {
+        let mut ply = Ply::from_fen(START_POSITION_FEN);
+        ply.make_by_notation("h2", "h3", MoveType::QUIET).unwrap();
+        ply.make_by_notation("c7", "c5", MoveType::DOUBLE_PAWN).unwrap();
+        
+        assert!(ply.en_passant.is_some());
+        assert_eq!(ply.en_passant.unwrap(), Bitboard::from(1 << NOTATION_TO_INDEX("c6")));
+        
+        ply.make_by_notation("h3", "h4", MoveType::QUIET).unwrap();
+        ply.make_by_notation("c5", "c4", MoveType::QUIET).unwrap();
+        ply.make_by_notation("d2", "d4", MoveType::DOUBLE_PAWN).unwrap();
+        
+        assert!(ply.en_passant.is_some());
+
+        let moves = Move::generate(&ply, Color::BLACK);
+
+        assert!(moves.contains(&Move::from_notation("c4", "d3", MoveType::EP_CAPTURE)));
     }
 }

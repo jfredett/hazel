@@ -113,6 +113,7 @@ impl Bitboard {
 
     /// Return a vector containing all the indices which are set
     ///
+    /// TODO: Replace this with an iterator that progressively pops the least set bit, should be quicker.
     /// ```
     /// # use hazel::bitboard::Bitboard;
     /// let mut b = Bitboard::empty();

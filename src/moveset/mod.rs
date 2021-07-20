@@ -38,7 +38,11 @@ impl MoveSet {
     
     /// Adds a capture move from the source square to the target square
     pub fn add_capture(&mut self, piece: Piece, source: usize, target: usize) {
-        self.moves[piece as usize].push(Move::from(source as u16, target as u16,  MoveType::CAPTURE));
+        self.moves[piece as usize].push(Move::from(source as u16, target as u16, MoveType::CAPTURE));
+    }
+    
+    pub fn add_en_passant_capture(&mut self, source: usize, target: usize) {
+        self.moves[Piece::Pawn as usize].push(Move::from(source as u16, target as u16, MoveType::EP_CAPTURE));
     }
 
     /// Adds all promotion moves from the source square to the target square

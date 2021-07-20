@@ -40,6 +40,7 @@ impl Ply {
             None => return Err(MoveError::MissingSourcePiece(MoveMode::Make, *self, mov)), 
         };
         let target_piece = self.enemy_piece_at_index(mov.target_idx());
+        let mut clear_ep = true;
         
         // probably want to remove the .and stuff and just resolve the error, return a None if needed.
         let result: Option<Piece> = match mov.move_metadata() {
@@ -63,9 +64,18 @@ impl Ply {
             MoveType::PROMOTION_CAPTURE_BISHOP  => { Some(self.execute_promotion_capture(mov, Piece::Bishop)?) },
             MoveType::PROMOTION_CAPTURE_ROOK    => { Some(self.execute_promotion_capture(mov, Piece::Rook)?) },
             MoveType::PROMOTION_CAPTURE_QUEEN   => { Some(self.execute_promotion_capture(mov, Piece::Queen)?) },
-            MoveType::DOUBLE_PAWN               => { self.move_piece(source_piece, mov)?; None },
+            MoveType::DOUBLE_PAWN               => { 
+                // move the piece
+                self.move_piece(source_piece, mov)?; 
+                // set the en_passant square
+                self.en_passant = Some(Bitboard::from(1 << mov.source_idx()).shift(self.pawn_direction()));
+                clear_ep = false;
+                None 
+            },
             _ => return Err(MoveError::UnrecognizedMove(MoveMode::Make, mov))
         };
+        
+        if clear_ep { self.en_passant = None; }
         
         self.tick(source_piece, result.is_some())?;
         
@@ -127,6 +137,20 @@ impl Ply {
         ), captured_piece)
     }
 
+    pub fn pawn_direction(&self) -> Direction {
+        Self::pawn_direction_for(self.current_player())
+    }
+    
+    pub fn enemy_pawn_direction(&self) -> Direction {
+        Self::pawn_direction_for(self.other_player())
+    }
+    
+    fn pawn_direction_for( color: Color) -> Direction {
+        match color {
+            Color::WHITE => { Direction::N },
+            Color::BLACK => { Direction::S },
+        }
+    }
     
     fn tick(&mut self, piece_moved: Piece, had_capture: bool) -> MoveResult<()> {
         // Half-move clock resets on capture or pawn move.
