@@ -9,11 +9,22 @@ impl Game {
     /// ::from_fen/1
     /// 
     /// Creates a Game initialized to the given fen string
+    #[cfg(test)]
     pub fn from_fen(fen: &str) -> Game {
         Game {
             position: Ply::from_fen(fen),
             played: vec![],
             history: vec![],
+            captures: vec![],
+            metadata: vec![]
+        }
+    }
+
+    #[cfg(not(test))]
+    pub fn from_fen(fen: &str) -> Game {
+        Game {
+            position: Ply::from_fen(fen),
+            played: vec![],
             captures: vec![],
             metadata: vec![]
         }

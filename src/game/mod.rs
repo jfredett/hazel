@@ -16,7 +16,7 @@ enum History {
 pub struct Game {
     position: Ply,
     played: Vec<Move>,              // TODO: Maybe a 'finite stack' class would be better here? 
-    history: Vec<History>, // Temporary, add only history for debugging purposes -- would be cool to featureflag this so we can turn it on when needed
+    #[cfg(test)] history: Vec<History>, // Temporary, add only history for debugging purposes -- would be cool to featureflag this so we can turn it on when needed
     captures: Vec<Piece>,  //       ditto.
     metadata: Vec<(String, String)> // TODO: String -> Some custom 'tag' type
     // NOTE: Do captures need to record color? We have the move recorded, so the color could be deduced.
@@ -28,7 +28,7 @@ impl Game {
         // NOTE: It is important to do this _before making the move_ so that we add the correct piece to the capture stack.
         self.played.push(mov);
 
-        self.history.push(History::Make(mov));
+        #[cfg(test)] self.history.push(History::Make(mov));
 
         if let Some(p) = self.position.make(mov).unwrap() {
             self.captures.push(p)
@@ -41,7 +41,7 @@ impl Game {
 
         let mov = self.played.pop().unwrap();
 
-        self.history.push(History::Unmake(mov));
+        #[cfg(test)] self.history.push(History::Unmake(mov));
 
         let captured_piece = if mov.is_capture() {
             self.captures.pop()
