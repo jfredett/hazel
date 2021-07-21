@@ -160,6 +160,9 @@ impl Ply {
 #[cfg(test)]
 mod test {
     use super::*;
+    
+    use super::tests::*;
+
     mod from_fen {
         use super::*;
 
@@ -167,14 +170,14 @@ mod test {
         fn parses_starting_position_correctly() {
             let start_fen = String::from(START_POSITION_FEN);
             let ply = Ply::from_fen(&start_fen);
-            assert_eq!(ply, ply::test::start_position());
+            assert_eq!(ply, start_position());
         }
 
         #[test]
         fn parses_london_position_correctly() {
             let fen = String::from(LONDON_POSITION_FEN);
             let ply = Ply::from_fen(&fen);
-            assert_eq!(ply, ply::test::london_position());
+            assert_eq!(ply, london_position());
         }
     }
 

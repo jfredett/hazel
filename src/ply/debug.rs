@@ -29,7 +29,7 @@ mod test {
 
     #[test]
     fn starting_position_displays_as_expected() {
-        let ply = ply::test::start_position();
+        let ply = start_position();
         let res = format!("{:?}", ply);
         let expected = "
 8 | r n b q k b n r
