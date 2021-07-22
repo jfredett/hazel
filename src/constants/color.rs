@@ -1,3 +1,8 @@
+use std::ops::Not;
+
+use crate::bitboard::Bitboard;
+use crate::constants::{RANK_1, RANK_2, RANK_7, RANK_8};
+
 use super::Direction;
 use serde::{Deserialize, Serialize};
 
@@ -15,6 +20,20 @@ impl Color {
         }
     }
     
+    pub fn pawn_rank(self) -> Bitboard {
+        match self {
+            Color::WHITE => { *RANK_2 }
+            Color::BLACK => { *RANK_7 }
+        }
+    }
+    
+    pub fn promotion_rank(self) -> Bitboard {
+        match self {
+            Color::WHITE => { *RANK_8 }
+            Color::BLACK => { *RANK_1 }
+        }
+    }
+    
     pub fn is_black(self) -> bool {
         self == Color::BLACK
     }
@@ -28,3 +47,15 @@ pub const COLORS : [Color; 2] = [
     Color::WHITE,
     Color::BLACK
 ];
+
+
+impl Not for Color {
+    type Output = Color;
+
+    fn not(self) -> Self::Output {
+        match self {
+            Color::WHITE => Color::BLACK,
+            Color::BLACK => Color::WHITE,
+        }
+    }
+}
