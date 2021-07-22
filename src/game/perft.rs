@@ -5,17 +5,22 @@ use super::*;
 impl Game {
     #[instrument(skip(self))]
     pub fn perft(&mut self, depth: usize) -> u64 {
-        if depth == 0 { return 1; }
-        let mut count = 0;
-        for m in self.moves().as_vec() {
+        let movs = self.moves();
+        if movs.is_empty() {
+            0
+        } else {
+            if depth == 0 { return 1; }
+            let mut count = 0;
+            for m in self.moves().as_vec() {
+                self.make(m);
 
-            self.make(m);
+                count += self.perft(depth - 1);
 
-            count += self.perft(depth - 1);
-
-            self.unmake();
+                self.unmake();
+            }
+            count
         }
-        count
+
     }
     
     pub fn last_played(&self) -> Option<Move> {
@@ -33,6 +38,12 @@ mod tests {
     fn perft_start_position(depth: usize) -> u64 {
         let mut g = Game::from_fen(START_POSITION_FEN);
         g.perft(depth)
+    }
+    
+    #[test]
+    fn check_mate_position_has_zero_perft_at_any_depth() {
+        let mut g = Game::from_fen("7k/6Q1/6K1/8/8/8/8/8 b - - 0 1");
+        assert_eq!(g.perft(1), 0);
     }
     
     #[test]

@@ -5,15 +5,25 @@ use crate::constants::move_tables::KNIGHT_MOVES;
 
 impl Ply {
     
-    // attacked_squares_for(color);
+    /// A bitboard containing every square attacked by any piece of the given color
     pub fn attacked_squares_for(&self, color: Color) -> Bitboard {
-        (self.knight_attacks_for(color) |
-         self.queen_attacks_for(color)  |
-         self.rook_attacks_for(color)   |
-         self.bishop_attacks_for(color) |
-         self.pawn_attacks_for(color)   |
-         self.king_attacks_for(color)  
-        ) & !self.occupancy_for(color)
+        self.influenced_squares_for(color) & !self.occupancy_for(color)
+    }
+    
+    /// A bitboard showing which pieces of a given color are 'defended' -- that is, can be
+    /// recaptured by some friendly piece if captured by an enemy piece. Note that this
+    /// does not account for whether the recapture would be _good_, only if it'd be possible.
+    pub fn defended_pieces_for(&self, color: Color) -> Bitboard {
+        self.influenced_squares_for(color) & self.occupancy_for(color) 
+    }
+    
+    pub fn influenced_squares_for(&self, color: Color) -> Bitboard {
+        self.knight_attacks_for(color) |
+        self.queen_attacks_for(color)  |
+        self.rook_attacks_for(color)   |
+        self.bishop_attacks_for(color) |
+        self.pawn_attacks_for(color)   |
+        self.king_attacks_for(color)  
     }
 
     // pinned_squares_for(color);
@@ -160,6 +170,19 @@ mod tests {
             assert_eq!(test_position().pawn_attacks_for(Color::WHITE), expected_pawn_attacks());
         }
         
+    }
+    
+    
+    mod defended_pieces_for {
+        use super::*;
+
+        #[test]
+        fn the_queen_in_this_position_is_defended() {
+            let p = Ply::from_fen("7k/6Q1/6K1/8/8/8/8/8 b - - 0 1");
+            let d = p.defended_pieces_for(Color::WHITE);
+            dbg!(d);
+            assert!(p.defended_pieces_for(Color::WHITE).is_set(6,6));
+        }
     }
     
 }

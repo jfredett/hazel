@@ -13,17 +13,24 @@ impl Move {
         
         // king moves -- covers avoiding checked squares, does not cover if king is already in check.
         let king = ply.kings[color as usize];
-        let in_check = (king & ply.attacked_squares_for(!color)).is_nonempty();
+        let forbidden_squares = ply.attacked_squares_for(!color);
+        let in_check = (king & forbidden_squares).is_nonempty();
 
         let source = king.first_index();
         
         
         let nominal_king_attacks = ply.king_attacks_for(color);
-        let forbidden_squares = ply.attacked_squares_for(!color);
         let king_attacks = nominal_king_attacks & !(forbidden_squares | ply.occupancy_for(color));
+        
+        // this doesn't account for blocking moves, but it should reduce the overcount a bit.
+        // TODO: blocking moves
 
-        let king_captures = king_attacks & ply.occupancy_for(!color);
+
+        let king_captures = king_attacks & ply.occupancy_for(!color) & !ply.defended_pieces_for(!color);
         let king_moves = king_attacks & !ply.occupancy_for(!color);
+        
+        // TODO: Disregard moves which would result in the king being attacked.
+        // To do that, we need to look to see if a capture is on a square which is attacked by the other side.
         
         for capture in king_captures.all_set_indices() {
             out.add_capture(Piece::King, source, capture);
@@ -33,9 +40,8 @@ impl Move {
             out.add_move(Piece::King, source, target)
         }
         
-        // this doesn't account for blocking moves, but it should reduce the overcount a bit.
+        // out will be empty if it's checkmate, we need to handle this in the make/unmake to record checkmate and stop searching
         if in_check { return out; }
-
 
         /* TODO:
          * 1. Probably break this into some smaller functions, even if it's artificial.
