@@ -72,6 +72,10 @@ impl Bitboard {
     pub fn is_empty(&self) -> bool {
         self.0 == 0
     }
+    
+    pub fn is_nonempty(&self) -> bool {
+        !self.is_empty()
+    }
 
     /// True if the bitboard has all bits set.
     ///

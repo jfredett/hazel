@@ -11,6 +11,31 @@ impl Move {
     pub fn generate(&ply : &Ply, color: Color) -> MoveSet {
         let mut out : MoveSet = MoveSet::empty();
         
+        // king moves -- covers avoiding checked squares, does not cover if king is already in check.
+        let king = ply.kings[color as usize];
+        let in_check = (king & ply.attacked_squares_for(!color)).is_nonempty();
+
+        let source = king.first_index();
+        
+        
+        let nominal_king_attacks = ply.king_attacks_for(color);
+        let forbidden_squares = ply.attacked_squares_for(!color);
+        let king_attacks = nominal_king_attacks & !(forbidden_squares | ply.occupancy_for(color));
+
+        let king_captures = king_attacks & ply.occupancy_for(!color);
+        let king_moves = king_attacks & !ply.occupancy_for(!color);
+        
+        for capture in king_captures.all_set_indices() {
+            out.add_capture(Piece::King, source, capture);
+        }
+        
+        for target in king_moves.all_set_indices() {
+            out.add_move(Piece::King, source, target)
+        }
+        
+        // this doesn't account for blocking moves, but it should reduce the overcount a bit.
+        if in_check { return out; }
+
 
         /* TODO:
          * 1. Probably break this into some smaller functions, even if it's artificial.
@@ -60,24 +85,6 @@ impl Move {
         for sq in east_attack_promotions.all_set_indices() { out.add_promotion(deshift(sq) - 1, sq, true); }
         for sq in west_attack_promotions.all_set_indices() { out.add_promotion(deshift(sq) + 1, sq, true); }
         
-        // king moves -- covers avoiding checked squares, does not cover if king is already in check.
-        let king = ply.kings[color as usize];
-        let source = king.first_index();
-        
-        let nominal_king_attacks = ply.king_attacks_for(color);
-        let forbidden_squares = ply.attacked_squares_for(!color);
-        let king_attacks = nominal_king_attacks & !(forbidden_squares | ply.occupancy_for(color));
-
-        let king_captures = king_attacks & ply.occupancy_for(!color);
-        let king_moves = king_attacks & !ply.occupancy_for(!color);
-        
-        for capture in king_captures.all_set_indices() {
-            out.add_capture(Piece::King, source, capture);
-        }
-        
-        for target in king_moves.all_set_indices() {
-            out.add_move(Piece::King, source, target)
-        }
         
         // Castling
         if ply.can_castle_short() { out.add_short_castle(color); }

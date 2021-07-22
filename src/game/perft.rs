@@ -25,7 +25,6 @@ impl Game {
 
 #[cfg(test)]
 mod tests {
-    use tracing_test::traced_test;
 
     use crate::{constants::START_POSITION_FEN, movement::MoveType};
 
@@ -37,7 +36,6 @@ mod tests {
     }
     
     #[test]
-    #[traced_test]
     fn perft_start_position_to_depth_6() {
         assert_eq!(perft_start_position(1), 20);
         assert_eq!(perft_start_position(2), 400);
