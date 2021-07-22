@@ -10,40 +10,42 @@ impl Move {
     /// Generates all valid moves from the given ply.
     pub fn generate(&ply : &Ply, color: Color) -> MoveSet {
         let mut out : MoveSet = MoveSet::empty();
-        // TODO: Move this into ply
-        let (promotion_rank, double_jump_rank) = match color {
-            Color::WHITE => (*RANK_8, *RANK_2),
-            Color::BLACK => (*RANK_1, *RANK_7)
-        };
         
-        let pawn_direction = ply.pawn_direction();
-        let enemy_pawn_direction = ply.enemy_pawn_direction();
-        let other_color = ply.other_player();
+
+        /* TODO:
+         * 1. Probably break this into some smaller functions, even if it's artificial.
+         * 2. Do king moves first, make sure we're not in check before generating other moves. We already avoid walking into check, so now 
+         *    we just need to detect check (including doublechecks). I think that's the remaining issue in my perft impl
+         * 3. there is a pattern I keep repeating -- generate the attacks bb, isolate captures, isolate moves. That's probably extractable (most 
+         *    of it is in ply/attacks.rs already), so refactor this thing to use that. Pawns are still tricky, but attacks == moves for all other
+         *    pieces so should work well.
+         * 4. I do wonder if a table-based approach would be better for pawns, if only because it's cleaner looking than all this algebra.
+         */ 
 
         // pawn moves
         let pawns = ply.pawns[color as usize];
-        let raw_advances = pawns.shift(pawn_direction) & !ply.occupancy();
-        let promotions = raw_advances & promotion_rank;
-        let advances = raw_advances & !promotion_rank;
-        let double_moves = ((pawns & double_jump_rank).shift(pawn_direction) & !ply.occupancy())
-                                 .shift(pawn_direction) & !ply.occupancy();
-        let east_attacks_raw = (pawns & !*H_FILE).shift(pawn_direction).shift(Direction::E) & ply.occupancy_for(other_color);
-        let west_attacks_raw = (pawns & !*A_FILE).shift(pawn_direction).shift(Direction::W) & ply.occupancy_for(other_color);
-        let east_attacks = east_attacks_raw & !promotion_rank;
-        let west_attacks = west_attacks_raw & !promotion_rank;
-        let east_attack_promotions = east_attacks_raw & promotion_rank;
-        let west_attack_promotions = west_attacks_raw & promotion_rank;
+        let raw_advances = pawns.shift(ply.pawn_direction()) & !ply.occupancy();
+        let promotions = raw_advances & color.promotion_rank();
+        let advances = raw_advances & !color.promotion_rank();
+        let double_moves = ((pawns & color.pawn_rank()).shift(ply.pawn_direction()) & !ply.occupancy())
+                                 .shift(ply.pawn_direction()) & !ply.occupancy();
+        let east_attacks_raw = (pawns & !*H_FILE).shift(ply.pawn_direction()).shift(Direction::E) & ply.occupancy_for(!color);
+        let west_attacks_raw = (pawns & !*A_FILE).shift(ply.pawn_direction()).shift(Direction::W) & ply.occupancy_for(!color);
+        let east_attacks = east_attacks_raw & !color.promotion_rank();
+        let west_attacks = west_attacks_raw & !color.promotion_rank();
+        let east_attack_promotions = east_attacks_raw & color.promotion_rank();
+        let west_attack_promotions = west_attacks_raw & color.promotion_rank();
         
         if let Some(ep_square) = ply.en_passant {
-            let ep_attackers = ( ep_square.shift(enemy_pawn_direction).shift(Direction::E) 
-                                       | ep_square.shift(enemy_pawn_direction).shift(Direction::W)) 
+            let ep_attackers = ( ep_square.shift(ply.enemy_pawn_direction()).shift(Direction::E) 
+                                       | ep_square.shift(ply.enemy_pawn_direction()).shift(Direction::W)) 
                                      & pawns;
             for sq in ep_attackers.all_set_indices() {
                 out.add_en_passant_capture(sq, ep_square.first_index());
             }
         }
 
-        let deshift = match pawn_direction {
+        let deshift = match ply.pawn_direction() {
             Direction::N => |e: usize| e - 8,
             Direction::S => |e: usize| e + 8,
             _ => unreachable!()
@@ -58,20 +60,16 @@ impl Move {
         for sq in east_attack_promotions.all_set_indices() { out.add_promotion(deshift(sq) - 1, sq, true); }
         for sq in west_attack_promotions.all_set_indices() { out.add_promotion(deshift(sq) + 1, sq, true); }
         
-        // TODO: en passant
-
-        // king moves
-        // FIXME: Doesn't account for checks yet.
-        // NOTE: We should check king moves first to see if we're in check, since we can bail earlier if we are.
+        // king moves -- covers avoiding checked squares, does not cover if king is already in check.
         let king = ply.kings[color as usize];
         let source = king.first_index();
         
         let nominal_king_attacks = ply.king_attacks_for(color);
-        let forbidden_squares = ply.attacked_squares_for(other_color);
+        let forbidden_squares = ply.attacked_squares_for(!color);
         let king_attacks = nominal_king_attacks & !(forbidden_squares | ply.occupancy_for(color));
 
-        let king_captures = king_attacks & ply.occupancy_for(other_color);
-        let king_moves = king_attacks & !ply.occupancy_for(other_color);
+        let king_captures = king_attacks & ply.occupancy_for(!color);
+        let king_moves = king_attacks & !ply.occupancy_for(!color);
         
         for capture in king_captures.all_set_indices() {
             out.add_capture(Piece::King, source, capture);
@@ -90,11 +88,11 @@ impl Move {
         for source in knights.all_set_indices() {
             let attacks = KNIGHT_MOVES[source] & !ply.occupancy_for(color);
 
-            for capture in (attacks & ply.occupancy_for(other_color)).all_set_indices() {
+            for capture in (attacks & ply.occupancy_for(!color)).all_set_indices() {
                 out.add_capture(Piece::Knight, source, capture);
             }
             
-            for target in (attacks & !ply.occupancy_for(other_color)).all_set_indices() {
+            for target in (attacks & !ply.occupancy_for(!color)).all_set_indices() {
                 out.add_move(Piece::Knight, source, target);
             }
         }
@@ -103,11 +101,11 @@ impl Move {
             for source in ply.get_piece(color, piece).all_set_indices() {
                 let attacks = pextboard::attacks_for(piece, source, ply.occupancy()) & !ply.occupancy_for(color);
 
-                for capture in (attacks & ply.occupancy_for(other_color)).all_set_indices() {
+                for capture in (attacks & ply.occupancy_for(!color)).all_set_indices() {
                     out.add_capture(piece, source, capture)
                 }
                 
-                for target in (attacks & !ply.occupancy_for(other_color)).all_set_indices() {
+                for target in (attacks & !ply.occupancy_for(!color)).all_set_indices() {
                     out.add_move(piece, source, target);
                 }
             }
