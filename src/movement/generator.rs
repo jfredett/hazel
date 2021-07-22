@@ -65,18 +65,20 @@ impl Move {
         // NOTE: We should check king moves first to see if we're in check, since we can bail earlier if we are.
         let king = ply.kings[color as usize];
         let source = king.first_index();
-        for d in DIRECTIONS {
-            let m = king.shift(d);
-            if m.is_empty() { continue; }
+        
+        let nominal_king_attacks = ply.king_attacks_for(color);
+        let forbidden_squares = ply.attacked_squares_for(other_color);
+        let king_attacks = nominal_king_attacks & !(forbidden_squares | ply.occupancy_for(color));
 
-            if (m & ply.occupancy_for(color)).is_empty() {
-                let target = m.first_index();
-                if ply.occupancy_for(other_color).is_index_set(target) {
-                    out.add_capture(Piece::King, source, target);
-                } else {
-                    out.add_move(Piece::King, source, target);
-                }
-            }
+        let king_captures = king_attacks & ply.occupancy_for(other_color);
+        let king_moves = king_attacks & !ply.occupancy_for(other_color);
+        
+        for capture in king_captures.all_set_indices() {
+            out.add_capture(Piece::King, source, capture);
+        }
+        
+        for target in king_moves.all_set_indices() {
+            out.add_move(Piece::King, source, target)
         }
         
         // Castling
