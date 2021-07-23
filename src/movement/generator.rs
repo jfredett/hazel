@@ -1,5 +1,4 @@
 use crate::{
-    bitboard::Bitboard,
     constants::{
         A_FILE, Color, Direction, H_FILE, Piece, move_tables::*
     }, 
@@ -11,6 +10,8 @@ use super::Move;
 
 
 impl Move {
+    //FIXME: This is in the wrong place, this should live on ply.
+
     /// Generates all valid moves from the given ply.
     pub fn generate(&ply : &Ply, color: Color) -> MoveSet {
         let mut out : MoveSet = MoveSet::empty();

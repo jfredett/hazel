@@ -4,6 +4,10 @@ use crate::constants::move_tables::KNIGHT_MOVES;
 
 
 impl Ply {
+    // ATTACK QUERIES
+    //
+    // Global-question type functions, "What squares are attacked?", "What squares are pinned?" etc.
+    // Stuff that cares about color, but not piece type.
     
     /// A bitboard containing every square attacked by any piece of the given color
     pub fn attacked_squares_for(&self, color: Color) -> Bitboard {
@@ -11,8 +15,8 @@ impl Ply {
     }
     
     /// A bitboard showing which pieces of a given color are 'defended' -- that is, can be
-    /// recaptured by some friendly piece if captured by an enemy piece. Note that this
-    /// does not account for whether the recapture would be _good_, only if it'd be possible.
+    /// recaptured by some friendly piece if captured by an enemy piece. Note that this does not
+    /// account for whether the recapture would be _good_, only if it'd be possible.
     pub fn defended_pieces_for(&self, color: Color) -> Bitboard {
         self.influenced_squares_for(color) & self.occupancy_for(color) 
     }
@@ -26,51 +30,10 @@ impl Ply {
         self.king_attack_board_for(color)  
     }
 
-    // pinned_squares_for(color);
-
-    // OCCUPANCY
-    
-    /// Provides a bitboard which shows the location of all squares occupied by pieces of the given
-    /// color
-    /// ```
-    /// # #[macro_use] extern crate hazel;
-    /// # use hazel::bitboard::Bitboard;
-    /// # use hazel::ply::Ply;
-    /// # use hazel::constants::*;
-    /// let fen = "8/5k1p/2n5/3N4/6P1/3K4/8/8 w - - 0 1".to_string();
-    /// let ply = Ply::from_fen(&fen);
-    /// let expected_occupancy_white = bitboard!("d3", "d5", "g4");
-    /// let expected_occupancy_black = bitboard!("c6", "f7", "h7");
-    /// assert_eq!(ply.occupancy_for(Color::WHITE), expected_occupancy_white);
-    /// assert_eq!(ply.occupancy_for(Color::BLACK), expected_occupancy_black);
-    /// ```
-    pub fn occupancy_for(&self, color: Color) -> Bitboard {
-        self.kings[color as usize]   |
-        self.queens[color as usize]  |
-        self.rooks[color as usize]   |
-        self.bishops[color as usize] |
-        self.knights[color as usize] |
-        self.pawns[color as usize] 
-    }
-
-    /// Provides a bitboard which shows the location of all squares occupied by pieces of any
-    /// color
-    /// ```
-    /// # #[macro_use] extern crate hazel;
-    /// # use hazel::bitboard::Bitboard;
-    /// # use hazel::ply::Ply;
-    /// # use hazel::constants::*;
-    /// let fen = "8/5k1p/2n5/3N4/6P1/3K4/8/8 w - - 0 1".to_string();
-    /// let ply = Ply::from_fen(&fen);
-    /// let expected_occupancy_white = bitboard!("d3", "d5", "g4");
-    /// let expected_occupancy_black = bitboard!("c6", "f7", "h7");
-    /// assert_eq!(ply.occupancy(), expected_occupancy_white | expected_occupancy_black);
-    /// ```
-    pub fn occupancy(&self) -> Bitboard {
-        self.occupancy_for(Color::WHITE) | self.occupancy_for(Color::BLACK)
-    }
-    
-    // ATTACKS / MOVES
+    // ATTACK AND MOVE BOARDS
+    //
+    // Piece-local stuff functions, "What squares can a piece attack?", "What squares do my pawns
+    // defend?", etc.
     pub fn king_attack_board_for(&self, color: Color) -> Bitboard {
         let mut attacks = Bitboard::empty();
         let king = self.get_piece(color, Piece::King);
