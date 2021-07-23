@@ -18,12 +18,12 @@ impl Ply {
     }
     
     pub fn influenced_squares_for(&self, color: Color) -> Bitboard {
-        self.knight_attacks_for(color) |
-        self.queen_attacks_for(color)  |
-        self.rook_attacks_for(color)   |
-        self.bishop_attacks_for(color) |
-        self.pawn_attacks_for(color)   |
-        self.king_attacks_for(color)  
+        self.knight_attack_board_for(color) |
+        self.queen_attack_board_for(color)  |
+        self.rook_attack_board_for(color)   |
+        self.bishop_attack_board_for(color) |
+        self.pawn_attack_board_for(color)   |
+        self.king_attack_board_for(color)  
     }
 
     // pinned_squares_for(color);
@@ -71,8 +71,7 @@ impl Ply {
     }
     
     // ATTACKS / MOVES
-    
-    pub fn king_attacks_for(&self, color: Color) -> Bitboard {
+    pub fn king_attack_board_for(&self, color: Color) -> Bitboard {
         let mut attacks = Bitboard::empty();
         let king = self.get_piece(color, Piece::King);
         for d in DIRECTIONS {
@@ -82,7 +81,7 @@ impl Ply {
     }
 
     /// Calculates all squares attacked by pawn of the given color, does not account for friendly squares.
-    pub fn pawn_attacks_for(&self, color: Color) -> Bitboard {
+    pub fn pawn_attack_board_for(&self, color: Color) -> Bitboard {
         let pawns = self.get_piece(color, Piece::Pawn);
         let pre_attacks = pawns.shift(color.pawn_direction());
         let east_attacks = pre_attacks.shift(Direction::E);
@@ -92,7 +91,7 @@ impl Ply {
     }
 
     /// Calculates all squares attacked by all knights of the given color. 
-    pub fn knight_attacks_for(&self, color: Color) -> Bitboard {
+    pub fn knight_attack_board_for(&self, color: Color) -> Bitboard {
         let mut attacks = Bitboard::empty();
         let knights = self.knights[color as usize];
         for source in knights.all_set_indices() {
@@ -102,11 +101,11 @@ impl Ply {
     }
     
     /// Calculates all squares attacked by all queens of the given color. 
-    pub fn queen_attacks_for(&self, color: Color)  -> Bitboard { self.slider_attacks_for(Piece::Queen, color) }
+    pub fn queen_attack_board_for(&self, color: Color)  -> Bitboard { self.slider_attacks_for(Piece::Queen, color) }
     /// Calculates all squares attacked by all rooks of the given color. 
-    pub fn rook_attacks_for(&self, color: Color)   -> Bitboard { self.slider_attacks_for(Piece::Rook, color) }
+    pub fn rook_attack_board_for(&self, color: Color)   -> Bitboard { self.slider_attacks_for(Piece::Rook, color) }
     /// Calculates all squares attacked by all bishops of the given color. 
-    pub fn bishop_attacks_for(&self, color: Color) -> Bitboard { self.slider_attacks_for(Piece::Bishop, color) }
+    pub fn bishop_attack_board_for(&self, color: Color) -> Bitboard { self.slider_attacks_for(Piece::Bishop, color) }
 
     fn slider_attacks_for(&self, piece: Piece, color: Color) -> Bitboard {
         let mut attacks = Bitboard::empty();
@@ -167,7 +166,7 @@ mod tests {
 
         #[test]
         fn correctly_determines_pawn_attacked_squares() {
-            assert_eq!(test_position().pawn_attacks_for(Color::WHITE), expected_pawn_attacks());
+            assert_eq!(test_position().pawn_attack_board_for(Color::WHITE), expected_pawn_attacks());
         }
         
     }

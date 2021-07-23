@@ -1,7 +1,7 @@
 use super::*;
 
 // TODO: There is a _ton_ of repetition in here that could be reduced.
-
+//
 impl Ply {
     /// True if the given piece of the given color is present at the given rank and file.
     // TODO: This is only used in tests and probably we should factor it out

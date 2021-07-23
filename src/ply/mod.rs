@@ -13,12 +13,17 @@ mod creation;
 mod make;
 mod metadata;
 mod query;
-mod attacks;
 
 #[cfg(test)] mod tests;
 #[cfg(test)] use tests::*;
 
 use metadata::*;
+
+
+// FIXME: A lot of things right now are fighting uphill against the way I've laid out the ply struct.
+// I think probably we should refactor it -- if only to make looking up pieces quicker, a single array
+// with conventional locations for bitboards would be ideal. Being able to do some clever indexing shit 
+// might also improve the general QOL when using this structure.
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Serialize, Deserialize)]
 pub struct Ply {

@@ -1,9 +1,13 @@
-use crate::{constants::{A_FILE, Color, DIRECTIONS, Direction, H_FILE, Piece, RANK_1, RANK_2, RANK_7, RANK_8}, moveset::MoveSet, pextboard::{self}, ply::Ply};
-
-
+use crate::{
+    bitboard::Bitboard,
+    constants::{
+        A_FILE, Color, Direction, H_FILE, Piece, move_tables::*
+    }, 
+    moveset::MoveSet, pextboard::{self}, 
+    ply::Ply
+};
 
 use super::Move;
-use crate::constants::move_tables::*;
 
 
 impl Move {
@@ -19,7 +23,7 @@ impl Move {
         let source = king.first_index();
         
         
-        let nominal_king_attacks = ply.king_attacks_for(color);
+        let nominal_king_attacks = ply.king_attack_board_for(color);
         let king_attacks = nominal_king_attacks & !(forbidden_squares | ply.occupancy_for(color));
         
         // this doesn't account for blocking moves, but it should reduce the overcount a bit.
