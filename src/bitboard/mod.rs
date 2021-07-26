@@ -73,6 +73,15 @@ impl Bitboard {
         self.0 == 0
     }
     
+    /// True if the bitboard has any set bits.
+    ///
+    /// ```
+    /// # use hazel::bitboard::Bitboard;
+    /// let mut b = Bitboard::empty();
+    /// assert!(b.is_empty());
+    /// b.set(1,1);
+    /// assert!(b.is_nonempty());
+    /// ```
     pub fn is_nonempty(&self) -> bool {
         !self.is_empty()
     }
