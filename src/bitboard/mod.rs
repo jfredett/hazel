@@ -54,6 +54,7 @@ mod debug;
 mod shifts;
 mod from_into;
 mod intrinsics;
+mod iterator;
 
 use crate::constants::conversion_tables::*;
 
@@ -136,13 +137,7 @@ impl Bitboard {
     /// assert_eq!(b.all_set_indices(), vec![10,20,30]);
     /// ```
     pub fn all_set_indices(&self) -> Vec<usize> {
-        let mut out = vec![];
-        for i in 0..64 { 
-            if self.is_index_set(i) {
-                out.push(i);
-            }
-        }
-        out
+        self.into_iter().collect()
     }
 
     /// unsets the bit at the given coordinates
