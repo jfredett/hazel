@@ -13,6 +13,15 @@ impl MoveSet {
         MoveSet { moves: [vec![], vec![], vec![], vec![], vec![], vec![]] }
     }
     
+    pub fn merge(&mut self, other: MoveSet) -> &mut MoveSet {
+        for (i, subset) in self.moves.iter_mut().enumerate() {
+            for m in other.moves[i] {
+                subset.push(m);
+            }
+        }
+        self
+    }
+    
     /// Adds a quiet move from the source square to the target square
     pub fn add_move(&mut self, piece: Piece, source: usize, target: usize) {
         self.moves[piece as usize].push(Move::from(source as u16, target as u16,  MoveType::QUIET));

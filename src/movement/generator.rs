@@ -20,16 +20,29 @@ impl Move {
         let king = ply.king_for(color);
         let forbidden_squares = ply.attacked_squares_for(!color);
         let in_check = (king & forbidden_squares).is_nonempty();
+        
+        
+        // If it's our turn and the enemy king is already in check, we win. 
+        let mated = (ply.king_for(!color) & ply.attacked_squares_for(color)).is_nonempty();
+        if mated { return out; }
 
         let source = king.first_index();
-        
         
         let nominal_king_attacks = ply.king_attack_board_for(color);
         let king_attacks = nominal_king_attacks & !(forbidden_squares | ply.occupancy_for(color));
         
         // this doesn't account for blocking moves, but it should reduce the overcount a bit.
         // TODO: blocking moves
-
+        
+        // we can find all the squares which would block for the king by pretending it's a queen.
+        let king_rays = pextboard::attacks_for(Piece::Queen, source, ply.occupancy());
+        // then intersect with all the squares we attack
+        let _blocking_squares = ply.attacked_squares_for(color) & king_rays;
+        // we'd need to figure out the source piece, but if in check we'd
+        // basically just mask everything by this? Maybe this is just a way to
+        // mask off the moveset? Accept only values which have targets in this
+        // bb?
+        
 
         let king_captures = king_attacks & ply.occupancy_for(!color) & !ply.defended_pieces_for(!color);
         let king_moves = king_attacks & !ply.occupancy_for(!color);
@@ -75,7 +88,7 @@ impl Move {
         if let Some(ep_square) = ply.en_passant() {
             let ep_attackers = ( ep_square.shift(ply.enemy_pawn_direction()).shift(Direction::E) 
                                        | ep_square.shift(ply.enemy_pawn_direction()).shift(Direction::W)) 
-                                     & pawns;
+                                       & pawns;
             for sq in ep_attackers.all_set_indices() {
                 out.add_en_passant_capture(sq, ep_square.first_index());
             }
@@ -128,6 +141,7 @@ impl Move {
                 }
             }
         }
+
         out
     }
 }

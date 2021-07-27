@@ -13,6 +13,7 @@ mod creation;
 mod make;
 pub mod metadata;
 mod query;
+mod movegen;
 
 #[cfg(test)] mod tests;
 #[cfg(test)] use tests::*;

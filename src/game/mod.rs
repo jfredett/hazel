@@ -37,6 +37,11 @@ impl Game {
             self.captures.push(p)
         }
     }
+    
+    /* Make and Unmake should have a 'previous move metadata' stack. Basically we
+     * should take the `captures` variable and push a Metadata struct which has the 
+     * optional piece captured, move #, half-move #, castling metadata, etc.
+     */
 
     // #unmake/0            --> proxies down to Ply
     pub fn unmake(&mut self) {
