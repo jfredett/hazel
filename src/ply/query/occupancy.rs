@@ -18,12 +18,12 @@ impl Ply {
     /// assert_eq!(ply.occupancy_for(Color::BLACK), expected_occupancy_black);
     /// ```
     pub fn occupancy_for(&self, color: Color) -> Bitboard {
-        self.kings[color as usize]   |
-        self.queens[color as usize]  |
-        self.rooks[color as usize]   |
-        self.bishops[color as usize] |
-        self.knights[color as usize] |
-        self.pawns[color as usize] 
+        self.king_for(color)   |
+        self.queens_for(color)  |
+        self.rooks_for(color)   |
+        self.bishops_for(color) |
+        self.knights_for(color) |
+        self.pawns_for(color) 
     }
 
     /// Provides a bitboard which shows the location of all squares occupied by pieces of any

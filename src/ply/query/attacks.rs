@@ -56,7 +56,7 @@ impl Ply {
     /// Calculates all squares attacked by all knights of the given color. 
     pub fn knight_attack_board_for(&self, color: Color) -> Bitboard {
         let mut attacks = Bitboard::empty();
-        let knights = self.knights[color as usize];
+        let knights = self.knights_for(color);
         for source in knights.all_set_indices() {
             attacks |= KNIGHT_MOVES[source] & !self.occupancy_for(color);
         }

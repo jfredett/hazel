@@ -6,30 +6,21 @@ use super::*;
 // functions elsewhere. Most tests should use the constants defined in constants/test.rs
 pub fn start_position() -> Ply {
     Ply {
-        pawns: [
-            Bitboard::from(0x00_00_00_00_00_00_FF_00),
+        pieces: [[
+            bitboard!("b1", "g1"),
+            bitboard!("c1", "f1"),
+            bitboard!("a1", "h1"),
+            bitboard!("d1"),
+            bitboard!("e1"),
+            Bitboard::from(0x00_00_00_00_00_00_FF_00)
+        ], [
+            bitboard!("b8", "g8"),
+            bitboard!("c8", "f8"),
+            bitboard!("a8", "h8"),
+            bitboard!("d8"),
+            bitboard!("e8"),
             Bitboard::from(0x00_FF_00_00_00_00_00_00)
-        ],
-        kings: [
-            Bitboard::from_notation("e1"),
-            Bitboard::from_notation("e8")
-        ],
-        queens: [
-            Bitboard::from_notation("d1"),
-            Bitboard::from_notation("d8")
-        ],
-        rooks: [
-            Bitboard::from_notation("a1") | Bitboard::from_notation("h1"),
-            Bitboard::from_notation("a8") | Bitboard::from_notation("h8")
-        ],
-        bishops: [
-            Bitboard::from_notation("c1") | Bitboard::from_notation("f1"),
-            Bitboard::from_notation("c8") | Bitboard::from_notation("f8")
-        ],
-        knights: [
-            Bitboard::from_notation("b1")| Bitboard::from_notation("g1"),
-            Bitboard::from_notation("b8")| Bitboard::from_notation("g8")
-        ],
+        ]],
         meta: Metadata::default()
     }
 }
@@ -40,35 +31,21 @@ pub fn london_position() -> Ply {
     meta.to_move = Color::BLACK;
 
     Ply {
-        pawns: [
-            Bitboard::from_notation("a2") | Bitboard::from_notation("b2") | Bitboard::from_notation("c3") | 
-            Bitboard::from_notation("d4") | Bitboard::from_notation("e3") | Bitboard::from_notation("f2") | 
-            Bitboard::from_notation("g2") | Bitboard::from_notation("h3")
-            ,
-            Bitboard::from_notation("a7") | Bitboard::from_notation("b7") | Bitboard::from_notation("c5") | 
-            Bitboard::from_notation("d5") | Bitboard::from_notation("e6") | Bitboard::from_notation("f7") | 
-            Bitboard::from_notation("g7") | Bitboard::from_notation("h7")
-        ],
-        kings: [
-            Bitboard::from_notation("e1"),
-            Bitboard::from_notation("e8")
-        ],
-        queens: [
-            Bitboard::from_notation("d1"),
-            Bitboard::from_notation("d8")
-        ],
-        rooks: [
-            Bitboard::from_notation("a1") | Bitboard::from_notation("h1"),
-            Bitboard::from_notation("a8") | Bitboard::from_notation("h8")
-        ],
-        bishops: [
-            Bitboard::from_notation("f1") | Bitboard::from_notation("f4"),
-            Bitboard::from_notation("c8") | Bitboard::from_notation("e7")
-        ],
-        knights: [
-            Bitboard::from_notation("d2")| Bitboard::from_notation("f3"),
-            Bitboard::from_notation("c6")| Bitboard::from_notation("f6")
-        ],
+        pieces: [[
+            bitboard!("d2", "f3"),
+            bitboard!("f1", "f4"),
+            bitboard!("a1", "h1"),
+            bitboard!("d1"),
+            bitboard!("e1"),
+            bitboard!("a2", "b2", "c3", "d4", "e3", "f2", "g2", "h3")
+        ], [
+            bitboard!("c6", "f6"),
+            bitboard!("c8", "e7"),
+            bitboard!("a8", "h8"),
+            bitboard!("d8"),
+            bitboard!("e8"),
+            bitboard!("a7", "b7", "c5", "d5", "e6", "f7", "g7", "h7")
+        ]],
         meta
     }
 }

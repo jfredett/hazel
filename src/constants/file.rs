@@ -1,5 +1,8 @@
 use crate::bitboard::Bitboard;
+use serde::{Serialize, Deserialize};
 use super::*;
+
+#[derive(PartialEq, Eq, Clone, Copy, Hash, Debug, Serialize, Deserialize)]
 pub enum File {
     A = 0,
     B = 1,

@@ -5,12 +5,7 @@ impl Ply {
     /// Produces a ply representing an empty board
     pub fn empty() -> Ply {
         Ply {
-            pawns: [Bitboard::empty(); 2],
-            kings: [Bitboard::empty(); 2],
-            queens: [Bitboard::empty(); 2],
-            rooks: [Bitboard::empty(); 2],
-            bishops: [Bitboard::empty(); 2],
-            knights: [Bitboard::empty(); 2],
+            pieces: [[Bitboard::empty(); 6]; 2],
             meta: Metadata::default(),
         }
     }
@@ -28,18 +23,18 @@ impl Ply {
         let mut file = 0;
         for ch in fen_parts[0].chars() {
             match ch {
-                'p' => { ply.pawns[Color::BLACK as usize].set(rank,file);   file += 1; }
-                'k' => { ply.kings[Color::BLACK as usize].set(rank,file);   file += 1; }
-                'q' => { ply.queens[Color::BLACK as usize].set(rank,file);  file += 1; }
-                'r' => { ply.rooks[Color::BLACK as usize].set(rank,file);   file += 1; }
-                'b' => { ply.bishops[Color::BLACK as usize].set(rank,file); file += 1; }
-                'n' => { ply.knights[Color::BLACK as usize].set(rank,file); file += 1; }
-                'P' => { ply.pawns[Color::WHITE as usize].set(rank,file);   file += 1; }
-                'K' => { ply.kings[Color::WHITE as usize].set(rank,file);   file += 1; }
-                'Q' => { ply.queens[Color::WHITE as usize].set(rank,file);  file += 1; }
-                'R' => { ply.rooks[Color::WHITE as usize].set(rank,file);   file += 1; }
-                'B' => { ply.bishops[Color::WHITE as usize].set(rank,file); file += 1; }
-                'N' => { ply.knights[Color::WHITE as usize].set(rank,file); file += 1; }
+                'p' => { ply.mut_pawns_for(Color::BLACK).set(rank,file);   file += 1; }
+                'k' => { ply.mut_king_for(Color::BLACK).set(rank,file);    file += 1; }
+                'q' => { ply.mut_queens_for(Color::BLACK).set(rank,file);  file += 1; }
+                'r' => { ply.mut_rooks_for(Color::BLACK).set(rank,file);   file += 1; }
+                'b' => { ply.mut_bishops_for(Color::BLACK).set(rank,file); file += 1; }
+                'n' => { ply.mut_knights_for(Color::BLACK).set(rank,file); file += 1; }
+                'P' => { ply.mut_pawns_for(Color::WHITE).set(rank,file);   file += 1; }
+                'K' => { ply.mut_king_for(Color::WHITE).set(rank,file);    file += 1; }
+                'Q' => { ply.mut_queens_for(Color::WHITE).set(rank,file);  file += 1; }
+                'R' => { ply.mut_rooks_for(Color::WHITE).set(rank,file);   file += 1; }
+                'B' => { ply.mut_bishops_for(Color::WHITE).set(rank,file); file += 1; }
+                'N' => { ply.mut_knights_for(Color::WHITE).set(rank,file); file += 1; }
                 '/' => { rank -= 1; file = 0; }
                 '1' => { file += 1; }
                 '2' => { file += 2; }

@@ -241,7 +241,7 @@ mod tests {
             let board = Ply::from_fen(&String::from("k7/8/4p3/8/1p2R3/8/4P3/K7 w - - 0 1"));
             
             // this is fine here since we know there is only 1 rook on the board, this'd bust if there were two.
-            let rook_pos = board.rooks[Color::WHITE as usize];
+            let rook_pos = board.rooks_for(Color::WHITE);
             let expected = bitboard!("e2", "e3", "e5", "e6", "b4", "c4", "d4", "f4", "g4", "h4");
             
             let rook_attacks = slow_rook_attacks(rook_pos, board.occupancy());
@@ -285,7 +285,7 @@ mod tests {
             let board = Ply::from_fen(&String::from("k7/8/6p1/8/1p2B3/5P2/8/K7 w - - 0 1"));
             
             // this is fine here since we know there is only 1 bishop on the board, this'd bust if there were two.
-            let bishop_pos = board.bishops[Color::WHITE as usize];
+            let bishop_pos = board.bishops_for(Color::WHITE);
             let expected = bitboard!("f3","f5","g6","d5","c6","b7","a8","d3","c2","b1");
             
             let bishop_attacks = slow_bishop_attacks(bishop_pos, board.occupancy());

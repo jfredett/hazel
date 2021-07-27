@@ -17,7 +17,7 @@ impl Move {
         let mut out : MoveSet = MoveSet::empty();
         
         // king moves -- covers avoiding checked squares, does not cover if king is already in check.
-        let king = ply.kings[color as usize];
+        let king = ply.king_for(color);
         let forbidden_squares = ply.attacked_squares_for(!color);
         let in_check = (king & forbidden_squares).is_nonempty();
 
@@ -59,7 +59,7 @@ impl Move {
          */ 
 
         // pawn moves
-        let pawns = ply.pawns[color as usize];
+        let pawns = ply.pawns_for(color);
         let raw_advances = pawns.shift(ply.pawn_direction()) & !ply.occupancy();
         let promotions = raw_advances & color.promotion_rank();
         let advances = raw_advances & !color.promotion_rank();
@@ -102,7 +102,7 @@ impl Move {
         if ply.can_castle_long() { out.add_long_castle(color); }
 
         // knight moves
-        let knights = ply.knights[color as usize];
+        let knights = ply.knights_for(color);
         for source in knights.all_set_indices() {
             let attacks = KNIGHT_MOVES[source] & !ply.occupancy_for(color);
 

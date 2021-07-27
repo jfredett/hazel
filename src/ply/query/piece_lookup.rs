@@ -8,12 +8,12 @@ impl Ply {
     pub fn piece_at(&self, file: File, rank: usize, piece: Piece, color: Color) -> bool {
         if !(1..=8).contains(&rank) { panic!("Invalid position {:?}{:?}", file, rank); }
         let board = match piece {
-            Piece::Rook => { self.rooks[color as usize] }
-            Piece::Bishop => { self.bishops[color as usize] }
-            Piece::Knight => { self.knights[color as usize] }
-            Piece::King => { self.kings[color as usize] }
-            Piece::Queen => { self.queens[color as usize] }
-            Piece::Pawn => { self.pawns[color as usize] }
+            Piece::Rook => { self.rooks_for(color) }
+            Piece::Bishop => { self.bishops_for(color) }
+            Piece::Knight => { self.knights_for(color) }
+            Piece::King => { self.king_for(color) }
+            Piece::Queen => { self.queens_for(color) }
+            Piece::Pawn => { self.pawns_for(color) }
         };
         board.is_set(rank - 1, file as usize)
     }
@@ -21,61 +21,48 @@ impl Ply {
     /// Returns the piece at the index provided, if no piece is present, returns none.
     pub fn piece_at_index(&self, idx: usize) -> Option<(Color, Piece)> {
         for color in COLORS {
-            if self.rooks[color as usize].is_index_set(idx) { return Some((color, Piece::Rook)) }
-            if self.bishops[color as usize].is_index_set(idx) { return Some((color, Piece::Bishop)) }
-            if self.knights[color as usize].is_index_set(idx) { return Some((color, Piece::Knight)) }
-            if self.kings[color as usize].is_index_set(idx) { return Some((color, Piece::King)) }
-            if self.queens[color as usize].is_index_set(idx) { return Some((color, Piece::Queen)) }
-            if self.pawns[color as usize].is_index_set(idx) { return Some((color, Piece::Pawn)) }
+            if self.rooks_for(color).is_index_set(idx) { return Some((color, Piece::Rook)) }
+            if self.bishops_for(color).is_index_set(idx) { return Some((color, Piece::Bishop)) }
+            if self.knights_for(color).is_index_set(idx) { return Some((color, Piece::Knight)) }
+            if self.king_for(color).is_index_set(idx) { return Some((color, Piece::King)) }
+            if self.queens_for(color).is_index_set(idx) { return Some((color, Piece::Queen)) }
+            if self.pawns_for(color).is_index_set(idx) { return Some((color, Piece::Pawn)) }
         }
         None
     }
     
     /// Returns the piece at the given index iff that piece is of the current player's color.
     pub fn friendly_piece_at_index(&self, idx: usize) -> Option<Piece> {
-        if self.rooks[self.current_player() as usize].is_index_set(idx) { return Some(Piece::Rook) }
-        if self.bishops[self.current_player() as usize].is_index_set(idx) { return Some(Piece::Bishop) }
-        if self.knights[self.current_player() as usize].is_index_set(idx) { return Some(Piece::Knight) }
-        if self.kings[self.current_player() as usize].is_index_set(idx) { return Some(Piece::King) }
-        if self.queens[self.current_player() as usize].is_index_set(idx) { return Some(Piece::Queen) }
-        if self.pawns[self.current_player() as usize].is_index_set(idx) { return Some(Piece::Pawn) }
+        if self.rooks_for( self.current_player() ).is_index_set(idx) { return Some(Piece::Rook) }
+        if self.bishops_for( self.current_player() ).is_index_set(idx) { return Some(Piece::Bishop) }
+        if self.knights_for( self.current_player() ).is_index_set(idx) { return Some(Piece::Knight) }
+        if self.king_for( self.current_player() ).is_index_set(idx) { return Some(Piece::King) }
+        if self.queens_for( self.current_player() ).is_index_set(idx) { return Some(Piece::Queen) }
+        if self.pawns_for( self.current_player() ).is_index_set(idx) { return Some(Piece::Pawn) }
         None
     }
     
     /// Returns the piece at the given index iff that piece is of the other player's color.
     pub fn enemy_piece_at_index(&self, idx: usize) -> Option<Piece> {
-        if self.rooks[self.other_player() as usize].is_index_set(idx) { return Some(Piece::Rook) }
-        if self.bishops[self.other_player() as usize].is_index_set(idx) { return Some(Piece::Bishop) }
-        if self.knights[self.other_player() as usize].is_index_set(idx) { return Some(Piece::Knight) }
-        if self.kings[self.other_player() as usize].is_index_set(idx) { return Some(Piece::King) }
-        if self.queens[self.other_player() as usize].is_index_set(idx) { return Some(Piece::Queen) }
-        if self.pawns[self.other_player() as usize].is_index_set(idx) { return Some(Piece::Pawn) }
+        if self.rooks_for( self.other_player() ).is_index_set(idx) { return Some(Piece::Rook) }
+        if self.bishops_for( self.other_player() ).is_index_set(idx) { return Some(Piece::Bishop) }
+        if self.knights_for( self.other_player() ).is_index_set(idx) { return Some(Piece::Knight) }
+        if self.king_for( self.other_player() ).is_index_set(idx) { return Some(Piece::King) }
+        if self.queens_for( self.other_player() ).is_index_set(idx) { return Some(Piece::Queen) }
+        if self.pawns_for( self.other_player() ).is_index_set(idx) { return Some(Piece::Pawn) }
         None
     }
     
     /// A helper for digging into the ply structure to touch the right pieces.
     pub fn get_mut_piece(&mut self, color: Color, piece: Piece) -> &mut Bitboard {
-        match piece {
-            Piece::Knight => &mut self.knights[color as usize],
-            Piece::Bishop => &mut self.bishops[color as usize],
-            Piece::Rook   => &mut self.rooks[color as usize],
-            Piece::Queen  => &mut self.queens[color as usize],
-            Piece::King   => &mut self.kings[color as usize],
-            Piece::Pawn   => &mut self.pawns[color as usize],
-        }
+        &mut self.pieces[color as usize][piece as usize]
     }
 
     /// A helper for digging into the ply structure to touch the right pieces.
     pub fn get_piece(&self, color: Color, piece: Piece) -> Bitboard {
-        match piece {
-            Piece::Knight => self.knights[color as usize],
-            Piece::Bishop => self.bishops[color as usize],
-            Piece::Rook   => self.rooks[color as usize],
-            Piece::Queen  => self.queens[color as usize],
-            Piece::King   => self.kings[color as usize],
-            Piece::Pawn   => self.pawns[color as usize],
-        }
+        self.pieces[color as usize][piece as usize]
     }
+
 
     /// True if the current player both has the right to castle long and the ability.
     pub fn can_castle_long(&self) -> bool {
