@@ -30,15 +30,15 @@ pub fn start_position() -> Ply {
             Bitboard::from_notation("b1")| Bitboard::from_notation("g1"),
             Bitboard::from_notation("b8")| Bitboard::from_notation("g8")
         ],
-        en_passant: None,
-        meta: Metadata::BLACK_CASTLE_LONG | Metadata::BLACK_CASTLE_SHORT |
-              Metadata::WHITE_CASTLE_LONG | Metadata::WHITE_CASTLE_SHORT,
-        full_move_clock: 1,
-        half_move_clock: 0
+        meta: Metadata::default()
     }
 }
 
 pub fn london_position() -> Ply {
+    let mut meta = Metadata::default();
+    meta.full_move_clock = 7;
+    meta.to_move = Color::BLACK;
+
     Ply {
         pawns: [
             Bitboard::from_notation("a2") | Bitboard::from_notation("b2") | Bitboard::from_notation("c3") | 
@@ -69,11 +69,6 @@ pub fn london_position() -> Ply {
             Bitboard::from_notation("d2")| Bitboard::from_notation("f3"),
             Bitboard::from_notation("c6")| Bitboard::from_notation("f6")
         ],
-        en_passant: None,
-        meta: Metadata::BLACK_CASTLE_LONG | Metadata::BLACK_CASTLE_SHORT |
-              Metadata::WHITE_CASTLE_LONG | Metadata::WHITE_CASTLE_SHORT |
-              Metadata::BLACK_TO_MOVE,
-        full_move_clock: 7,
-        half_move_clock: 0
+        meta
     }
 }

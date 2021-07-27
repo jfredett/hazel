@@ -88,9 +88,12 @@ mod tests {
         let mov = Move::from_notation("d2", "d4", MoveType::QUIET);
         
         game.make(mov);
-        assert_ne!(game, original);
+        // because we track the full history in the struct, we have to compare it 
+        // in chunks
+        assert_ne!(game.position, original.position);
             
         game.unmake();
-        assert_eq!(game, original);
+
+        assert_eq!(game.position, original.position);
     }
 }

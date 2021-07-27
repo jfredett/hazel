@@ -72,7 +72,7 @@ impl Move {
         let east_attack_promotions = east_attacks_raw & color.promotion_rank();
         let west_attack_promotions = west_attacks_raw & color.promotion_rank();
         
-        if let Some(ep_square) = ply.en_passant {
+        if let Some(ep_square) = ply.en_passant() {
             let ep_attackers = ( ep_square.shift(ply.enemy_pawn_direction()).shift(Direction::E) 
                                        | ep_square.shift(ply.enemy_pawn_direction()).shift(Direction::W)) 
                                      & pawns;
@@ -194,14 +194,14 @@ mod test {
         ply.make_by_notation("h2", "h3", MoveType::QUIET).unwrap();
         ply.make_by_notation("c7", "c5", MoveType::DOUBLE_PAWN).unwrap();
         
-        assert!(ply.en_passant.is_some());
-        assert_eq!(ply.en_passant.unwrap(), Bitboard::from(1 << NOTATION_TO_INDEX("c6")));
+        assert!(ply.meta.en_passant().is_some());
+        assert_eq!(ply.meta.en_passant().unwrap(), Bitboard::from_index(NOTATION_TO_INDEX("c6") as u8));
         
         ply.make_by_notation("h3", "h4", MoveType::QUIET).unwrap();
         ply.make_by_notation("c5", "c4", MoveType::QUIET).unwrap();
         ply.make_by_notation("d2", "d4", MoveType::DOUBLE_PAWN).unwrap();
         
-        assert!(ply.en_passant.is_some());
+        assert!(ply.meta.en_passant().is_some());
 
         let moves = Move::generate(&ply, Color::BLACK);
 

@@ -40,6 +40,10 @@ impl Bitboard {
     pub fn from(b: u64) -> Bitboard {
         Bitboard { 0: b }
     }
+    
+    pub fn from_index(idx: u8) -> Bitboard {
+        Bitboard { 0: 1 << idx }
+    }
 
     /// Creates a bitboard from the given u64
     /// ```

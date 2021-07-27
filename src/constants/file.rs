@@ -1,4 +1,5 @@
-#[derive(Hash, PartialEq, Eq, Clone, Copy, Debug)]
+use crate::bitboard::Bitboard;
+use super::*;
 pub enum File {
     A = 0,
     B = 1,
@@ -8,6 +9,12 @@ pub enum File {
     F = 5,
     G = 6,
     H = 7
+}
+
+impl File {
+    pub fn to_bitboard(self) -> Bitboard {
+        FILE_MASKS[self as usize]
+    }
 }
 
 pub const FILES : [File; 8] = [ File::A, File::B, File::C, File::D, File::E, File::F, File::G, File::H ];

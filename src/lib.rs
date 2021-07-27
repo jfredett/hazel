@@ -21,8 +21,6 @@ pub use packed_simd::*;
 
 #[macro_use] extern crate lazy_static;
 
-#[macro_use] extern crate bitflags;
-
 extern crate either;
 extern crate rand;
 

@@ -6,7 +6,7 @@ impl Debug for Game {
     #[cfg(test)]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "{:?}", self.position)?;
-        writeln!(f, "{}, {}, {:?}", self.position.half_move_clock, self.position.full_move_clock, self.position.meta)?;
+        writeln!(f, "{:?}", self.position.meta)?;
         writeln!(f)?;
 
         for (i, m) in self.played.iter().enumerate() {
@@ -26,7 +26,7 @@ impl Debug for Game {
     #[cfg(not(test))]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "{:?}", self.position)?;
-        writeln!(f, "{}, {}, {:?}", self.position.half_move_clock, self.position.full_move_clock, self.position.meta)?;
+        writeln!(f, "{:?}", self.position.meta)?;
         writeln!(f)?;
 
         for (i, m) in self.played.iter().enumerate() {

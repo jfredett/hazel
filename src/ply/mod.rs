@@ -35,11 +35,6 @@ pub struct Ply {
     pub rooks: [Bitboard; 2],
     pub bishops: [Bitboard; 2],
     pub knights: [Bitboard; 2],
-    pub en_passant: Option<Bitboard>,
-    pub full_move_clock: u32, // we're aligned to 64b, so this is the biggest that'll fit conveniently
-    // NOTE: Maybe mask this off to 6 bits (halfmove count should never go > 50), then use the top two bits for 3-fold repetition? Stick the whole thing
-    // in the metadata struct?
-    pub half_move_clock: u8, // this is for the 50m rule
     pub meta: Metadata,
 }
 
@@ -61,23 +56,18 @@ impl Ply {
         Move::generate(self, self.other_player())
     }
     
+    pub fn en_passant(&self) -> Option<Bitboard> {
+        self.meta.en_passant()
+    }
     
     /// Returns the color of the player who will make the next move.
     pub fn current_player(&self) -> Color {
-        if self.meta.contains(Metadata::BLACK_TO_MOVE) {
-            Color::BLACK
-        } else {
-            Color::WHITE
-        }
+        self.meta.to_move
     }
     
     /// Returns the color of the player who is not currently making the next move.
     pub fn other_player(&self) -> Color {
-        if self.meta.contains(Metadata::BLACK_TO_MOVE) {
-            Color::WHITE
-        } else {
-            Color::BLACK
-        }
+        !self.meta.to_move
     }
 
     /// returns an 8x8 array with characters representing each piece in the proper locations

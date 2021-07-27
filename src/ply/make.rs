@@ -68,14 +68,14 @@ impl Ply {
                 // move the piece
                 self.move_piece(source_piece, mov)?; 
                 // set the en_passant square
-                self.en_passant = Some(Bitboard::from(1 << mov.source_idx()).shift(self.pawn_direction()));
+                self.meta.set_en_passant(Some(mov.source_idx() % 8));
                 clear_ep = false;
                 None 
             },
             _ => return Err(MoveError::UnrecognizedMove(MoveMode::Make, mov))
         };
         
-        if clear_ep { self.en_passant = None; }
+        if clear_ep { self.meta.set_en_passant(None); }
         
         self.tick(source_piece, result.is_some())?;
         
@@ -154,26 +154,26 @@ impl Ply {
     
     fn tick(&mut self, piece_moved: Piece, had_capture: bool) -> MoveResult<()> {
         // Half-move clock resets on capture or pawn move.
-        self.half_move_clock += 1;
-        if piece_moved == Piece::Pawn || had_capture { self.half_move_clock = 0; }
+        self.meta.half_move_tick();
+        if piece_moved == Piece::Pawn || had_capture { self.meta.half_move_reset(); }
         
-        // Full Move Clock
-        if self.current_player() == Color::BLACK { self.full_move_clock += 1; }
-        // Current Player Switch
-        self.meta ^= Metadata::BLACK_TO_MOVE;
+        // Full Move tick
+        self.meta.full_move_tick();
     
         Ok(())
     }
     
     fn untick(&mut self, previous_half_move_count: Option<usize>) -> MoveResult<()> {
+        // FIXME: This should probably just overwrite the metadata entirely. Since all the
+        // relevant information will be there and we don't have to do any calculation that way.
+
         // Half move clock unwinds
-        if let Some(count) = previous_half_move_count { self.half_move_clock = count as u8; }
+        if let Some(count) = previous_half_move_count { self.meta.half_move_clock = count as u8; }
         
         // Full Move Clock
-        if self.current_player() == Color::WHITE { self.full_move_clock -= 1; }
+        self.meta.full_move_untick();
 
         // Current Player Switch
-        self.meta ^= Metadata::BLACK_TO_MOVE;
         
         Ok(())
     }

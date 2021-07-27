@@ -81,10 +81,10 @@ impl Ply {
     pub fn can_castle_long(&self) -> bool {
         match self.current_player() {
             Color::WHITE => { 
-                self.meta.contains(Metadata::WHITE_CASTLE_LONG) && (self.occupancy() & bitboard!("b1", "c1", "d1")).is_empty()
+                self.meta.white_castle_long && (self.occupancy() & bitboard!("b1", "c1", "d1")).is_empty()
             }
             Color::BLACK => { 
-                self.meta.contains(Metadata::BLACK_CASTLE_LONG) && (self.occupancy() & bitboard!("b8", "c8", "d8")).is_empty()
+                self.meta.black_castle_long && (self.occupancy() & bitboard!("b8", "c8", "d8")).is_empty()
             }
         }
     }
@@ -93,10 +93,10 @@ impl Ply {
     pub fn can_castle_short(&self) -> bool {
         match self.current_player() {
             Color::WHITE => { 
-                self.meta.contains(Metadata::WHITE_CASTLE_SHORT) && (self.occupancy() & bitboard!("f1", "g1")).is_empty()
+                self.meta.white_castle_short && (self.occupancy() & bitboard!("f1", "g1")).is_empty()
             }
             Color::BLACK => { 
-                self.meta.contains(Metadata::BLACK_CASTLE_SHORT) && (self.occupancy() & bitboard!("f8", "g8")).is_empty()
+                self.meta.black_castle_short && (self.occupancy() & bitboard!("f8", "g8")).is_empty()
             }
         }
     }

@@ -11,10 +11,7 @@ impl Ply {
             rooks: [Bitboard::empty(); 2],
             bishops: [Bitboard::empty(); 2],
             knights: [Bitboard::empty(); 2],
-            en_passant: None,
-            meta: Metadata::DEFAULT,
-            half_move_clock: 0,
-            full_move_clock: 1
+            meta: Metadata::default(),
         }
     }
 
@@ -57,19 +54,20 @@ impl Ply {
 
         }
 
+        // TODO: Move this part into a method on Metadata itself.
         match fen_parts[1] {
-            "w" => { /* intentionally blank */ }
-            "b" => { ply.meta |= Metadata::BLACK_TO_MOVE; }
+            "w" => { ply.meta.to_move = Color::WHITE; }
+            "b" => { ply.meta.to_move = Color::BLACK; }
             _ => { panic!("Invalid FEN color: {}", fen); }
         };
 
         // castling rights
         for ch in fen_parts[2].chars() {
             match ch {
-                'K' => { ply.meta |= Metadata::WHITE_CASTLE_SHORT; }
-                'Q' => { ply.meta |= Metadata::WHITE_CASTLE_LONG; }
-                'k' => { ply.meta |= Metadata::BLACK_CASTLE_SHORT; }
-                'q' => { ply.meta |= Metadata::BLACK_CASTLE_LONG; }
+                'K' => { ply.meta.white_castle_short = true; }
+                'Q' => { ply.meta.white_castle_long = true; }
+                'k' => { ply.meta.black_castle_short = true;  }
+                'q' => { ply.meta.black_castle_long = true;  }
                 '-' => { 
                     /* we don't need to do anything, this should only ever appear alone, and means
                      * there are no castling rights for either side. */ 
@@ -78,15 +76,13 @@ impl Ply {
             }
         }
 
-        ply.en_passant = match fen_parts[3] {
+        ply.meta.set_en_passant(match fen_parts[3] {
             "-" => None,
-            _ => Some(Bitboard::from_notation(fen_parts[3]))
-        };
-
-        ply.half_move_clock = fen_parts[4].parse().unwrap_or_else(|_| panic!("Invalid FEN half-move: {}", fen));
-        ply.full_move_clock = fen_parts[5].parse().unwrap_or_else(|_| panic!("Invalid FEN full-move: {}", fen));
-
-
+            _ => Some(NOTATION_TO_INDEX(fen_parts[3]))
+        });
+        
+        ply.meta.half_move_clock = fen_parts[4].parse().unwrap_or_else(|_| panic!("Invalid FEN half-move: {}", fen));
+        ply.meta.full_move_clock = fen_parts[5].parse().unwrap_or_else(|_| panic!("Invalid FEN full-move: {}", fen));
 
         ply
     }
@@ -122,21 +118,22 @@ impl Ply {
         }
         out.pop(); // we have an extra '/' so we need to remove it
 
+        // TODO: move into a to_fen on Metadata
         out.push(' ');
-        if self.meta.contains(Metadata::BLACK_TO_MOVE) {
+        if self.meta.to_move.is_black() {
             out.push('b');
         } else {
             out.push('w');
         } 
 
         out.push(' ');
-        if self.meta.contains(Metadata::WHITE_CASTLE_SHORT) { out.push('K'); }
-        if self.meta.contains(Metadata::WHITE_CASTLE_LONG)  { out.push('Q'); }
-        if self.meta.contains(Metadata::BLACK_CASTLE_SHORT) { out.push('k'); }
-        if self.meta.contains(Metadata::BLACK_CASTLE_LONG)  { out.push('q'); }
+        if self.meta.white_castle_short { out.push('K'); }
+        if self.meta.white_castle_long  { out.push('Q'); }
+        if self.meta.black_castle_short { out.push('k'); }
+        if self.meta.black_castle_long  { out.push('q'); }
 
         out.push(' ');
-        match self.en_passant {
+        match self.en_passant() {
             None => { out.push('-'); }
             // need to implement this
             Some(bb) => { 
@@ -147,10 +144,10 @@ impl Ply {
         }
 
         out.push(' ');
-        out.push_str(&self.half_move_clock.to_string());
+        out.push_str(&self.meta.half_move_clock.to_string());
 
         out.push(' ');
-        out.push_str(&self.full_move_clock.to_string());
+        out.push_str(&self.meta.full_move_clock.to_string());
 
         out
     }
