@@ -11,9 +11,14 @@ impl Arbitrary for Game {
         let mut game = Game::start_position();
         while num_moves != 0 {
             let available_moves = game.position.moves();
+
+            // if we end up in a position with no moves, then break and just live with the smaller #.
+            if available_moves.is_empty() { break; }
+
             let mov_idx = usize::arbitrary(g) % available_moves.len();
             let mov = available_moves.moves.concat()[mov_idx];
             game.make(mov);
+            if !available_moves.contains(&mov) { dbg!(&game, &mov); }
             num_moves -= 1;
         }
         game
