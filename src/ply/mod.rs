@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 mod debug;
 mod creation;
 mod make;
-mod metadata;
+pub mod metadata;
 mod query;
 
 #[cfg(test)] mod tests;

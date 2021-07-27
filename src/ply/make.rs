@@ -83,10 +83,10 @@ impl Ply {
     }
 
     #[instrument(skip(self))]
-    pub fn unmake(&mut self, mov: Move, target_piece: Option<Piece>) -> MoveResult<()> {
+    pub fn unmake(&mut self, mov: Move, captured_piece: Option<Piece>, metadata: Metadata) -> MoveResult<()> {
         // Untick _first_ so that the 'current_player' becomes the correct color.
         // TODO: half-move clock memory
-        self.untick(None)?;
+        self.meta = metadata;
 
         // note how it's target -- this is _after_ the mov has been made, so we have to work backwards
         let source_piece = match self.friendly_piece_at_index(mov.target_idx()) {
@@ -99,7 +99,7 @@ impl Ply {
             MoveType::SHORT_CASTLE              => self.unshort_castle()?,
             MoveType::LONG_CASTLE               => self.unlong_castle()?,
             MoveType::CAPTURE => {
-                match target_piece {
+                match captured_piece {
                     Some(t) => self.place_enemy_piece(t, mov.target_idx())?,
                     None => { return Err(MoveError::MissingTargetPiece(MoveMode::Unmake, *self, mov)) },
                 }
@@ -110,13 +110,14 @@ impl Ply {
             MoveType::PROMOTION_BISHOP          => self.unexecute_promotion(mov, Piece::Bishop)?,
             MoveType::PROMOTION_ROOK            => self.unexecute_promotion(mov, Piece::Rook)?,
             MoveType::PROMOTION_QUEEN           => self.unexecute_promotion(mov, Piece::Queen)?,
-            MoveType::PROMOTION_CAPTURE_KNIGHT  => self.unexecute_promotion_capture(mov, Piece::Knight, target_piece)?,
-            MoveType::PROMOTION_CAPTURE_BISHOP  => self.unexecute_promotion_capture(mov, Piece::Bishop, target_piece)?,
-            MoveType::PROMOTION_CAPTURE_ROOK    => self.unexecute_promotion_capture(mov, Piece::Rook, target_piece)?,
-            MoveType::PROMOTION_CAPTURE_QUEEN   => self.unexecute_promotion_capture(mov, Piece::Queen, target_piece)?,
+            MoveType::PROMOTION_CAPTURE_KNIGHT  => self.unexecute_promotion_capture(mov, Piece::Knight, captured_piece)?,
+            MoveType::PROMOTION_CAPTURE_BISHOP  => self.unexecute_promotion_capture(mov, Piece::Bishop, captured_piece)?,
+            MoveType::PROMOTION_CAPTURE_ROOK    => self.unexecute_promotion_capture(mov, Piece::Rook, captured_piece)?,
+            MoveType::PROMOTION_CAPTURE_QUEEN   => self.unexecute_promotion_capture(mov, Piece::Queen, captured_piece)?,
             MoveType::DOUBLE_PAWN               => self.unmove_piece(source_piece, mov)?,
             _ => return Err(MoveError::UnrecognizedMove(MoveMode::Unmake, mov))
         };
+        
         
         Ok(())
     }
@@ -129,12 +130,12 @@ impl Ply {
         ))
     }
     
-    pub fn unmake_by_notation(&mut self, source: &str, target: &str, metadata: MoveType, captured_piece: Option<Piece>) -> MoveResult<()> {
+    pub fn unmake_by_notation(&mut self, source: &str, target: &str, metadata: MoveType, captured_piece: Option<Piece>, game_metadata: Metadata) -> MoveResult<()> {
         self.unmake(Move::from(
             NOTATION_TO_INDEX(source) as u16,
             NOTATION_TO_INDEX(target) as u16,
             metadata
-        ), captured_piece)
+        ), captured_piece, game_metadata)
     }
 
     pub fn pawn_direction(&self) -> Direction {
@@ -163,21 +164,6 @@ impl Ply {
         Ok(())
     }
     
-    fn untick(&mut self, previous_half_move_count: Option<usize>) -> MoveResult<()> {
-        // FIXME: This should probably just overwrite the metadata entirely. Since all the
-        // relevant information will be there and we don't have to do any calculation that way.
-
-        // Half move clock unwinds
-        if let Some(count) = previous_half_move_count { self.meta.half_move_clock = count as u8; }
-        
-        // Full Move Clock
-        self.meta.full_move_untick();
-
-        // Current Player Switch
-        
-        Ok(())
-    }
-
     fn castle_rank_mask(&self) -> usize {
         if self.current_player().is_black() {
             0o70

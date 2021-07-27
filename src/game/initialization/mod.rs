@@ -15,6 +15,7 @@ impl Game {
             position: Ply::from_fen(fen),
             played: vec![],
             history: vec![],
+            game_history: vec![],
             captures: vec![],
             metadata: vec![]
         }
@@ -26,6 +27,7 @@ impl Game {
             position: Ply::from_fen(fen),
             played: vec![],
             captures: vec![],
+            game_history: vec![],
             metadata: vec![]
         }
     }

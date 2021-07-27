@@ -1,4 +1,5 @@
 use crate::{constants::{Color, Piece}, movement::Move, ply::Ply};
+use crate::ply::metadata::Metadata;
 use serde::{Serialize, Deserialize};
 
 mod initialization;
@@ -18,6 +19,7 @@ pub struct Game {
     played: Vec<Move>,              // TODO: Maybe a 'finite stack' class would be better here? 
     #[cfg(test)] history: Vec<History>, // Temporary, add only history for debugging purposes -- would be cool to featureflag this so we can turn it on when needed
     captures: Vec<Piece>,  //       ditto.
+    game_history: Vec<Metadata>,
     metadata: Vec<(String, String)> // TODO: String -> Some custom 'tag' type
     // NOTE: Do captures need to record color? We have the move recorded, so the color could be deduced.
 }
@@ -29,6 +31,7 @@ impl Game {
         self.played.push(mov);
 
         #[cfg(test)] self.history.push(History::Make(mov));
+        self.game_history.push(self.position.meta);
 
         if let Some(p) = self.position.make(mov).unwrap() {
             self.captures.push(p)
@@ -48,8 +51,9 @@ impl Game {
         } else {
             None
         };
+        let metadata = self.game_history.pop().unwrap();
 
-        if let Err(e) = self.position.unmake(mov, captured_piece) {
+        if let Err(e) = self.position.unmake(mov, captured_piece, metadata) {
             panic!("error: {:?}, game: {:?}", e, self)
         }
     }
