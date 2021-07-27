@@ -55,7 +55,7 @@ impl Ply {
                 self.move_piece(source_piece, mov)?;
                 target_piece
             },
-            MoveType::EP_CAPTURE => todo!(),
+            MoveType::EP_CAPTURE                => todo!(),
             MoveType::PROMOTION_KNIGHT          => { self.execute_promotion(mov, Piece::Knight)?; None },
             MoveType::PROMOTION_BISHOP          => { self.execute_promotion(mov, Piece::Bishop)?; None },
             MoveType::PROMOTION_ROOK            => { self.execute_promotion(mov, Piece::Rook)?; None  },
@@ -156,7 +156,40 @@ impl Ply {
     fn tick(&mut self, piece_moved: Piece, had_capture: bool) -> MoveResult<()> {
         // Half-move clock resets on capture or pawn move.
         self.meta.half_move_tick();
-        if piece_moved == Piece::Pawn || had_capture { self.meta.half_move_reset(); }
+        match piece_moved {
+            Piece::Rook => {
+                let rooks = self.rooks_for(self.current_player()) | self.rooks_for(self.other_player());
+                // PEXT here using the CORNERS mask will map a1 -> bit 0, h1 -> bit 2, a8 -> bit 3, h8 -> bit 4.
+                // If the bit is high, the rook is still in place, so we retain castling rights. 
+                match rooks.pext(*CORNERS) {
+                    0b0000 => self.meta.rook_moved(true,  true, true, true),
+                    0b0001 => self.meta.rook_moved(false, true, true, true),
+                    0b0010 => self.meta.rook_moved(true,  false,true, true),
+                    0b0011 => self.meta.rook_moved(false, false,true, true),
+                    0b0100 => self.meta.rook_moved(true,  true, false,true),
+                    0b0101 => self.meta.rook_moved(false, true, false,true),
+                    0b0110 => self.meta.rook_moved(true,  false,false,true),
+                    0b0111 => self.meta.rook_moved(false, false,false,true),
+                    0b1000 => self.meta.rook_moved(true,  true, true, false),
+                    0b1001 => self.meta.rook_moved(false, true, true, false),
+                    0b1010 => self.meta.rook_moved(true,  false,true, false),
+                    0b1011 => self.meta.rook_moved(false, false,true, false),
+                    0b1100 => self.meta.rook_moved(true,  true, false,false),
+                    0b1101 => self.meta.rook_moved(false, true, false,false),
+                    0b1110 => self.meta.rook_moved(true,  false,false,false),
+                    0b1111 => self.meta.rook_moved(false, false,false,false),
+                    _ => unreachable!()
+                }
+            }
+            Piece::King => { self.meta.king_moved(self.current_player()) }
+            Piece::Pawn => { self.meta.half_move_reset(); },
+            _ => ()
+        }
+        
+        if had_capture { self.meta.half_move_reset(); }
+        
+        // TODO: Track castling rights, if the piece is a rook, we need to know which
+
         
         // Full Move tick
         self.meta.full_move_tick();

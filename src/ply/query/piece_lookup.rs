@@ -63,6 +63,7 @@ impl Ply {
         self.pieces[color as usize][piece as usize]
     }
 
+    /// TODO: Prevent castling if a piece is attacking the intervening squares
 
     /// True if the current player both has the right to castle long and the ability.
     pub fn can_castle_long(&self) -> bool {

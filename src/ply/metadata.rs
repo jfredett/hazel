@@ -36,6 +36,23 @@ impl Metadata {
         }
     }
     
+    /// Set castling rights based on which rooks have moved, if the rook on the indicated square (by argument name) has moved.
+    /// Preserves previous castling rights (e.g., if the a1 rook moves, then moves back, it does not restore privileges)
+    pub fn rook_moved(&mut self, a1: bool, h1: bool, a8: bool, h8: bool) {
+        self.white_castle_long &= !a1;
+        self.white_castle_short &= !h1;
+        self.black_castle_long &= !a8;
+        self.black_castle_short &= !h8;
+    }
+    
+    /// Set castling rights based on when a king moves.
+    pub fn king_moved(&mut self, color: Color) {
+        match color {
+            Color::WHITE => { self.white_castle_long = false; self.white_castle_short = false }
+            Color::BLACK => { self.black_castle_long = false; self.black_castle_short = false }
+        }
+    }
+    
     pub fn half_move_tick(&mut self) { self.half_move_clock += 1; }
     pub fn half_move_untick(&mut self) { self.half_move_clock -= 1; }
     pub fn half_move_reset(&mut self) { self.half_move_clock = 0; }
