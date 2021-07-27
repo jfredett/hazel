@@ -55,7 +55,14 @@ impl Ply {
                 self.move_piece(source_piece, mov)?;
                 target_piece
             },
-            MoveType::EP_CAPTURE                => todo!(),
+            MoveType::EP_CAPTURE                => { 
+                self.remove_enemy_piece(
+                    Piece::Pawn,
+                    self.enemy_pawn_direction().index_shift(mov.target_idx())
+                )?;
+                self.move_piece(Piece::Pawn, mov)?;
+                Some(Piece::Pawn)
+            },
             MoveType::PROMOTION_KNIGHT          => { self.execute_promotion(mov, Piece::Knight)?; None },
             MoveType::PROMOTION_BISHOP          => { self.execute_promotion(mov, Piece::Bishop)?; None },
             MoveType::PROMOTION_ROOK            => { self.execute_promotion(mov, Piece::Rook)?; None  },
@@ -411,6 +418,26 @@ mod tests {
         assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("a8")), None);
         assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("e8")), None);
 
+        Ok(())
+    }
+    
+
+    #[test]
+    fn en_passant_capture() -> MoveResult<()> {
+        let mut p = Ply::from_fen(START_POSITION_FEN);
+        // This encodes the following game:
+        // 1. d4 Nh6
+        // 2. d5 e5
+        // 3. dxe6
+        p.make_by_notation("d2", "d4", MoveType::QUIET)?;
+        p.make_by_notation("g8", "h6", MoveType::QUIET)?;
+        p.make_by_notation("d4", "d5", MoveType::QUIET)?;
+        p.make_by_notation("e7", "e5", MoveType::QUIET)?;
+        p.make_by_notation("d5", "e6", MoveType::EP_CAPTURE)?;
+        
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("e5")), None);
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("e6")), Some((Color::WHITE, Piece::Pawn)));
+        
         Ok(())
     }
 }

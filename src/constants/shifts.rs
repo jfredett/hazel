@@ -15,6 +15,22 @@ pub enum Direction {
     NW = 7
 }
 
+impl Direction {
+    /// shifts an index in the direction
+    pub fn index_shift(self, idx: usize) -> usize {
+        match self {
+            Direction::N => idx + 8,
+            Direction::NE => idx + 9,
+            Direction::E => idx + 1,
+            Direction::SE => idx - 7,
+            Direction::S => idx - 8,
+            Direction::SW => idx - 9,
+            Direction::W => idx - 1,
+            Direction::NW => idx + 7,
+        }
+    }
+}
+
 pub const DIRECTIONS : [Direction; 8] = [
     Direction::N,
     Direction::NE,
@@ -25,3 +41,9 @@ pub const DIRECTIONS : [Direction; 8] = [
     Direction::W,
     Direction::NW,
 ];
+
+
+#[cfg(test)]
+mod tests {
+    
+}

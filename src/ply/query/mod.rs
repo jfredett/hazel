@@ -12,7 +12,7 @@ pub use occupancy::*;
 
 
 impl Ply {
-    pub fn king_for(&self, color: Color)   -> Bitboard { self.get_piece(color, Piece::King) }
+    pub fn king_for(&self, color: Color)    -> Bitboard { self.get_piece(color, Piece::King) }
     pub fn pawns_for(&self, color: Color)   -> Bitboard { self.get_piece(color, Piece::Pawn) }
     pub fn knights_for(&self, color: Color) -> Bitboard { self.get_piece(color, Piece::Knight) }
     pub fn bishops_for(&self, color: Color) -> Bitboard { self.get_piece(color, Piece::Bishop) }
