@@ -46,15 +46,15 @@
 #[derive(Hash, PartialEq, Eq, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub struct Bitboard(u64);
 
-mod creation;
-mod bitops;
-mod util;
 mod arbitrary;
+mod bitops;
+mod creation;
 mod debug;
-mod shifts;
 mod from_into;
 mod intrinsics;
 mod iterator;
+mod shifts;
+mod util;
 
 use crate::constants::conversion_tables::*;
 
@@ -73,7 +73,7 @@ impl Bitboard {
     pub fn is_empty(&self) -> bool {
         self.0 == 0
     }
-    
+
     /// True if the bitboard has any set bits.
     ///
     /// ```
@@ -109,7 +109,7 @@ impl Bitboard {
     /// ```
     #[inline]
     pub fn set(&mut self, x: usize, y: usize) {
-        self.set_by_index(Bitboard::coords_to_index(x,y));
+        self.set_by_index(Bitboard::coords_to_index(x, y));
     }
 
     /// Set a bit located at the given index
@@ -121,8 +121,8 @@ impl Bitboard {
     /// Set a bit located at the given notation
     #[inline]
     pub fn set_by_notation(&mut self, notation: &str) {
-        let (x,y) = Bitboard::notation_to_coords(notation);
-        self.set(x,y);
+        let (x, y) = Bitboard::notation_to_coords(notation);
+        self.set(x, y);
     }
 
     /// Return a vector containing all the indices which are set
@@ -152,9 +152,9 @@ impl Bitboard {
     /// assert!(!b.is_set(0,1));
     /// ```
     pub fn unset(&mut self, rank: usize, file: usize) {
-        self.unset_by_index(Bitboard::coords_to_index(rank,file));
+        self.unset_by_index(Bitboard::coords_to_index(rank, file));
     }
-    
+
     /// unsets the bit at the given index
     /// ```
     /// # use hazel::bitboard::Bitboard;
@@ -168,7 +168,7 @@ impl Bitboard {
     pub fn unset_by_index(&mut self, idx: usize) {
         self.0 &= !(1 << idx)
     }
-    
+
     /// Logically 'moves' a piece from the 'from' square to the 'to' square
     pub fn move_piece(&mut self, from: usize, to: usize) {
         self.unset_by_index(from);
@@ -186,7 +186,7 @@ impl Bitboard {
     /// assert!(!b.is_set(0,1));
     /// ```
     pub fn flip(&mut self, rank: usize, file: usize) {
-        self.0 ^= 1 << Bitboard::coords_to_index(rank,file);
+        self.0 ^= 1 << Bitboard::coords_to_index(rank, file);
     }
 
     /// True if the bit at the given notation is set
@@ -213,7 +213,7 @@ impl Bitboard {
     /// ```
     #[inline]
     pub fn is_set(&self, rank: usize, file: usize) -> bool {
-        self.is_index_set(Bitboard::coords_to_index(rank,file))
+        self.is_index_set(Bitboard::coords_to_index(rank, file))
     }
 
     /// True if the given bit is set
@@ -262,7 +262,7 @@ mod test {
         #[test]
         fn accurately_reports_if_board_is_not_empty() {
             let mut nonempty_board = Bitboard::empty();
-            nonempty_board.set(1,1);
+            nonempty_board.set(1, 1);
             assert!(!nonempty_board.is_empty());
         }
     }
@@ -273,33 +273,33 @@ mod test {
         #[test]
         fn accurately_reports_if_square_is_set() {
             let mut board = Bitboard::empty();
-            board.set(1,1);
-            assert!(board.is_set(1,1));
+            board.set(1, 1);
+            assert!(board.is_set(1, 1));
         }
 
         #[test]
         fn accurately_reports_if_square_is_not_set() {
             let mut board = Bitboard::empty();
-            board.set(1,1);
-            assert!(!board.is_set(0,1));
+            board.set(1, 1);
+            assert!(!board.is_set(0, 1));
         }
 
         #[test]
         fn is_idempotent_if_the_bit_is_already_set() {
             let mut board = Bitboard::empty();
-            board.set(1,1);
-            assert!(board.is_set(1,1));
-            board.set(1,1);
-            assert!(board.is_set(1,1));
+            board.set(1, 1);
+            assert!(board.is_set(1, 1));
+            board.set(1, 1);
+            assert!(board.is_set(1, 1));
         }
 
         #[test]
         fn is_inverse_to_unset() {
             let mut board = Bitboard::empty();
-            board.set(1,1);
-            assert!(board.is_set(1,1));
-            board.unset(1,1);
-            assert!(!board.is_set(1,1));
+            board.set(1, 1);
+            assert!(board.is_set(1, 1));
+            board.unset(1, 1);
+            assert!(!board.is_set(1, 1));
         }
     }
 
@@ -308,23 +308,25 @@ mod test {
 
         #[quickcheck]
         fn setting_then_flipping_is_idempotent(x_i: usize, y_i: usize) -> bool {
-            let x = x_i % 8; let y = y_i % 8;
+            let x = x_i % 8;
+            let y = y_i % 8;
             let mut board = Bitboard::empty();
-            board.set(x,y);
-            assert!(board.is_set(x,y));
-            board.flip(x,y);
-            assert!(!board.is_set(x,y));
+            board.set(x, y);
+            assert!(board.is_set(x, y));
+            board.flip(x, y);
+            assert!(!board.is_set(x, y));
             board == Bitboard::empty()
         }
 
         #[quickcheck]
-        fn double_flipping_is_idempotent(x_i: usize, y_i: usize) -> bool{
-            let x = x_i % 8; let y = y_i % 8;
+        fn double_flipping_is_idempotent(x_i: usize, y_i: usize) -> bool {
+            let x = x_i % 8;
+            let y = y_i % 8;
             let mut board = Bitboard::empty();
-            board.flip(x,y);
-            assert!(board.is_set(x,y));
-            board.flip(x,y);
-            assert!(!board.is_set(x,y));
+            board.flip(x, y);
+            assert!(board.is_set(x, y));
+            board.flip(x, y);
+            assert!(!board.is_set(x, y));
             board == Bitboard::empty()
         }
     }

@@ -1,6 +1,6 @@
 use super::*;
-use std::fmt::{Debug, Display, Formatter, Result};
 use crate::constants::INDEX_TO_NOTATION;
+use std::fmt::{Debug, Display, Formatter, Result};
 
 impl Debug for Move {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
@@ -9,13 +9,14 @@ impl Debug for Move {
         } else if self.is_long_castle() {
             write!(f, "O-O-O")
         } else {
-            write!(f, 
+            write!(
+                f,
                 "{} ({:02}) -> {} ({:02}) ({}0b{:04b}) [0o{:06o}]",
                 INDEX_TO_NOTATION[self.source_idx() as usize],
-                self.source_idx(), 
+                self.source_idx(),
                 INDEX_TO_NOTATION[self.target_idx() as usize],
-                self.target_idx(), 
-                if self.is_promotion() { "P, " } else { "" }, 
+                self.target_idx(),
+                if self.is_promotion() { "P, " } else { "" },
                 self.move_metadata() as u16,
                 self.0
             )
@@ -32,7 +33,7 @@ impl Display for Move {
 #[cfg(test)]
 mod test {
     use super::*;
-    
+
     #[test]
     fn displays_as_intended() {
         let m = Move::from_notation("d2", "d4", MoveType::QUIET);

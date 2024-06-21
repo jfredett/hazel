@@ -1,8 +1,8 @@
 use super::*;
 
-mod creation;
 mod bitops;
-mod shifts; 
+mod creation;
+mod shifts;
 
 bench!(
     group: Bitboard,

@@ -7,6 +7,7 @@
 
 #[inline(always)]
 #[allow(non_snake_case)]
+#[rustfmt::skip]
 pub fn NOTATION_TO_INDEX(notation: &str) -> usize {
     match notation {
         "a1" => { 0o00 }, "b1" => { 0o01 }, "c1" => { 0o02 }, "d1" => { 0o03 }, "e1" => { 0o04 }, "f1" => { 0o05 }, "g1" => { 0o06 }, "h1" => { 0o07 },
@@ -23,16 +24,12 @@ pub fn NOTATION_TO_INDEX(notation: &str) -> usize {
 
 lazy_static! {
     pub static ref INDEX_TO_NOTATION: [&'static str; 64] = [
-        "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
-        "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
-        "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
-        "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
-        "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
-        "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
-        "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
-        "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8"
+        "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", "a2", "b2", "c2", "d2", "e2", "f2", "g2",
+        "h2", "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3", "a4", "b4", "c4", "d4", "e4", "f4",
+        "g4", "h4", "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5", "a6", "b6", "c6", "d6", "e6",
+        "f6", "g6", "h6", "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7", "a8", "b8", "c8", "d8",
+        "e8", "f8", "g8", "h8"
     ];
-
     pub static ref COORDS_TO_INDEX: [[usize; 8]; 8] = {
         let mut m = [[0; 8]; 8];
 
@@ -42,7 +39,6 @@ lazy_static! {
 
         m
     };
-
     pub static ref INDEX_TO_COORDS: [(usize, usize); 64] = {
         let mut m = [(0, 0); 64];
 
@@ -51,10 +47,8 @@ lazy_static! {
             for file in rank_arr {
                 m[idx] = (rank, *file % 8);
                 idx += 1;
-
             }
         }
         m
     };
 }
-

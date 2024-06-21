@@ -7,7 +7,7 @@ mod mainline;
 
 impl Game {
     /// ::from_fen/1
-    /// 
+    ///
     /// Creates a Game initialized to the given fen string
     #[cfg(test)]
     pub fn from_fen(fen: &str) -> Game {
@@ -17,7 +17,7 @@ impl Game {
             history: vec![],
             game_history: vec![],
             captures: vec![],
-            metadata: vec![]
+            metadata: vec![],
         }
     }
 
@@ -28,17 +28,17 @@ impl Game {
             played: vec![],
             captures: vec![],
             game_history: vec![],
-            metadata: vec![]
+            metadata: vec![],
         }
     }
 
     /// ::start_position/1
-    /// 
+    ///
     /// Creates a Game initialized to the start position.
     pub fn start_position() -> Game {
         Game::from_fen(START_POSITION_FEN)
     }
-    
+
     pub fn moves(&self) -> MoveSet {
         self.position.moves()
     }
@@ -58,12 +58,11 @@ mod tests {
             let g = Game::from_fen(POS2_KIWIPETE_FEN);
             assert_eq!(g.position.to_fen(), POS2_KIWIPETE_FEN);
         }
-        
+
         #[test]
         fn start_position() {
             let g = Game::start_position();
             assert_eq!(g.position.to_fen(), START_POSITION_FEN);
         }
     }
-    
 }

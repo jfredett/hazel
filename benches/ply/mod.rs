@@ -1,16 +1,16 @@
 use super::*;
 
-
 lazy_static! {
-    pub static ref START_POSITION_FEN : String = String::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-    pub static ref SIMPLE_POSITION_FEN : String = String::from("8/5k1p/2n5/3N4/6P1/3K4/8/8 w - - 0 1");
-    pub static ref LONDON_POSITION_FEN : String = String::from("r1bqk2r/pp2bppp/2n1pn2/2pp4/3P1B2/2P1PN1P/PP1N1PP1/R2QKB1R b KQkq - 0 7");
-
-    pub static ref START_POSITION : Ply  = Ply::from_fen(&START_POSITION_FEN);
-    pub static ref LONDON_POSITION : Ply = Ply::from_fen(&LONDON_POSITION_FEN);
-    pub static ref SIMPLE_POSITION : Ply = Ply::from_fen(&SIMPLE_POSITION_FEN);
+    pub static ref START_POSITION_FEN: String =
+        String::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    pub static ref SIMPLE_POSITION_FEN: String =
+        String::from("8/5k1p/2n5/3N4/6P1/3K4/8/8 w - - 0 1");
+    pub static ref LONDON_POSITION_FEN: String =
+        String::from("r1bqk2r/pp2bppp/2n1pn2/2pp4/3P1B2/2P1PN1P/PP1N1PP1/R2QKB1R b KQkq - 0 7");
+    pub static ref START_POSITION: Ply = Ply::from_fen(&START_POSITION_FEN);
+    pub static ref LONDON_POSITION: Ply = Ply::from_fen(&LONDON_POSITION_FEN);
+    pub static ref SIMPLE_POSITION: Ply = Ply::from_fen(&SIMPLE_POSITION_FEN);
 }
-
 
 bench!(
     group: Ply,

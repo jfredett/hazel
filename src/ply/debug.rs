@@ -1,14 +1,14 @@
 use super::*;
-use std::fmt::{Formatter, Result, Debug};
+use std::fmt::{Debug, Formatter, Result};
 
 impl Debug for Ply {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         let buf = self.board_buffer();
         // We need to start on a8 and work _down_ to h1, left to right.
         writeln!(f)?;
-        for rank in 0..8 {                
-            write!(f, "{} |", 8 - rank)?; 
-            for file in FILES {                                        
+        for rank in 0..8 {
+            write!(f, "{} |", 8 - rank)?;
+            for file in FILES {
                 write!(f, " {}", buf[7 - rank][file as usize])?;
             }
             writeln!(f)?;
@@ -19,7 +19,6 @@ impl Debug for Ply {
         } else {
             writeln!(f, "    White to play")
         }
-
     }
 }
 
@@ -46,5 +45,4 @@ mod test {
 
         assert_eq!(res, expected);
     }
-
 }

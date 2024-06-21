@@ -1,7 +1,8 @@
 use super::*;
 
-pub struct IndexIterator { source: Bitboard }
-
+pub struct IndexIterator {
+    source: Bitboard,
+}
 
 impl IntoIterator for Bitboard {
     type Item = usize;
@@ -9,9 +10,7 @@ impl IntoIterator for Bitboard {
     type IntoIter = IndexIterator;
 
     fn into_iter(self) -> Self::IntoIter {
-        IndexIterator {
-            source: self
-        }
+        IndexIterator { source: self }
     }
 }
 

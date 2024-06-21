@@ -1,7 +1,7 @@
 use super::*;
 
 bench!(
-    group: Bitboard, 
+    group: Bitboard,
     pretty: "&/2",
     name: and_op,
     test: { b1 & b2 },
@@ -11,7 +11,7 @@ bench!(
 );
 
 bench!(
-    group: Bitboard, 
+    group: Bitboard,
     pretty: "|/2",
     name: or_op,
     test: { b1 | b2 },
@@ -21,7 +21,7 @@ bench!(
 );
 
 bench!(
-    group: Bitboard, 
+    group: Bitboard,
     pretty: "^/2",
     name: xor_op,
     test: { b1 ^ b2 },
@@ -31,7 +31,7 @@ bench!(
 );
 
 bench!(
-    group: Bitboard, 
+    group: Bitboard,
     pretty: "!/1",
     name: and_op,
     test: { !b1 },

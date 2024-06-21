@@ -1,5 +1,5 @@
+#![feature(stmt_expr_attributes)]
 #![cfg_attr(test, allow(unused_imports))]
-
 // NOTE: These lints are disabled for the following reasons:
 //
 // 1. unusual byte groupings are helpful when notating the values of masks. See
@@ -14,50 +14,52 @@
 #![allow(clippy::unusual_byte_groupings, clippy::needless_range_loop)]
 
 #[cfg(test)]
-#[macro_use] extern crate quickcheck_macros;
+#[macro_use]
+extern crate quickcheck_macros;
 
-#[macro_use] extern crate lazy_static;
+#[macro_use]
+extern crate lazy_static;
 
 extern crate either;
 extern crate rand;
 
-pub use rand::prelude::*;
-pub use tracing::{info, debug, error, warn, instrument};
 pub use anyhow::*;
+pub use rand::prelude::*;
 pub use thiserror::Error;
+pub use tracing::{debug, error, info, instrument, warn};
 
 #[cfg(test)]
 pub use tracing_test;
 
-#[macro_use] pub mod bitboard;
+#[macro_use]
+pub mod bitboard;
 pub mod constants;
-pub mod ply;
+pub mod game;
 pub mod movement;
 pub mod moveset;
 pub mod pextboard;
+pub mod ply;
 pub mod util;
-pub mod game;
-
-
 
 /// passes if the left is a subset of the right
-#[macro_export] macro_rules! assert_is_subset {
-    ($left:expr, $right:expr) => (
+#[macro_export]
+macro_rules! assert_is_subset {
+    ($left:expr, $right:expr) => {
         let mut missing = vec![];
         for m in $left {
-           if !$right.contains(&m) {
+            if !$right.contains(&m) {
                 missing.push(m);
-           } 
-        } 
-        
+            }
+        }
+
         if missing.len() > 0 {
             panic!("assertion failed, set difference: {:?}", missing);
         }
-    );
+    };
 }
 
 /*
-FIXME: This isn't working because it can't find the 'assert_is_subset!' macro even though it's _right there_. 
+FIXME: This isn't working because it can't find the 'assert_is_subset!' macro even though it's _right there_.
 
 /// This is essentially assert_eq but doesn't care about order differences
 #[macro_export] macro_rules! assert_are_equal_sets {

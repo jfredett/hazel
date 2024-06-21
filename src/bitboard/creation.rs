@@ -9,7 +9,8 @@ use super::*;
 /// assert!(bb.is_notation_set("d4"));
 /// assert!(bb.is_notation_set("c6"));
 /// ```
-#[macro_export] macro_rules! bitboard {
+#[macro_export]
+macro_rules! bitboard {
     () => (
         Bitboard::empty()
     );
@@ -40,7 +41,7 @@ impl Bitboard {
     pub fn from(b: u64) -> Bitboard {
         Bitboard { 0: b }
     }
-    
+
     pub fn from_index(idx: u8) -> Bitboard {
         Bitboard { 0: 1 << idx }
     }
