@@ -8,8 +8,6 @@ pub use criterion_macro::criterion;
 
 use rand::distributions::{Distribution, Uniform};
 
-use packed_simd::*;
-
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
@@ -75,14 +73,6 @@ bench!(
     pretty: "Measurement (Integer Operations)",
     name: reference,
     test: { 2i64 + 2i64 },
-    where:
-);
-
-bench!(
-    group: Reference,
-    pretty: "Measurement (SIMD Creation)",
-    name: reference,
-    test: { i64x4::new(0,1,2,3) },
     where:
 );
 
