@@ -120,7 +120,7 @@ impl<const SIZE: usize> PEXTBoard<SIZE> {
 
     pub fn rook() -> PEXTBoard<ROOK_TABLE_SIZE> {
         let mut board = PEXTBoard {
-            table: box [Bitboard::empty(); ROOK_TABLE_SIZE]
+            table: Box::new([Bitboard::empty(); ROOK_TABLE_SIZE])
         };
         board.initialize_piece(Piece::Rook);
         board
@@ -128,7 +128,7 @@ impl<const SIZE: usize> PEXTBoard<SIZE> {
     
     pub fn bishop() -> PEXTBoard<BISHOP_TABLE_SIZE> {
         let mut board = PEXTBoard {
-            table: box [Bitboard::empty(); BISHOP_TABLE_SIZE]
+            table: Box::new([Bitboard::empty(); BISHOP_TABLE_SIZE])
         };
         board.initialize_piece(Piece::Bishop);
         board

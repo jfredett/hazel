@@ -1,4 +1,3 @@
-#![feature(nll, box_syntax)]
 #![cfg_attr(test, allow(unused_imports))]
 
 // NOTE: These lints are disabled for the following reasons:
@@ -13,8 +12,6 @@
 // about 20 minutes of trying couldn't grok the trait bound error I was getting so I left it
 // as is.
 #![allow(clippy::unusual_byte_groupings, clippy::needless_range_loop)]
-
-pub use packed_simd::*;
 
 #[cfg(test)]
 #[macro_use] extern crate quickcheck_macros;

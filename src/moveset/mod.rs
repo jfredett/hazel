@@ -12,31 +12,31 @@ impl MoveSet {
     pub fn empty() -> MoveSet {
         MoveSet { moves: [vec![], vec![], vec![], vec![], vec![], vec![]] }
     }
-    
+
     pub fn merge(&mut self, other: MoveSet) -> &mut MoveSet {
         for (i, subset) in self.moves.iter_mut().enumerate() {
-            for m in other.moves[i] {
+            for m in other.moves[i].clone() {
                 subset.push(m);
             }
         }
         self
     }
-    
+
     /// Adds a quiet move from the source square to the target square
     pub fn add_move(&mut self, piece: Piece, source: usize, target: usize) {
         self.moves[piece as usize].push(Move::from(source as u16, target as u16,  MoveType::QUIET));
     }
-    
+
     /// Adds a short castle move
     pub fn add_short_castle(&mut self, color: Color) {
         self.moves[Piece::King as usize].push(Move::short_castle(color));
     }
-    
+
     /// Adds a long castle move
     pub fn add_long_castle(&mut self, color: Color) {
         self.moves[Piece::King as usize].push(Move::long_castle(color));     
     }
-    
+
     pub fn add_pawn_double_move(&mut self, source: usize, color: Color) {
         let offset: isize = match color {
             Color::WHITE =>  16,

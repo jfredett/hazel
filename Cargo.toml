@@ -15,7 +15,6 @@ name="hazel"
 path="src/main.rs"
 
 [dependencies]
-packed_simd = { version = "0.3.4", package = "packed_simd_2" }
 clap = { version = "~2.33", features = ["yaml"]}
 lazy_static = "~1.4"
 either = "~1.6"
