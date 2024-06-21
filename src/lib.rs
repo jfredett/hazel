@@ -23,7 +23,7 @@ extern crate lazy_static;
 extern crate either;
 extern crate rand;
 
-pub use anyhow::*;
+// pub use anyhow::*;
 pub use rand::prelude::*;
 pub use thiserror::Error;
 pub use tracing::{debug, error, info, instrument, warn};

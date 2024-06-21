@@ -18,6 +18,7 @@ impl Display for MoveMode {
 }
 
 pub type MoveResult<T> = Result<T, MoveError>;
+
 #[derive(PartialEq, Eq, Debug, Hash, Clone, Copy, Error)]
 pub enum MoveError {
     // #[error("Error when attempting to make move {1:?} on board {0:?}")]
