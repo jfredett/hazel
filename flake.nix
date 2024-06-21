@@ -20,6 +20,10 @@
         modules = [{
           languages.rust.enable = true;
           languages.rust.channel = "nightly";
+          languages.rust.components = [ "rustc" "cargo" "clippy" "rustfmt" "rust-analyzer" ];
+
+          # FIXME: I would love for this to be part of the Cargo.toml, and not the flake.
+          languages.rust.rustflags = "-C target-feature=+bmi1,+bmi2";
 
           packages = with pkgs; [ 
             gnuplot 
