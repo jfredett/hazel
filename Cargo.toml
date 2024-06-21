@@ -28,10 +28,10 @@ thiserror = "1.0.61"
 
 
 [dev-dependencies]
-criterion = "*"
-criterion-macro = "*"
-quickcheck = "*"
-quickcheck_macros = "*"
+criterion = "0.4.0"
+criterion-macro = "0.4.0"
+quickcheck = "1.0.3"
+quickcheck_macros = "1.0.0"
 paste = "*"
 tracing-test = "*"
 
