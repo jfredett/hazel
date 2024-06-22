@@ -3,7 +3,9 @@ use crate::{
     moveset::MoveSet,
     pextboard::{self},
     ply::Ply,
+    bitboard::Bitboard,
 };
+
 
 use super::Move;
 
@@ -16,38 +18,40 @@ impl Move {
 
         // king moves -- covers avoiding checked squares, does not cover if king is already in check.
         let king = ply.king_for(color);
+        let source = king.first_index();
         let forbidden_squares = ply.attacked_squares_for(!color);
         let in_check = (king & forbidden_squares).is_nonempty();
 
-        // If it's our turn and the enemy king is already in check, we win.
-        let mated = (ply.king_for(!color) & ply.attacked_squares_for(color)).is_nonempty();
-        if mated {
-            return out;
-        }
+        // Building the Moveset
+        let blocking_squares = if in_check {
+            // If we are in check, then we need to screen all the moves by the squares which
+            // could block the check (or capture the attacking piece).
 
-        let source = king.first_index();
+            // Pretend the King is a Queen, any squares which are attackable are squares
+            // from which the king can be checked and a block is possible (you cannot block
+            // a knight, so we don't need to consider those attacks.
+            let king_rays = pextboard::attacks_for(Piece::Queen, source, ply.occupancy());
+            let potential_attackers = ply.occupancy_for(!color);
+            // then intersect with all the squares we attack to determine which square could
+            // be blocked to resolve a check.
+            (ply.attacked_squares_for(color) | potential_attackers) & king_rays
+        } else {
+            // No movement is blocked, so we can mask with the bitboard of all 1's
+            Bitboard::full()
+        };
+
 
         let nominal_king_attacks = ply.king_attack_board_for(color);
         let king_attacks = nominal_king_attacks & !(forbidden_squares | ply.occupancy_for(color));
-
-        // this doesn't account for blocking moves, but it should reduce the overcount a bit.
-        // TODO: blocking moves
-
-        // we can find all the squares which would block for the king by pretending it's a queen.
-        let king_rays = pextboard::attacks_for(Piece::Queen, source, ply.occupancy());
-        // then intersect with all the squares we attack
-        let _blocking_squares = ply.attacked_squares_for(color) & king_rays;
-        // we'd need to figure out the source piece, but if in check we'd
-        // basically just mask everything by this? Maybe this is just a way to
-        // mask off the moveset? Accept only values which have targets in this
-        // bb?
 
         let king_captures =
             king_attacks & ply.occupancy_for(!color) & !ply.defended_pieces_for(!color);
         let king_moves = king_attacks & !ply.occupancy_for(!color);
 
-        // TODO: Disregard moves which would result in the king being attacked.
-        // To do that, we need to look to see if a capture is on a square which is attacked by the other side.
+        // Winning Mate: If it's our turn and the enemy king is already in check, we win.
+        if (ply.king_for(!color) & ply.attacked_squares_for(color)).is_nonempty() { return out; }
+        // Losing Mate: If it's out turn and we are in check and have no moves, we lose.
+        if in_check && blocking_squares.is_empty() && king_moves.is_empty() { return out; }
 
         for capture in king_captures.all_set_indices() {
             out.add_capture(Piece::King, source, capture);
@@ -57,10 +61,29 @@ impl Move {
             out.add_move(Piece::King, source, target)
         }
 
-        // out will be empty if it's checkmate, we need to handle this in the make/unmake to record checkmate and stop searching
-        if in_check {
-            return out;
-        }
+
+        // pawn moves
+        let pawns = ply.pawns_for(color);
+        let raw_advances = pawns.shift(ply.pawn_direction()) & !ply.occupancy() & blocking_squares;
+        let promotions = raw_advances & color.promotion_rank() & blocking_squares;
+        let advances = raw_advances & !color.promotion_rank() & blocking_squares;
+        let double_moves = ((pawns & color.pawn_rank()).shift(ply.pawn_direction())
+            & !ply.occupancy())
+            .shift(ply.pawn_direction())
+            & !ply.occupancy();
+        let east_attacks_raw = (pawns & !*H_FILE)
+            .shift(ply.pawn_direction())
+            .shift(Direction::E)
+            & ply.occupancy_for(!color);
+        let west_attacks_raw = (pawns & !*A_FILE)
+            .shift(ply.pawn_direction())
+            .shift(Direction::W)
+            & ply.occupancy_for(!color);
+        let east_attacks = east_attacks_raw & !color.promotion_rank() & blocking_squares;
+        let west_attacks = west_attacks_raw & !color.promotion_rank() & blocking_squares;
+        let east_attack_promotions = east_attacks_raw & color.promotion_rank() & blocking_squares;
+        let west_attack_promotions = west_attacks_raw & color.promotion_rank() & blocking_squares;
+
 
         /* TODO:
          * 1. Probably break this into some smaller functions, even if it's artificial.
@@ -71,37 +94,15 @@ impl Move {
          *    pieces so should work well.
          * 4. I do wonder if a table-based approach would be better for pawns, if only because it's cleaner looking than all this algebra.
          */
-
-        // pawn moves
-        let pawns = ply.pawns_for(color);
-        let raw_advances = pawns.shift(ply.pawn_direction()) & !ply.occupancy();
-        let promotions = raw_advances & color.promotion_rank();
-        let advances = raw_advances & !color.promotion_rank();
-        let double_moves = ((pawns & color.pawn_rank()).shift(ply.pawn_direction())
-            & !ply.occupancy())
-        .shift(ply.pawn_direction())
-            & !ply.occupancy();
-        let east_attacks_raw = (pawns & !*H_FILE)
-            .shift(ply.pawn_direction())
-            .shift(Direction::E)
-            & ply.occupancy_for(!color);
-        let west_attacks_raw = (pawns & !*A_FILE)
-            .shift(ply.pawn_direction())
-            .shift(Direction::W)
-            & ply.occupancy_for(!color);
-        let east_attacks = east_attacks_raw & !color.promotion_rank();
-        let west_attacks = west_attacks_raw & !color.promotion_rank();
-        let east_attack_promotions = east_attacks_raw & color.promotion_rank();
-        let west_attack_promotions = west_attacks_raw & color.promotion_rank();
-
         if let Some(ep_square) = ply.en_passant() {
             let ep_attackers = (ep_square
                 .shift(ply.enemy_pawn_direction())
                 .shift(Direction::E)
                 | ep_square
-                    .shift(ply.enemy_pawn_direction())
-                    .shift(Direction::W))
-                & pawns;
+                .shift(ply.enemy_pawn_direction())
+                .shift(Direction::W))
+                & pawns
+                & blocking_squares;
             for sq in ep_attackers.all_set_indices() {
                 out.add_en_passant_capture(sq, ep_square.first_index());
             }
@@ -138,6 +139,7 @@ impl Move {
 
         // Castling
         if ply.can_castle_short() {
+            dbg!(ply);
             out.add_short_castle(color);
         }
         if ply.can_castle_long() {
@@ -147,7 +149,7 @@ impl Move {
         // knight moves
         let knights = ply.knights_for(color);
         for source in knights.all_set_indices() {
-            let attacks = KNIGHT_MOVES[source] & !ply.occupancy_for(color);
+            let attacks = KNIGHT_MOVES[source] & !ply.occupancy_for(color) & blocking_squares;
 
             for capture in (attacks & ply.occupancy_for(!color)).all_set_indices() {
                 out.add_capture(Piece::Knight, source, capture);
@@ -161,7 +163,7 @@ impl Move {
         for piece in [Piece::Bishop, Piece::Rook, Piece::Queen] {
             for source in ply.get_piece(color, piece).all_set_indices() {
                 let attacks = pextboard::attacks_for(piece, source, ply.occupancy())
-                    & !ply.occupancy_for(color);
+                    & !ply.occupancy_for(color) & blocking_squares;
 
                 for capture in (attacks & ply.occupancy_for(!color)).all_set_indices() {
                     out.add_capture(piece, source, capture)
@@ -256,4 +258,5 @@ mod test {
 
         assert!(moves.contains(&Move::from_notation("c4", "d3", MoveType::EP_CAPTURE)));
     }
+
 }

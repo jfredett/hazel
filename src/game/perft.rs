@@ -44,6 +44,7 @@ mod tests {
     #[test]
     fn check_mate_position_has_zero_perft_at_any_depth() {
         let mut g = Game::from_fen("7k/6Q1/6K1/8/8/8/8/8 b - - 0 1");
+        dbg!(&g);
         assert_eq!(g.perft(1), 0);
     }
 

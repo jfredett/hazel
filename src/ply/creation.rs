@@ -132,8 +132,10 @@ impl Ply {
                     ply.meta.black_castle_long = true;
                 }
                 '-' => {
-                    /* we don't need to do anything, this should only ever appear alone, and means
-                     * there are no castling rights for either side. */
+                    ply.meta.white_castle_short = false;
+                    ply.meta.white_castle_long = false;
+                    ply.meta.black_castle_short = false;
+                    ply.meta.black_castle_long = false;
                 }
                 _ => {
                     panic!("Invalid FEN castling key: {}", fen);
