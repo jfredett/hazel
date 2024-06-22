@@ -184,6 +184,11 @@ impl Move {
     pub fn is_long_castle(&self) -> bool {
         self.move_metadata().is_long_castle()
     }
+
+    #[inline(always)]
+    pub fn is_en_passant(&self) -> bool {
+        self.move_metadata().is_en_passant()
+    }
 }
 
 #[cfg(test)]

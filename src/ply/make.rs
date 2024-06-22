@@ -21,10 +21,6 @@ pub type MoveResult<T> = Result<T, MoveError>;
 
 #[derive(PartialEq, Eq, Debug, Hash, Clone, Copy, Error)]
 pub enum MoveError {
-    // #[error("Error when attempting to make move {1:?} on board {0:?}")]
-    // MakeError(Ply, Move),
-    // #[error("Error when attempting to unmake move {1:?} on board {0:?}")]
-    // UnmakeError(Ply, Move),
     #[error("{0}: Move {1:?} has malformed metadata")]
     UnrecognizedMove(MoveMode, Move),
     #[error("{0}: Missing friendly piece at source index of {2:?} for board {1:?}")]
@@ -37,7 +33,13 @@ impl Ply {
     pub fn make(&mut self, mov: Move) -> MoveResult<Option<Piece>> {
         let source_piece = match self.friendly_piece_at_index(mov.source_idx()) {
             Some(s) => s,
-            None => return Err(MoveError::MissingSourcePiece(MoveMode::Make, *self, mov)),
+            None => {
+                return if mov.move_metadata().is_en_passant() {
+                    Ok(Some(Piece::Pawn))
+                } else {
+                    Err(MoveError::MissingSourcePiece(MoveMode::Make, *self, mov))
+                }
+            }
         };
         let target_piece = self.enemy_piece_at_index(mov.target_idx());
         let mut clear_ep = true;
@@ -134,7 +136,13 @@ impl Ply {
         // note how it's target -- this is _after_ the mov has been made, so we have to work backwards
         let source_piece = match self.friendly_piece_at_index(mov.target_idx()) {
             Some(s) => s,
-            None => return Err(MoveError::MissingSourcePiece(MoveMode::Unmake, *self, mov)),
+            None => {
+                if mov.is_en_passant() {
+                    Piece::Pawn
+                } else {
+                    return Err(MoveError::MissingSourcePiece(MoveMode::Unmake, *self, mov))
+                }
+            }
         };
 
         match mov.move_metadata() {
@@ -150,7 +158,22 @@ impl Ply {
                 }
                 self.unmove_piece(source_piece, mov)?
             }
-            MoveType::EP_CAPTURE => todo!(),
+            MoveType::EP_CAPTURE => {
+                // The enemy piece is always on the attacked file, at the same rank as the other
+                // piece was. mov.source_index() is 0oRF, and mov.target_index() is 0oTG, I need to
+                // calculate 0oRG.
+                //
+                // This is just a simple masking problem:
+                //
+                // TODO: Move this to `Move`
+                let captured_square = (0o70 & mov.source_idx()) | (0o07 & mov.target_idx());
+                self.place_friendly_piece(
+                    Piece::Pawn,
+                    captured_square
+                )?;
+                self.remove_enemy_piece(Piece::Pawn, mov.target_idx())?;
+                self.place_enemy_piece(Piece::Pawn, mov.source_idx())?;
+            },
             MoveType::PROMOTION_KNIGHT => self.unexecute_promotion(mov, Piece::Knight)?,
             MoveType::PROMOTION_BISHOP => self.unexecute_promotion(mov, Piece::Bishop)?,
             MoveType::PROMOTION_ROOK => self.unexecute_promotion(mov, Piece::Rook)?,
@@ -405,6 +428,9 @@ impl Ply {
 mod tests {
     use super::*;
 
+    use tracing::info;
+    use tracing_test::traced_test;
+
     #[test]
     fn short_castle_is_done_correctly() -> MoveResult<()> {
         let mut p = Ply::from_fen(START_POSITION_FEN);
@@ -474,6 +500,45 @@ mod tests {
         );
         assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("h8")), None);
         assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("e8")), None);
+
+        Ok(())
+    }
+
+    #[traced_test]
+    #[test]
+    fn en_passant_capture_is_undone_correctly() -> MoveResult<()> {
+        let mut p = Ply::from_fen(START_POSITION_FEN);
+        // This encodes the following game:
+        // 1. d4 h6
+        // 2. d5 e5
+        // 3. dxe6
+        p.make_by_notation("d2", "d4", MoveType::QUIET)?;
+        p.make_by_notation("h7", "h6", MoveType::QUIET)?;
+        p.make_by_notation("d4", "d5", MoveType::QUIET)?;
+        p.make_by_notation("e7", "e5", MoveType::QUIET)?;
+        p.make_by_notation("d5", "e6", MoveType::EP_CAPTURE)?;
+
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("e5")), None);
+        assert_eq!(
+            p.piece_at_index(NOTATION_TO_INDEX("e6")),
+            Some((Color::WHITE, Piece::Pawn))
+        );
+
+        // Now I want to undo the en passant capture
+        p.unmake_by_notation("d5", "e6", MoveType::EP_CAPTURE, Some(Piece::Pawn), p.meta)?;
+
+        assert_eq!(
+            p.piece_at_index(NOTATION_TO_INDEX("e5")),
+            Some((Color::BLACK, Piece::Pawn))
+        );
+        assert_eq!(
+            p.piece_at_index(NOTATION_TO_INDEX("e6")),
+            None
+        );
+        assert_eq!(
+            p.piece_at_index(NOTATION_TO_INDEX("d5")), 
+            Some((Color::WHITE, Piece::Pawn))
+        );
 
         Ok(())
     }

@@ -8,7 +8,7 @@ pub enum MoveType {
     SHORT_CASTLE = 0b0010,
     LONG_CASTLE = 0b0011,
     CAPTURE = 0b0100,
-    EP_CAPTURE = 0b0101, // NOTE: unused at the moment, according to CPW, usually this is used for an en passant capture
+    EP_CAPTURE = 0b0101,
     UNUSED_1 = 0b0110,   // NOTE: unused at the moment
     UNUSED_2 = 0b0111,   // NOTE: unused at the moment
     PROMOTION_KNIGHT = 0b1000,
@@ -23,6 +23,7 @@ pub enum MoveType {
 
 impl MoveType {
     pub fn new(bits: u16) -> MoveType {
+        // NOTE: This may not be necessary? I think I mask this on the way in.
         match bits & 0b1111u16 {
             0b0000 => MoveType::QUIET,
             0b0001 => MoveType::DOUBLE_PAWN,
@@ -46,6 +47,7 @@ impl MoveType {
 
     const PROMOTION_MASK: u16 = 0b1000;
     const CAPTURE_MASK: u16 = 0b0100;
+    const EP_MASK: u16 = 0b0101;
 
     #[inline(always)]
     pub fn is_long_castle(self) -> bool {
@@ -66,6 +68,11 @@ impl MoveType {
     #[inline(always)]
     pub fn is_promotion(self) -> bool {
         (self as u16 & Self::PROMOTION_MASK) != 0
+    }
+
+    #[inline(always)]
+    pub fn is_en_passant(self) -> bool {
+        (self as u16 & Self::EP_MASK) != 0
     }
 
     // convenience constructors

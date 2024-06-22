@@ -35,4 +35,23 @@ Added a LICENSE (AGPLv3), README, and uncommented the next tier of `perft`, whic
 unimplemented `EP_CAPTURE` in the `src/ply/make.rs` module.
 
 For now, it's good enough to go live I think. I still need to chase out some dependabot warnings,
-but that shouldn't be too hard.
+but that shouldn't be too hard
+
+# 22-JUN-2024
+
+## 0143
+
+Worked a bit on EP_CAPTURE, but it appears that the `unmake` method marked `todo!()` that I started
+implementing isn't actully getting called in my test that explicitly exercises the unmake function
+for this. It seems to be failing further up the chain, so I managed to stumble on a different bug
+while trying to get perft working up to 6-ply.
+
+## 1221
+
+I think the issue may be that it's not properly recording that the previous move was an en passant?
+
+## 1318
+
+I've got it figured out, I just needed to do some calculation to get all the pieces moved correctly.
+I need to add another couple tests for en passant on the edge files, one for an EP by black on
+white, and a few other cases, but I suspect `perft` will reveal if there are any such issues.
