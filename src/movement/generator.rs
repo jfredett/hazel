@@ -139,7 +139,6 @@ impl Move {
 
         // Castling
         if ply.can_castle_short() {
-            dbg!(ply);
             out.add_short_castle(color);
         }
         if ply.can_castle_long() {
@@ -194,9 +193,6 @@ mod test {
         let ply = Ply::from_fen(&String::from(START_POSITION_FEN));
         let moves = Move::generate(&ply, Color::WHITE);
         for m in STARTING_MOVES.iter() {
-            if !moves.contains(m) {
-                dbg!("missing move", m);
-            }
             assert!(moves.contains(m));
         }
     }
@@ -206,9 +202,6 @@ mod test {
         let ply = Ply::from_fen(&String::from(D4_POSITION_FEN));
         let moves = Move::generate(&ply, Color::BLACK);
         for m in D4_MOVES.iter() {
-            if !moves.contains(m) {
-                dbg!("missing move", m);
-            }
             assert!(moves.contains(m));
         }
     }
@@ -228,7 +221,6 @@ mod test {
         for movset in moves.clone().moves {
             assert_is_subset!(movset, *POS2_KIWIPETE_MOVES);
         }
-        dbg!("Missing Moves");
         for mov in POS2_KIWIPETE_MOVES.iter() {
             assert!(moves.moves.iter().any(|movset| movset.contains(mov)))
         }

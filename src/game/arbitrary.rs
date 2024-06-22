@@ -20,9 +20,7 @@ impl Arbitrary for Game {
             let mov_idx = usize::arbitrary(g) % available_moves.len();
             let mov = available_moves.moves.concat()[mov_idx];
             game.make(mov);
-            if !available_moves.contains(&mov) {
-                dbg!(&game, &mov);
-            }
+
             num_moves -= 1;
         }
         game
