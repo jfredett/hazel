@@ -1,5 +1,7 @@
 use super::*;
-use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Mul, Not, Shl, Shr};
+use std::ops::{
+    BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Mul, Not, Shl, Shr,
+};
 
 /// Implements the various bit-ops for Bitboards
 macro_rules! binop_trait {
@@ -10,7 +12,7 @@ macro_rules! binop_trait {
             #[inline]
             fn $method(self, rhs: Bitboard) -> Bitboard {
                 let res = $trait::$method(self.0, rhs.0);
-                return Bitboard::from(res)
+                return Bitboard::from(res);
             }
         }
     };
@@ -21,7 +23,9 @@ macro_rules! binop_assign_trait {
     ($trait:ident, $method:ident) => {
         impl $trait for Bitboard {
             #[inline]
-            fn $method(&mut self, rhs: Bitboard) { $trait::$method(&mut self.0, rhs.0); }
+            fn $method(&mut self, rhs: Bitboard) {
+                $trait::$method(&mut self.0, rhs.0);
+            }
         }
     };
 }
@@ -36,7 +40,7 @@ impl Not for Bitboard {
 
 impl Mul for Bitboard {
     type Output = Bitboard;
-    
+
     fn mul(self, rhs: Bitboard) -> Bitboard {
         Bitboard::from(self.0.overflowing_mul(rhs.0).0)
     }
@@ -74,7 +78,6 @@ impl Shr<u64> for Bitboard {
     }
 }
 
-
 binop_trait!(BitAnd, bitand);
 binop_trait!(BitXor, bitxor);
 binop_trait!(BitOr, bitor);
@@ -96,12 +99,12 @@ mod tests {
             fn multiply_bitboard_by_bitboard(b1: u64, b2: u64) -> bool {
                 Bitboard::from(b1) * Bitboard::from(b2) == Bitboard::from(b1.overflowing_mul(b2).0)
             }
-            
+
             #[quickcheck]
             fn multiply_bitboard_by_u64(b1: u64, b2: u64) -> bool {
-                Bitboard::from(b1) * b2 == Bitboard::from(b1.overflowing_mul(b2).0) 
+                Bitboard::from(b1) * b2 == Bitboard::from(b1.overflowing_mul(b2).0)
             }
-            
+
             #[quickcheck]
             fn multiply_u64_by_bitboard(b1: u64, b2: u64) -> bool {
                 b1 * Bitboard::from(b2) == Bitboard::from(b1.overflowing_mul(b2).0)
@@ -181,7 +184,6 @@ mod tests {
                 (a | b) | c == a | (b | c)
             }
         }
-
 
         mod bitxor {
             use super::*;
@@ -278,8 +280,5 @@ mod tests {
                 b1 == expected
             }
         }
-
-
     }
 }
-

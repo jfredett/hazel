@@ -1,3 +1,4 @@
+.devenv/
 /target
 launch.json
 .vscode/settings.json

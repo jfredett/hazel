@@ -1,5 +1,5 @@
 use super::*;
-use crate::{bitboard::Bitboard};
+use crate::bitboard::Bitboard;
 
 lazy_static! {
     /// A lookup table to convert a knight on a given index -> it's bitboard of moves
@@ -8,7 +8,7 @@ lazy_static! {
         for i in 0..64 {
                 let mut bb = Bitboard::empty();
                 bb.set_by_index(i);
-                
+
                 let position_board = bb.shift(Direction::N).shift(Direction::N).shift(Direction::E) // NNE
                                    | bb.shift(Direction::N).shift(Direction::N).shift(Direction::W) // NNW
                                    | bb.shift(Direction::W).shift(Direction::W).shift(Direction::N) // WWN
@@ -38,7 +38,7 @@ lazy_static! {
                 |  wbb.shift(Direction::N).shift(Direction::N)
                 |  wbb.shift(Direction::NE)
                 |  wbb.shift(Direction::NW);
-                
+
             bbb |= bbb.shift(Direction::S)
                 |  bbb.shift(Direction::S).shift(Direction::S)
                 |  bbb.shift(Direction::SE)
@@ -59,7 +59,7 @@ lazy_static! {
             wbb |= wbb.shift(Direction::N)
                 |  wbb.shift(Direction::NE)
                 |  wbb.shift(Direction::NW);
-                
+
             bbb |= bbb.shift(Direction::S)
                 |  bbb.shift(Direction::SE)
                 |  bbb.shift(Direction::SW);
@@ -71,5 +71,5 @@ lazy_static! {
 
         [ white_out, black_out ]
     };
-    
+
 }

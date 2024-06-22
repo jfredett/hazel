@@ -9,5 +9,3 @@ impl Arbitrary for Bitboard {
         Bitboard::from(u64::arbitrary(g))
     }
 }
-
-

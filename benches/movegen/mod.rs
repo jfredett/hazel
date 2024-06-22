@@ -1,6 +1,6 @@
 use super::*;
 
-use hazel::pextboard::{slow_rook_attacks, slow_bishop_attacks};
+use hazel::pextboard::{slow_bishop_attacks, slow_rook_attacks};
 
 bench!(
     group: MoveGen,
@@ -8,7 +8,7 @@ bench!(
     name: rook_attacks_slow,
     test: { slow_rook_attacks(rook_idx, random_bitboard()) },
     where:
-        rook_idx => Bitboard::from(1 << (random_u64() % 64)); 
+        rook_idx => Bitboard::from(1 << (random_u64() % 64));
 );
 
 bench!(
@@ -17,7 +17,7 @@ bench!(
     name: rook_attacks_slow,
     test: { hazel::pextboard::attacks_for(Piece::Rook, rook_idx, random_bitboard()) },
     where:
-        rook_idx => random_usize() % 64; 
+        rook_idx => random_usize() % 64;
 );
 
 bench!(
@@ -26,7 +26,7 @@ bench!(
     name: bishop_attacks_slow,
     test: { slow_bishop_attacks(bishop_idx, random_bitboard()) },
     where:
-        bishop_idx => Bitboard::from(1 << (random_u64() % 64)); 
+        bishop_idx => Bitboard::from(1 << (random_u64() % 64));
 );
 
 bench!(
@@ -35,5 +35,5 @@ bench!(
     name: bishop_attacks_slow,
     test: { hazel::pextboard::attacks_for(Piece::Bishop, bishop_idx, random_bitboard()) },
     where:
-        bishop_idx => random_usize() % 64; 
+        bishop_idx => random_usize() % 64;
 );

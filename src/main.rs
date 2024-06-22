@@ -1,8 +1,8 @@
-#[macro_use] extern crate clap;
+#[macro_use]
+extern crate clap;
 
 use clap::App;
 use tracing::*;
-
 
 fn main() {
     let yaml = load_yaml!("args.yml");

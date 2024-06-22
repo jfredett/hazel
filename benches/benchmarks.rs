@@ -8,18 +8,18 @@ pub use criterion_macro::criterion;
 
 use rand::distributions::{Distribution, Uniform};
 
-use packed_simd::*;
-
-#[macro_use] extern crate lazy_static;
-#[macro_use] extern crate paste;
+#[macro_use]
+extern crate lazy_static;
+#[macro_use]
+extern crate paste;
 
 use hazel::bitboard::*;
-use hazel::ply::*;
 use hazel::constants::*;
+use hazel::ply::*;
 //use hazel::constants::magic::*;
 mod bitboard;
-mod ply;
 mod movegen;
+mod ply;
 
 /// A helper macro for quickly defining benchmarks. Invoke as follows:
 ///
@@ -37,7 +37,7 @@ mod movegen;
 /// This will define a benchmark function, set it to measure throughput in items/s, and do wall-time.
 ///
 /// TODO: Make the field ordering arbitrary
-/// TODO: make `name` optional and autogenerate function names 
+/// TODO: make `name` optional and autogenerate function names
 /// TODO: better variable setup (would love it if it were just raw rust there)
 #[macro_export]
 macro_rules! bench {
@@ -62,8 +62,7 @@ macro_rules! bench {
 }
 
 fn config() -> Criterion {
-    Criterion::default()
-        .sample_size(25000)
+    Criterion::default().sample_size(25000)
 }
 
 // NOTE: These measurements serve as references for 'the fastest possible thing' this machine can do.
@@ -74,14 +73,6 @@ bench!(
     pretty: "Measurement (Integer Operations)",
     name: reference,
     test: { 2i64 + 2i64 },
-    where:
-);
-
-bench!(
-    group: Reference,
-    pretty: "Measurement (SIMD Creation)",
-    name: reference,
-    test: { i64x4::new(0,1,2,3) },
     where:
 );
 

@@ -1,6 +1,5 @@
 use super::*;
 
-
 pub fn random_direction() -> Direction {
     let d = random_usize() % 8;
     match d {
@@ -12,7 +11,7 @@ pub fn random_direction() -> Direction {
         5 => Direction::SW,
         6 => Direction::W,
         7 => Direction::NW,
-        _ => panic!("Not possible")
+        _ => panic!("Not possible"),
     }
 }
 

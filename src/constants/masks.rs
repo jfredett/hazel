@@ -1,5 +1,4 @@
 ///! various bitboard masks
-
 // I don't know why this triggers this lint, this fails if I don't import the macro.
 // Macro imports are blerg.
 use crate::bitboard;
@@ -14,7 +13,7 @@ lazy_static! {
     pub static ref F_FILE : Bitboard = E_FILE.shift(Direction::E);
     pub static ref G_FILE : Bitboard = F_FILE.shift(Direction::E);
     pub static ref H_FILE : Bitboard = G_FILE.shift(Direction::E);
-    
+
     pub static ref FILE_MASKS : [Bitboard; 8] = [
         *A_FILE,
         *B_FILE,
@@ -25,12 +24,12 @@ lazy_static! {
         *G_FILE,
         *H_FILE
     ];
-    
+
     pub static ref EDGES : Bitboard = *A_FILE | *H_FILE | *RANK_1 | *RANK_8;
     pub static ref CORNERS : Bitboard = bitboard!("a1", "a8", "h1", "h8");
-    
+
     pub static ref RANK_1 : Bitboard = bitboard!("a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1");
-    
+
     pub static ref RANK_2 : Bitboard = RANK_1.shift(Direction::N);
     pub static ref RANK_3 : Bitboard = RANK_2.shift(Direction::N);
     pub static ref RANK_4 : Bitboard = RANK_3.shift(Direction::N);
@@ -38,7 +37,7 @@ lazy_static! {
     pub static ref RANK_6 : Bitboard = RANK_5.shift(Direction::N);
     pub static ref RANK_7 : Bitboard = RANK_6.shift(Direction::N);
     pub static ref RANK_8 : Bitboard = RANK_7.shift(Direction::N);
-    
+
     pub static ref INITIAL_PAWN_RANK : [Bitboard; 2] = [*RANK_2, *RANK_7];
 
     pub static ref RANK_MASKS : [Bitboard; 8] = [
@@ -51,7 +50,7 @@ lazy_static! {
         *RANK_7,
         *RANK_8,
     ];
-    
+
     // Taken from: https://www.chess.com/forum/view/general/which-diagonals-have-names
     //    a8-a8
     pub static ref A8_A8_DIAG : Bitboard = bitboard!("a8");
@@ -69,7 +68,7 @@ lazy_static! {
     pub static ref F1_H3_DIAG : Bitboard = bitboard!("f1", "g2", "h3");
     //    h1-h1
     pub static ref H1_H1_DIAG : Bitboard = bitboard!("h1");
-    //    
+    //
     //    a7-b8
     pub static ref A7_B8_DIAG : Bitboard = bitboard!("a7", "b8");
     //    a5-d8 "Caro-Kann Diagonal"
@@ -84,7 +83,7 @@ lazy_static! {
     pub static ref E1_H4_DIAG : Bitboard = bitboard!("e1", "f2", "g3", "h4");
     //    g1-h2
     pub static ref G1_H2_DIAG : Bitboard = bitboard!("g1", "h2");
-    //    
+    //
     //    g8-h7
     pub static ref G8_H7_DIAG : Bitboard = bitboard!("g8", "h7");
     //    e8-h5 "Scholar's Mate Diagonal"
@@ -116,4 +115,4 @@ lazy_static! {
     pub static ref F8_H6_DIAG : Bitboard = bitboard!("f8", "g7", "h6");
     //    h8-h8
     pub static ref H8_DIAG : Bitboard = bitboard!("h8");
-} 
+}

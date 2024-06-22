@@ -25,4 +25,3 @@ impl From<Bitboard> for usize {
         val.0 as usize
     }
 }
-
