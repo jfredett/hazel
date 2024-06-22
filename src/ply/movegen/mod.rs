@@ -5,7 +5,8 @@ impl Ply {
     /// Generates a moveset of all the available moves for the current player.
     fn new_moves(&self) -> MoveSet {
         let mut out = MoveSet::empty();
-        // FIXME: This is almost certainly a wildly inefficient way to do this. Each call to merge is a O(n) loop where this probably could be O(1)
+        // FIXME: This is almost certainly a wildly inefficient way to do this. Each call to merge
+        // is a O(n) loop where this probably could be O(1)
         out.merge(self.pawn_advances())
             .merge(self.pawn_attacks())
             .merge(self.pawn_double_advances())
@@ -47,7 +48,8 @@ impl Ply {
         let mut out = MoveSet::empty();
 
         for target_idx in moves {
-            // using enemy pawn direction here is a little hacky, basically we need to 'put back' the pawn so we know where we started.
+            // using enemy pawn direction here is a little hacky, basically we need to 'put back'
+            // the pawn so we know where we started.
             out.add_move(
                 Piece::Pawn,
                 self.enemy_pawn_direction().index_shift(target_idx),
