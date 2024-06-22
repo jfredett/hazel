@@ -28,3 +28,11 @@ I suspect this is because `Metadata::default()` grants castling rights, but in t
 
 I got everything pushed up onto `main`, switched the branch over, and need to just do a few more
 cleanup tasks before I can set the repo to open.
+
+## 2147
+
+Added a LICENSE (AGPLv3), README, and uncommented the next tier of `perft`, which is failing due to
+unimplemented `EP_CAPTURE` in the `src/ply/make.rs` module.
+
+For now, it's good enough to go live I think. I still need to chase out some dependabot warnings,
+but that shouldn't be too hard.
