@@ -13,3 +13,18 @@ move.
 
 I'm going to check out [bugstalker](https://github.com/godzie44/BugStalker) to see if it helps suss
 out what's happening.
+
+## 2115
+
+I found the issue. I think my movegen was more or less fine? I added some logic about looking for
+'blocking squares', but I don't actually know if it's necessary. I'll have to come back and test it
+when I get to the refactor stage. Right now I've chased down a different bug which appears to be due
+to `Game::from_fen/1` not calculating metadata from the FEN string. It ultimately delegates to
+`Ply::from_fen/1`, which appears to incorrectly grant castling rights to black, which is incorrect.
+I suspect this is because `Metadata::default()` grants castling rights, but in the event I see the
+`-` value, I don't do anything, which means it breaks.
+
+## 2133
+
+I got everything pushed up onto `main`, switched the branch over, and need to just do a few more
+cleanup tasks before I can set the repo to open.
