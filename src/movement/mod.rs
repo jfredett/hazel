@@ -58,14 +58,13 @@ impl Move {
     /// # use hazel::constants::*;
     /// # use either::Either;
     /// // the move from d2 -> d4
-    /// let m = Move::from_notation("d2", "d4", Either::Left(MoveType::quiet()));
+    /// let m = Move::from_notation("d2", "d4", MoveType::DOUBLE_PAWN);
     ///
     /// assert_eq!(m.source_idx(), 0o13);
     /// assert_eq!(m.target_idx(), 0o33);
     /// assert!(!m.is_promotion());
-    /// assert!(m.move_metadata().is_quiet());
     ///
-    /// let pm = Move::from_notation("d7", "d8", Either::Right(Piece::Queen));
+    /// let pm = Move::from_notation("d7", "d8", MoveType::PROMOTION_QUEEN);
     /// assert_eq!(pm.source_idx(), 0o63);
     /// assert_eq!(pm.target_idx(), 0o73);
     /// assert!(pm.is_promotion());
@@ -113,7 +112,7 @@ impl Move {
     /// # use hazel::movement::*;
     /// // the move from d2 -> d4
     ///
-    /// let m = Move::from(0o13, 0o33, false, 0o00);
+    /// let m = Move::from(0o13, 0o33, MoveType::DOUBLE_PAWN);
     /// assert_eq!(m.source_idx(), 0o13);
     /// ```
     pub fn source_idx(&self) -> usize {
@@ -124,7 +123,7 @@ impl Move {
     /// ```
     /// # use hazel::movement::*;
     /// // the move from d2 -> d4
-    /// let m = Move::from(0o13, 0o33, false, 0o00);
+    /// let m = Move::from(0o13, 0o33, MoveType::DOUBLE_PAWN);
     /// assert_eq!(m.target_idx(), 0o33);
     /// ```
     pub fn target_idx(&self) -> usize {
@@ -135,8 +134,8 @@ impl Move {
     /// ```
     /// # use hazel::movement::*;
     /// // the move from d2 -> d4
-    /// let m1 = Move::from(0o13, 0o33, false, 0b000);
-    /// let m2 = Move::from(0o63, 0o73, true, 0b011);
+    /// let m1 = Move::from(0o13, 0o33, MoveType::DOUBLE_PAWN);
+    /// let m2 = Move::from(0o63, 0o73, MoveType::PROMOTION_QUEEN);
     /// assert!(!m1.is_promotion());
     /// assert!(m2.is_promotion());
     /// ```
