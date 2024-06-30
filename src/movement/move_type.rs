@@ -22,6 +22,28 @@ pub enum MoveType {
 }
 
 impl MoveType {
+    pub fn decode(self) -> &'static str {
+        match self {
+            MoveType::QUIET => "QUIET",
+            MoveType::DOUBLE_PAWN => "DOUBLE_PAWN",
+            MoveType::SHORT_CASTLE => "SHORT_CASTLE",
+            MoveType::LONG_CASTLE => "LONG_CASTLE",
+            MoveType::CAPTURE => "CAPTURE",
+            MoveType::EP_CAPTURE => "EP_CAPTURE",
+            MoveType::UNUSED_1 => "UNUSED_1",
+            MoveType::UNUSED_2 => "UNUSED_2",
+            MoveType::PROMOTION_KNIGHT => "PROMOTION_KNIGHT",
+            MoveType::PROMOTION_BISHOP => "PROMOTION_BISHOP",
+            MoveType::PROMOTION_ROOK => "PROMOTION_ROOK",
+            MoveType::PROMOTION_QUEEN => "PROMOTION_QUEEN",
+            MoveType::PROMOTION_CAPTURE_KNIGHT => "PROMOTION_CAPTURE_KNIGHT",
+            MoveType::PROMOTION_CAPTURE_BISHOP => "PROMOTION_CAPTURE_BISHOP",
+            MoveType::PROMOTION_CAPTURE_ROOK => "PROMOTION_CAPTURE_ROOK",
+            MoveType::PROMOTION_CAPTURE_QUEEN => "PROMOTION_CAPTURE_QUEEN",
+        }
+    }
+
+
     pub fn new(bits: u16) -> MoveType {
         // NOTE: This may not be necessary? I think I mask this on the way in.
         match bits & 0b1111u16 {

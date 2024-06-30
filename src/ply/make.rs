@@ -44,7 +44,6 @@ impl Ply {
         let target_piece = self.enemy_piece_at_index(mov.target_idx());
         let mut clear_ep = true;
 
-        // probably want to remove the .and stuff and just resolve the error, return a None if needed.
         let result: Option<Piece> = match mov.move_metadata() {
             MoveType::QUIET => {
                 self.move_piece(source_piece, mov)?;
@@ -159,20 +158,49 @@ impl Ply {
                 self.unmove_piece(source_piece, mov)?
             }
             MoveType::EP_CAPTURE => {
-                // The enemy piece is always on the attacked file, at the same rank as the other
-                // piece was. mov.source_index() is 0oRF, and mov.target_index() is 0oTG, I need to
-                // calculate 0oRG.
                 //
-                // This is just a simple masking problem:
+                //  Consider the following case:
                 //
-                // TODO: Move this to `Move`
-                let captured_square = (0o70 & mov.source_idx()) | (0o07 & mov.target_idx());
-                self.place_friendly_piece(
-                    Piece::Pawn,
-                    captured_square
-                )?;
-                self.remove_enemy_piece(Piece::Pawn, mov.target_idx())?;
-                self.place_enemy_piece(Piece::Pawn, mov.source_idx())?;
+                //
+                //  PGN:
+                //
+                //  1. f4 Na6
+                //  2. f5 g5
+                //  (3. fxe6 ...)
+                //
+                // State after end of ply 2:
+                //
+                // 8 | r . b q k b n r
+                // 7 | p p p p p p . p
+                // 6 | n . . . . . . .
+                // 5 | . . . . . P p .
+                // 4 | . . . . . . . .
+                // 3 | . . . . . . . .
+                // 2 | P P P P P . P P
+                // 1 | R N B Q K B N R
+                //     a b c d e f g h
+                //
+                // State after ply 2.5:
+                //
+                // 8 | r . b q k b n r
+                // 7 | p p p p p p . p
+                // 6 | n . . . . . P .
+                // 5 | . . . . . . . .
+                // 4 | . . . . . . . .
+                // 3 | . . . . . . . .
+                // 2 | P P P P P . P P
+                // 1 | R N B Q K B N R
+                //     a b c d e f g h
+                //
+                // To undo from this state, I need to:
+                //
+                // 1. Uncapture the pawn on the target square
+                // 2. Move the enemy pawn forward one space.
+                //
+                let target_idx = self.enemy_pawn_direction().index_shift(mov.target_idx());
+
+                self.place_enemy_piece(Piece::Pawn, target_idx)?;
+                self.unmove_piece(Piece::Pawn, mov)?;
             },
             MoveType::PROMOTION_KNIGHT => self.unexecute_promotion(mov, Piece::Knight)?,
             MoveType::PROMOTION_BISHOP => self.unexecute_promotion(mov, Piece::Bishop)?,
@@ -350,6 +378,13 @@ impl Ply {
     fn move_piece(&mut self, piece: Piece, mov: Move) -> MoveResult<()> {
         self.friendly_piece_mut(piece)
             .move_piece(mov.source_idx(), mov.target_idx());
+        Ok(())
+    }
+
+    /// Unmoves a piece, does not restore captures or anything
+    fn unmove_enemy_piece(&mut self, piece: Piece, mov: Move) -> MoveResult<()> {
+        self.enemy_piece_mut(piece)
+            .move_piece(mov.target_idx(), mov.source_idx());
         Ok(())
     }
 

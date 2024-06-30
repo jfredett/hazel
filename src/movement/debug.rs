@@ -11,13 +11,13 @@ impl Debug for Move {
         } else {
             write!(
                 f,
-                "{} ({:02}) -> {} ({:02}) ({}0b{:04b}) [0o{:06o}]",
+                "{} ({:02}) -> {} ({:02}) ({}{}) [0o{:06o}]",
                 INDEX_TO_NOTATION[self.source_idx() as usize],
                 self.source_idx(),
                 INDEX_TO_NOTATION[self.target_idx() as usize],
                 self.target_idx(),
-                if self.is_promotion() { "P, " } else { "" },
-                self.move_metadata() as u16,
+                self.move_metadata().decode(),
+                if self.is_promotion() { ", P" } else { "" },
                 self.0
             )
         }
@@ -38,6 +38,6 @@ mod test {
     fn displays_as_intended() {
         let m = Move::from_notation("d2", "d4", MoveType::QUIET);
         let debug_out = format!("{:?}", m);
-        assert_eq!(debug_out, "d2 (11) -> d4 (27) (0b0000) [0o026660]");
+        assert_eq!(debug_out, "d2 (11) -> d4 (27) (QUIET) [0o026660]");
     }
 }

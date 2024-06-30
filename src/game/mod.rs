@@ -6,6 +6,8 @@ use crate::{
 };
 use serde::{Deserialize, Serialize};
 
+use tracing::{debug, error, info, instrument, warn};
+
 mod arbitrary;
 mod debug;
 mod initialization;
@@ -44,13 +46,11 @@ impl Game {
         }
     }
 
-    /* Make and Unmake should have a 'previous move metadata' stack. Basically we
-     * should take the `captures` variable and push a Metadata struct which has the
-     * optional piece captured, move #, half-move #, castling metadata, etc.
-     */
-
-    // #unmake/0            --> proxies down to Ply
+    /// #unmake/0
+    ///
+    /// Unmake the most recent move, if any. No-op if no moves have been made.
     pub fn unmake(&mut self) {
+        debug!("{:?}", self.position);
         if self.played.is_empty() {
             return;
         }
@@ -68,12 +68,17 @@ impl Game {
         let metadata = self.game_history.pop().unwrap();
 
         if let Err(e) = self.position.unmake(mov, captured_piece, metadata) {
-            panic!("error: {:?}, game: {:?}", e, self)
+            error!("Game Struct {:?}", self);
+            error!("mov: {:?}", mov);
+            error!("captured_piece: {:?}", captured_piece);
+            error!("metadata: {:?}", metadata);
+            error!("Error unmaking move: {:?}", e);
+
+            panic!("Unrecoverable Error");
         }
     }
 
-    // #evaluate/0          --> should probably proxy down to a method on Ply
-    //
+    // #evaluate/0 --> should probably proxy down to a method on Ply
 
     /// current_player/0
     ///

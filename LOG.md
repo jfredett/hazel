@@ -55,3 +55,68 @@ I think the issue may be that it's not properly recording that the previous move
 I've got it figured out, I just needed to do some calculation to get all the pieces moved correctly.
 I need to add another couple tests for en passant on the edge files, one for an EP by black on
 white, and a few other cases, but I suspect `perft` will reveal if there are any such issues.
+
+## 2117
+
+
+```
+2024-06-22T21:48:00.245032Z DEBUG perft_start_position_to_depth_6:perft{depth=5}:perft{depth=4}:perft{depth=3}:perft{depth=2}:perft{depth=1}: hazel::game: 
+8 | r . b q k b n r
+7 | p . p p p p p p
+6 | n P . . . . . .
+5 | . . . . . . . .
+4 | . . . . . . . .
+3 | . . . . . . . .
+2 | . P P P P P P P
+1 | R N B Q K B N R
+    a b c d e f g h
+    Black to play
+
+2024-06-22T21:48:00.245161Z DEBUG perft_start_position_to_depth_6:perft{depth=5}:perft{depth=4}:perft{depth=3}:perft{depth=2}:perft{depth=1}: hazel::game: 
+8 | r . b q k b n r
+7 | p . p p p p p p
+6 | n P . . . . . .
+5 | p P . . . . . .
+4 | . . . . . . . .
+3 | . P . . . . . .
+2 | . . P P P P P P
+1 | R N B Q K B N R
+    a b c d e f g h
+    Black to play
+```
+
+This is where the bug is introduced. In the first Ply, White plays axb6, and in the second Ply, the
+`unmake` function has been called but did not properly accomplish the unmove. By the time we see it,
+White has played b3, but the board is in an incorrect state because the en passant didn't unwind
+properly.
+
+I'm not 100% sure what I did wrong, but I think the answer is probably to add a bunch more tests.
+
+One thing I could do is have each ply have a pointer to a 'previous' ply, rather than maintaining a
+full history in the ply itself. This would trivialize the `unmake` function, but at the cost of way
+more memory use (I think).
+
+I think the first step is to analyze the `unmake` side of the en passant, and make sure it works
+consistently. I'm looking forward to when I have the movegen side of this working correctly, so I
+can refactor it to be less of a giant megamethod, I think at least some of my pain is found there.
+
+# 30-JUN-2024
+
+## 0102
+
+Been working on the EP_CAPTURE issue, I ended up just deleting the implementation, walking away for
+a bit, then reimplementing. I ended up doing it a slightly different way than the inital bit
+mangling trick I was trying, and I think I'm just going to leave it as is for now. I think the bit
+mangling will be faster and I was probably just doing it wrong, but I can leave the optimization for
+another day.
+
+I added some better error output for the unrecoverable error branch, and managed to get the `perft`
+test running (but getting a different count of positions than it should).
+
+I need to set up some kind of integration test w/ a known-good engine. I think I might try switching
+off the movegen for a bit and work on the UCI implementation and maybe a little TUI for debugging. I
+could then ostensibly get it and stockfish talking to each other, and it could then start perfting
+and having SF verify the results, so I can start to see the game state that led to it overcounting.
+
+In any case, for now, EP_CAPTURE I think is working, and I won't really be able to track down the
+bug until I build up some better tools for debugging.
