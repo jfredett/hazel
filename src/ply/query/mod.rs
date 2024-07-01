@@ -4,9 +4,6 @@ mod attacks;
 mod occupancy;
 mod piece_lookup;
 
-pub use attacks::*;
-pub use occupancy::*;
-pub use piece_lookup::*;
 
 impl Ply {
     pub fn king_for(&self, color: Color) -> Bitboard {

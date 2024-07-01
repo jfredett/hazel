@@ -58,7 +58,6 @@ mod util;
 
 use crate::constants::conversion_tables::*;
 
-pub use shifts::*;
 
 impl Bitboard {
     /// True if the bitboard has no set bits.
