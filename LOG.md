@@ -120,3 +120,38 @@ and having SF verify the results, so I can start to see the game state that led 
 
 In any case, for now, EP_CAPTURE I think is working, and I won't really be able to track down the
 bug until I build up some better tools for debugging.
+
+## 1838
+
+A rough design:
+
+Hazel: The main thread, spawns:
+    - Grid: A list of engine instances, defaulting to Hazel, but allowing arbitrary UCI connections
+      to other engines.
+    - UI: The UI thread
+    - Race Control: Which sends commands between engines / the UI, may be part of the main Hazel thread
+      instead of it's own thing, not really sure.
+
+The idea is to let Hazel have a sort of 'tournament management' feature, where it can run multiple
+different engines and manage games between them, and also allow for deep integration tests as above.
+
+The Engine Instance is a UCI Socket for communicating to the engine, which Hazel manages and the UI
+allows selection between, messages are proxied down to the actual engine instance, which is just
+running it's own UCI client reading from the same socket.
+
+# 1-JUL-2024
+
+## 2242
+
+Got the Ratatui UI roughed in; also sketched out a plan for the debugging
+interface/engine-tournament-manager thing. I'm off on a rabbit trail, but it seems fun so probably
+worth doing. 
+
+The first thing I want to do is get some sort of widget built to display a chessboard, I don't think
+that should be too difficult, since I've got half an implementation in the Debug impl for Ply.
+
+I can't say I know enough about `ratatui` so far to have an opinion, but I'll say for sure that the
+markup-in-Rust thing is not my favorite. Copilot actually helps a bit here, these APIs kind of suck
+to remember; I frequently get simple transpotition errors where I miscapitalize or whatever. Copilot
+eventually figures out what I'm trying to do and at least makes the mistakes for me, so I'm just
+fixing what it fucks up instead of me making the mistake and feeling bad about it.
