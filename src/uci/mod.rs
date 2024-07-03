@@ -20,13 +20,12 @@ pub enum UCIMessage {
     Quit,
     // Engine -> GUI
     ID(String, String),
-    UCIOptions(Vec<String>),
     ReadyOk,
     BestMove(String, Option<String>),
     CopyProtection,
     Registration,
     Info(Vec<String>),
-    Option(String),
+    Option(String, Vec<String>),
 }
 
 // TODO: Error type
@@ -77,8 +76,35 @@ impl UCIMessage {
                 let value = parts.collect::<Vec<&str>>().join(" ");
                 UCIMessage::ID(name, value)
             }
-            Some(&_) => todo!(),
-            None => todo!()
+            Some("uciok") => UCIMessage::ReadyOk,
+            Some("bestmove") => {
+                let best_move = parts.next().unwrap().to_string();
+                match parts.next() {
+                    Some("ponder") => UCIMessage::BestMove(best_move, Some(parts.next().unwrap().to_string())),
+                    _ => UCIMessage::BestMove(best_move, None)
+                }
+            }
+            Some("copyprotection") => UCIMessage::CopyProtection,
+            Some("registration") => UCIMessage::Registration,
+            Some("info") => {
+                UCIMessage::Info(
+                    parts.collect::<Vec<&str>>()
+                        .chunks(2)
+                        .map(|s| s.join(" ").to_string())
+                        .collect()
+                )
+            }
+            Some("option") => {
+                let name = match parts.next() {
+                    Some("name") => parts.next().unwrap().to_string(),
+                    _ => panic!("Invalid option command")
+                };
+                let remaining_string = parts.collect::<Vec<&str>>().chunks(2).map(|s| s.join(" ").to_string()).collect();
+                UCIMessage::Option(name, remaining_string)
+            }
+            Some("readyok") => UCIMessage::ReadyOk,
+            Some(_) => panic!("Unknown UCI message: {}", message),
+            None => panic!("Empty UCI message")
         }
     }
 }
@@ -174,6 +200,64 @@ mod tests {
         assert_parses!(
             "id name Hazel 0.1",
             UCIMessage::ID("name".to_string(), "Hazel 0.1".to_string())
+        );
+    }
+
+    #[test]
+    fn parses_ready_ok() {
+        assert_parses!("readyok", UCIMessage::ReadyOk);
+    }
+
+    #[test]
+    fn parses_best_move() {
+        assert_parses!(
+            "bestmove e2e4 ponder e7e5",
+            UCIMessage::BestMove("e2e4".to_string(), Some("e7e5".to_string()))
+        );
+        assert_parses!(
+            "bestmove e2e4",
+            UCIMessage::BestMove("e2e4".to_string(), None)
+        );
+    }
+
+    #[test]
+    fn parses_copy_protection() {
+        assert_parses!("copyprotection", UCIMessage::CopyProtection);
+    }
+
+    #[test]
+    fn parses_registration() {
+        assert_parses!("registration", UCIMessage::Registration);
+    }
+
+    #[test]
+    fn parses_info() {
+        assert_parses!(
+            "info depth 1 seldepth 1 nodes 1 nps 1 time 1 pv e2e4",
+            UCIMessage::Info(vec![
+                "depth 1".to_string(),
+                "seldepth 1".to_string(),
+                "nodes 1".to_string(),
+                "nps 1".to_string(),
+                "time 1".to_string(),
+                "pv e2e4".to_string()
+            ])
+        );
+    }
+
+    #[test]
+    fn parses_option() {
+        assert_parses!(
+            "option name NullMove type check default true",
+            UCIMessage::Option("NullMove".to_string(), vec![
+                "type check".to_string(),
+                "default true".to_string()
+            ])
+        );
+
+        assert_parses!(
+            "option name foo",
+            UCIMessage::Option("foo".to_string(), vec![])
         );
     }
 }

@@ -155,3 +155,40 @@ markup-in-Rust thing is not my favorite. Copilot actually helps a bit here, thes
 to remember; I frequently get simple transpotition errors where I miscapitalize or whatever. Copilot
 eventually figures out what I'm trying to do and at least makes the mistakes for me, so I'm just
 fixing what it fucks up instead of me making the mistake and feeling bad about it.
+
+## 2307
+
+Futzing more, I think it makes sense to include all the UI stuff in the library proper, and maybe
+just gate it by a feature someday. I can implement widgets directly against the types in the
+library, which seems nicer than having to wrap things in a newtype to widget them.
+
+I'm definitely not quite doing it right w/ rendering, this is because I'm procrastinating reading
+the rest of this tutorial.
+
+# 3-JUL-2024
+
+## 0941
+
+I think the UI is in a good spot to leave for a minute while I bring in some of the components that
+need the UI. The first round is a simple UCI REPL; I should be able to type raw UCI into the UI and
+have it respond (probably with dummy info for now). It should expose an option "current engine" that
+points to the relevant backend by name.
+
+I also managed to re-introduce an en passant bug, I'm going to leave it for now; I started on a
+refactored movegen module before I put the project down last time, I think that's probably the
+'right' way to chase out these bugs, and I think having a better debugging tool will help a lot in
+figuring out what the issue is.
+
+## 1145
+
+I've roughed in the UCI repl a bit, just the parsing stuff. I'm going to get a basic
+parse-to-an-enum, then refactor to use Hazel types for Moves/etc. Those are generic enough that it
+should help with forwarding UCI around but also being ergonomic enough to use directly in the UI and
+for Hazel.
+
+## 1320
+
+Fully roughed in, no type fanciness yes, but I'll enrich the parsing as I need it. I think the next
+step is to get the OCI connection started up, and then work on a backend which proxies the OCI
+connection to the backend engine.
+
