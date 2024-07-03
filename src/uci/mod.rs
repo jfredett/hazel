@@ -4,6 +4,8 @@
 
 use tracing::{instrument, info, debug};
 
+pub mod connection;
+
 #[derive(Debug, PartialEq)]
 pub enum UCIMessage {
     // GUI -> Engine

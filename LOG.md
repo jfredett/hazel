@@ -192,3 +192,22 @@ Fully roughed in, no type fanciness yes, but I'll enrich the parsing as I need i
 step is to get the OCI connection started up, and then work on a backend which proxies the OCI
 connection to the backend engine.
 
+## 1335
+
+I think I need to learn `tokio`. I keep hemming and hawing about just writing my own threadpool
+thing, but I should probably learn the 'real' tool instead of rolling my own here. Time for more
+tutorial reading, I guess.
+
+Or not, [this article](https://corrode.dev/blog/async/) suggests that maybe threads are just fine. I
+don't know that this needs to be such a giant thing, I'm comfortable having lots of otherwise idle
+threads with connections open. I suppose maybe a better approach would be to have a
+thread-per-engine, and then keep them in a pool. I suppose I could have `Grid` be abstract across
+any `Engine`, and then have `Engine` be a trait which, e.g., `HazelEngine` might implement.
+
+The trait would just expect a way to send it UCI messages and recieve them in return. Eventually I
+can place another variant which supports, e.g., a protobuf-defined API or something. The API would
+have a `raw_uci` message so you could always fall back to just parsing UCI, but for richer queries I
+could extend it.
+
+I think I'll skip `tokio` for now and stick with threads until it starts hurting.
+
