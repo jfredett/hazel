@@ -40,6 +40,8 @@ pub mod pextboard;
 pub mod ply;
 pub mod util;
 
+pub mod uci;
+
 /// passes if the left is a subset of the right
 #[macro_export]
 macro_rules! assert_is_subset {

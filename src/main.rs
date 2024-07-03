@@ -1,6 +1,7 @@
 use tracing::*;
 
 mod ui;
+mod uci;
 
 
 fn main() {
@@ -8,7 +9,7 @@ fn main() {
 
     // Start the Hazel Main Thread
     //   Start the UI
-    ui::run();
+    let _ = ui::run();
     //   The UI displays and manages the Grid via Race Control 
 
     //   Start the Grid
