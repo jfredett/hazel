@@ -1,10 +1,11 @@
 use std::io;
 
+use hazel::ply::Ply;
 use ratatui::{
     buffer::Buffer,
     crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind},
     layout::{Alignment, Rect},
-    style::Stylize,
+    prelude::{Layout, Constraint, Direction},
     symbols::border,
     text::{Line, Text},
     widgets::{
@@ -51,10 +52,28 @@ impl Hazel {
 
 impl Widget for &Hazel {
     fn render(self, area: Rect, buf: &mut Buffer) {
+        let layout = Layout::default()
+            .direction(Direction::Horizontal)
+            .margin(1)
+            .constraints(
+                [
+                    Constraint::Percentage(15),
+                    Constraint::Percentage(70),
+                    Constraint::Percentage(15),
+                ]
+                .as_ref(),
+            )
+            .split(area);
+
+        // A static board to render in a box.
+        let board = Ply::from_fen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
+        let plywidget = PlyWidget { ply: board };
+
         let title = Title::from("Hazel - A Chess Engine");
         let instructions = Title::from(Line::from(vec![
                 "Press q to quit".into()
         ]));
+
         let block = Block::bordered()
             .title(title.alignment(Alignment::Center))
             .title(instructions
@@ -64,9 +83,25 @@ impl Widget for &Hazel {
 
         Paragraph::new(Text::from(""))
             .block(block)
+            .render(layout[0], buf);
+
+        plywidget.render(layout[1], buf);
+    }
+}
+
+struct PlyWidget { ply: Ply }
+
+impl Widget for &PlyWidget {
+    fn render(self, area: Rect, buf: &mut Buffer) {
+        let title = Title::from("Ply");
+        let block = Block::bordered()
+            .title(title.alignment(Alignment::Center))
+            .border_set(border::THICK);
+
+        Paragraph::new(Text::from(self.ply.to_string()))
+            .block(block)
             .render(area, buf);
     }
-
 }
 
 pub fn run() -> io::Result<()> {

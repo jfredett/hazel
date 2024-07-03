@@ -1,5 +1,5 @@
 use super::*;
-use std::fmt::{Debug, Formatter, Result};
+use std::fmt::{Debug, Display, Formatter, Result};
 
 impl Debug for Ply {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
@@ -19,6 +19,12 @@ impl Debug for Ply {
         } else {
             writeln!(f, "    White to play")
         }
+    }
+}
+
+impl Display for Ply {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        Debug::fmt(&self, f)
     }
 }
 
