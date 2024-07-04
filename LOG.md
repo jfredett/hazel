@@ -224,3 +224,32 @@ just wrote with the `Game` struct, and implement whichever commands feel easy an
 That should be enough for me to hook hazel up to an OTS GUI, and then I can get something relatively
 bug free working on a known-good GUI before working to implement my own. I can also hopefully hook
 up my UI and the OTS one at the same time, so I can compare when debugging.
+
+
+# 4-JUL-2024
+
+## 1713
+
+Been picking at this all day, managed to get Arena to connect to Hazel and for Hazel to dump it's
+logs somewhere other than STDOUT. I imagine I could have the thing continue to dump logs to STDOUT
+but I'm not sure if that'll cause weirdness later with the UI, so I'm just going to leave it sending
+to `/tmp/hazel.log` until I have some UI in place.
+
+I think I'm going to work towards getting it making random moves and generally implementing the rest
+of UCI for now. I also want to get it so that when `debug` is turned on, the `debug` log level is
+set on the subscriber, and otherwise leave it at `info`. That way I can continue to use Arena as a
+debugging mechanism.
+
+I slapped together a couple scripts for running `cargo test` and `cargo build` with warnings
+suppressed. I wish this was an option on the command itself instead of a flag. I recognize the 'good
+practice' of always leaving these on, but I think it's a little misguided, most of the time I
+prioritize fixing the thing I'm working on, and because the error occasionally pop up in the middle
+of all the warnings, it's hard to track down the error amidst them.
+
+I did a little experimenting with `watchman` and I think it may be worth a little hackery to come up
+with something that will automatically, incrementally rerun tests and give you a little grid display
++ log output of failing tests. Mostly I want it to exist, I don't know that I actually want to build
+such a thing.
+
+In any case, good progress today, hopefully I can get most of the protocol implemented and see if it
+can help me debug any of the weird EP bugs I've been seeing.
