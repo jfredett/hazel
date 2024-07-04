@@ -4,13 +4,24 @@ use crate::constants::Piece;
 #[derive(PartialEq, Eq, Debug, Clone, Copy)]
 pub enum MoveType {
     QUIET = 0b0000,
-    DOUBLE_PAWN = 0b0001, // NOTE: unused at the moment, according to CPW, usually this indicates a double-pawn move
+    DOUBLE_PAWN = 0b0001,
     SHORT_CASTLE = 0b0010,
     LONG_CASTLE = 0b0011,
     CAPTURE = 0b0100,
     EP_CAPTURE = 0b0101,
     UNUSED_1 = 0b0110,   // NOTE: unused at the moment
-    UNUSED_2 = 0b0111,   // NOTE: unused at the moment
+    ///
+    /// UCI sends moves in a simplified long algebraic notation that simply specifies:
+    ///
+    /// 1. source square
+    /// 2. target square
+    /// 3. promotion piece (if any)
+    ///
+    /// For Hazel, more is expected of the move metadata, but calculating it requires knowing the
+    /// game state. This value is used to indicate that the move metadata is ambiguous and needs to
+    /// be calculated.
+    /// 
+    UCI_AMBIGUOUS = 0b0111,
     PROMOTION_KNIGHT = 0b1000,
     PROMOTION_BISHOP = 0b1001,
     PROMOTION_ROOK = 0b1010,
@@ -31,7 +42,7 @@ impl MoveType {
             MoveType::CAPTURE => "CAPTURE",
             MoveType::EP_CAPTURE => "EP_CAPTURE",
             MoveType::UNUSED_1 => "UNUSED_1",
-            MoveType::UNUSED_2 => "UNUSED_2",
+            MoveType::UCI_AMBIGUOUS => "UCI_AMBIGUOUS",
             MoveType::PROMOTION_KNIGHT => "PROMOTION_KNIGHT",
             MoveType::PROMOTION_BISHOP => "PROMOTION_BISHOP",
             MoveType::PROMOTION_ROOK => "PROMOTION_ROOK",
@@ -54,7 +65,8 @@ impl MoveType {
             0b0100 => MoveType::CAPTURE,
             0b0101 => MoveType::EP_CAPTURE,
             0b0110 => MoveType::UNUSED_1,
-            0b0111 => MoveType::UNUSED_2,
+            // NOTE: 
+            0b0111 => MoveType::UCI_AMBIGUOUS,
             0b1000 => MoveType::PROMOTION_KNIGHT,
             0b1001 => MoveType::PROMOTION_BISHOP,
             0b1010 => MoveType::PROMOTION_ROOK,
@@ -70,6 +82,18 @@ impl MoveType {
     const PROMOTION_MASK: u16 = 0b1000;
     const CAPTURE_MASK: u16 = 0b0100;
     const EP_MASK: u16 = 0b0101;
+
+    #[inline]
+    pub fn from_uci(uci: &str) -> MoveType {
+        match uci {
+            "q" => MoveType::PROMOTION_QUEEN,
+            "r" => MoveType::PROMOTION_ROOK,
+            "b" => MoveType::PROMOTION_BISHOP,
+            "n" => MoveType::PROMOTION_KNIGHT,
+            "" => MoveType::UCI_AMBIGUOUS,
+            _ => unimplemented!(),
+        }
+    }
 
     #[inline(always)]
     pub fn is_long_castle(self) -> bool {
@@ -129,5 +153,9 @@ impl MoveType {
             MoveType::PROMOTION_CAPTURE_QUEEN => Some(Piece::Queen),
             _ => None,
         }
+    }
+
+    pub fn is_ambiguous(self) -> bool {
+        self == MoveType::UCI_AMBIGUOUS
     }
 }

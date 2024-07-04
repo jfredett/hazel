@@ -1,8 +1,8 @@
-
-// TODO: Parse directly into (hazel) structs?
-// TODO: Internal Enums for, e.g., `go`, `info`, etc.
-
 use tracing::{instrument, info, debug};
+
+
+pub const START_POSITION_FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+pub const LONDON_POSITION_FEN: &str = "r1bqk2r/pp2bppp/2n1pn2/2pp4/3P1B2/2P1PN1P/PP1N1PP1/R2QKB1R b KQkq - 0 7";
 
 pub mod connection;
 
@@ -15,7 +15,10 @@ pub enum UCIMessage {
     SetOption(String, Option<String>),
     Register,
     UCINewGame,
-    Position(Vec<String>, Vec<String>),
+    // NOTE: Position will _always_ have a FEN string as it's first part, never the literal `startpos`.
+    // If `startpos` is given, it'll replace with the Starting position FEN. `startpos` is bad and
+    // I refuse it.
+    Position(String, Vec<String>),
     Go(Vec<String>),
     Stop,
     PonderHit,
@@ -35,6 +38,8 @@ pub enum UCIMessage {
 impl UCIMessage {
     #[instrument]
     pub fn parse(message: &str) -> UCIMessage {
+        info!("Parsing UCI message: {}", message);
+
         let mut parts = message.split_whitespace();
         match parts.next() {
             Some("uci") => UCIMessage::UCI,
@@ -47,7 +52,6 @@ impl UCIMessage {
             Some("register") => UCIMessage::Register,
             Some("ucinewgame") => UCIMessage::UCINewGame,
             Some("setoption") => {
-                info!("setoption");
                 let name = parts.nth(1).unwrap().to_string();
                 match parts.next() {
                     Some("value") => {
@@ -58,16 +62,22 @@ impl UCIMessage {
                 }
             }
             Some("position") => {
-                let mut position = vec![];
-                let mut moves = vec![];
-                for part in parts {
-                    match part {
-                        "startpos" => position.push("startpos".to_string()),
-                        "moves" => (),
-                        _ => moves.push(part.to_string())
-                    }
+
+                // FIXME: This kinda sucks, but I don't think it gets better without using an
+                // actual parsing library, which seems like a lot.
+
+                let mut pos_spec = parts.clone().take_while(|&s| s != "moves").map(|s| s.to_string());
+                let moves : Vec<String> = parts.skip_while(|&s| s != "moves").skip(1).map(|s| s.to_string() ).collect();
+
+
+                if pos_spec.next().unwrap() == "startpos" {
+                    UCIMessage::Position(START_POSITION_FEN.to_string(), moves)
+                } else {
+                    UCIMessage::Position(
+                        pos_spec.collect::<Vec<String>>().join(" "),
+                        moves
+                    )
                 }
-                UCIMessage::Position(position, moves)
             }
             Some("go") => UCIMessage::Go(parts.map(|s| s.to_string()).collect()),
             Some("stop") => UCIMessage::Stop,
@@ -140,7 +150,6 @@ mod tests {
         assert_parses!("isready", UCIMessage::IsReady);
     }
 
-    #[traced_test]
     #[test]
     fn parses_set_option() {
         assert_parses!(
@@ -164,11 +173,23 @@ mod tests {
     }
 
     #[test]
+    fn parses_position_with_non_startpos_fen() {
+        assert_parses!(
+            &format!("position fen {} moves", LONDON_POSITION_FEN),
+            UCIMessage::Position(
+                LONDON_POSITION_FEN.to_string(),
+                vec![]
+            )
+        );
+    }
+
+    #[test]
     fn parses_position() {
         assert_parses!(
             "position startpos moves e2e4 e7e5",
             UCIMessage::Position(
-                vec!["startpos".to_string()],
+                // NOTE: See note in the struct defn.
+                START_POSITION_FEN.to_string(),
                 vec!["e2e4".to_string(), "e7e5".to_string()]
             )
         );

@@ -30,6 +30,47 @@ pub enum MoveError {
 }
 
 impl Ply {
+    pub fn disambiguate(&self, mov: Move) -> Move {
+        if mov.is_ambiguous() {
+            // we know it's not a prmotion, since that isn't ambiguous in UCI.
+
+            // we can check the target for a piece as well, if it's there, it must be a capture.
+            let metadata = if self.enemy_piece_at_index(mov.target_idx()).is_some() {
+                MoveType::CAPTURE
+            } else {
+                // we know there is a piece there because the move is presumptively valid.
+                let piece = self.friendly_piece_at_index(mov.source_idx()).unwrap();
+                // since we know it's not a capture, if it's not a king or pawn move, it's a quiet
+                // move.
+                // if it's a king move, we need to check to see if it's a castle, otherwise it's
+                // a quiet move.
+                if piece == Piece::King {
+                    if mov.is_short_castling_move_for(self.current_player()) {
+                        MoveType::SHORT_CASTLE
+                    } else if mov.is_long_castling_move_for(self.current_player()) {
+                        MoveType::LONG_CASTLE
+                    } else {
+                        MoveType::QUIET
+                    }
+                } else if piece == Piece::Pawn {
+                    if mov.is_double_pawn_push_for(self.current_player()) {
+                        MoveType::DOUBLE_PAWN
+                    } else {
+                        MoveType::QUIET
+                    }
+                } else {
+                    MoveType::QUIET
+                }
+            };
+
+            return Move::from(mov.source_idx() as u16, mov.target_idx() as u16, metadata);
+        } else { 
+            return mov;
+        };
+
+    }
+
+
     pub fn make(&mut self, mov: Move) -> MoveResult<Option<Piece>> {
         let source_piece = match self.friendly_piece_at_index(mov.source_idx()) {
             Some(s) => s,
@@ -232,9 +273,9 @@ impl Ply {
         metadata: MoveType,
     ) -> MoveResult<Option<Piece>> {
         self.make(Move::from(
-            NOTATION_TO_INDEX(source) as u16,
-            NOTATION_TO_INDEX(target) as u16,
-            metadata,
+                NOTATION_TO_INDEX(source) as u16,
+                NOTATION_TO_INDEX(target) as u16,
+                metadata,
         ))
     }
 
@@ -539,7 +580,6 @@ mod tests {
         Ok(())
     }
 
-    #[traced_test]
     #[test]
     fn en_passant_capture_is_undone_correctly() -> MoveResult<()> {
         let mut p = Ply::from_fen(START_POSITION_FEN);

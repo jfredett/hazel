@@ -48,6 +48,22 @@ impl Move {
         }
     }
 
+    pub fn from_uci(uci: &str) -> Move {
+        // BUG: This is not going to calculate metadata correctly, I think.
+        // Since a double pawn move looks like a quiet move (you have to detect it
+        // by knowing that the source piece is a pawn). I might add a "UCI" metadata
+        // value, if I have room, and this will instruct the engine to scrutinize the move
+        // with respect to the actual game state to calculate it's metadata.
+        //
+        // Both 0b0110 and 0b0111 are available for this purpose. Since UCI does encode promotion,
+        // I can attempt to calculate, and failing that, mark it 0b0111 to indicate that we need
+        // to examine gamestate to proceed.
+        let source = NOTATION_TO_INDEX(&uci[0..2]) as u16;
+        let target = NOTATION_TO_INDEX(&uci[2..4]) as u16;
+        let metadata = MoveType::from_uci(&uci[4..]);
+        Move::from(source, target, metadata)
+    }
+
     /// Creates a move from the given source and target squares (given in notation), and
     /// the provided metadata. If a Right(Piece) is provided, the move is assumed to be a
     /// valid promotion. No error checking is done.
@@ -188,6 +204,41 @@ impl Move {
     #[inline(always)]
     pub fn is_en_passant(&self) -> bool {
         self.move_metadata().is_en_passant()
+    }
+
+    #[inline(always)]
+    pub fn is_ambiguous(&self) -> bool {
+        self.move_metadata().is_ambiguous()
+    }
+
+    /// This checks that the move is a two-square move forward (relative to color), and that it
+    /// started on the correct row.
+    #[inline(always)]
+    pub fn is_double_pawn_push_for(&self, color: Color) -> bool {
+        match color {
+            Color::WHITE => { self.target_idx() - self.source_idx() == 0o20 && self.source_idx() & 0o70 == 0o10 },
+            Color::BLACK => { self.source_idx() - self.target_idx() == 0o20 && self.source_idx() & 0o70 == 0o60 },
+        }
+    }
+
+    /// This checks that the move is a valid short castle for the color, assuming the piece at the
+    /// source square is a king and that there are no castle blocks.
+    #[inline(always)]
+    pub fn is_short_castling_move_for(&self, color: Color) -> bool {
+        match color {
+            Color::WHITE => self.source_idx() == 0o04 && self.target_idx() == 0o06,
+            Color::BLACK => self.source_idx() == 0o74 && self.target_idx() == 0o76,
+        }
+    }
+
+    /// This checks that the move is a valid long castle for the color, assuming the piece at the
+    /// source square is a king and that there are no castle blocks.
+    #[inline(always)]
+    pub fn is_long_castling_move_for(&self, color: Color) -> bool {
+        match color {
+            Color::WHITE => self.source_idx() == 0o04 && self.target_idx() == 0o02,
+            Color::BLACK => self.source_idx() == 0o74 && self.target_idx() == 0o72,
+        }
     }
 }
 

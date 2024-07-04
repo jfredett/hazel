@@ -49,7 +49,6 @@ mod tests {
 
     use tracing_test::traced_test;
 
-    #[traced_test]
     #[test]
     fn perft_start_position_to_depth_6() {
         assert_eq!(perft_start_position(1), 20);

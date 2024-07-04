@@ -41,7 +41,12 @@ impl Game {
         self.history.push(History::Make(mov));
         self.game_history.push(self.position.meta);
 
-        if let Some(p) = self.position.make(mov).unwrap() {
+
+        let unambiguous_move = if mov.is_ambiguous() {
+            self.position.disambiguate(mov)
+        } else { mov };
+
+        if let Some(p) = self.position.make(unambiguous_move).unwrap() {
             self.captures.push(p)
         }
     }
@@ -50,15 +55,18 @@ impl Game {
     ///
     /// Unmake the most recent move, if any. No-op if no moves have been made.
     pub fn unmake(&mut self) {
-        debug!("{:?}", self.position);
         if self.played.is_empty() {
             return;
         }
 
         let mov = self.played.pop().unwrap();
 
+        let unambiguous_move = if mov.is_ambiguous() {
+            self.position.disambiguate(mov)
+        } else { mov };
+
         #[cfg(test)]
-        self.history.push(History::Unmake(mov));
+        self.history.push(History::Unmake(unambiguous_move));
 
         let captured_piece = if mov.is_capture() {
             self.captures.pop()
@@ -67,9 +75,9 @@ impl Game {
         };
         let metadata = self.game_history.pop().unwrap();
 
-        if let Err(e) = self.position.unmake(mov, captured_piece, metadata) {
+        if let Err(e) = self.position.unmake(unambiguous_move, captured_piece, metadata) {
             error!("Game Struct {:?}", self);
-            error!("mov: {:?}", mov);
+            error!("mov: {:?}", unambiguous_move);
             error!("captured_piece: {:?}", captured_piece);
             error!("metadata: {:?}", metadata);
             error!("Error unmaking move: {:?}", e);

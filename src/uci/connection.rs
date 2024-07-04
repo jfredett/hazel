@@ -33,7 +33,6 @@ mod tests {
     use super::*;
     use tracing_test::traced_test;
 
-    #[traced_test]
     #[test]
     fn test_with_dummy_io() {
         let input = "uci\nisready\n".as_bytes();

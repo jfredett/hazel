@@ -32,6 +32,10 @@ impl Game {
         }
     }
 
+    pub fn to_fen(&self) -> String {
+        self.position.to_fen()
+    }
+
     /// ::start_position/1
     ///
     /// Creates a Game initialized to the start position.
@@ -56,13 +60,13 @@ mod tests {
         #[test]
         fn create_from_fen() {
             let g = Game::from_fen(POS2_KIWIPETE_FEN);
-            assert_eq!(g.position.to_fen(), POS2_KIWIPETE_FEN);
+            assert_eq!(g.to_fen(), POS2_KIWIPETE_FEN);
         }
 
         #[test]
         fn start_position() {
             let g = Game::start_position();
-            assert_eq!(g.position.to_fen(), START_POSITION_FEN);
+            assert_eq!(g.to_fen(), START_POSITION_FEN);
         }
     }
 }
