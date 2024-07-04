@@ -38,6 +38,7 @@ pub mod moveset;
 pub mod pextboard;
 pub mod ply;
 pub mod util;
+pub mod driver;
 
 pub mod uci;
 

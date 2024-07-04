@@ -211,3 +211,16 @@ could extend it.
 
 I think I'll skip `tokio` for now and stick with threads until it starts hurting.
 
+
+## 2143
+
+Definitely a pass on `tokio`, the docs say that I'm probably not the right case for it right now,
+and if I can go with a threaded approach, go with a threaded approach, so that sounds like a good
+reason to me.
+
+I'm going to work on getting the 'Driver' part of Hazel working, that's going to be the thing that
+actually takes UCI messages and plays the game. My goal is going to be to integrate the UCI parser I
+just wrote with the `Game` struct, and implement whichever commands feel easy and bail on the rest.
+That should be enough for me to hook hazel up to an OTS GUI, and then I can get something relatively
+bug free working on a known-good GUI before working to implement my own. I can also hopefully hook
+up my UI and the OTS one at the same time, so I can compare when debugging.
