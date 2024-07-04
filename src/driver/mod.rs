@@ -24,6 +24,11 @@ impl Driver {
                 info!("Received IsReady");
                 UCIMessage::ReadyOk
             }
+            UCIMessage::UCI => {
+                info!("Received UCI");
+                UCIMessage::ID("Hazel".to_string(), "0.1".to_string())
+            }
+
             _ => {
                 error!("Unexpected message: {:?}", message);
                 panic!("Unexpected message");
@@ -42,7 +47,18 @@ mod tests {
     #[test]
     fn driver_parses_isready() {
         let mut driver = Driver::new();
-        driver.exec(UCIMessage::IsReady);
-
+        let response = driver.exec(UCIMessage::IsReady);
+        assert_eq!(response, UCIMessage::ReadyOk);
     }
+
+    #[traced_test]
+    #[test]
+    fn driver_parses_uci() {
+        let mut driver = Driver::new();
+        let response = driver.exec(UCIMessage::UCI);
+        assert_eq!(response, UCIMessage::ID("Hazel".to_string(), "0.1".to_string()));
+    }
+
+
+
 }
