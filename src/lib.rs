@@ -41,6 +41,7 @@ pub mod util;
 pub mod driver;
 
 pub mod uci;
+pub mod ui;
 
 /// passes if the left is a subset of the right
 #[macro_export]

@@ -1,10 +1,12 @@
-use tracing::{instrument, info, debug};
+use tracing::{instrument, info, debug, error};
+use std::fmt::{self, Display, Formatter};
 
 
 pub const START_POSITION_FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 pub const LONDON_POSITION_FEN: &str = "r1bqk2r/pp2bppp/2n1pn2/2pp4/3P1B2/2P1PN1P/PP1N1PP1/R2QKB1R b KQkq - 0 7";
 
 pub mod connection;
+pub use connection::run;
 
 #[derive(Debug, PartialEq)]
 pub enum UCIMessage {
@@ -35,10 +37,16 @@ pub enum UCIMessage {
 
 // TODO: Error type
 
+impl Display for UCIMessage {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 impl UCIMessage {
     #[instrument]
     pub fn parse(message: &str) -> UCIMessage {
-        info!("Parsing UCI message: {}", message);
+        info!("Parsing UCI message: {:?}", message);
 
         let mut parts = message.split_whitespace();
         match parts.next() {
@@ -46,7 +54,13 @@ impl UCIMessage {
             Some("debug") => match parts.next() {
                 Some("on") => UCIMessage::Debug(true),
                 Some("off") => UCIMessage::Debug(false),
-                _ => panic!("Invalid debug command"),
+                _ => {
+                    error!("Invalid debug command");
+                    // return an error type eventually, maybe? Spec generally suggests ignoring
+                    // errors like this.
+                    // for now, set debug on if we're not sure what's going on.
+                    UCIMessage::Debug(true)
+                },
             },
             Some("isready") => UCIMessage::IsReady,
             Some("register") => UCIMessage::Register,

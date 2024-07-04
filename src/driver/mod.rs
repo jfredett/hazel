@@ -16,7 +16,6 @@ pub struct Driver {
 }
 
 impl Driver {
-
     pub fn new() -> Self {
         Driver {
             debug: false,
@@ -34,7 +33,7 @@ impl Driver {
     }
 
     pub fn exec(&mut self, message: UCIMessage) -> Option<UCIMessage> {
-        info!("Executing UCI instruction: {}", message);
+        info!("Executing UCI instruction: {:?}", message);
 
         match message {
             // GUI -> Engine

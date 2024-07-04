@@ -1,6 +1,6 @@
 use std::io;
 
-use hazel::ply::Ply;
+use crate::ply::Ply;
 use ratatui::{
     buffer::Buffer,
     crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind},
@@ -21,7 +21,6 @@ mod tui;
 struct Hazel {
     // TODO: Control Panel State goes here
     exit : bool
-
 }
 
 impl Hazel {

@@ -6,7 +6,7 @@ use std::io::{self, BufRead};
 
 use tracing::*;
 
-
+use crate::driver::Driver;
 use crate::uci::UCIMessage;
 
 pub fn run() -> io::Result<()> {
@@ -15,15 +15,18 @@ pub fn run() -> io::Result<()> {
 
 // take arbitrary IO Streams and use it as if it were STDIN/STDOUT
 // to do the `run` function above
-pub fn run_with_io<T: io::Read, U: io::Write>(input: T, output: U) -> io::Result<()> {
+pub fn run_with_io<T: io::Read, U: io::Write>(input: T, mut output: U) -> io::Result<()> {
     let handle = io::BufReader::new(input);
+    let mut driver = Driver::new();
 
     for line in handle.lines() {
         let line = line?;
         let message = UCIMessage::parse(&line);
         info!("Received UCI message: {:?}", message);
+        if let Some(response) = driver.exec(message) {
+            output.write_all(response.to_string().as_bytes())?;
+        }
     }
-
     Ok(())
 }
 

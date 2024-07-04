@@ -1,7 +1,7 @@
 use tracing::*;
 
-mod ui;
-mod uci;
+use hazel::uci;
+use hazel::ui;
 
 use std::thread;
 use tracing::info;
@@ -13,6 +13,9 @@ enum RaceControlMessage {
 }
 
 fn main() {
+    let file_appender = tracing_appender::rolling::never("/tmp", "hazel.log");
+    tracing_subscriber::fmt().with_writer(file_appender).init();
+
     info!("Welcome to Hazel.");
 
 
@@ -55,7 +58,12 @@ fn main() {
      */
 
 
+    /*
     thread::spawn(|| {
         let _ = ui::run();
     });
+    */
+
+
+    let _ = uci::run();
 }
