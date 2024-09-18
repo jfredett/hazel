@@ -253,3 +253,16 @@ such a thing.
 
 In any case, good progress today, hopefully I can get most of the protocol implemented and see if it
 can help me debug any of the weird EP bugs I've been seeing.
+
+# 18-SEP-2024
+
+## 1505
+
+Stuck on a work problem, decided to commit off some work here while thinking about it. Several
+things are in flight here but I haven't been back fore a while because I simply can't bring myself
+to work on UI code. I'm procrastinating even now.
+
+I'm debating whether I want a special 'Hazel' widget that can bypass the UCI interface, or if I want
+to support a sort of UCI+ interface that allows for custom commands to be passed through, so I can
+just focus on using an existing UCI interface. I'm probably going to branch off and work on both,
+because making decisions is hard.
