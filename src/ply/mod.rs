@@ -35,23 +35,6 @@ const COLOR_COUNT: usize = 2;
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Serialize, Deserialize)]
 pub struct Ply {
-    /*
-    pieces: [[Bitboard; PIECE_COUNT]; COLOR_COUNT]
-        This now becomes a somewhat more simple thing to operate on. Instead of having to call
-        self.each_friggin_piece, just loop over the array.  Will also make the eventual SIMD
-        version of this a bit easier -- Bitboard -> X-Bitboard (where X is the SIMD width), this
-        becomes a X-Ply. All the operations on it switch to X-wide instructions, etc.
-
-        It would be nice to have an interface like:
-
-        ply[Color::BLACK][Piece::Rook] => Bitboard for the rooks.
-
-        Still want 1 bitboard per piece type, even if there are multiple pieces of that type. but
-        want to support popcount (so I know how many pieces of a type there are), and also a better
-        iterator for bitboards that quickly produces all the indices (using the tzcnt instruction
-        repeatedly or something like.)
-    */
-    // indexed by COLOR
     pub pieces: [[Bitboard; PIECE_COUNT]; COLOR_COUNT],
     pub meta: Metadata,
 }
@@ -67,6 +50,8 @@ impl Ply {
 
     /// Generates all legal moves from the current position for the enemy player
     /// Useful in determining threats for prophylaxis.
+    ///
+    /// NB. This is essentially [Null Move Analysis](https://www.chessprogramming.org/Null_Move)
     ///
     /// TODO: Technically this is a lie, it generates pseudolegal moves.
     pub fn enemy_moves(&self) -> MoveSet {
