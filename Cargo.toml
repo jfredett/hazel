@@ -42,6 +42,9 @@ quickcheck = "1.0.3"
 quickcheck_macros = "1.0.0"
 paste = "1.0.15"
 tracing-test = "0.2.5"
+cargo-llvm-cov = "0.6.11"
+cargo-nextest = "0.9.72"
+#cargo-mutants = "24.7.1"
 
 [[bench]]
 name = "benchmarks"

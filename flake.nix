@@ -22,16 +22,17 @@
         modules = [{
           languages.rust.enable = true;
           languages.rust.channel = "nightly";
-          languages.rust.components = [ "rustc" "cargo" "clippy" "rustfmt" "rust-analyzer" ];
+          languages.rust.components = [ "rustc" "cargo" "clippy" "rustfmt" "rust-analyzer" "miri" "llvm-tools" ];
 
           # FIXME: I would love for this to be part of the Cargo.toml, and not the flake.
           languages.rust.rustflags = "-C target-feature=+bmi1,+bmi2";
 
-          packages = with pkgs; [ 
-            gnuplot 
+          packages = with pkgs; [
+            gnuplot
             bugstalker.packages."x86_64-linux".default
             perf-tools
             linuxKernel.packages.linux_6_6.perf
+            just
           ];
         }];
       };

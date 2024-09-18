@@ -179,7 +179,7 @@ impl Move {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use tracing_test::traced_test;
 
     use super::*;

@@ -246,7 +246,7 @@ impl Bitboard {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use super::*;
 
     mod is_empty {
