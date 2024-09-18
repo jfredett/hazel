@@ -33,6 +33,7 @@
             perf-tools
             linuxKernel.packages.linux_6_6.perf
             just
+            stockfish
           ];
         }];
       };
