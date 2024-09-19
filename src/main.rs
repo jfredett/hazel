@@ -1,3 +1,5 @@
+#![allow(unused_imports)]
+
 use tracing::*;
 
 use hazel::uci;
@@ -8,6 +10,7 @@ use tracing::info;
 use crossbeam::channel::Sender;
 
 #[derive(Debug, PartialEq)]
+#[allow(dead_code)] // this is a stub, not dead code
 enum RaceControlMessage {
     Exit
 }

@@ -1,7 +1,5 @@
 use super::*;
 
-use tracing::debug;
-
 impl Ply {
     /// Produces a ply representing an empty board
     pub fn empty() -> Ply {

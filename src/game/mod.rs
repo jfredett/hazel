@@ -6,7 +6,7 @@ use crate::{
 };
 use serde::{Deserialize, Serialize};
 
-use tracing::{debug, error, warn};
+use tracing::{error, warn};
 
 mod arbitrary;
 mod debug;

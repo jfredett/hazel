@@ -2,7 +2,6 @@
 
 use tracing::*;
 
-use std::io;
 use crate::uci::UCIMessage;
 use crate::game::Game;
 use crate::movement::Move;
@@ -45,7 +44,7 @@ impl Driver {
                 self.debug = flag;
                 None
             }
-            UCIMessage::SetOption(name, values) => {
+            UCIMessage::SetOption(_name, _values) => {
                 None
             }
             UCIMessage::Register => {

@@ -135,7 +135,6 @@ mod tests {
         #[test]
         fn the_queen_in_this_position_is_defended() {
             let p = Ply::from_fen("7k/6Q1/6K1/8/8/8/8/8 b - - 0 1");
-            let d = p.defended_pieces_for(Color::WHITE);
             assert!(p.defended_pieces_for(Color::WHITE).is_set(6, 6));
         }
     }

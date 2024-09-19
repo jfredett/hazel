@@ -423,6 +423,7 @@ impl Ply {
     }
 
     /// Unmoves a piece, does not restore captures or anything
+    #[allow(dead_code)] // mostly for symmetry with everything else.
     fn unmove_enemy_piece(&mut self, piece: Piece, mov: Move) -> MoveResult<()> {
         self.enemy_piece_mut(piece)
             .move_piece(mov.target_idx(), mov.source_idx());

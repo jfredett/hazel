@@ -1,4 +1,4 @@
-use tracing::{instrument, info, debug, error};
+use tracing::{instrument, info, error};
 use std::fmt::{self, Display, Formatter};
 
 
@@ -390,6 +390,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(non_snake_case)] // I like naming puns, especially when they're this bad.
     fn parses_CamelCase_option() {
         assert_parses!(
             "option name NullMove type check default true",

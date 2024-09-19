@@ -52,7 +52,7 @@ impl Engine<UCIMessage> for Stockfish {
             .expect("Failed to start stockfish");
 
         let stdin = child.stdin.take().expect("Failed to open stdin");
-        let mut stdout = child.stdout.take().expect("Failed to open stdout");
+        let stdout = child.stdout.take().expect("Failed to open stdout");
         let mut stdout = BufReader::new(stdout);
 
 
@@ -80,7 +80,7 @@ impl Engine<UCIMessage> for Stockfish {
             if bytes_read == 0 { break; } // EOF reached.
 
             let line = line.trim_end();
-            response.push(UCIMessage::parse(line.clone()));
+            response.push(UCIMessage::parse(line));
 
             if self.is_response_complete(&message, &line) { break; } // Check if the response is complete.
         }
