@@ -356,8 +356,7 @@ Engine to GUI:
 		* <id> = OwnBook, type check
 			this means that the engine has its own book which is accessed by the engine itself.
 			if this is set, the engine takes care of the opening book and the GUI will never
-			execute a move out of its book for the engine. If this is set to false by the GUI,
-			the engine should not access its own book.
+			execute a move out of its book for the engine. If this is set to false by the GUI, the engine should not access its own book.
 		* <id> = MultiPV, type spin
 			the engine supports multi best line or k-best mode. the default value is 1
 		* <id> = UCI_ShowCurrLine, type check, should be false by default,

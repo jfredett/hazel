@@ -1,8 +1,8 @@
 @_default:
   just --list
 
-test:
-  cargo nextest run --no-fail-fast --all-targets
+test *ARGS:
+  cargo nextest run --no-fail-fast {{ARGS}}
 
 coverage:
   cargo llvm-cov nextest --text --no-fail-fast
