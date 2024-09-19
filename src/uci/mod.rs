@@ -8,7 +8,7 @@ pub const LONDON_POSITION_FEN: &str = "r1bqk2r/pp2bppp/2n1pn2/2pp4/3P1B2/2P1PN1P
 pub mod connection;
 pub use connection::run;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum UCIMessage {
     // GUI -> Engine
     UCI,
@@ -28,18 +28,110 @@ pub enum UCIMessage {
     // Engine -> GUI
     ID(String, String),
     ReadyOk,
+    UCIOk,
     BestMove(String, Option<String>),
     CopyProtection,
     Registration,
     Info(Vec<String>),
-    Option(String, Vec<String>),
+    Option(UCIOption),
+    EmptyLine,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct UCIOption {
+    name: String,
+    option_type: String,
+    default: String,
+    min: String,
+    max: String,
+    var: Vec<String>,
+}
+
+impl Display for UCIOption {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "option name {} type {} default {} min {} max {} var {}",
+            self.name, self.option_type, self.default, self.min, self.max, self.var.join(" "))
+    }
+}
+
+impl UCIOption {
+    const KEYWORDS: [&'static str; 6] = ["name", "type", "default", "min", "max", "var"];
+
+    pub fn new(name: String, option_type: String, default: String, min: String, max: String, var: Vec<String>) -> UCIOption {
+        UCIOption {
+            name,
+            option_type,
+            default,
+            min,
+            max,
+            var,
+        }
+    }
+
+    fn empty() -> UCIOption {
+        UCIOption {
+            name: "".to_string(),
+            option_type: "".to_string(),
+            default: "".to_string(),
+            min: "".to_string(),
+            max: "".to_string(),
+            var: vec![],
+        }
+    }
+
+    fn is_keyword(s: &str) -> bool {
+        UCIOption::KEYWORDS.contains(&s)
+    }
+
+    fn set(&mut self, keyword: &str, value: String) {
+        match keyword {
+            "name"    => self.name = value,
+            "type"    => self.option_type = value,
+            "default" => self.default = value,
+            "min"     => self.min = value,
+            "max"     => self.max = value,
+            "var"     => self.var = value.split_whitespace().map(|s| s.to_string()).collect(),
+            "option"  => { }, // ignore
+            _         => { panic!("Unknown keyword: {}", keyword) }
+        }
+    }
+
+    #[instrument]
+    pub fn parse(option: &str) -> UCIOption {
+        // split the option by keyword in KEYWORDS
+        let mut buf = vec![];
+        let mut current_keyword = "option";
+        let mut ret = UCIOption::empty();
+        let mut parts = option.split_whitespace();
+        loop {
+            match parts.next() {
+                Some(k) if UCIOption::is_keyword(k) => {
+                    let value = buf.clone().join(" ");
+                    ret.set(current_keyword, value);
+                    buf = vec![];
+                    current_keyword = k;
+                },
+                Some(s) => {
+                    buf.push(s.to_string());
+                },
+                None => {
+                    // we've run out of parts
+                    //      so set the final option
+                    ret.set(current_keyword, buf.clone().join(" "));
+                    //          and then return
+                    return ret;
+                }
+            }
+        }
+
+    }
 }
 
 // TODO: Error type
 
 impl Display for UCIMessage {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{}", format!("{:?}", self).to_lowercase())
     }
 }
 
@@ -102,7 +194,7 @@ impl UCIMessage {
                 let value = parts.collect::<Vec<&str>>().join(" ");
                 UCIMessage::ID(name, value)
             }
-            Some("uciok") => UCIMessage::ReadyOk,
+            Some("uciok") => UCIMessage::UCIOk,
             Some("bestmove") => {
                 let best_move = parts.next().unwrap().to_string();
                 match parts.next() {
@@ -121,16 +213,11 @@ impl UCIMessage {
                 )
             }
             Some("option") => {
-                let name = match parts.next() {
-                    Some("name") => parts.next().unwrap().to_string(),
-                    _ => panic!("Invalid option command")
-                };
-                let remaining_string = parts.collect::<Vec<&str>>().chunks(2).map(|s| s.join(" ").to_string()).collect();
-                UCIMessage::Option(name, remaining_string)
+                UCIMessage::Option(UCIOption::parse(message))
             }
             Some("readyok") => UCIMessage::ReadyOk,
             Some(_) => panic!("Unknown UCI message: {}", message),
-            None => panic!("Empty UCI message")
+            None => { UCIMessage::EmptyLine }
         }
     }
 }
@@ -151,6 +238,26 @@ mod tests {
     #[test]
     fn parses_uci() {
         assert_parses!("uci", UCIMessage::UCI);
+    }
+
+    #[test]
+    fn parses_uciok() {
+        assert_parses!("uciok", UCIMessage::UCIOk);
+    }
+
+    #[test]
+    fn parses_empty_line() {
+        assert_parses!("", UCIMessage::EmptyLine);
+    }
+
+    #[test]
+    fn parses_empty_line_with_whitespace() {
+        assert_parses!("  ", UCIMessage::EmptyLine);
+    }
+
+    #[test]
+    fn parses_readyok() {
+        assert_parses!("readyok", UCIMessage::ReadyOk);
     }
 
     #[test]
@@ -283,18 +390,89 @@ mod tests {
     }
 
     #[test]
-    fn parses_option() {
+    fn parses_CamelCase_option() {
         assert_parses!(
             "option name NullMove type check default true",
-            UCIMessage::Option("NullMove".to_string(), vec![
-                "type check".to_string(),
-                "default true".to_string()
-            ])
+            UCIMessage::Option(UCIOption::new(
+                "NullMove".to_string(),
+                "check".to_string(),
+                "true".to_string(),
+                "".to_string(),
+                "".to_string(),
+                vec![]
+            ))
         );
+    }
 
+    #[test]
+    fn parses_multi_word_option() {
+        assert_parses!(
+             "option name Debug Log File type string default",
+            UCIMessage::Option(UCIOption::new(
+                "Debug Log File".to_string(),
+                "string".to_string(),
+                "".to_string(),
+                "".to_string(),
+                "".to_string(),
+                vec![]
+            ))
+        );
+    }
+
+    #[test]
+    fn parses_all_default_option() {
         assert_parses!(
             "option name foo",
-            UCIMessage::Option("foo".to_string(), vec![])
+            UCIMessage::Option(UCIOption::new(
+                "foo".to_string(),
+                "".to_string(),
+                "".to_string(),
+                "".to_string(),
+                "".to_string(),
+                vec![]
+            ))
+        );
+    }
+
+    #[test]
+    fn parses_option_with_var() {
+        assert_parses!(
+            "option name Threads type spin default 1 min 1 max 1024",
+            UCIMessage::Option(UCIOption::new(
+                "Threads".to_string(),
+                "spin".to_string(),
+                "1".to_string(),
+                "1".to_string(),
+                "1024".to_string(),
+                vec![]
+            ))
+        );
+    }
+
+    #[test]
+    fn parses_option_with_var_and_default() {
+        assert_parses!(
+            "option name Threads type spin default 1 min 1 max 1024 var 1 2 4 8 16 32 64 128 256 512 1024",
+            UCIMessage::Option(UCIOption::new(
+                "Threads".to_string(),
+                "spin".to_string(),
+                "1".to_string(),
+                "1".to_string(),
+                "1024".to_string(),
+                vec![
+                    "1".to_string(),
+                    "2".to_string(),
+                    "4".to_string(),
+                    "8".to_string(),
+                    "16".to_string(),
+                    "32".to_string(),
+                    "64".to_string(),
+                    "128".to_string(),
+                    "256".to_string(),
+                    "512".to_string(),
+                    "1024".to_string(),
+                ]
+            ))
         );
     }
 }
