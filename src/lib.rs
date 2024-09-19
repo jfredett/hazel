@@ -24,6 +24,7 @@ extern crate either;
 extern crate rand;
 
 pub(crate) use thiserror::Error;
+#[allow(unused_imports)] // I want all the tracing stuff available regardless of whether it's used
 pub(crate) use tracing::{debug, error, info, instrument, warn};
 
 #[cfg(test)]
@@ -32,16 +33,16 @@ pub use tracing_test;
 #[macro_use]
 pub mod bitboard;
 pub mod constants;
+pub mod driver;
+pub mod engine;
 pub mod game;
 pub mod movement;
 pub mod moveset;
 pub mod pextboard;
 pub mod ply;
-pub mod util;
-pub mod driver;
-
 pub mod uci;
 pub mod ui;
+pub mod util;
 
 /// passes if the left is a subset of the right
 #[macro_export]

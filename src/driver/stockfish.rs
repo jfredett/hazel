@@ -4,11 +4,11 @@
 use std::io::{BufRead, BufReader, Write};
 use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
 
+#[allow(unused_imports)] // I want all the tracing stuff available regardless of whether it's used
 use tracing::*;
 
-use crate::uci::{UCIMessage, UCIOption};
-use crate::game::Game;
-use crate::movement::Move;
+use crate::uci::UCIMessage;
+use crate::engine::Engine;
 
 #[derive(Debug)]
 struct Stockfish {
@@ -18,52 +18,6 @@ struct Stockfish {
 }
 
 impl Stockfish {
-    pub fn new() -> Self {
-        // start the stockfish process
-        let mut child = Command::new("stockfish")
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .spawn()
-            .expect("Failed to start stockfish");
-
-        let stdin = child.stdin.take().expect("Failed to open stdin");
-        let mut stdout = child.stdout.take().expect("Failed to open stdout");
-        let mut stdout = BufReader::new(stdout);
-
-
-        // just burn off everything it outputs until we ask it to get ready
-        //
-            let mut line = String::new();
-            let bytes_read = stdout.read_line(&mut line).expect("Failed to read from stockfish");
-            dbg!(&line);
-
-        Stockfish { child, stdin, stdout }
-    }
-
-    pub fn exec_message(&mut self, message: &str) -> Vec<UCIMessage> {
-        self.exec(UCIMessage::parse(message))
-    }
-
-    pub fn exec(&mut self, message: UCIMessage) -> Vec<UCIMessage> {
-        let cmd_str = message.to_string();
-
-        writeln!(self.stdin, "{}", cmd_str).expect("Failed to write to stockfish");
-
-        let mut response = Vec::new();
-        loop {
-            let mut line = String::new();
-            let bytes_read = self.stdout.read_line(&mut line).expect("Failed to read from stockfish");
-
-            if bytes_read == 0 { break; } // EOF reached.
-
-            let line = line.trim_end();
-            response.push(UCIMessage::parse(line.clone()));
-
-            if self.is_response_complete(&message, &line) { break; } // Check if the response is complete.
-        }
-        response
-    }
-
     fn is_response_complete(&self, message: &UCIMessage, last_line: &str) -> bool {
         match message {
             UCIMessage::UCI => last_line == "uciok",
@@ -88,10 +42,58 @@ impl Drop for Stockfish {
     }
 }
 
+impl Engine<UCIMessage> for Stockfish {
+    fn new() -> Self {
+        // start the stockfish process
+        let mut child = Command::new("stockfish")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .expect("Failed to start stockfish");
+
+        let stdin = child.stdin.take().expect("Failed to open stdin");
+        let mut stdout = child.stdout.take().expect("Failed to open stdout");
+        let mut stdout = BufReader::new(stdout);
+
+
+        // just burn off everything it outputs until we ask it to get ready
+        let mut line = String::new();
+        let _ = stdout.read_line(&mut line).expect("Failed to first stanza from stockfish");
+
+        Stockfish { child, stdin, stdout }
+    }
+
+    fn exec_message(&mut self, message: &str) -> Vec<UCIMessage> {
+        self.exec(UCIMessage::parse(message))
+    }
+
+    fn exec(&mut self, message: UCIMessage) -> Vec<UCIMessage> {
+        let cmd_str = message.to_string();
+
+        writeln!(self.stdin, "{}", cmd_str).expect("Failed to write to stockfish");
+
+        let mut response = Vec::new();
+        loop {
+            let mut line = String::new();
+            let bytes_read = self.stdout.read_line(&mut line).expect("Failed to read from stockfish");
+
+            if bytes_read == 0 { break; } // EOF reached.
+
+            let line = line.trim_end();
+            response.push(UCIMessage::parse(line.clone()));
+
+            if self.is_response_complete(&message, &line) { break; } // Check if the response is complete.
+        }
+        response
+    }
+
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use tracing_test::traced_test;
+    use crate::uci::{UCIMessage, UCIOption};
 
     #[traced_test]
     #[test]
