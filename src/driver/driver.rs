@@ -6,53 +6,57 @@ use crate::uci::UCIMessage;
 use crate::game::Game;
 use crate::movement::Move;
 
+pub use crate::engine::Engine;
 
+
+// FIXME: this should probably be named 'Hazel' since it's the engine config for hazel.
 pub struct Driver {
     debug: bool,
     game: Option<Game>
 }
 
 impl Driver {
-    pub fn new() -> Self {
+    pub fn new() -> Driver {
         Driver {
             debug: false,
             game: None
         }
     }
+}
 
+impl Engine<UCIMessage> for Driver {
     /// This method simplifies testing by allowing the driver to be fed a string
     /// which is then parsed by the UCI implementation. This exercises both sides of the UCI
     /// implementation. Since Driver doesn't handle the UCI stream directly, we know we'll
     /// always be listening to our dialect of UCI anyway.
-    #[cfg(test)]
-    pub fn exec_message(&mut self, message: &str) -> Option<UCIMessage> {
+    fn exec_message(&mut self, message: &str) -> Vec<UCIMessage> {
         self.exec(UCIMessage::parse(message))
     }
 
-    pub fn exec(&mut self, message: UCIMessage) -> Option<UCIMessage> {
+    fn exec(&mut self, message: UCIMessage) -> Vec<UCIMessage> {
         info!("Executing UCI instruction: {:?}", message);
 
         match message {
             // GUI -> Engine
             UCIMessage::IsReady => {
-                Some(UCIMessage::ReadyOk)
+                vec![UCIMessage::ReadyOk]
             }
             UCIMessage::UCI => {
-                Some(UCIMessage::ID("Hazel".to_string(), "0.1".to_string()))
+                vec![UCIMessage::ID("Hazel".to_string(), "0.1".to_string())]
             }
             UCIMessage::Debug(flag) => {
                 self.debug = flag;
-                None
+                vec![]
             }
             UCIMessage::SetOption(_name, _values) => {
-                None
+                vec![]
             }
             UCIMessage::Register => {
-                None
+                vec![]
             }
             UCIMessage::UCINewGame => {
                 self.game = None;
-                None
+                vec![]
             }
             UCIMessage::Position(fen, moves) => {
                 let mut game = Game::from_fen(&fen);
@@ -61,7 +65,7 @@ impl Driver {
                 }
 
                 self.game = Some(game);
-                None
+                vec![]
             }
             UCIMessage::Go(_) => {
                 /*
@@ -71,25 +75,25 @@ impl Driver {
                 self.game.make(m);
                 None
                 */
-                None
+                vec![]
             }
             UCIMessage::Stop => {
-                None
+                vec![]
             }
             UCIMessage::PonderHit => {
-                None
+                vec![]
             }
             UCIMessage::Quit => {
-                None
+                vec![]
             }
             // Engine -> GUI
-            UCIMessage::ID(_,_) => None,
-            UCIMessage::ReadyOk => None,
-            UCIMessage::BestMove(_, _) => None,
-            UCIMessage::CopyProtection => None,
-            UCIMessage::Registration => None,
-            UCIMessage::Info(_) => None,
-            UCIMessage::Option(_) => None,
+            UCIMessage::ID(_,_) => vec![],
+            UCIMessage::ReadyOk => vec![],
+            UCIMessage::BestMove(_, _) => vec![],
+            UCIMessage::CopyProtection => vec![],
+            UCIMessage::Registration => vec![],
+            UCIMessage::Info(_) => vec![],
+            UCIMessage::Option(_) => vec![],
             _ => {
                 error!("Unexpected message: {:?}", message);
                 panic!("Unexpected message");
@@ -110,14 +114,15 @@ mod tests {
     fn driver_parses_isready() {
         let mut driver = Driver::new();
         let response = driver.exec(UCIMessage::IsReady);
-        assert_eq!(response, Some(UCIMessage::ReadyOk));
+        assert_eq!(response, vec![UCIMessage::ReadyOk]);
+        // this but with a vec![] instead of Some
     }
 
     #[test]
     fn driver_parses_uci() {
         let mut driver = Driver::new();
         let response = driver.exec(UCIMessage::UCI);
-        assert_eq!(response, Some(UCIMessage::ID("Hazel".to_string(), "0.1".to_string())));
+        assert_eq!(response, vec![UCIMessage::ID("Hazel".to_string(), "0.1".to_string())]);
     }
 
     #[test]
@@ -125,7 +130,7 @@ mod tests {
         let mut driver = Driver::new();
         assert!(!driver.debug);
         let response = driver.exec(UCIMessage::Debug(true));
-        assert_eq!(response, None);
+        assert_eq!(response, vec![]);
         assert!(driver.debug)
     }
 
@@ -133,7 +138,7 @@ mod tests {
     fn driver_sets_up_start_position() {
         let mut driver = Driver::new();
         let response = driver.exec_message("position startpos moves");
-        assert_eq!(response, None);
+        assert_eq!(response, vec![]);
         assert!(driver.game.is_some());
         assert!(driver.game.unwrap().to_fen() == START_POSITION_FEN);
     }
@@ -143,7 +148,7 @@ mod tests {
         let mut driver = Driver::new();
 
         let response = driver.exec_message(&format!("position fen {} moves", POS2_KIWIPETE_FEN));
-        assert_eq!(response, None);
+        assert_eq!(response, vec![]);
         assert!(driver.game.is_some());
         assert!(driver.game.unwrap().to_fen() == POS2_KIWIPETE_FEN);
     }
@@ -152,9 +157,8 @@ mod tests {
     fn driver_plays_moves_specified_by_position() {
         let mut driver = Driver::new();
         let response = driver.exec_message(&format!("position fen {} moves e2e4 e7e5", START_POSITION_FEN));
-        assert_eq!(response, None);
+        assert_eq!(response, vec![]);
         assert!(driver.game.is_some());
-        // BUG: This fen is probably wrong. It should be the position after e2e4 e7e5
         assert_eq!(driver.game.unwrap().to_fen(), "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2");
     }
 }

@@ -1,4 +1,8 @@
-// Purpose: Main application logic for the Hazel Chess Engine.
+// NOTE: DEPRECATED
+// This is an experiment, it's not for real use. I don't want to remove it from the repo just yet
+// as I'm going to need some of this code handy.
+
+
 use std::io;
 use crate::ui::widgets::ply::PlyWidget;
 use crate::ply::Ply;
@@ -17,17 +21,39 @@ use ratatui::{
     Frame,
 };
 
-use crate::ui::state::race_control::RaceControl;
-
-/// The main application widget for the Hazel Chess UI
 #[derive(Debug, Default)]
-pub struct HazelWidget {
-    race_control: RaceControl,
-    current_tab: String,
+pub struct Hazel {
+    // TODO: Control Panel State goes here
     exit : bool
 }
 
-impl Widget for &HazelWidget {
+impl Hazel {
+    /// runs the application's main loop until the user quits
+    pub fn run(&mut self, terminal: &mut tui::Tui) -> io::Result<()> {
+        while !self.exit {
+            terminal.draw(|frame| self.render_frame(frame))?;
+            self.handle_events()?;
+        }
+        Ok(())
+    }
+
+    fn render_frame(&self, frame: &mut Frame) {
+        frame.render_widget(&*self, frame.size());
+    }
+
+    fn handle_events(&mut self) -> io::Result<()> {
+        match event::read()? {
+            Event::Key(KeyEvent {
+                code: KeyCode::Char('q'),
+                kind: KeyEventKind::Press,
+                modifiers: _, ..
+            }) => Ok(self.exit = true),
+            _ => Ok(())
+        }
+    }
+}
+
+impl Widget for &Hazel {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let layout = Layout::default()
             .direction(Direction::Horizontal)
@@ -66,36 +92,3 @@ impl Widget for &HazelWidget {
     }
 }
 
-impl HazelWidget {
-    pub fn new() -> Self {
-        HazelWidget {
-            race_control: RaceControl::new(),
-            current_tab: "Grid".to_string(),
-            exit: false
-        }
-    }
-
-    /// runs the application's main loop until the user quits
-    pub fn run(&mut self, terminal: &mut tui::Tui) -> io::Result<()> {
-        while !self.exit {
-            terminal.draw(|frame| self.render_frame(frame))?;
-            self.handle_events()?;
-        }
-        Ok(())
-    }
-
-    fn render_frame(&self, frame: &mut Frame) {
-        frame.render_widget(&*self, frame.size());
-    }
-
-    fn handle_events(&mut self) -> io::Result<()> {
-        match event::read()? {
-            Event::Key(KeyEvent {
-                code: KeyCode::Char('q'),
-                kind: KeyEventKind::Press,
-                modifiers: _, ..
-            }) => Ok(self.exit = true),
-            _ => Ok(())
-        }
-    }
-}

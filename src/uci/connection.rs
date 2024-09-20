@@ -9,6 +9,8 @@ use tracing::*;
 use crate::driver::Driver;
 use crate::uci::UCIMessage;
 
+use crate::engine::Engine;
+
 pub fn run() -> io::Result<()> {
     run_with_io(io::stdin(), io::stdout())
 }
@@ -23,8 +25,9 @@ pub fn run_with_io<T: io::Read, U: io::Write>(input: T, mut output: U) -> io::Re
         let line = line?;
         let message = UCIMessage::parse(&line);
         info!("Received UCI message: {:?}", message);
-        if let Some(response) = driver.exec(message) {
-            output.write_all(response.to_string().as_bytes())?;
+        let response = driver.exec(message) ;
+        for r in response {
+            output.write_all(r.to_string().as_bytes())?;
         }
     }
     Ok(())

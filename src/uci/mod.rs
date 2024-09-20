@@ -1,3 +1,5 @@
+/// This module contains the UCI protocol implementation for the engine. It includes as UCI
+/// 'primitive' commands the extended/nonstandard commands that Stockfish implements.
 use tracing::{instrument, info, error};
 use std::fmt::{self, Display, Formatter};
 
@@ -35,6 +37,15 @@ pub enum UCIMessage {
     Info(Vec<String>),
     Option(UCIOption),
     EmptyLine,
+    // Stockfish Extensions
+    D,
+    /*
+    Eval,
+    Bench,
+    Compiler,
+    ExportNet,
+    Flip
+    */
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -216,6 +227,7 @@ impl UCIMessage {
                 UCIMessage::Option(UCIOption::parse(message))
             }
             Some("readyok") => UCIMessage::ReadyOk,
+            Some("d") => UCIMessage::D,
             Some(_) => panic!("Unknown UCI message: {}", message),
             None => { UCIMessage::EmptyLine }
         }
@@ -475,5 +487,10 @@ mod tests {
                 ]
             ))
         );
+    }
+
+    #[test]
+    fn parses_stockfish_extension_D() {
+        assert_parses!("d", UCIMessage::D);
     }
 }

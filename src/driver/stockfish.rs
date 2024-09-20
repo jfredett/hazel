@@ -11,7 +11,7 @@ use crate::uci::UCIMessage;
 use crate::engine::Engine;
 
 #[derive(Debug)]
-struct Stockfish {
+pub struct Stockfish {
     child: Child,
     stdin: ChildStdin,
     stdout: BufReader<ChildStdout>,
@@ -42,8 +42,8 @@ impl Drop for Stockfish {
     }
 }
 
-impl Engine<UCIMessage> for Stockfish {
-    fn new() -> Self {
+impl Stockfish {
+    pub fn new() -> Stockfish {
         // start the stockfish process
         let mut child = Command::new("stockfish")
             .stdin(Stdio::piped())
@@ -62,6 +62,9 @@ impl Engine<UCIMessage> for Stockfish {
 
         Stockfish { child, stdin, stdout }
     }
+}
+
+impl Engine<UCIMessage> for Stockfish {
 
     fn exec_message(&mut self, message: &str) -> Vec<UCIMessage> {
         self.exec(UCIMessage::parse(message))
