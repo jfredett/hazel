@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use crate::constants::Color;
 
 /// Represents a piece, the ordering is important since in move generation the promotion piecetype is
 /// encoded in 2 bits, this ordering allows us to cast it directly into this enum.
@@ -16,6 +17,10 @@ impl Piece {
     pub fn last_piece() -> Piece {
         Piece::Pawn
     }
+
+    pub fn to_fen(&self, color: Color) -> char {
+        ASCII_PIECE_CHARS[color as usize][*self as usize]
+    }
 }
 
 impl From<u16> for Piece {
@@ -23,6 +28,7 @@ impl From<u16> for Piece {
         PIECES[(v & 0x0007) as usize]
     }
 }
+
 
 /// A convenience array for looping over the pieces in the right order.
 pub const PIECES: [Piece; 6] = [
@@ -62,6 +68,7 @@ pub const UNICODE_PIECE_CHARS: [[char; 6]; 2] = [
     ],
 ];
 
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -97,6 +104,46 @@ mod test {
         #[test]
         pub fn converts_pawns_correctly() {
             converts_correctly(5, Piece::Pawn);
+        }
+    }
+
+    mod to_fen {
+        use super::*;
+
+        fn converts_correctly(piece: Piece, color: Color, expected: char) {
+            let c = piece.to_fen(color);
+            assert_eq!(c, expected);
+        }
+
+        #[test]
+        pub fn converts_knights_correctly() {
+            converts_correctly(Piece::Knight, Color::WHITE, 'N');
+            converts_correctly(Piece::Knight, Color::BLACK, 'n');
+        }
+        #[test]
+        pub fn converts_bishops_correctly() {
+            converts_correctly(Piece::Bishop, Color::WHITE, 'B');
+            converts_correctly(Piece::Bishop, Color::BLACK, 'b');
+        }
+        #[test]
+        pub fn converts_rooks_correctly() {
+            converts_correctly(Piece::Rook, Color::WHITE, 'R');
+            converts_correctly(Piece::Rook, Color::BLACK, 'r');
+        }
+        #[test]
+        pub fn converts_queens_correctly() {
+            converts_correctly(Piece::Queen, Color::WHITE, 'Q');
+            converts_correctly(Piece::Queen, Color::BLACK, 'q');
+        }
+        #[test]
+        pub fn converts_kings_correctly() {
+            converts_correctly(Piece::King, Color::WHITE, 'K');
+            converts_correctly(Piece::King, Color::BLACK, 'k');
+        }
+        #[test]
+        pub fn converts_pawns_correctly() {
+            converts_correctly(Piece::Pawn, Color::WHITE, 'P');
+            converts_correctly(Piece::Pawn, Color::BLACK, 'p');
         }
     }
 }
