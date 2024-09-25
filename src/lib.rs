@@ -1,4 +1,4 @@
-#![feature(stmt_expr_attributes)]
+#![feature(stmt_expr_attributes,assert_matches)]
 #![cfg_attr(test, allow(unused_imports))]
 // NOTE: These lints are disabled for the following reasons:
 //

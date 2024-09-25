@@ -106,6 +106,8 @@ impl Engine<UCIMessage> for Stockfish {
 
 #[cfg(test)]
 mod tests {
+    use std::assert_matches::assert_matches;
+
     use super::*;
     use tracing_test::traced_test;
     use crate::uci::{UCIMessage, UCIOption};
@@ -115,31 +117,11 @@ mod tests {
     fn stockfish_connects() {
         let mut stockfish = Stockfish::new();
         let response = stockfish.exec_message("uci");
-        assert_eq!(response, vec![
-            UCIMessage::ID("name".to_string(), "Stockfish 16.1".to_string()),
-            UCIMessage::ID("author".to_string(), "the Stockfish developers (see AUTHORS file)".to_string()),
-            UCIMessage::EmptyLine,
-            UCIMessage::Option( UCIOption::new( "Debug Log File".to_string(), "string".to_string(), "".to_string(), "".to_string(), "".to_string(), vec![])),
-            UCIMessage::Option( UCIOption::new( "Threads".to_string(), "spin".to_string(), "1".to_string(), "1".to_string(), "1024".to_string(), vec![])),
-            UCIMessage::Option( UCIOption::new( "Hash".to_string(), "spin".to_string(), "16".to_string(), "1".to_string(), "33554432".to_string(), vec![])),
-            UCIMessage::Option( UCIOption::new( "Clear Hash".to_string(), "button".to_string(), "".to_string(), "".to_string(), "".to_string(), vec![])),
-            UCIMessage::Option( UCIOption::new( "Ponder".to_string(), "check".to_string(), "false".to_string(), "".to_string(), "".to_string(), vec![])),
-            UCIMessage::Option( UCIOption::new( "MultiPV".to_string(), "spin".to_string(), "1".to_string(), "1".to_string(), "256".to_string(), vec![])),
-            UCIMessage::Option( UCIOption::new( "Skill Level".to_string(), "spin".to_string(), "20".to_string(), "0".to_string(), "20".to_string(), vec![])),
-            UCIMessage::Option( UCIOption::new( "Move Overhead".to_string(), "spin".to_string(), "10".to_string(), "0".to_string(), "5000".to_string(), vec![])),
-            UCIMessage::Option( UCIOption::new( "nodestime".to_string(), "spin".to_string(), "0".to_string(), "0".to_string(), "10000".to_string(), vec![])),
-            UCIMessage::Option( UCIOption::new( "UCI_Chess960".to_string(), "check".to_string(), "false".to_string(), "".to_string(), "".to_string(), vec![])),
-            UCIMessage::Option( UCIOption::new( "UCI_LimitStrength".to_string(), "check".to_string(), "false".to_string(), "".to_string(), "".to_string(), vec![])),
-            UCIMessage::Option( UCIOption::new( "UCI_Elo".to_string(), "spin".to_string(), "1320".to_string(), "1320".to_string(), "3190".to_string(), vec![])),
-            UCIMessage::Option( UCIOption::new( "UCI_ShowWDL".to_string(), "check".to_string(), "false".to_string(), "".to_string(), "".to_string(), vec![])),
-            UCIMessage::Option( UCIOption::new( "SyzygyPath".to_string(), "string".to_string(), "<empty>".to_string(), "".to_string(), "".to_string(), vec![])),
-            UCIMessage::Option( UCIOption::new( "SyzygyProbeDepth".to_string(), "spin".to_string(), "1".to_string(), "1".to_string(), "100".to_string(), vec![])),
-            UCIMessage::Option( UCIOption::new( "Syzygy50MoveRule".to_string(), "check".to_string(), "true".to_string(), "".to_string(), "".to_string(), vec![])),
-            UCIMessage::Option( UCIOption::new( "SyzygyProbeLimit".to_string(), "spin".to_string(), "7".to_string(), "0".to_string(), "7".to_string(), vec![])),
-            UCIMessage::Option( UCIOption::new( "EvalFile".to_string(), "string".to_string(), "nn-b1a57edbea57.nnue".to_string(), "".to_string(), "".to_string(), vec![])),
-            UCIMessage::Option( UCIOption::new( "EvalFileSmall".to_string(), "string".to_string(), "nn-baff1ede1f90.nnue".to_string(), "".to_string(), "".to_string(), vec![])),
-            UCIMessage::UCIOk,
-        ]);
+        // I'm only checking the first couple stanzas which I hope stay consistent across versions.
+        // I just want a canary to make sure I connected, UCI is timeless.
+        assert_matches!(&response[0], UCIMessage::ID(key, value) if key == "name" && value.starts_with("Stockfish"));
+        assert_matches!(&response[1], UCIMessage::ID(key, value) if key == "author" && value.starts_with("the Stockfish developers"));
+        assert_matches!(&response.last().unwrap(), UCIMessage::UCIOk);
     }
 }
 
