@@ -12,6 +12,7 @@
     forAllSystems = f: builtins.listToAttrs (map (name: { inherit name; value = f name; }) systems);
   in
   {
+    packages.x86_64-linux.devenv-up = self.devShells.x86_64-linux.default.config.procfileScript;
     devShells = forAllSystems
     (system: let
       pkgs = import nixpkgs { inherit system; };

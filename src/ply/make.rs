@@ -207,7 +207,7 @@ impl Ply {
                 //
                 //  1. f4 Na6
                 //  2. f5 g5
-                //  (3. fxe6 ...)
+                //  (3. fxg6 ...)
                 //
                 // State after end of ply 2:
                 //
@@ -240,8 +240,10 @@ impl Ply {
                 //
                 let target_idx = self.enemy_pawn_direction().index_shift(mov.target_idx());
 
-                self.place_enemy_piece(Piece::Pawn, target_idx)?;
                 self.unmove_piece(Piece::Pawn, mov)?;
+                self.place_enemy_piece(Piece::Pawn, target_idx)?;
+
+                dbg!(self);
             },
             MoveType::PROMOTION_KNIGHT => self.unexecute_promotion(mov, Piece::Knight)?,
             MoveType::PROMOTION_BISHOP => self.unexecute_promotion(mov, Piece::Bishop)?,
@@ -273,9 +275,9 @@ impl Ply {
         metadata: MoveType,
     ) -> MoveResult<Option<Piece>> {
         self.make(Move::from(
-                NOTATION_TO_INDEX(source) as u16,
-                NOTATION_TO_INDEX(target) as u16,
-                metadata,
+            NOTATION_TO_INDEX(source) as u16,
+            NOTATION_TO_INDEX(target) as u16,
+            metadata,
         ))
     }
 
@@ -318,27 +320,26 @@ impl Ply {
         self.meta.half_move_tick();
         match piece_moved {
             Piece::Rook => {
-                let rooks =
-                    self.rooks_for(self.current_player()) | self.rooks_for(self.other_player());
+                let rooks = self.rooks_for(self.current_player()) | self.rooks_for(self.other_player());
                 // PEXT here using the CORNERS mask will map a1 -> bit 0, h1 -> bit 2, a8 -> bit 3, h8 -> bit 4.
                 // If the bit is high, the rook is still in place, so we retain castling rights.
                 match rooks.pext(*CORNERS) {
-                    0b0000 => self.meta.rook_moved(true, true, true, true),
-                    0b0001 => self.meta.rook_moved(false, true, true, true),
-                    0b0010 => self.meta.rook_moved(true, false, true, true),
-                    0b0011 => self.meta.rook_moved(false, false, true, true),
-                    0b0100 => self.meta.rook_moved(true, true, false, true),
-                    0b0101 => self.meta.rook_moved(false, true, false, true),
-                    0b0110 => self.meta.rook_moved(true, false, false, true),
-                    0b0111 => self.meta.rook_moved(false, false, false, true),
-                    0b1000 => self.meta.rook_moved(true, true, true, false),
-                    0b1001 => self.meta.rook_moved(false, true, true, false),
-                    0b1010 => self.meta.rook_moved(true, false, true, false),
-                    0b1011 => self.meta.rook_moved(false, false, true, false),
-                    0b1100 => self.meta.rook_moved(true, true, false, false),
-                    0b1101 => self.meta.rook_moved(false, true, false, false),
-                    0b1110 => self.meta.rook_moved(true, false, false, false),
-                    0b1111 => self.meta.rook_moved(false, false, false, false),
+                    0b0000 => self.meta.rook_moved(true  , true  , true  , true)  ,
+                    0b0001 => self.meta.rook_moved(false , true  , true  , true)  ,
+                    0b0010 => self.meta.rook_moved(true  , false , true  , true)  ,
+                    0b0011 => self.meta.rook_moved(false , false , true  , true)  ,
+                    0b0100 => self.meta.rook_moved(true  , true  , false , true)  ,
+                    0b0101 => self.meta.rook_moved(false , true  , false , true)  ,
+                    0b0110 => self.meta.rook_moved(true  , false , false , true)  ,
+                    0b0111 => self.meta.rook_moved(false , false , false , true)  ,
+                    0b1000 => self.meta.rook_moved(true  , true  , true  , false) ,
+                    0b1001 => self.meta.rook_moved(false , true  , true  , false) ,
+                    0b1010 => self.meta.rook_moved(true  , false , true  , false) ,
+                    0b1011 => self.meta.rook_moved(false , false , true  , false) ,
+                    0b1100 => self.meta.rook_moved(true  , true  , false , false) ,
+                    0b1101 => self.meta.rook_moved(false , true  , false , false) ,
+                    0b1110 => self.meta.rook_moved(true  , false , false , false) ,
+                    0b1111 => self.meta.rook_moved(false , false , false , false) ,
                     _ => unreachable!(),
                 }
             }
@@ -508,6 +509,9 @@ mod tests {
     use tracing::info;
     use tracing_test::traced_test;
 
+    use crate::engine::Engine;
+    use crate::uci::UCIMessage;
+
     #[test]
     fn short_castle_is_done_correctly() -> MoveResult<()> {
         let mut p = Ply::from_fen(START_POSITION_FEN);
@@ -581,6 +585,7 @@ mod tests {
         Ok(())
     }
 
+    #[traced_test]
     #[test]
     fn en_passant_capture_is_undone_correctly() -> MoveResult<()> {
         let mut p = Ply::from_fen(START_POSITION_FEN);
@@ -588,31 +593,40 @@ mod tests {
         // 1. d4 h6
         // 2. d5 e5
         // 3. dxe6
-        p.make_by_notation("d2", "d4", MoveType::QUIET)?;
-        p.make_by_notation("h7", "h6", MoveType::QUIET)?;
-        p.make_by_notation("d4", "d5", MoveType::QUIET)?;
-        p.make_by_notation("e7", "e5", MoveType::QUIET)?;
-        p.make_by_notation("d5", "e6", MoveType::EP_CAPTURE)?;
+        p.make_by_notation("f2", "f4", MoveType::QUIET)?;
+        p.make_by_notation("b8", "a6", MoveType::QUIET)?;
+        p.make_by_notation("f4", "f5", MoveType::QUIET)?;
+        p.make_by_notation("g7", "g5", MoveType::QUIET)?;
+        let expected_boardstate = p.clone();
+        p.make_by_notation("f5", "g6", MoveType::EP_CAPTURE)?;
 
-        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("e5")), None);
+
+        assert_eq!(p.piece_at_index(NOTATION_TO_INDEX("g7")), None);
         assert_eq!(
-            p.piece_at_index(NOTATION_TO_INDEX("e6")),
+            p.piece_at_index(NOTATION_TO_INDEX("g6")),
             Some((Color::WHITE, Piece::Pawn))
         );
 
-        // Now I want to undo the en passant capture
-        p.unmake_by_notation("d5", "e6", MoveType::EP_CAPTURE, Some(Piece::Pawn), p.meta)?;
+        dbg!(p.meta);
+        dbg!(expected_boardstate.meta);
+        // Now I want to undo the en passant capture -- I'm passing in the expected_stats's
+        // metadata, but I feel like it should probably be managed by the unmake function itself?
+        // For now I suppose it's fine.
+        p.unmake_by_notation("f5", "g6", MoveType::EP_CAPTURE, Some(Piece::Pawn), expected_boardstate.meta)?;
 
+        assert_eq!(p, expected_boardstate);
+
+        dbg!(p);
         assert_eq!(
-            p.piece_at_index(NOTATION_TO_INDEX("e5")),
+            p.piece_at_index(NOTATION_TO_INDEX("g5")),
             Some((Color::BLACK, Piece::Pawn))
         );
         assert_eq!(
-            p.piece_at_index(NOTATION_TO_INDEX("e6")),
+            p.piece_at_index(NOTATION_TO_INDEX("g6")),
             None
         );
         assert_eq!(
-            p.piece_at_index(NOTATION_TO_INDEX("d5")), 
+            p.piece_at_index(NOTATION_TO_INDEX("f5")),
             Some((Color::WHITE, Piece::Pawn))
         );
 

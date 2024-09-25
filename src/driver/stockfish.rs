@@ -24,6 +24,7 @@ impl Stockfish {
             UCIMessage::IsReady => last_line == "readyok",
             UCIMessage::Go(_) => last_line.starts_with("bestmove"),
             UCIMessage::Stop => last_line.starts_with("bestmove"),
+            UCIMessage::D => last_line.starts_with("Checkers:"),
             _ => false,
         }
     }
@@ -66,28 +67,39 @@ impl Stockfish {
 
 impl Engine<UCIMessage> for Stockfish {
 
+    #[instrument]
     fn exec_message(&mut self, message: &str) -> Vec<UCIMessage> {
         self.exec(UCIMessage::parse(message))
     }
 
+    #[instrument]
     fn exec(&mut self, message: UCIMessage) -> Vec<UCIMessage> {
+        debug!("{}", message.to_string());
         let cmd_str = message.to_string();
 
         writeln!(self.stdin, "{}", cmd_str).expect("Failed to write to stockfish");
 
-        let mut response = Vec::new();
-        loop {
-            let mut line = String::new();
-            let bytes_read = self.stdout.read_line(&mut line).expect("Failed to read from stockfish");
+        if message.has_response() {
+            let mut response = Vec::new();
+            loop {
+                let mut line = String::new();
+                let bytes_read = self.stdout.read_line(&mut line).expect("Failed to read from stockfish");
 
-            if bytes_read == 0 { break; } // EOF reached.
+                if bytes_read == 0 { break; } // EOF reached.
 
-            let line = line.trim_end();
-            response.push(UCIMessage::parse(line));
+                let line = line.trim_end();
+                if message != UCIMessage::D {
+                    response.push(UCIMessage::parse(line));
+                } else {
+                    debug!("{}", line);
+                }
 
-            if self.is_response_complete(&message, &line) { break; } // Check if the response is complete.
+                if self.is_response_complete(&message, &line) { break; } // Check if the response is complete.
+            }
+            return response
+        } else {
+            return vec![]
         }
-        response
     }
 
 }

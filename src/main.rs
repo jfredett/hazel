@@ -22,7 +22,7 @@ fn main() {
     info!("Welcome to Hazel.");
 
     // parse arguments
-    let headless : bool = true;
+    let headless : bool = false;
 
     /*
      *
@@ -71,8 +71,17 @@ fn main() {
         tracing_subscriber::fmt()
             .with_writer(non_blocking)
             .init();
-        uci::run()
+        let _ = uci::run();
     } else {
-        ui::run()
+        // Log to a file
+        let (non_blocking, _guard) = tracing_appender::non_blocking(std::fs::File::create("hazel.log").unwrap());
+        let subscriber = fmt::Subscriber::builder()
+            .with_env_filter(EnvFilter::from_default_env())
+            .with_writer(non_blocking)
+            .finish();
+        tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+        let _ = ui::run();
     };
+
+    ()
 }

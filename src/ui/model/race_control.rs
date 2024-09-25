@@ -1,4 +1,6 @@
-use crate::ui::state::grid::Grid;
+#![allow(dead_code)]
+
+use crate::ui::model::grid::Grid;
 
 #[derive(Debug, Default)]
 pub struct RaceControl {

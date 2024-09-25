@@ -1,10 +1,13 @@
+use std::fmt::Display;
 
+// TODO: Move this into Hazel Proper?
+// Maybe just use a Ply for this in Entry for now?
 use crate::constants::Piece;
 use crate::constants::Color;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct PieceBoard {
-    board: [[Occupant; 8]; 8],
+    pub board: [[Occupant; 8]; 8],
 }
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -41,6 +44,15 @@ impl Occupant {
     }
 }
 
+impl Display for Occupant {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Occupant::Occupied(piece, color) => write!(f, "{}", piece.to_fen(*color)),
+            Occupant::Empty => write!(f, ".")
+        }
+    }
+}
+
 pub const START_POSITION : PieceBoard = PieceBoard {
     board: [
         [ Occupant::black(Piece::Rook) , Occupant::black(Piece::Knight) , Occupant::black(Piece::Bishop) , Occupant::black(Piece::Queen) , Occupant::black(Piece::King) , Occupant::black(Piece::Bishop) , Occupant::black(Piece::Knight) , Occupant::black(Piece::Rook) ] ,
@@ -67,6 +79,10 @@ impl PieceBoard {
 
     pub fn set_startpos(&mut self) {
         self.set_board(START_POSITION.board);
+    }
+
+    pub fn get(&self, row: usize, col: usize) -> Occupant {
+        self.board[row][col]
     }
 
     pub fn to_fen(&self) -> String {

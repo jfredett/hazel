@@ -50,13 +50,34 @@ mod tests {
 
     use tracing_test::traced_test;
 
+    macro_rules! assert_no_difference {
+        ($a:expr, $b:expr) => {
+            if $a - $b != 0 {
+                if $a > $b {
+                    println!("Left overcounts right by: {} - {} = {}", $a, $b, $a - $b);
+                } else {
+                    println!("Right overcounts left by: {} - {} = {}", $b, $a, $b - $a);
+                }
+                assert!(false);
+            } else {
+                assert_eq!($a, $b);
+            }
+        }
+    }
+
     #[test]
-    fn perft_start_position_to_depth_6() {
-        assert_eq!(perft_start_position(1), 20);
-        assert_eq!(perft_start_position(2), 400);
-        assert_eq!(perft_start_position(3), 8_902);
-        assert_eq!(perft_start_position(4), 197_281);
-        // assert_eq!(perft_start_position(5), 4_865_609);
-        // assert_eq!(perft_start_position(6), 119_060_324);
+    fn perft_start_position_to_depth_4() {
+        assert_no_difference!(perft_start_position(1), 20);
+        assert_no_difference!(perft_start_position(2), 400);
+        assert_no_difference!(perft_start_position(3), 8_902);
+        assert_no_difference!(perft_start_position(4), 197_281);
+    }
+
+    
+    #[test]
+    #[ignore]
+    fn slow_perft() {
+        assert_no_difference!(perft_start_position(5), 4_865_609);
+        assert_eq!(perft_start_position(6), 119_060_324);
     }
 }

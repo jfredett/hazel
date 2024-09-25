@@ -1,4 +1,5 @@
-use crate::ui::state::entry::Entry;
+#![allow(dead_code)]
+use crate::ui::model::entry::Entry;
 
 #[derive(Debug, Default)]
 pub struct Grid {
