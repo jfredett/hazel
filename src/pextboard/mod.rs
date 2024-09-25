@@ -5,11 +5,6 @@ use crate::{
 };
 use nominal_attacks::*;
 
-// NOTE: This is actually necessary, but rust-analyzer thinks it's not. I think it has to do with it only really being
-// used to get the `bitboard!` macro
-#[allow(unused_imports)]
-use super::*;
-
 const BISHOP_OFFSETS: [usize; 64] = [
     0, 64, 96, 128, 160, 192, 224, 256, 320, 352, 384, 416, 448, 480, 512, 544, 576, 608, 640, 768,
     896, 1024, 1152, 1184, 1216, 1248, 1280, 1408, 1920, 2432, 2560, 2592, 2624, 2656, 2688, 2816,
@@ -215,7 +210,7 @@ lazy_static! {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{constants::Color, ply::Ply};
+    use crate::{bitboard, constants::Color, ply::Ply};
 
     mod rooks {
         use crate::constants::POS2_KIWIPETE_FEN;

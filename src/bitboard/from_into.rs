@@ -54,7 +54,4 @@ mod tests {
         let b = Bitboard(0x00000001);
         assert_eq!(usize::from(b), 0x0000000000000001);
     }
-
-
-
 }
