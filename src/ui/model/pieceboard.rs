@@ -10,7 +10,7 @@ pub struct PieceBoard {
     pub board: [[Occupant; 8]; 8],
 }
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum Occupant {
     Occupied(Piece, Color),
     #[default] Empty
@@ -174,6 +174,18 @@ mod tests {
 
     use super::*;
 
+    mod get {
+        use super::*;
+
+        #[test]
+        pub fn gets_piece_correctly() {
+            let fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+            let board = PieceBoard::from_fen(fen);
+            let occupant = board.get(0, 0);
+            assert_eq!(occupant, Occupant::black(Piece::Rook));
+        }
+    }
+
     mod fen {
         use super::*;
 
@@ -195,6 +207,14 @@ mod tests {
         #[test]
         pub fn converts_fen_to_board_correctly() {
             let fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+            let board = PieceBoard::from_fen(fen);
+            let fen2 = board.to_fen();
+            assert_eq!(fen, fen2);
+        }
+
+        #[test]
+        pub fn converts_each_offset_correctly() {
+            let fen = "p7/1p6/2p5/3p4/4p3/5p2/6p1/7p";
             let board = PieceBoard::from_fen(fen);
             let fen2 = board.to_fen();
             assert_eq!(fen, fen2);
