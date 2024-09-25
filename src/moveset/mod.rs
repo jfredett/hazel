@@ -186,10 +186,6 @@ mod test {
         ];
 
         assert_are_equal_sets!(ml.moves[Piece::Pawn as usize], expected);
-        /*
-        assert_is_subset!(&ml.moves[Piece::Pawn as usize], &expected);
-        assert_is_subset!(&expected, &ml.moves[Piece::Pawn as usize]);
-        */
     }
 
     #[test]
