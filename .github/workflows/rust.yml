@@ -10,21 +10,23 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:      
+  build:
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
     - name: Build
       run: cargo build --verbose
-      
+
     - name: Setup just
       uses: extractions/setup-just@v2
-      
+
     - name: Install Nextest
       uses: baptiste0928/cargo-install@v1
       with:
         crate: cargo-nextest
+    - name: Install Stockfish
+      run: sudo apt install -y stockfish
     - name: Run Tests
       run: just test
 
