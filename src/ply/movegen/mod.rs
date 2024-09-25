@@ -1,3 +1,5 @@
+#![allow(dead_code)] // this is a stub for a future refactor
+
 use super::*;
 
 impl Ply {

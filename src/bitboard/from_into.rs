@@ -25,3 +25,36 @@ impl From<Bitboard> for usize {
         val.0 as usize
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn bitboard_from_u64() {
+        let b = Bitboard::from(0x0000000000000001);
+        assert_eq!(b, Bitboard(0x0000000000000001));
+    }
+
+    #[test]
+    fn u64_from_bitboard() {
+        let b = Bitboard(0x0000000000000001);
+        assert_eq!(u64::from(b), 0x0000000000000001);
+    }
+
+    #[test]
+    fn bitboard_from_usize() {
+        let b = Bitboard::from(0x00000001);
+        assert_eq!(b, Bitboard(0x0000000000000001));
+    }
+
+    #[test]
+    fn usize_from_bitboard() {
+        let b = Bitboard(0x00000001);
+        assert_eq!(usize::from(b), 0x0000000000000001);
+    }
+
+
+
+}
