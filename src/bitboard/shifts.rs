@@ -4,7 +4,7 @@ use crate::constants::*;
 
 impl Bitboard {
     #[inline]
-    pub fn shift(&self, d: Direction) -> Bitboard {
+    pub const fn shift(&self, d: Direction) -> Bitboard {
         let mut new_b = *self; // new_b is a copy of self
 
         new_b.shift_mut(d);
@@ -13,7 +13,7 @@ impl Bitboard {
 
 
     #[rustfmt::skip]
-    pub fn shift_mut(&mut self, d : Direction) {
+    pub const fn shift_mut(&mut self, d : Direction) {
         let offset = DIRECTION_INDEX_OFFSETS[d as usize];
         match d {
             Direction::N    => { self.0 <<= offset               },

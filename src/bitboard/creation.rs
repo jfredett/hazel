@@ -27,7 +27,7 @@ impl Bitboard {
     /// let b = Bitboard::empty();
     /// assert!(b.is_empty());
     /// ```
-    pub fn empty() -> Bitboard {
+    pub const fn empty() -> Bitboard {
         Bitboard { 0: 0 }
     }
 
@@ -42,6 +42,12 @@ impl Bitboard {
         Bitboard { 0: b }
     }
 
+    /// Creates a bitboard from the given index
+    /// ```
+    /// # use hazel::bitboard::Bitboard;
+    /// let b = Bitboard::from_index(0);
+    /// assert!(b.is_set(0,0));
+    /// ```
     pub fn from_index(idx: u8) -> Bitboard {
         Bitboard { 0: 1 << idx }
     }
