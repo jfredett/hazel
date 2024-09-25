@@ -162,6 +162,7 @@ pub enum Search {
 #[cfg(test)]
 mod test {
     use either::Either;
+    use crate::assert_are_equal_sets;
 
     use crate::{
         assert_is_subset,
@@ -184,8 +185,11 @@ mod test {
             Move::from(56, 64, MoveType::PROMOTION_KNIGHT),
         ];
 
+        assert_are_equal_sets!(ml.moves[Piece::Pawn as usize], expected);
+        /*
         assert_is_subset!(&ml.moves[Piece::Pawn as usize], &expected);
         assert_is_subset!(&expected, &ml.moves[Piece::Pawn as usize]);
+        */
     }
 
     #[test]

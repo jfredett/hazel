@@ -61,9 +61,6 @@ macro_rules! assert_is_subset {
     };
 }
 
-/*
-FIXME: This isn't working because it can't find the 'assert_is_subset!' macro even though it's _right there_.
-
 /// This is essentially assert_eq but doesn't care about order differences
 #[macro_export] macro_rules! assert_are_equal_sets {
     ($left:expr, $right:expr) => (
@@ -72,4 +69,3 @@ FIXME: This isn't working because it can't find the 'assert_is_subset!' macro ev
     );
 }
 
-*/
