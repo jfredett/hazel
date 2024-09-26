@@ -31,11 +31,6 @@ impl Arbitrary for Game {
 mod tests {
     use super::*;
 
-    #[test]
-    fn foo() {
-        assert!(true);
-    }
-
     #[quickcheck]
     fn game_can_be_generated_arbitrarily(g: Game) -> bool {
         // just verifies the generator doesn't panic
