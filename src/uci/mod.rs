@@ -278,8 +278,16 @@ impl UCIMessage {
         }
     }
 
-
-
+    pub fn is_complete(&self, last_line: &str) -> bool {
+        match self {
+            UCIMessage::UCI => last_line == "uciok",
+            UCIMessage::IsReady => last_line == "readyok",
+            UCIMessage::Go(_) => last_line.starts_with("bestmove"),
+            UCIMessage::Stop => last_line.starts_with("bestmove"),
+            UCIMessage::D => last_line.starts_with("Checkers:"),
+            _ => false,
+        }
+    }
 }
 
 

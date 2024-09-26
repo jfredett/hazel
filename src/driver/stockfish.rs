@@ -18,16 +18,6 @@ pub struct Stockfish {
 }
 
 impl Stockfish {
-    fn is_response_complete(&self, message: &UCIMessage, last_line: &str) -> bool {
-        match message {
-            UCIMessage::UCI => last_line == "uciok",
-            UCIMessage::IsReady => last_line == "readyok",
-            UCIMessage::Go(_) => last_line.starts_with("bestmove"),
-            UCIMessage::Stop => last_line.starts_with("bestmove"),
-            UCIMessage::D => last_line.starts_with("Checkers:"),
-            _ => false,
-        }
-    }
 
     pub fn close(&mut self) -> std::io::Result<()> {
         writeln!(self.stdin, "quit")?;
@@ -94,7 +84,7 @@ impl Engine<UCIMessage> for Stockfish {
                     debug!("{}", line);
                 }
 
-                if self.is_response_complete(&message, &line) { break; } // Check if the response is complete.
+                if message.is_complete(&line) { break; } // Check if the response is complete.
             }
             return response
         } else {
