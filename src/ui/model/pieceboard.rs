@@ -1,56 +1,9 @@
-use std::fmt::Display;
-
-// TODO: Move this into Hazel Proper?
-// Maybe just use a Ply for this in Entry for now?
 use crate::constants::Piece;
-use crate::constants::Color;
+use crate::ui::model::{occupant::Occupant, alteration::Alteration};
 
 #[derive(Debug, Default, Clone, Copy)]
 pub struct PieceBoard {
     pub board: [[Occupant; 8]; 8],
-}
-
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub enum Occupant {
-    Occupied(Piece, Color),
-    #[default] Empty
-}
-
-impl Occupant {
-    pub const fn empty() -> Self {
-        Self::Empty
-    }
-
-    pub const fn white(piece: Piece) -> Self {
-        Self::Occupied(piece, Color::WHITE)
-    }
-
-    pub const fn black(piece: Piece) -> Self {
-        Self::Occupied(piece, Color::BLACK)
-    }
-
-    pub fn color(&self) -> Option<Color> {
-        match self {
-            Occupant::Occupied(_, color) => Some(*color),
-            Occupant::Empty => None
-        }
-    }
-
-    pub fn piece(&self) -> Option<Piece> {
-        match self {
-            Occupant::Occupied(piece, _) => Some(*piece),
-            Occupant::Empty => None
-        }
-    }
-}
-
-impl Display for Occupant {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Occupant::Occupied(piece, color) => write!(f, "{}", piece.to_fen(*color)),
-            Occupant::Empty => write!(f, ".")
-        }
-    }
 }
 
 pub const START_POSITION : PieceBoard = PieceBoard {
@@ -161,12 +114,6 @@ impl PieceBoard {
             }
         }
     }
-}
-
-pub enum Alteration {
-    Move((usize, usize), (usize, usize)),
-    Remove((usize, usize)),
-    Place((usize, usize), Occupant)
 }
 
 #[cfg(test)]
