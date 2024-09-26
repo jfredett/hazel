@@ -29,6 +29,8 @@ jobs:
       run: sudo apt install -y stockfish
     - name: Run Tests
       run: just test
+    - name: Run Doctests
+      run: cargo test --doc
 
     - name: Install cargo-llvm-cov
       uses: taiki-e/install-action@cargo-llvm-cov
