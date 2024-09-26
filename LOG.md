@@ -318,3 +318,18 @@ probably I should be calculating the 'correct' metadata from the 'unmade' moves 
 `Ply` struct is pretty cooked, tbh.
 
 Anyway, back to `main` I go.
+
+# 26-SEP-2024
+
+## 2034
+
+I set up a `mask` util object, but this is going to require refactoring `Engine` before I can use
+it. I think I can create a second trait, `AsyncEngine`, which wraps `Engine`, allowing for both.
+
+I think I need to switch to only returning messages one at a time, rather than trying to eagerly
+read. All this needs to factor into the UI as well, which is going to be a bunch of work as well.
+
+For now, I think I can progress with the blocking version and try to get the UI 'working' to some
+extent with a stockfish backend. Thus back to the UI I guess. Logging output and text-to-stdin input
+next, I think.
+
