@@ -2,6 +2,8 @@
 
 [![justforfunnoreally.dev badge](https://img.shields.io/badge/justforfunnoreally-dev-9ff)](https://justforfunnoreally.dev)
 
+[![codecov](https://codecov.io/github/jfredett/hazel/graph/badge.svg?token=ZHLLLZLAR5)](https://codecov.io/github/jfredett/hazel)
+
 `hazel` is a little chess engine in Rust from scratch by me. It's a work in progress,
 and I doubt it'll ever be particularly good, but I rather like it and you're welcome to
 read it and use it if you like.

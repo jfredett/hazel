@@ -18,22 +18,26 @@ jobs:
     - name: Build
       run: cargo build --verbose
 
-    - name: Setup just
+    - name: Install just
       uses: extractions/setup-just@v2
 
     - name: Install Nextest
       uses: baptiste0928/cargo-install@v1
       with:
         crate: cargo-nextest
+
     - name: Install Stockfish
       run: sudo apt install -y stockfish
-    - name: Run Tests
-      run: just test
 
     - name: Install cargo-llvm-cov
       uses: taiki-e/install-action@cargo-llvm-cov
+
+    - name: Run Tests
+      run: just ci
+
     - name: Generate code coverage
       run: just coverage
+
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:

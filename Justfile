@@ -1,18 +1,31 @@
 @_default:
     just --list
 
-test *ARGS:
-    #!/usr/bin/env bash
+# Run the CI pipeline
+ci *ARGS: doctest nextest
 
-    # Run the tests
-    cargo nextest run --no-fail-fast {{ARGS}}
+# Run the tests
+nextest:
+    cargo nextest run --no-fail-fast
 
-    # Run the doctests, which aren't done by nextest
+# Run the doctests, which aren't done by nextest
+doctest:
     cargo test --doc
 
-    # this next line if the .lcov file is older than like, 15 minutes, by running coverage
-    if [[ ! -f ./.lcov ]] || [[ $(find ./.lcov -mmin +15) ]]; then
+# Dev Loop
+test:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "Smoke Check"
+    just doctest
+
+    if [[ ! -f ./.lcov ]] || [[ $(find ./.lcov -mmin +5) ]]; then
+        echo "Refreshing coverage data"
         just coverage
+    else 
+        echo "Using cached coverage data"
+        just nextest
     fi
 
 coverage:
