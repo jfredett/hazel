@@ -2,43 +2,17 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 
 use ratatui::crossterm::event::{Event, KeyCode};
-use ratatui::text::Text;
 use ratatui::prelude::*;
-use ratatui::widgets::{Widget, Block, Borders};
+use ratatui::widgets::{Block, Borders};
 
+use crate::ui::widgets::fenwidget::FENWidget;
+use crate::ui::widgets::boardwidget::BoardWidget;
 
 use tracing::{debug, instrument};
 
-use ratatui::buffer::Buffer;
-
 use crate::uci::UCIMessage;
-use crate::ui::model::{
-    pieceboard::PieceBoard,
-    entry::{Entry, stockfish}
-};
+use crate::ui::model::entry::{Entry, stockfish};
 use crate::engine::Engine;
-
-#[derive(Debug, Default)]
-pub struct FENWidget {
-    board: PieceBoard
-}
-
-impl FENWidget {
-    pub fn from(entry: &Entry) -> Self {
-        Self {
-            board: entry.boardstate.clone()
-        }
-    }
-}
-
-impl Widget for &FENWidget {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        let fen = self.board.to_fen();
-
-        Text::styled(fen, Style::default().fg(Color::White).bg(Color::Black)).render(area, buf);
-    }
-}
-
 
 pub struct Hazel {
     flags: HashMap<String, bool>,
@@ -146,67 +120,3 @@ impl Hazel {
     }
 }
 
-pub struct BoardWidget {
-    board: PieceBoard
-}
-
-impl BoardWidget {
-    pub fn from(board: &PieceBoard) -> Self {
-        Self {
-            board: board.clone()
-        }
-    }
-}
-
-
-fn eight_cells(direction: Direction) -> Layout {
-    Layout::default()
-        .direction(direction)
-        .constraints(
-            [
-                Constraint::Max(1),
-                Constraint::Max(1),
-                Constraint::Max(1),
-                Constraint::Max(1),
-                Constraint::Max(1),
-                Constraint::Max(1),
-                Constraint::Max(1),
-                Constraint::Max(1),
-                /* Would be cool to scale up the board dynamically with the allotted size.
-                Constraint::Ratio(1, 8),
-                Constraint::Ratio(1, 8),
-                Constraint::Ratio(1, 8),
-                Constraint::Ratio(1, 8),
-                Constraint::Ratio(1, 8),
-                Constraint::Ratio(1, 8),
-                Constraint::Ratio(1, 8),
-                Constraint::Ratio(1, 8),
-                */
-            ].as_ref()
-        )
-}
-
-impl Widget for &BoardWidget {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        let cols = eight_cells(Direction::Horizontal).split(area);
-        let rows = [
-            eight_cells(Direction::Vertical).split(cols[0]),
-            eight_cells(Direction::Vertical).split(cols[1]),
-            eight_cells(Direction::Vertical).split(cols[2]),
-            eight_cells(Direction::Vertical).split(cols[3]),
-            eight_cells(Direction::Vertical).split(cols[4]),
-            eight_cells(Direction::Vertical).split(cols[5]),
-            eight_cells(Direction::Vertical).split(cols[6]),
-            eight_cells(Direction::Vertical).split(cols[7])
-        ];
-
-        for i in 0..8 {
-            for j in 0..8 {
-                let cell = Block::default()
-                    .title(self.board.get(i,j).to_string())
-                    .borders(Borders::NONE);
-                cell.render(rows[j][i], buf);
-            }
-        }
-    }
-}

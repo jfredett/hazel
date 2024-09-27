@@ -12,6 +12,7 @@ use ratatui::{
 
 mod model;
 mod app;
+mod widgets;
 
 use app::Hazel;
 
