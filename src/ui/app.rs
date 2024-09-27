@@ -14,6 +14,8 @@ use crate::uci::UCIMessage;
 use crate::ui::model::entry::{Entry, stockfish};
 use crate::engine::Engine;
 
+use super::widgets::outputwidget::OutputWidget;
+
 pub struct Hazel {
     flags: HashMap<String, bool>,
     entry: Entry
@@ -88,9 +90,9 @@ impl Hazel {
             .margin(1)
             .constraints(
                 [
-                    Constraint::Percentage(10),
-                    Constraint::Percentage(10),
-                    Constraint::Percentage(10),
+                    Constraint::Percentage(5),
+                    Constraint::Percentage(5),
+                    Constraint::Percentage(20),
                     Constraint::Percentage(70),
                 ].as_ref()
             )
@@ -108,12 +110,18 @@ impl Hazel {
         let input_widget = Block::default()
             .title("Input")
             .borders(Borders::ALL);
-        let output_widget = Block::default()
-            .title("Output")
-            .borders(Borders::ALL);
+
+        let mut output_widget = OutputWidget::empty();
+
+        output_widget.push("Hello, world!".to_string());
+        output_widget.push("Hello, world!".to_string());
+        output_widget.push("Hello, world!".to_string());
+        output_widget.push("Hello, world!".to_string());
+        output_widget.push("Hello, world!".to_string());
+        output_widget.push("Hello, world!".to_string());
 
         frame.render_widget(input_widget, chunks[1]);
-        frame.render_widget(output_widget, chunks[2]);
+        frame.render_widget(&output_widget, chunks[2]);
 
         frame.render_widget(&self.board_widget(), chunks[3]);
 
