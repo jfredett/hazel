@@ -43,7 +43,8 @@ impl Color {
     }
 }
 
-pub const COLORS: [Color; 2] = [Color::WHITE, Color::BLACK];
+pub const COLOR_COUNT: usize = 2;
+pub const COLORS: [Color; COLOR_COUNT] = [Color::WHITE, Color::BLACK];
 
 impl Not for Color {
     type Output = Color;

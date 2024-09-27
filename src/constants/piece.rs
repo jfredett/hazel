@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use crate::constants::Color;
 
+use super::COLOR_COUNT;
+
 /// Represents a piece, the ordering is important since in move generation the promotion piecetype is
 /// encoded in 2 bits, this ordering allows us to cast it directly into this enum.
 #[derive(Hash, PartialEq, Eq, Debug, Clone, Copy, Serialize, Deserialize)]
@@ -29,9 +31,10 @@ impl From<u16> for Piece {
     }
 }
 
+pub const PIECE_COUNT: usize = 6;
 
 /// A convenience array for looping over the pieces in the right order.
-pub const PIECES: [Piece; 6] = [
+pub const PIECES: [Piece; PIECE_COUNT] = [
     Piece::Knight,
     Piece::Bishop,
     Piece::Rook,
@@ -41,7 +44,7 @@ pub const PIECES: [Piece; 6] = [
 ];
 
 /// ASCII representations of each piece
-pub const ASCII_PIECE_CHARS: [[char; 6]; 2] = [
+pub const ASCII_PIECE_CHARS: [[char; PIECE_COUNT]; COLOR_COUNT] = [
     ['N', 'B', 'R', 'Q', 'K', 'P'],
     ['n', 'b', 'r', 'q', 'k', 'p'],
 ];

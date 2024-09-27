@@ -30,8 +30,6 @@ use metadata::*;
 // with conventional locations for bitboards would be ideal. Being able to do some clever indexing shit
 // might also improve the general QOL when using this structure.
 
-const PIECE_COUNT: usize = 6;
-const COLOR_COUNT: usize = 2;
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Serialize, Deserialize)]
 pub struct Ply {
