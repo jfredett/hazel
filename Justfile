@@ -3,9 +3,10 @@
 
 test *ARGS:
   cargo nextest run --no-fail-fast {{ARGS}}
+  cargo test --doc
 
 coverage:
-  cargo llvm-cov nextest --no-fail-fast
+  cargo llvm-cov nextest --no-fail-fast --lcov --output-path ./.lcov
 
 bench:
   cargo bench
