@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-echo "Suppressing warnings for tests"
-echo
-cl ; RUSTFLAGS="-C target-feature=+bmi1,+bmi2 -Awarnings" cargo test --color always --message-format human $@ -- --test-threads 1
