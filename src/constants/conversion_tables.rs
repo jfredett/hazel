@@ -22,6 +22,14 @@ pub fn NOTATION_TO_INDEX(notation: &str) -> usize {
     }
 }
 
+#[inline(always)]
+#[allow(non_snake_case)]
+#[rustfmt::skip]
+pub fn NOTATION_TO_COORDS(notation: &str) -> (usize, usize) {
+    let idx = NOTATION_TO_INDEX(notation);
+    INDEX_TO_COORDS[idx]
+}
+
 pub const INDEX_TO_NOTATION: [&'static str; 64] = [
     "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", "a2", "b2", "c2", "d2", "e2", "f2", "g2",
     "h2", "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3", "a4", "b4", "c4", "d4", "e4", "f4",
@@ -52,4 +60,44 @@ lazy_static! {
         }
         m
     };
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn notation_to_index() {
+        assert_eq!(NOTATION_TO_INDEX("a1"), 0o00);
+        assert_eq!(NOTATION_TO_INDEX("h8"), 0o77);
+        assert_eq!(NOTATION_TO_INDEX("e4"), 0o34);
+    }
+
+    #[test]
+    fn notation_to_coords() {
+        assert_eq!(NOTATION_TO_COORDS("a1"), (0, 0));
+        assert_eq!(NOTATION_TO_COORDS("h8"), (7, 7));
+        assert_eq!(NOTATION_TO_COORDS("e4"), (3, 4));
+    }
+
+    #[test]
+    fn index_to_notation() {
+        assert_eq!(INDEX_TO_NOTATION[0o00], "a1");
+        assert_eq!(INDEX_TO_NOTATION[0o77], "h8");
+        assert_eq!(INDEX_TO_NOTATION[0o34], "e4");
+    }
+
+    #[test]
+    fn coords_to_index() {
+        assert_eq!(COORDS_TO_INDEX[0][0], 0o00);
+        assert_eq!(COORDS_TO_INDEX[7][7], 0o77);
+        assert_eq!(COORDS_TO_INDEX[3][4], 0o34);
+    }
+
+    #[test]
+    fn index_to_coords() {
+        assert_eq!(INDEX_TO_COORDS[0o00], (0, 0));
+        assert_eq!(INDEX_TO_COORDS[0o77], (7, 7));
+        assert_eq!(INDEX_TO_COORDS[0o34], (3, 4));
+    }
 }
