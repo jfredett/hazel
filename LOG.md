@@ -333,3 +333,22 @@ For now, I think I can progress with the blocking version and try to get the UI 
 extent with a stockfish backend. Thus back to the UI I guess. Logging output and text-to-stdin input
 next, I think.
 
+# 27-SEP-2024
+
+## 0145
+
+I have foolishly stayed up too late working on this, but I've got the UI in a good spot. I think I've identified the
+mistake in my approach, in particular, I'm trying to extract modules/structs too early, I should start with state living
+on Hazel and extract the widgets I need as methods, then abstract the state away in bigger chunks.
+
+
+# 29-SEP-2024
+
+## 1014
+
+I've added a 'placeholder' widget so I can work more from the top-down on the UI. I designed a UI in the `ui-sketch.md`
+and I'm going to start working towards that now that I have a concept of what I want things to look like. My hope is
+that I can start with the layout of mostly `placeholder` invokes. The whole layout expects a static size, and eventually
+I want the UI to just be a window on a larger, statically rendered 'infinite canvas' type of thing.
+
+I should emphasize that I am not a UI/UX guy and I'm basically making this up as I go, but I think it'll be cool.
