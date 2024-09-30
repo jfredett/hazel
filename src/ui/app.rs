@@ -4,7 +4,6 @@ use std::fmt::Debug;
 use ratatui::crossterm::event::{Event, KeyCode};
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders};
-use tui_input::Input;
 
 use crate::ui::widgets::game_section::board_section::fenwidget::FENWidget;
 use crate::ui::widgets::game_section::board_section::boardwidget::BoardWidget;
@@ -15,13 +14,11 @@ use crate::uci::UCIMessage;
 use crate::ui::model::entry::{Entry, stockfish};
 use crate::engine::Engine;
 
-use super::widgets::engine_io_section::outputwidget::OutputWidget;
+use super::widgets::tile::Tile;
 
 pub struct Hazel {
     flags: HashMap<String, bool>,
     entry: Entry,
-
-    input: Input
 }
 
 impl Debug for Hazel {
@@ -38,7 +35,6 @@ impl Hazel {
         let mut s = Self {
             flags: HashMap::new(),
             entry: stockfish(),
-            input: Input::default(),
         };
 
         s.entry.exec(UCIMessage::UCI);
@@ -97,46 +93,65 @@ impl Hazel {
 
     #[instrument]
     pub fn render(&mut self, frame: &mut Frame) {
-        let chunks = layout().split(frame.size());
-
-        let container = Block::default()
-            .title(Span::styled("Hazel", Style::default().fg(Color::White).bg(Color::Black)))
-            .borders(Borders::ALL);
-        frame.render_widget(container, chunks[0]);
-
-        // render an input/output widgets, the input sends to Entry's stdin, the output is Entry's
-        // stdout.
-
-        let mut output_widget = OutputWidget::empty();
-
-        output_widget.push("Hello, world!".to_string());
-        output_widget.push("Hello, world!".to_string());
-        output_widget.push("Hello, world!".to_string());
-        output_widget.push("Hello, world!".to_string());
-        output_widget.push("Hello, world!".to_string());
-        output_widget.push("Hello, world!".to_string());
-
-        frame.render_widget(&output_widget, chunks[3]);
-
-        let input_widget = Block::default()
-            .title("Input")
-            .borders(Borders::ALL);
-        frame.render_widget(input_widget, chunks[2]);
-
-        frame.render_widget(&self.board_widget(), chunks[1]);
+        let tile = Tile::new();
+        frame.render_stateful_widget(&tile, Rect::new(0,0,64,32), self);
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use std::process::Termination;
 
-fn layout() -> Layout {
-    Layout::default()
-        .direction(Direction::Vertical)
-        .constraints(
-            [
-                Constraint::Min(1),
-                Constraint::Min(8),
-                Constraint::Length(10),
-                Constraint::Max(1),
-            ].as_ref()
-        )
+    use backend::TestBackend;
+
+    use super::*;
+
+    #[test]
+    fn placeholder() {
+        let mut hazel = Hazel::new();
+
+        let mut t = Terminal::new(TestBackend::new(64, 32)).unwrap();
+        let _ = t.draw(|f| {
+            hazel.render(f);
+        });
+        let buffer = t.backend().buffer();
+
+        let expected = Buffer::with_lines(vec![
+            "           Placeholder           ┌─────────────────────────────┐",
+            "           Placeholder           │         Placeholder         │",
+            "           Placeholder           │         Placeholder         │",
+            "┌───────────────┐┌──────────────┐│         Placeholder         │",
+            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
+            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
+            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
+            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
+            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
+            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
+            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
+            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
+            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
+            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
+            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
+            "│  Placeholder  ││  Placeholder │└─────────────────────────────┘",
+            "└───────────────┘└──────────────┘          Placeholder          ",
+            "│                          Placeholder                         │",
+            "┌──────────────────────────────────────────────────────────────┐",
+            "│                          Placeholder                         │",
+            "│                          Placeholder                         │",
+            "│                          Placeholder                         │",
+            "│                          Placeholder                         │",
+            "│                          Placeholder                         │",
+            "│                          Placeholder                         │",
+            "│                          Placeholder                         │",
+            "│                          Placeholder                         │",
+            "│                          Placeholder                         │",
+            "│                          Placeholder                         │",
+            "│                          Placeholder                         │",
+            "└──────────────────────────────────────────────────────────────┘",
+            "                           Placeholder                          ",
+        ]);
+
+        assert_eq!(buffer, &expected);
+    }
 }
+

@@ -1,44 +1,42 @@
 use ratatui::layout::Direction;
 use ratatui::prelude::*;
-use ratatui::widgets::Borders;
 use crate::ui::app::Hazel;
 
 use crate::ui::widgets::placeholder::Placeholder;
 
-mod pgn_section;
-use pgn_section::PGNSection;
-
 lazy_static! {
     static ref LAYOUT : Layout = Layout::default()
-        .direction(Direction::Vertical)
+        .direction(Direction::Horizontal)
         .constraints(
             [
-                Constraint::Max(3),
-                Constraint::Fill(1)
+                Constraint::Percentage(51),
+                Constraint::Percentage(49)
             ].as_ref(),
         );
 }
 
-pub struct InfoSection {
+pub struct PGNSection {
 }
 
-impl InfoSection {
+impl PGNSection {
     pub fn new() -> Self {
         Self {
         }
     }
 }
 
-impl StatefulWidget for &InfoSection {
+impl StatefulWidget for &PGNSection {
     type State = Hazel;
-    fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
+    fn render(self, area: Rect, buf: &mut Buffer, _state: &mut Self::State) {
         let chunks = LAYOUT.split(area);
 
-        let ticker_widget = Placeholder::of_size(chunks[0].width, chunks[0].height).borders(Borders::NONE); // &mut info_section::InfoSection::new();
-        ticker_widget.render(chunks[0], buf);//, state);
+        let pgn = Placeholder::of_size(chunks[0].width, chunks[0].height); // &mut pgnwidget::new();
+        pgn.render(chunks[0], buf);//, state);
 
-        let pgn_section = &mut PGNSection::new();
-        pgn_section.render(chunks[1], buf, state);
+        // This is shown as time-per-move in the sketch, but should be swappable for whatever I
+        // like.
+        let query = Placeholder::of_size(chunks[1].width, chunks[1].height);
+        query.render(chunks[1], buf);//, state);
     }
 }
 
@@ -52,14 +50,14 @@ mod tests {
         let mut buffer = Buffer::empty(rect);
         buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
-        let board_section = &mut InfoSection::new();
+        let board_section = &mut PGNSection::new();
         board_section.render(rect, &mut buffer, &mut Hazel::new());
 
         let mut expected = Buffer::with_lines(vec![
-            "                           Placeholder                          ",
-            "                           Placeholder                          ",
-            "                           Placeholder                          ",
             "┌───────────────────────────────┐┌─────────────────────────────┐",
+            "│          Placeholder          ││         Placeholder         │",
+            "│          Placeholder          ││         Placeholder         │",
+            "│          Placeholder          ││         Placeholder         │",
             "│          Placeholder          ││         Placeholder         │",
             "│          Placeholder          ││         Placeholder         │",
             "│          Placeholder          ││         Placeholder         │",
