@@ -4,6 +4,8 @@ use ratatui::prelude::*;
 
 use crate::ui::app::Hazel;
 
+use super::engine_io_section;
+use super::game_section::GameSectionLayout;
 use super::placeholder::Placeholder;
 
 lazy_static! {
@@ -48,13 +50,18 @@ impl StatefulWidget for &Tile {
     fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
         // TODO: We always render at the same size, this will likely be wrong if the size is too
         // small, but I can add logic later.
-
+        // Really I need an 'offset' Rect, the x,y components are added, the WIDTH/HEIGHT are min'd
+        // against the provided area, if the area is too small, we render to an internal buffer and
+        // cut the piece we out to match.
         let adjusted_area = Rect::new(area.x, area.y, WIDTH, HEIGHT);
-        let chunks = LAYOUT.split(area);
+        let chunks = LAYOUT.split(adjusted_area);
 
-        Placeholder::of_size(chunks[0].width, chunks[0].height).render(chunks[0], buf);
+        let game_section = &mut GameSectionLayout::new();
+        game_section.render(chunks[0], buf, state);
+        //Placeholder::of_size(chunks[0].width, chunks[0].height).render(chunks[0], buf);
         Placeholder::of_size(chunks[1].width, chunks[1].height).borders(Borders::LEFT | Borders::RIGHT).render(chunks[1], buf);
-        Placeholder::of_size(chunks[2].width, chunks[2].height).render(chunks[2], buf);
+        let engine_io_section = &mut engine_io_section::EngineIOSection::new();
+        engine_io_section.render(chunks[2], buf, state);
 
         // self.game_section.render(chunks[0], buf, state);
         // self.query_line.render(chunks[1], buf, state);
@@ -68,7 +75,59 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_layout() {
+    fn placeholder_within_larger_canvas() {
+        let rect = Rect::new(0, 0, 65, 33);
+        let mut buffer = Buffer::empty(rect);
+        buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
+
+        let tile = &mut Tile::new();
+        tile.render(rect, &mut buffer, &mut Hazel::new());
+
+        // FIXME: https://github.com/ratatui/ratatui/issues/605 This issue does what I _wish_ this
+        // was doing, in particular, I'd prefer the corners 'merge' into the next set of borders,
+        // but they don't do that right now and I can't really ascertain what state that fork is in
+        // other than it's 260something commits old at time of writing.
+        let mut expected = Buffer::with_lines(vec![
+            "┌──────────────────────────────────────────────────────────────┐ ",
+            "│                          Placeholder                         │ ",
+            "│                          Placeholder                         │ ",
+            "│                          Placeholder                         │ ",
+            "│                          Placeholder                         │ ",
+            "│                          Placeholder                         │ ",
+            "│                          Placeholder                         │ ",
+            "│                          Placeholder                         │ ",
+            "│                          Placeholder                         │ ",
+            "│                          Placeholder                         │ ",
+            "│                          Placeholder                         │ ",
+            "│                          Placeholder                         │ ",
+            "│                          Placeholder                         │ ",
+            "│                          Placeholder                         │ ",
+            "│                          Placeholder                         │ ",
+            "│                          Placeholder                         │ ",
+            "└──────────────────────────────────────────────────────────────┘ ",
+            "│                          Placeholder                         │ ",
+            "┌──────────────────────────────────────────────────────────────┐ ",
+            "│                          Placeholder                         │ ",
+            "│                          Placeholder                         │ ",
+            "│                          Placeholder                         │ ",
+            "│                          Placeholder                         │ ",
+            "│                          Placeholder                         │ ",
+            "│                          Placeholder                         │ ",
+            "│                          Placeholder                         │ ",
+            "│                          Placeholder                         │ ",
+            "│                          Placeholder                         │ ",
+            "│                          Placeholder                         │ ",
+            "│                          Placeholder                         │ ",
+            "│                          Placeholder                         │ ",
+            "└──────────────────────────────────────────────────────────────┘ ",
+            ""
+        ]);
+
+        expected.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
+        assert_eq!(buffer, expected);
+    }
+    #[test]
+    fn placeholder() {
         let rect = Rect::new(0, 0, 64, 32);
         let mut buffer = Buffer::empty(rect);
         buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));

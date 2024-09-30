@@ -15,7 +15,7 @@ use crate::uci::UCIMessage;
 use crate::ui::model::entry::{Entry, stockfish};
 use crate::engine::Engine;
 
-use super::widgets::engine_io_section::outputwidget::OutputWidget;
+use super::widgets::tile::Tile;
 
 pub struct Hazel {
     flags: HashMap<String, bool>,
@@ -97,33 +97,10 @@ impl Hazel {
 
     #[instrument]
     pub fn render(&mut self, frame: &mut Frame) {
-        let chunks = layout().split(frame.size());
+        let chunks = Layout::default().split(frame.size());
 
-        let container = Block::default()
-            .title(Span::styled("Hazel", Style::default().fg(Color::White).bg(Color::Black)))
-            .borders(Borders::ALL);
-        frame.render_widget(container, chunks[0]);
-
-        // render an input/output widgets, the input sends to Entry's stdin, the output is Entry's
-        // stdout.
-
-        let mut output_widget = OutputWidget::empty();
-
-        output_widget.push("Hello, world!".to_string());
-        output_widget.push("Hello, world!".to_string());
-        output_widget.push("Hello, world!".to_string());
-        output_widget.push("Hello, world!".to_string());
-        output_widget.push("Hello, world!".to_string());
-        output_widget.push("Hello, world!".to_string());
-
-        frame.render_widget(&output_widget, chunks[3]);
-
-        let input_widget = Block::default()
-            .title("Input")
-            .borders(Borders::ALL);
-        frame.render_widget(input_widget, chunks[2]);
-
-        frame.render_widget(&self.board_widget(), chunks[1]);
+        let tile = Tile::new();
+        frame.render_stateful_widget(&tile, Rect::new(0,0,64,32), self);
     }
 }
 
@@ -139,4 +116,31 @@ fn layout() -> Layout {
                 Constraint::Max(1),
             ].as_ref()
         )
+}
+
+
+#[cfg(test)]
+mod tests {
+    use std::process::Termination;
+
+    use backend::TestBackend;
+
+    use super::*;
+
+    #[test]
+    fn placeholder() {
+        let mut hazel = Hazel::new();
+
+        let mut t = Terminal::new(TestBackend::new(64, 32)).unwrap();
+        t.draw(|f| {
+            hazel.render(f);
+        });
+        let buffer = t.backend().buffer();
+
+        let mut expected = Buffer::with_lines(vec![
+            ""
+        ]);
+
+        assert_eq!(buffer, &expected);
+    }
 }

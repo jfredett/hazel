@@ -1,12 +1,9 @@
-pub mod board_section;
-pub mod info_section;
-
 use ratatui::layout::Direction;
 use ratatui::prelude::*;
+use ratatui::widgets::Borders;
 use crate::ui::app::Hazel;
 
-use board_section::BoardSection;
-use info_section::InfoSection;
+use crate::ui::widgets::placeholder::Placeholder;
 
 lazy_static! {
     static ref LAYOUT : Layout = Layout::default()
@@ -19,30 +16,30 @@ lazy_static! {
         );
 }
 
-pub struct GameSectionLayout {
+pub struct PGNSection {
 }
 
-
-impl GameSectionLayout {
+impl PGNSection {
     pub fn new() -> Self {
         Self {
         }
     }
 }
 
-impl StatefulWidget for &GameSectionLayout {
+impl StatefulWidget for &PGNSection {
     type State = Hazel;
     fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
         let chunks = LAYOUT.split(area);
 
-        let info_section = &mut InfoSection::new();
-        info_section.render(chunks[0], buf, state);
+        let pgn = Placeholder::of_size(chunks[0].width, chunks[0].height); // &mut pgnwidget::new();
+        pgn.render(chunks[0], buf);//, state);
 
-        let board_section = &mut BoardSection::new();
-        board_section.render(chunks[1], buf, state);
+        // This is shown as time-per-move in the sketch, but should be swappable for whatever I
+        // like.
+        let query = Placeholder::of_size(chunks[1].width, chunks[1].height);
+        query.render(chunks[1], buf);//, state);
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -50,18 +47,16 @@ mod tests {
 
     #[test]
     fn placeholder() {
-        let rect = Rect::new(0, 0, 64, 17);
+        let rect = Rect::new(0, 0, 64, 16);
         let mut buffer = Buffer::empty(rect);
         buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
-        let game_section = &mut GameSectionLayout::new();
-        game_section.render(rect, &mut buffer, &mut Hazel::new());
+        let board_section = &mut PGNSection::new();
+        board_section.render(rect, &mut buffer, &mut Hazel::new());
 
         let mut expected = Buffer::with_lines(vec![
             ""
         ]);
-        expected.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
-
         assert_eq!(buffer, expected);
     }
 }
