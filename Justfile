@@ -37,3 +37,6 @@ bench:
 
 miri-test:
     cargo miri nextest run --no-fail-fast --all-targets
+
+cloc *args:
+  cloc --vcs=git --exclude-ext=.rc . {{args}}

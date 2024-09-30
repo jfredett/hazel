@@ -210,6 +210,29 @@ against the UI or engine, so it could support arbitrary custom messages for spec
 them for now with a generic `placeholder` widget.
 
 
+Schematically:
+
+```
+INFO | BOARD
+------------
+QUERY TICKER
+------------
+    IO
+```
+
+The tricky thing is the mixed split, I think if I rearrange this as:
+
+```
+GAME
+-----
+QUERY
+-----
+IO
+```
+
+The layout will be easier
+
+
 ----
 
 

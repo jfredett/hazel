@@ -2,7 +2,6 @@ use ratatui::text::Text;
 use ratatui::prelude::*;
 use ratatui::widgets::Widget;
 
-
 #[allow(unused_imports)]
 use tracing::{debug, instrument};
 

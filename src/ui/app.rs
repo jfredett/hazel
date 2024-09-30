@@ -5,8 +5,8 @@ use ratatui::crossterm::event::{Event, KeyCode};
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders};
 
-use crate::ui::widgets::fenwidget::FENWidget;
-use crate::ui::widgets::boardwidget::BoardWidget;
+use crate::ui::widgets::game_section::board_section::fenwidget::FENWidget;
+use crate::ui::widgets::game_section::board_section::boardwidget::BoardWidget;
 
 use tracing::{debug, instrument};
 
@@ -14,11 +14,11 @@ use crate::uci::UCIMessage;
 use crate::ui::model::entry::{Entry, stockfish};
 use crate::engine::Engine;
 
-use super::widgets::outputwidget::OutputWidget;
+use super::widgets::tile::Tile;
 
 pub struct Hazel {
     flags: HashMap<String, bool>,
-    entry: Entry
+    entry: Entry,
 }
 
 impl Debug for Hazel {
@@ -34,7 +34,7 @@ impl Hazel {
     pub fn new() -> Self {
         let mut s = Self {
             flags: HashMap::new(),
-            entry: stockfish()
+            entry: stockfish(),
         };
 
         s.entry.exec(UCIMessage::UCI);
@@ -44,7 +44,6 @@ impl Hazel {
         debug!("setting startpos done");
 
         s.entry.boardstate.set_startpos();
-
 
         return s;
     }
@@ -84,47 +83,75 @@ impl Hazel {
     }
 
     #[instrument]
-    pub fn render(&mut self, frame: &mut Frame) {
-        let chunks = Layout::default()
-            .direction(Direction::Vertical)
-            .margin(1)
-            .constraints(
-                [
-                    Constraint::Percentage(5),
-                    Constraint::Percentage(5),
-                    Constraint::Percentage(20),
-                    Constraint::Percentage(70),
-                ].as_ref()
-            )
-            .split(frame.size());
-
-        let block = Block::default()
-            .title("Hazel")
-            .borders(Borders::ALL);
-
-        frame.render_widget(block, frame.size());
-        frame.render_widget(&self.fen_widget(), chunks[0]);
-
-        // render an input/output widgets, the input sends to Entry's stdin, the output is Entry's
-        // stdout.
-        let input_widget = Block::default()
+    pub fn input_widget(&self) -> Block {
+        Block::default()
             .title("Input")
-            .borders(Borders::ALL);
+            .borders(Borders::ALL)
+    }
 
-        let mut output_widget = OutputWidget::empty();
 
-        output_widget.push("Hello, world!".to_string());
-        output_widget.push("Hello, world!".to_string());
-        output_widget.push("Hello, world!".to_string());
-        output_widget.push("Hello, world!".to_string());
-        output_widget.push("Hello, world!".to_string());
-        output_widget.push("Hello, world!".to_string());
 
-        frame.render_widget(input_widget, chunks[1]);
-        frame.render_widget(&output_widget, chunks[2]);
+    #[instrument]
+    pub fn render(&mut self, frame: &mut Frame) {
+        let tile = Tile::new();
+        frame.render_stateful_widget(&tile, Rect::new(0,0,64,32), self);
+    }
+}
 
-        frame.render_widget(&self.board_widget(), chunks[3]);
+#[cfg(test)]
+mod tests {
+    use std::process::Termination;
 
+    use backend::TestBackend;
+
+    use super::*;
+
+    #[test]
+    fn placeholder() {
+        let mut hazel = Hazel::new();
+
+        let mut t = Terminal::new(TestBackend::new(64, 32)).unwrap();
+        let _ = t.draw(|f| {
+            hazel.render(f);
+        });
+        let buffer = t.backend().buffer();
+
+        let expected = Buffer::with_lines(vec![
+            "           Placeholder           ┌─────────────────────────────┐",
+            "           Placeholder           │         Placeholder         │",
+            "           Placeholder           │         Placeholder         │",
+            "┌───────────────┐┌──────────────┐│         Placeholder         │",
+            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
+            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
+            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
+            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
+            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
+            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
+            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
+            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
+            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
+            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
+            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
+            "│  Placeholder  ││  Placeholder │└─────────────────────────────┘",
+            "└───────────────┘└──────────────┘          Placeholder          ",
+            "│                          Placeholder                         │",
+            "┌──────────────────────────────────────────────────────────────┐",
+            "│                          Placeholder                         │",
+            "│                          Placeholder                         │",
+            "│                          Placeholder                         │",
+            "│                          Placeholder                         │",
+            "│                          Placeholder                         │",
+            "│                          Placeholder                         │",
+            "│                          Placeholder                         │",
+            "│                          Placeholder                         │",
+            "│                          Placeholder                         │",
+            "│                          Placeholder                         │",
+            "│                          Placeholder                         │",
+            "└──────────────────────────────────────────────────────────────┘",
+            "                           Placeholder                          ",
+        ]);
+
+        assert_eq!(buffer, &expected);
     }
 }
 

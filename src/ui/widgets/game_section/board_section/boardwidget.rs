@@ -5,6 +5,8 @@ use ratatui::buffer::Buffer;
 
 use crate::ui::model::pieceboard::PieceBoard;
 
+// TODO: Rename and extract to the generic section, should be something like "Small Board Widget"
+// or something.
 pub struct BoardWidget {
     board: PieceBoard
 }
@@ -72,3 +74,37 @@ impl Widget for &BoardWidget {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn renders_empty_board() {
+        let rect = Rect::new(0, 0, 8, 8);
+        let mut buffer = Buffer::empty(rect);
+        buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
+
+        let board = PieceBoard::default();
+        let board_widget = &BoardWidget::from(&board);
+        board_widget.render(rect, &mut buffer);
+
+        let mut expected = Buffer::with_lines(vec![
+            "........",
+            "........",
+            "........",
+            "........",
+            "........",
+            "........",
+            "........",
+            "........"
+        ]);
+        expected.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
+
+        assert_eq!(buffer, expected);
+    }
+}
+
+
+
+
