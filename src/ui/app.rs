@@ -4,9 +4,10 @@ use std::fmt::Debug;
 use ratatui::crossterm::event::{Event, KeyCode};
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders};
+use tui_input::Input;
 
-use crate::ui::widgets::fenwidget::FENWidget;
-use crate::ui::widgets::boardwidget::BoardWidget;
+use crate::ui::widgets::game_section::board_section::fenwidget::FENWidget;
+use crate::ui::widgets::game_section::board_section::boardwidget::BoardWidget;
 
 use tracing::{debug, instrument};
 
@@ -14,11 +15,13 @@ use crate::uci::UCIMessage;
 use crate::ui::model::entry::{Entry, stockfish};
 use crate::engine::Engine;
 
-use super::widgets::outputwidget::OutputWidget;
+use super::widgets::engine_io_section::outputwidget::OutputWidget;
 
 pub struct Hazel {
     flags: HashMap<String, bool>,
-    entry: Entry
+    entry: Entry,
+
+    input: Input
 }
 
 impl Debug for Hazel {
@@ -34,7 +37,8 @@ impl Hazel {
     pub fn new() -> Self {
         let mut s = Self {
             flags: HashMap::new(),
-            entry: stockfish()
+            entry: stockfish(),
+            input: Input::default(),
         };
 
         s.entry.exec(UCIMessage::UCI);
@@ -44,7 +48,6 @@ impl Hazel {
         debug!("setting startpos done");
 
         s.entry.boardstate.set_startpos();
-
 
         return s;
     }
@@ -84,32 +87,25 @@ impl Hazel {
     }
 
     #[instrument]
+    pub fn input_widget(&self) -> Block {
+        Block::default()
+            .title("Input")
+            .borders(Borders::ALL)
+    }
+
+
+
+    #[instrument]
     pub fn render(&mut self, frame: &mut Frame) {
-        let chunks = Layout::default()
-            .direction(Direction::Vertical)
-            .margin(1)
-            .constraints(
-                [
-                    Constraint::Percentage(5),
-                    Constraint::Percentage(5),
-                    Constraint::Percentage(20),
-                    Constraint::Percentage(70),
-                ].as_ref()
-            )
-            .split(frame.size());
+        let chunks = layout().split(frame.size());
 
-        let block = Block::default()
-            .title("Hazel")
+        let container = Block::default()
+            .title(Span::styled("Hazel", Style::default().fg(Color::White).bg(Color::Black)))
             .borders(Borders::ALL);
-
-        frame.render_widget(block, frame.size());
-        frame.render_widget(&self.fen_widget(), chunks[0]);
+        frame.render_widget(container, chunks[0]);
 
         // render an input/output widgets, the input sends to Entry's stdin, the output is Entry's
         // stdout.
-        let input_widget = Block::default()
-            .title("Input")
-            .borders(Borders::ALL);
 
         let mut output_widget = OutputWidget::empty();
 
@@ -120,11 +116,27 @@ impl Hazel {
         output_widget.push("Hello, world!".to_string());
         output_widget.push("Hello, world!".to_string());
 
-        frame.render_widget(input_widget, chunks[1]);
-        frame.render_widget(&output_widget, chunks[2]);
+        frame.render_widget(&output_widget, chunks[3]);
 
-        frame.render_widget(&self.board_widget(), chunks[3]);
+        let input_widget = Block::default()
+            .title("Input")
+            .borders(Borders::ALL);
+        frame.render_widget(input_widget, chunks[2]);
 
+        frame.render_widget(&self.board_widget(), chunks[1]);
     }
 }
 
+
+fn layout() -> Layout {
+    Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Min(1),
+                Constraint::Min(8),
+                Constraint::Length(10),
+                Constraint::Max(1),
+            ].as_ref()
+        )
+}
