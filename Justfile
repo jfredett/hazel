@@ -13,7 +13,7 @@ doctest:
     cargo test --doc
 
 # Dev Loop
-test:
+test *ARGS:
     #!/usr/bin/env bash
     set -euo pipefail
 
@@ -25,7 +25,7 @@ test:
         just coverage
     else 
         echo "Using cached coverage data"
-        just nextest
+        just nextest {{ARGS}}
     fi
 
 coverage:
