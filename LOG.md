@@ -352,3 +352,189 @@ that I can start with the layout of mostly `placeholder` invokes. The whole layo
 I want the UI to just be a window on a larger, statically rendered 'infinite canvas' type of thing.
 
 I should emphasize that I am not a UI/UX guy and I'm basically making this up as I go, but I think it'll be cool.
+
+# 1-OCT-2024
+
+## 1739
+
+A little idea I had to improve board management.
+
+I want to have a single `MoveType` that is respected across boards, and to me, that really comes down to that
+`Alteration` idea I used in the `Pieceboard` type. In particular, I reduced from thinking about a move as a monolithic
+enum like:
+
+```rust
+pub enum MoveType {
+    QUIET = 0b0000,
+    DOUBLE_PAWN = 0b0001,
+    SHORT_CASTLE = 0b0010,
+    LONG_CASTLE = 0b0011,
+    CAPTURE = 0b0100,
+    EP_CAPTURE = 0b0101,
+    UNUSED_1 = 0b0110,   // NOTE: unused at the moment
+    ///
+    /// UCI sends moves in a simplified long algebraic notation that simply specifies:
+    ///
+    /// 1. source square
+    /// 2. target square
+    /// 3. promotion piece (if any)
+    ///
+    /// For Hazel, more is expected of the move metadata, but calculating it requires knowing the
+    /// game state. This value is used to indicate that the move metadata is ambiguous and needs to
+    /// be calculated.
+    /// 
+    UCI_AMBIGUOUS = 0b0111,
+    PROMOTION_KNIGHT = 0b1000,
+    PROMOTION_BISHOP = 0b1001,
+    PROMOTION_ROOK = 0b1010,
+    PROMOTION_QUEEN = 0b1011,
+    PROMOTION_CAPTURE_KNIGHT = 0b1100,
+    PROMOTION_CAPTURE_BISHOP = 0b1101,
+    PROMOTION_CAPTURE_ROOK = 0b1110,
+    PROMOTION_CAPTURE_QUEEN = 0b1111,
+}
+```
+
+Coupled with some location information, I can instead think of a move as entirely defined by a series of simpler
+`Alteration`s to the board.
+
+```
+enum Alteration {
+    Remove(Location, Color, Piece),
+    Place(Location, Color, Piece),
+    Comment(&'static str)
+}
+```
+
+A location is a compact representation of a spot on the board, the Piece is a compact representation of a piece, since
+there are 64 squares and 6 possible pieces, and 2 colors, then there these can be tightly packed into a single byte. A
+move may be multiple 'alterations' e.g., a Capture a black pawn on `e4` with a Knight by White would be:
+
+```rust
+Comment("1. Ne4 ...")
+Remove(e4, Black, Pawn)   // Remove the target piece, the piece metadata here is used for unmoving.
+Remove(d2, White, Knight) // Remove the source piece from it's original location.
+Place(e4, White, Knight)  // Place it in it's new location.
+```
+
+The `Comment` allows for some clever tricks later. This representation means we can represent the game state as a series
+of trivially reversible alterations, and we can use the `Comment` to act as a checkpoint to know when we've unwound
+enough. Every board representation can, ultimately, just implement some parser for these alterations, and then we can
+decouple make/unmake from the board representation entirely. Movegen would query a representation of the board, generate
+a bunch of `Move`s, which can then be 'compiled' as alterations.
+
+It also means that internally, the engine can happily keep a couple different representations in various stages of the
+game tree depending on what the engine might need for evaluation. It can have a pieceboard rep, perhaps, for doing one
+kind of analysis where the pieceboard is convenient, and so long as it is only working on that analysis, it can keep it
+up to date to the exclusion of other reps. Similarly, it can roll forward or back as needed.
+
+This also makes it much easier to maintain UI-friendly represnetations that can benefit from the faster internal
+representations. We can pick up the list of alterations and apply them unchanged.
+
+Ultimately this boils down to a `BoardRepresentation` trait which looks like:
+
+```rust
+type Move = Vec<Alteration>;
+
+trait BoardRepresentation {
+    fn make(&mut self, alteration: Alteration);
+}
+
+pub fn unmake<BR>(board: &mut BR, alteration: Alteration) where BR: BoardRepresentation {
+    board.make(!alteration);
+}
+
+trait MoveGenerator {
+    // Calculate _all_ (not necessarily only legal) forward moves from the current position.
+    fn moves(&self) -> Vec<Move>;
+}
+
+trait LegalMoveGenerator {
+    // Calculate only legal moves from the current position.
+    fn legal_moves(&self) -> Vec<Move>;
+}
+
+```
+
+This will make it easy to differentiate between UI/Non-UI reps (e.g., whether it implements MoveGenerator or
+LegalMoveGenerator). Meanwhile, `!` starts to do some heavy lifting because:
+
+```
+impl Not<Alteration> for Alteration {
+    fn not(self) -> Alteration {
+        match self {
+            Remove(loc, color, piece) => Place(loc, color, piece),
+            Place(loc, color, piece) => Remove(loc, color, piece),
+            Comment(c) => Comment(c),
+        }
+    }
+}
+```
+
+For completeness, every move type is represented:
+
+
+```
+Quiet(src, dest):
+    src_color, src_piece = get(src)
+    Place(dest, src_color, src_piece)
+    Remove(dest, src_color, src_piece)
+
+ShortCastle(color):
+    if color == White:
+        Place(6, White, King)
+        Remove(4, White, King)
+        Place(5, White, Rook)
+        Remove(7, White, Rook)
+    else:
+        Place(62, Black, King)
+        Remove(60, Black, King)
+        Place(61, Black, Rook)
+        Remove(63, Black, Rook)
+
+LongCastle(color):
+    if color == White:
+        Place(2, White, King)
+        Remove(4, White, King)
+        Place(3, White, Rook)
+        Remove(0, White, Rook)
+    else:
+        Place(58, Black, King)
+        Remove(60, Black, King)
+        Place(59, Black, Rook)
+        Remove(56, Black, Rook)
+
+Capture(src, dest):
+    src_color, src_piece = get(src)
+    Place(dest, src_color, src_piece)
+    Remove(dest, src_color, src_piece)
+    Remove(src, src_color, src_piece)
+
+EnPassant(src, dest):
+    src_color, src_piece = get(src)
+    Place(dest, src_color, src_piece)
+    Remove(dest, src_color, Pawn)
+    Remove(dest, !src_color, Pawn)
+
+
+Promotion(src, dest, piece):
+    src_color, src_piece = get(src)
+    Place(dest, src_color, piece)
+    Remove(dest, src_color, src_piece)
+
+PromotionCapture(src, dest, piece):
+    src_color, src_piece = get(src)
+    Place(dest, src_color, piece)
+    Remove(dest, src_color, src_piece)
+    Remove(dest, !src_color, piece)
+```
+
+These rely on an assumed internal 'get' function that retrieves the piece at a location, but I think that's too low
+level to include in the trait, since `get` might be different depending on context and how you want to implement things.
+
+In any case, this should (I think) make for a bit of an easier make/unmake system. It _may_ be possible to make it fully
+piece/color agnostic, but I haven't thought it that far through yet.
+
+
+
+

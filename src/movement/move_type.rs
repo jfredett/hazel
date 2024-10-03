@@ -20,7 +20,7 @@ pub enum MoveType {
     /// For Hazel, more is expected of the move metadata, but calculating it requires knowing the
     /// game state. This value is used to indicate that the move metadata is ambiguous and needs to
     /// be calculated.
-    /// 
+    ///
     UCI_AMBIGUOUS = 0b0111,
     PROMOTION_KNIGHT = 0b1000,
     PROMOTION_BISHOP = 0b1001,
@@ -65,7 +65,6 @@ impl MoveType {
             0b0100 => MoveType::CAPTURE,
             0b0101 => MoveType::EP_CAPTURE,
             0b0110 => MoveType::UNUSED_1,
-            // NOTE: 
             0b0111 => MoveType::UCI_AMBIGUOUS,
             0b1000 => MoveType::PROMOTION_KNIGHT,
             0b1001 => MoveType::PROMOTION_BISHOP,
