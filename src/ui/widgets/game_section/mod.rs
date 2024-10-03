@@ -3,7 +3,6 @@ pub mod info_section;
 
 use ratatui::layout::Direction;
 use ratatui::prelude::*;
-use crate::ui::app::Hazel;
 
 use board_section::BoardSection;
 use info_section::InfoSection;
@@ -31,7 +30,7 @@ impl GameSectionLayout {
 }
 
 impl StatefulWidget for &GameSectionLayout {
-    type State = Hazel;
+    type State = ();
     fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
         let chunks = LAYOUT.split(area);
 
@@ -55,7 +54,7 @@ mod tests {
         buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
         let game_section = &mut GameSectionLayout::new();
-        game_section.render(rect, &mut buffer, &mut Hazel::new());
+        game_section.render(rect, &mut buffer, &mut ());
 
         let mut expected = Buffer::with_lines(vec![
             "           Placeholder           ┌─────────────────────────────┐",

@@ -3,32 +3,67 @@ pub mod outputwidget;
 use ratatui::layout::Direction;
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders};
-use crate::ui::app::Hazel;
 
-// TODO: minimize the state by making EngineIOSection not need all of Hazel, instead it'll
-// be it's own state management ViewModel and Hazel will construct it from itself.
-
-pub struct EngineIOSection {
-    output: Vec<String>,
-    input: String,
+lazy_static! {
+    static ref LAYOUT : Layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Fill(1),
+                Constraint::Max(1),
+            ]
+                .as_ref(),
+        );
 }
 
+pub struct EngineIOSection {
+    output: Output,
+    input: Input,
+}
 
 struct Input {
+    content: String
+}
+
+impl Input {
+    pub fn push(&mut self, input: char) {
+        self.content.push(input);
+    }
 }
 
 struct Output {
+    buffer: Vec<String>
+}
+
+impl EngineIOSection {
+    pub fn push(&mut self, line: String) {
+        self.output.push(line);
+    }
+
+    pub fn handle_input(&mut self, input: char) {
+        self.input.push(input);
+    }
 }
 
 impl Default for Input {
     fn default() -> Self {
-        Self {}
+        Self {
+            content: String::new()
+        }
     }
 }
 
 impl Default for Output {
     fn default() -> Self {
-        Self {}
+        Self {
+            buffer: vec![]
+        }
+    }
+}
+
+impl Output {
+    pub fn push(&mut self, line: String) {
+        self.buffer.push(line);
     }
 }
 
@@ -81,43 +116,22 @@ impl StatefulWidget for &Output {
     }
 }
 
-
-lazy_static! {
-    static ref LAYOUT : Layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints(
-            [
-                Constraint::Fill(1),
-                Constraint::Max(1),
-            ]
-                .as_ref(),
-        );
-}
-
-impl EngineIOSection {
-    pub fn new() -> Self {
+impl Default for EngineIOSection {
+    fn default() -> Self {
         Self {
-            output: vec![],
-            input: String::new(),
+            output: Output::default(),
+            input: Input::default(),
         }
-    }
-
-    pub fn push(&mut self, line: String) {
-        self.output.push(line);
     }
 }
 
 impl StatefulWidget for &EngineIOSection {
-    type State = Hazel;
+    type State = ();
     fn render(self, area: Rect, buf: &mut Buffer, _state: &mut Self::State) {
         let chunks = LAYOUT.split(area);
 
-
-        let output_widget = Output::default();
-        output_widget.render(chunks[0], buf, &mut self.output.clone());
-
-        let input_widget = Input::default();
-        input_widget.render(chunks[1], buf, &mut self.input.clone());
+        self.output.render(chunks[0], buf, &mut self.output.buffer.clone());
+        self.input.render(chunks[1], buf, &mut self.input.content.clone());
     }
 }
 
@@ -127,12 +141,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn placeholder() {
+    fn renders_as_expected() {
         let rect = Rect::new(0, 0, 64, 17);
         let mut buffer = Buffer::empty(rect);
         buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
-        let engine_io_section = &mut EngineIOSection::new();
+        let engine_io_section = &mut EngineIOSection::default();
 
         // Mock out the output from the 'engine'
         engine_io_section.push("Stockfish 16.1 by the Stockfish developers (see AUTHORS file)".to_string());
@@ -145,7 +159,7 @@ mod tests {
         engine_io_section.push("info depth 1 seldepth 2 multipv 1 score cp 0 nodes 20 nps 1000 hashfull 0 tbhits 0 time 20 pv d2d4".to_string());
         engine_io_section.push("bestmove d2d4".to_string());
 
-        engine_io_section.render(rect, &mut buffer, &mut Hazel::new());
+        engine_io_section.render(rect, &mut buffer, &mut ());
 
         let mut expected = Buffer::with_lines(vec![
             "┌──────────────────────────────────────────────────────────────┐",

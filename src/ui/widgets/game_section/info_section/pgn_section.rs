@@ -1,6 +1,5 @@
 use ratatui::layout::Direction;
 use ratatui::prelude::*;
-use crate::ui::app::Hazel;
 
 use crate::ui::widgets::placeholder::Placeholder;
 
@@ -26,7 +25,7 @@ impl PGNSection {
 }
 
 impl StatefulWidget for &PGNSection {
-    type State = Hazel;
+    type State = ();
     fn render(self, area: Rect, buf: &mut Buffer, _state: &mut Self::State) {
         let chunks = LAYOUT.split(area);
 
@@ -51,7 +50,7 @@ mod tests {
         buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
         let board_section = &mut PGNSection::new();
-        board_section.render(rect, &mut buffer, &mut Hazel::new());
+        board_section.render(rect, &mut buffer, &mut ());
 
         let mut expected = Buffer::with_lines(vec![
             "┌───────────────────────────────┐┌─────────────────────────────┐",

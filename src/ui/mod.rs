@@ -40,13 +40,9 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut Hazel) -> io::Resul
     loop {
         if app.check_flag("exit") { return Ok(true); }
 
-        terminal.draw(|f| ui(f, app))?;
+        terminal.draw(|f| app.render(f) )?;
 
         let event = event::read()?;
         app.handle_events(event);
     }
-}
-
-fn ui(frame: &mut ratatui::Frame, app: &mut Hazel) {
-    app.render(frame);
 }

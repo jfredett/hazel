@@ -16,9 +16,17 @@ use crate::engine::Engine;
 
 use super::widgets::tile::Tile;
 
+enum Mode {
+    Insert,
+    Command
+}
+
 pub struct Hazel {
     flags: HashMap<String, bool>,
     entry: Entry,
+    // UI
+    mode: Mode,
+    tile: Tile,
 }
 
 impl Debug for Hazel {
@@ -34,7 +42,9 @@ impl Hazel {
     pub fn new() -> Self {
         let mut s = Self {
             flags: HashMap::new(),
+            mode: Mode::Command,
             entry: stockfish(),
+            tile: Tile::new(),
         };
 
         s.entry.exec(UCIMessage::UCI);
@@ -51,11 +61,32 @@ impl Hazel {
     #[instrument]
     pub fn handle_events(&mut self, event: Event) {
         if let Event::Key(key) = event {
-            match key.code {
-                KeyCode::Char('q') => self.set_flag("exit", true),
-                _ => {}
+            match self.mode {
+                Mode::Insert => {
+                    match key.code {
+                        KeyCode::Esc => {
+                            self.mode = Mode::Command;
+                        },
+                        KeyCode::Char(c) => {
+                            self.tile.handle_input(c);
+                        },
+                        _ => {
+                        }
+                    }
+                },
+                Mode::Command => {
+                    match key.code {
+                        KeyCode::Char('i') => {
+                            self.mode = Mode::Insert;
+                        },
+                        KeyCode::Char('q') => {
+                            self.set_flag("exit", true);
+                        },
+                        _ => {
+                        }
+                    }
+                }
             }
-            // nyi
         }
     }
 
@@ -90,11 +121,10 @@ impl Hazel {
     }
 
 
-
     #[instrument]
     pub fn render(&mut self, frame: &mut Frame) {
-        let tile = Tile::new();
-        frame.render_stateful_widget(&tile, Rect::new(0,0,64,32), self);
+        let tile = &self.tile;
+        frame.render_stateful_widget(tile, Rect::new(0,0,64,32), &mut ());
     }
 }
 
@@ -158,4 +188,3 @@ mod tests {
         assert_eq!(actual, expected);
     }
 }
-

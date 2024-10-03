@@ -2,9 +2,7 @@ use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::widgets::{Borders, StatefulWidget};
 use ratatui::prelude::*;
 
-use crate::ui::app::Hazel;
-
-use super::engine_io_section;
+use super::engine_io_section::EngineIOSection;
 use super::game_section::GameSectionLayout;
 use super::placeholder::Placeholder;
 
@@ -28,8 +26,8 @@ pub struct Tile {
     /*
     game_section: GameSection,
     query_line: Query,
-    engine_io_section: EngineIOSection,
     */
+    engine_io_section: EngineIOSection,
 }
 
 
@@ -39,14 +37,18 @@ impl Tile {
             /*
             game_section: GameSection::new(),
             query_line: Query::new(),
-            engine_io_section: EngineIOSection::new(),
             */
+            engine_io_section: EngineIOSection::default(),
         }
+    }
+
+    pub fn handle_input(&mut self, input: char) {
+        self.engine_io_section.handle_input(input);
     }
 }
 
 impl StatefulWidget for &Tile {
-    type State = Hazel;
+    type State = ();
     fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
         // TODO: We always render at the same size, this will likely be wrong if the size is too
         // small, but I can add logic later.
@@ -60,8 +62,7 @@ impl StatefulWidget for &Tile {
         game_section.render(chunks[0], buf, state);
         //Placeholder::of_size(chunks[0].width, chunks[0].height).render(chunks[0], buf);
         Placeholder::of_size(chunks[1].width, chunks[1].height).borders(Borders::LEFT | Borders::RIGHT).render(chunks[1], buf);
-        let engine_io_section = &mut engine_io_section::EngineIOSection::new();
-        engine_io_section.render(chunks[2], buf, state);
+        self.engine_io_section.render(chunks[2], buf, state);
 
         // self.game_section.render(chunks[0], buf, state);
         // self.query_line.render(chunks[1], buf, state);
@@ -81,7 +82,7 @@ mod tests {
         buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
         let tile = &mut Tile::new();
-        tile.render(rect, &mut buffer, &mut Hazel::new());
+        tile.render(rect, &mut buffer, &mut ());
 
         // FIXME: https://github.com/ratatui/ratatui/issues/605 This issue does what I _wish_ this
         // was doing, in particular, I'd prefer the corners 'merge' into the next set of borders,
@@ -133,7 +134,7 @@ mod tests {
         buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
         let tile = &mut Tile::new();
-        tile.render(rect, &mut buffer, &mut Hazel::new());
+        tile.render(rect, &mut buffer, &mut ());
 
         // FIXME: see above
         let mut expected = Buffer::with_lines(vec![
