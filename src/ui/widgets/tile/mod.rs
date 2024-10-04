@@ -45,6 +45,14 @@ impl Tile {
     pub fn handle_input(&mut self, input: char) {
         self.engine_io_section.handle_input(input);
     }
+
+    pub fn handle_backspace(&mut self) {
+        self.engine_io_section.handle_backspace();
+    }
+
+    pub fn handle_enter(&mut self) {
+        self.engine_io_section.handle_enter();
+    }
 }
 
 impl StatefulWidget for &Tile {

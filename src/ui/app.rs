@@ -62,6 +62,7 @@ impl Hazel {
     pub fn handle_events(&mut self, event: Event) {
         if let Event::Key(key) = event {
             match self.mode {
+                // Probably insert mode is just handled by the tile wholesale?
                 Mode::Insert => {
                     match key.code {
                         KeyCode::Esc => {
@@ -70,10 +71,17 @@ impl Hazel {
                         KeyCode::Char(c) => {
                             self.tile.handle_input(c);
                         },
+                        KeyCode::Backspace => {
+                            self.tile.handle_backspace();
+                        },
+                        KeyCode::Enter => {
+                            self.tile.handle_enter();
+                        },
                         _ => {
                         }
                     }
                 },
+                // Command mode will eventually select the tile you want/start new tiles, etc.
                 Mode::Command => {
                     match key.code {
                         KeyCode::Char('i') => {

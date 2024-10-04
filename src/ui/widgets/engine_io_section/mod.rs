@@ -1,8 +1,8 @@
-pub mod outputwidget;
-
 use ratatui::layout::Direction;
 use ratatui::prelude::*;
-use ratatui::widgets::{Block, Borders};
+
+use crate::ui::widgets::input::Input;
+use crate::ui::widgets::output::Output;
 
 lazy_static! {
     static ref LAYOUT : Layout = Layout::default()
@@ -11,28 +11,13 @@ lazy_static! {
             [
                 Constraint::Fill(1),
                 Constraint::Max(1),
-            ]
-                .as_ref(),
+            ].as_ref(),
         );
 }
 
 pub struct EngineIOSection {
     output: Output,
     input: Input,
-}
-
-struct Input {
-    content: String
-}
-
-impl Input {
-    pub fn push(&mut self, input: char) {
-        self.content.push(input);
-    }
-}
-
-struct Output {
-    buffer: Vec<String>
 }
 
 impl EngineIOSection {
@@ -43,76 +28,16 @@ impl EngineIOSection {
     pub fn handle_input(&mut self, input: char) {
         self.input.push(input);
     }
-}
 
-impl Default for Input {
-    fn default() -> Self {
-        Self {
-            content: String::new()
-        }
+    pub fn handle_backspace(&mut self) {
+        self.input.pop();
     }
-}
 
-impl Default for Output {
-    fn default() -> Self {
-        Self {
-            buffer: vec![]
-        }
-    }
-}
+    pub fn handle_enter(&mut self) {
+        let content = self.input.flush();
 
-impl Output {
-    pub fn push(&mut self, line: String) {
-        self.buffer.push(line);
-    }
-}
-
-impl StatefulWidget for &Input {
-    type State = String;
-
-    fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
-        let block = Block::default()
-            .borders(Borders::NONE)
-            .title(format!("$> {}", state))
-            .border_style(Style::default().fg(Color::White).bg(Color::Black));
-        block.render(area, buf);
-    }
-}
-
-impl StatefulWidget for &Output {
-    type State = Vec<String>;
-
-    fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
-        let block = Block::default()
-            .borders(Borders::ALL)
-            .border_style(Style::default().fg(Color::White).bg(Color::Black));
-        block.render(area, buf);
-
-        // long lines are wrapped and indented by 2 spaces
-        let output = state.clone();
-        let mut adjusted = vec![];
-        for line in output.iter() {
-            if line.len() > area.width as usize - 2 {
-                let mut working_copy = line.clone();
-                let mut new_lines = vec![working_copy.split_off(area.width as usize - 2)];
-
-                while working_copy.len() > area.width as usize - 2 {
-                    let new_line = format!("  {}", working_copy.split_off(area.width as usize - 4));
-                    new_lines.push(new_line);
-                }
-                new_lines.push(working_copy);
-                adjusted.extend(new_lines.into_iter().rev());
-            } else {
-                adjusted.push(line.to_string());
-            }
-        }
-
-        // should fill from the bottom to the top:
-        let mut y = area.bottom() - 2;
-        for line in adjusted.into_iter().rev() {
-            buf.set_string(area.left() + 1, y, line, Style::default().fg(Color::White).bg(Color::Black));
-            y -= 1;
-        }
+        self.output.push(format!("> {}",  content));
+        // TODO: Send to engine as well
     }
 }
 
@@ -130,8 +55,11 @@ impl StatefulWidget for &EngineIOSection {
     fn render(self, area: Rect, buf: &mut Buffer, _state: &mut Self::State) {
         let chunks = LAYOUT.split(area);
 
-        self.output.render(chunks[0], buf, &mut self.output.buffer.clone());
-        self.input.render(chunks[1], buf, &mut self.input.content.clone());
+        // NOTE: I don't fully understand why the buffer is passed like this, since it's already
+        // part of the widget? Seems redundant, but maybe something to do with mutability/borrow
+        // checker stuff? Really passes my understanding right now.
+        self.output.render(chunks[0], buf, &mut self.output.buffer());
+        self.input.render(chunks[1], buf, &mut self.input.content());
     }
 }
 
@@ -183,6 +111,170 @@ mod tests {
 
         expected.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
         assert_eq!(buffer, expected);
+    }
+
+    #[test]
+    fn renders_very_long_lines_correctly() {
+        let rect = Rect::new(0, 0, 27, 6);
+        let mut buffer = Buffer::empty(rect);
+        buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
+
+        let engine_io_section = &mut EngineIOSection::default();
+
+
+        engine_io_section.push("A line exceeding, the buffers shortened width, should be wrapped around.".to_string());
+
+        engine_io_section.render(rect, &mut buffer, &mut ());
+
+        let mut expected = Buffer::with_lines(vec![
+            "┌─────────────────────────┐",
+            "│A line exceeding, the buf│",
+            "│ fers shortened width, sh│",
+            "│ ould be wrapped around. │",
+            "└─────────────────────────┘",
+            "$>                         ",
+        ]);
+        expected.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
+
+        assert_eq!(buffer, expected);
+    }
+
+    #[test]
+    fn accepts_input() {
+        let rect = Rect::new(0, 0, 64, 17);
+        let mut buffer = Buffer::empty(rect);
+        buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
+
+        let engine_io_section = &mut EngineIOSection::default();
+
+        engine_io_section.handle_input('a');
+        engine_io_section.handle_input('b');
+        engine_io_section.handle_input('c');
+        engine_io_section.handle_input('d');
+        engine_io_section.handle_input('e');
+        engine_io_section.handle_input('f');
+        engine_io_section.handle_input('g');
+
+        engine_io_section.render(rect, &mut buffer, &mut ());
+
+        let mut expected = Buffer::with_lines(vec![
+            "┌──────────────────────────────────────────────────────────────┐",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "└──────────────────────────────────────────────────────────────┘",
+            "$> abcdefg                                                      ",
+        ]);
+
+
+        expected.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
+
+        assert_eq!(buffer, expected);
+
+    }
+
+    #[test]
+    fn handles_backspace() {
+        let rect = Rect::new(0, 0, 64, 17);
+        let mut buffer = Buffer::empty(rect);
+        buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
+
+        let engine_io_section = &mut EngineIOSection::default();
+
+        engine_io_section.handle_input('a');
+        engine_io_section.handle_input('b');
+        engine_io_section.handle_input('c');
+        engine_io_section.handle_input('d');
+        engine_io_section.handle_input('e');
+        engine_io_section.handle_input('f');
+        engine_io_section.handle_input('g');
+
+        engine_io_section.handle_backspace();
+
+        engine_io_section.render(rect, &mut buffer, &mut ());
+
+        let mut expected = Buffer::with_lines(vec![
+            "┌──────────────────────────────────────────────────────────────┐",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "└──────────────────────────────────────────────────────────────┘",
+            "$> abcdef                                                       ",
+        ]);
+
+        expected.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
+
+        assert_eq!(buffer, expected);
+
+    }
+
+
+    #[test]
+    fn handles_enter() {
+        let rect = Rect::new(0, 0, 64, 17);
+        let mut buffer = Buffer::empty(rect);
+        buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
+
+        let engine_io_section = &mut EngineIOSection::default();
+
+        engine_io_section.handle_input('a');
+        engine_io_section.handle_input('b');
+        engine_io_section.handle_input('c');
+        engine_io_section.handle_input('d');
+        engine_io_section.handle_input('e');
+        engine_io_section.handle_input('f');
+        engine_io_section.handle_input('g');
+
+        engine_io_section.handle_enter();
+
+        engine_io_section.render(rect, &mut buffer, &mut ());
+
+        let mut expected = Buffer::with_lines(vec![
+            "┌──────────────────────────────────────────────────────────────┐",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│                                                              │",
+            "│> abcdefg                                                     │",
+            "└──────────────────────────────────────────────────────────────┘",
+            "$>                                                              ",
+        ]);
+
+        expected.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
+
+        assert_eq!(buffer, expected);
+
     }
 }
 
