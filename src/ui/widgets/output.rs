@@ -24,6 +24,17 @@ impl Output {
     }
 }
 
+fn wrap_string(s: &str, width: usize) -> Vec<String> {
+    let mut lines = vec![];
+    let mut working_copy = s.to_string();
+    while working_copy.len() > width {
+        let new_line = working_copy.split_off(width);
+        lines.push(working_copy);
+        working_copy = new_line;
+    }
+    lines.push(working_copy);
+    lines
+}
 
 impl StatefulWidget for &Output {
     type State = Vec<String>;
@@ -39,15 +50,8 @@ impl StatefulWidget for &Output {
         let mut adjusted = vec![];
         for line in output.iter() {
             if line.len() > area.width as usize - 2 {
-                let mut working_copy = line.clone();
-                let mut new_lines = vec![working_copy.split_off(area.width as usize - 2)];
-
-                while working_copy.len() > area.width as usize - 2 {
-                    let new_line = format!("  {}", working_copy.split_off(area.width as usize - 4));
-                    new_lines.push(new_line);
-                }
-                new_lines.push(working_copy);
-                adjusted.extend(new_lines.into_iter().rev());
+                let new_lines = wrap_string(line, area.width as usize - 2);
+                adjusted.extend(new_lines.into_iter());
             } else {
                 adjusted.push(line.to_string());
             }

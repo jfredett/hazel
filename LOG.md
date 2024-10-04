@@ -535,6 +535,23 @@ level to include in the trait, since `get` might be different depending on conte
 In any case, this should (I think) make for a bit of an easier make/unmake system. It _may_ be possible to make it fully
 piece/color agnostic, but I haven't thought it that far through yet.
 
+# 3-OCT-2024
 
+## 2049
+
+Working on getting the UI to be 'reactive', and my heirarchy is making for a real annoying problem of having to thread
+the various bits of state through the UI, it would be convenient but clumsy to have it all in a single object on Hazel,
+laying out the UI a little more rigidly there would probably work, I think I could simply render to an internal
+'infinite' buffer and then grab a XxY view to actually render to the screen.
+
+I think a more elegant way, though, is to make the main UI object an async object and have it run a little message queue
+that each widget can listen for events addressed to it on. So the handler would grab the event, parse it based on the
+current UI state, and enqueue a message which can be seen by any widget and reacted to. This would allow for each widget
+to manage all it's own internal state, just by subscribing to this message queue. Leaving the object structure to
+represent the DOM, essentially.
+
+Did I accidentally re-invent React? I don't know, just seems logical to me, I'm not a UI programmer.
+
+For the moment I'm just going to eat crow and thread everything through, it's ugly but it will work.
 
 

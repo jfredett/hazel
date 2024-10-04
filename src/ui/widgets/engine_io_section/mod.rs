@@ -129,8 +129,8 @@ mod tests {
         let mut expected = Buffer::with_lines(vec![
             "┌─────────────────────────┐",
             "│A line exceeding, the buf│",
-            "│ fers shortened width, sh│",
-            "│ ould be wrapped around. │",
+            "│fers shortened width, sho│",
+            "│uld be wrapped around.   │",
             "└─────────────────────────┘",
             "$>                         ",
         ]);
