@@ -9,7 +9,8 @@ pub struct Placeholder {
     width: u16,
     height: u16,
     borders: Borders,
-    text: &'static str
+    text: &'static str,
+    style: Style
 }
 
 // Features:
@@ -28,7 +29,8 @@ impl Placeholder {
             width,
             height,
             borders: Borders::ALL,
-            text: "Placeholder"
+            text: "Placeholder",
+            style: Style::default()
         }
     }
 
@@ -42,8 +44,14 @@ impl Placeholder {
         self
     }
 
-    fn calculate_text(&self) -> String {
-        vec![self.text].repeat(self.height as usize).join("\n")
+    fn calculate_text(&self) -> Span {
+        let text = vec![self.text].repeat(self.height as usize).join("\n");
+        Span::styled(text, self.style)
+    }
+
+    pub fn set_style(mut self, style: Style) -> Self {
+        self.style = style;
+        self
     }
 }
 
@@ -68,7 +76,7 @@ mod tests {
         let text = placeholder.calculate_text();
 
         let expected = "Placeholder\nPlaceholder\nPlaceholder";
-        assert_eq!(text, expected);
+        assert_eq!(text, expected.into());
     }
 
     mod rendering {

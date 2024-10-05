@@ -13,6 +13,7 @@ use tracing::{debug, instrument};
 use crate::uci::UCIMessage;
 use crate::ui::model::entry::{Entry, stockfish};
 use crate::engine::Engine;
+use crate::ui::model::pieceboard::PieceBoard;
 
 use super::widgets::tile::Tile;
 
@@ -50,10 +51,11 @@ impl Hazel {
         s.entry.exec(UCIMessage::UCI);
         s.entry.exec(UCIMessage::IsReady);
         debug!("setting startpos");
-        s.entry.exec(UCIMessage::Position("startpos".to_string(), vec![]));
+        s.entry.exec(UCIMessage::Position("startpos moves d2d4".to_string(), vec![]));
         debug!("setting startpos done");
 
-        s.entry.boardstate.set_startpos();
+        // s.entry.boardstate.set_startpos();
+        s.entry.boardstate = PieceBoard::from_fen("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR");
 
         return s;
     }
@@ -131,8 +133,8 @@ impl Hazel {
 
     #[instrument]
     pub fn render(&mut self, frame: &mut Frame) {
-        let tile = &self.tile;
-        frame.render_stateful_widget(tile, Rect::new(0,0,64,32), &mut ());
+        self.tile.set_state(self.entry.boardstate.clone());
+        frame.render_widget(&self.tile, Rect::new(0,0,64,32));
     }
 }
 
