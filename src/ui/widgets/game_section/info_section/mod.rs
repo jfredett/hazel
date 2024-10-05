@@ -28,16 +28,15 @@ impl InfoSection {
     }
 }
 
-impl StatefulWidget for &InfoSection {
-    type State = ();
-    fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
+impl Widget for &InfoSection {
+    fn render(self, area: Rect, buf: &mut Buffer) {
         let chunks = LAYOUT.split(area);
 
         let ticker_widget = Placeholder::of_size(chunks[0].width, chunks[0].height).borders(Borders::NONE); // &mut info_section::InfoSection::new();
         ticker_widget.render(chunks[0], buf);//, state);
 
-        let pgn_section = &mut PGNSection::new();
-        pgn_section.render(chunks[1], buf, state);
+        let pgn_section = PGNSection::new();
+        pgn_section.render(chunks[1], buf);
     }
 }
 
@@ -52,7 +51,7 @@ mod tests {
         buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
         let board_section = &mut InfoSection::new();
-        board_section.render(rect, &mut buffer, &mut ());
+        board_section.render(rect, &mut buffer);
 
         let mut expected = Buffer::with_lines(vec![
             "                           Placeholder                          ",

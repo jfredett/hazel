@@ -24,9 +24,8 @@ impl PGNSection {
     }
 }
 
-impl StatefulWidget for &PGNSection {
-    type State = ();
-    fn render(self, area: Rect, buf: &mut Buffer, _state: &mut Self::State) {
+impl Widget for &PGNSection {
+    fn render(self, area: Rect, buf: &mut Buffer) {
         let chunks = LAYOUT.split(area);
 
         let pgn = Placeholder::of_size(chunks[0].width, chunks[0].height); // &mut pgnwidget::new();
@@ -50,7 +49,7 @@ mod tests {
         buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
         let board_section = &mut PGNSection::new();
-        board_section.render(rect, &mut buffer, &mut ());
+        board_section.render(rect, &mut buffer);
 
         let mut expected = Buffer::with_lines(vec![
             "┌───────────────────────────────┐┌─────────────────────────────┐",

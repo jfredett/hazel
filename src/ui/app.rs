@@ -13,6 +13,7 @@ use tracing::{debug, instrument};
 use crate::uci::UCIMessage;
 use crate::ui::model::entry::{Entry, stockfish};
 use crate::engine::Engine;
+use crate::ui::model::pieceboard::PieceBoard;
 
 use super::widgets::tile::Tile;
 
@@ -50,10 +51,11 @@ impl Hazel {
         s.entry.exec(UCIMessage::UCI);
         s.entry.exec(UCIMessage::IsReady);
         debug!("setting startpos");
-        s.entry.exec(UCIMessage::Position("startpos".to_string(), vec![]));
+        s.entry.exec(UCIMessage::Position("startpos moves d2d4".to_string(), vec![]));
         debug!("setting startpos done");
 
-        s.entry.boardstate.set_startpos();
+        // s.entry.boardstate.set_startpos();
+        s.entry.boardstate = PieceBoard::from_fen("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR");
 
         return s;
     }
@@ -131,8 +133,8 @@ impl Hazel {
 
     #[instrument]
     pub fn render(&mut self, frame: &mut Frame) {
-        let tile = &self.tile;
-        frame.render_stateful_widget(tile, Rect::new(0,0,64,32), &mut ());
+        self.tile.set_state(self.entry.boardstate.clone());
+        frame.render_widget(&self.tile, Rect::new(0,0,64,32));
     }
 }
 
@@ -154,27 +156,27 @@ mod tests {
         });
 
         let mut expected = Buffer::with_lines(vec![
-            "           Placeholder           ┌─────────────────────────────┐",
-            "           Placeholder           │         Placeholder         │",
-            "           Placeholder           │         Placeholder         │",
-            "┌───────────────┐┌──────────────┐│         Placeholder         │",
-            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
-            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
-            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
-            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
-            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
-            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
-            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
-            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
-            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
-            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
-            "│  Placeholder  ││  Placeholder ││         Placeholder         │",
-            "│  Placeholder  ││  Placeholder │└─────────────────────────────┘",
-            "└───────────────┘└──────────────┘          Placeholder          ",
+            "               Placeholder               R  N  B  Q  K  B  N  R ",
+            "               Placeholder              a8 b8 c8 d8 e8 f8 g8 h8 ",
+            "               Placeholder               P  P  P  P  P  P  P  P ",
+            "┌──────────────────┐┌──────────────────┐a7 b7 c7 d7 e7 f7 g7 h7 ",
+            "│    Placeholder   ││    Placeholder   │                        ",
+            "│    Placeholder   ││    Placeholder   │a6 b6 c6 d6 e6 f6 g6 h6 ",
+            "│    Placeholder   ││    Placeholder   │                        ",
+            "│    Placeholder   ││    Placeholder   │a5 b5 c5 d5 e5 f5 g5 h5 ",
+            "│    Placeholder   ││    Placeholder   │          P             ",
+            "│    Placeholder   ││    Placeholder   │a4 b4 c4 d4 e4 f4 g4 h4 ",
+            "│    Placeholder   ││    Placeholder   │                        ",
+            "│    Placeholder   ││    Placeholder   │a3 b3 c3 d3 e3 f3 g3 h3 ",
+            "│    Placeholder   ││    Placeholder   │ P  P  P     P  P  P  P ",
+            "│    Placeholder   ││    Placeholder   │a2 b2 c2 d2 e2 f2 g2 h2 ",
+            "│    Placeholder   ││    Placeholder   │ R  N  B  Q  K  B  N  R ",
+            "│    Placeholder   ││    Placeholder   │a1 b1 c1 d1 e1 f1 g1 h1 ",
+            "│    Placeholder   ││    Placeholder   │       Placeholder      ",
+            "│    Placeholder   ││    Placeholder   │       Placeholder      ",
+            "└──────────────────┘└──────────────────┘       Placeholder      ",
             "│                          Placeholder                         │",
             "┌──────────────────────────────────────────────────────────────┐",
-            "│                                                              │",
-            "│                                                              │",
             "│                                                              │",
             "│                                                              │",
             "│                                                              │",
@@ -188,11 +190,13 @@ mod tests {
             "$>                                                              ",
         ]);
 
-        // Ignore style differences for now
-        let mut actual = t.backend().buffer().clone();
-        actual.set_style(Rect::new(0, 0, 64, 32), Style::default().fg(Color::White).bg(Color::Black));
-        expected.set_style(Rect::new(0, 0, 64, 32), Style::default().fg(Color::White).bg(Color::Black));
+        let actual = t.backend().buffer().clone();
 
-        assert_eq!(actual, expected);
+        // Ignore style differences for now, by... turning everything into a big list of chars
+        // wrapped in &strs wrapped in my pain and suffering.
+        let expected_content : Vec<String> = expected.content().iter().map(|x| x.symbol().to_string()).collect();
+        let actual_content : Vec<String> = actual.content().iter().map(|x| x.symbol().to_string()).collect();
+
+        assert_eq!(actual_content, expected_content);
     }
 }
