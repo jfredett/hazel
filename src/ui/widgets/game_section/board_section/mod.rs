@@ -16,8 +16,8 @@ lazy_static! {
         .direction(Direction::Vertical)
         .constraints(
             [
-                Constraint::Fill(1),
-                Constraint::Max(1)
+                Constraint::Length(16),
+                Constraint::Fill(1)
             ].as_ref(),
         );
 }
@@ -50,7 +50,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn renders_as_expected() {
+    fn renders_empty_board() {
         let rect = Rect::new(0, 0, 33, 18);
         let mut buffer = Buffer::empty(rect);
         buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
@@ -59,78 +59,71 @@ mod tests {
         let board_section = &mut BoardSection::from(board);
         board_section.render(rect, &mut buffer);
 
-        // NOTE: These are designed to be used in conjunction with a checkerboard, not this
-        // monochrome one. I am not sure how to render this just yet in ratatui, but when I get
-        // there, which symbol to use to represent white/black will change based on the color of
-        // the square the piece is on, because of how it outlines. It's also why the pieces look
-        // backwards right now (as though you are playing as black)
         let mut expected = Buffer::with_lines(vec![
-            "┌───┬───┬───┬───┬───┬───┬───┬───┐",
-            "│ ♜ │ ♞ │ ♝ │ ♛ │ ♚ │ ♝ │ ♞ │ ♜ │",
-            "├───┼───┼───┼───┼───┼───┼───┼───┤",
-            "│ ♟ │ ♟ │ ♟ │ ♟ │ ♟ │ ♟ │ ♟ │ ♟ │",
-            "├───┼───┼───┼───┼───┼───┼───┼───┤",
-            "│   │   │   │   │   │   │   │   │",
-            "├───┼───┼───┼───┼───┼───┼───┼───┤",
-            "│   │   │   │   │   │   │   │   │",
-            "├───┼───┼───┼───┼───┼───┼───┼───┤",
-            "│   │   │   │   │   │   │   │   │",
-            "├───┼───┼───┼───┼───┼───┼───┼───┤",
-            "│   │   │   │   │   │   │   │   │",
-            "├───┼───┼───┼───┼───┼───┼───┼───┤",
-            "│ ♙ │ ♙ │ ♙ │ ♙ │ ♙ │ ♙ │ ♙ │ ♙ │",
-            "├───┼───┼───┼───┼───┼───┼───┼───┤",
-            "│ ♖ │ ♘ │ ♗ │ ♕ │ ♔ │ ♗ │ ♘ │ ♖ │",
-            "└───┴───┴───┴───┴───┴───┴───┴───┘",
+            "                                 ",
+            "a8 b8 c8 d8 e8 f8 g8 h8          ",
+            "                                 ",
+            "a7 b7 c7 d7 e7 f7 g7 h7          ",
+            "                                 ",
+            "a6 b6 c6 d6 e6 f6 g6 h6          ",
+            "                                 ",
+            "a5 b5 c5 d5 e5 f5 g5 h5          ",
+            "                                 ",
+            "a4 b4 c4 d4 e4 f4 g4 h4          ",
+            "                                 ",
+            "a3 b3 c3 d3 e3 f3 g3 h3          ",
+            "                                 ",
+            "a2 b2 c2 d2 e2 f2 g2 h2          ",
+            "                                 ",
+            "a1 b1 c1 d1 e1 f1 g1 h1          ",
+            "           Placeholder           ",
             "           Placeholder           ",
         ]);
         expected.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
+        buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
         assert_eq!(buffer, expected);
     }
 
-    use ratatui::widgets::Block;
-
     #[test]
-    fn pinky() {
-        let b = Block::new().title(Span::styled("Pinky", Style::default().bg(Color::Magenta))).borders(Borders::ALL);
+    fn renders_startpos() {
         let rect = Rect::new(0, 0, 33, 18);
         let mut buffer = Buffer::empty(rect);
         buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
+        let mut board = PieceBoard::default();
+        board.set_startpos();
 
-        b.render(rect, &mut buffer);
+        let board_section = &mut BoardSection::from(board);
+        board_section.render(rect, &mut buffer);
 
         let mut expected = Buffer::with_lines(vec![
-            "┌───────────────────────────────┐",
-            "│Pinky                          │",
-            "└───────────────────────────────┘",
+            " R  N  B  Q  K  B  N  R          ",
+            "a8 b8 c8 d8 e8 f8 g8 h8          ",
+            " P  P  P  P  P  P  P  P          ",
+            "a7 b7 c7 d7 e7 f7 g7 h7          ",
+            "                                 ",
+            "a6 b6 c6 d6 e6 f6 g6 h6          ",
+            "                                 ",
+            "a5 b5 c5 d5 e5 f5 g5 h5          ",
+            "                                 ",
+            "a4 b4 c4 d4 e4 f4 g4 h4          ",
+            "                                 ",
+            "a3 b3 c3 d3 e3 f3 g3 h3          ",
+            " P  P  P  P  P  P  P  P          ",
+            "a2 b2 c2 d2 e2 f2 g2 h2          ",
+            " R  N  B  Q  K  B  N  R          ",
+            "a1 b1 c1 d1 e1 f1 g1 h1          ",
+            "           Placeholder           ",
+            "           Placeholder           ",
         ]);
-        expected.set_style(rect, Style::default().fg(Color::Magenta).bg(Color::Black));
+        expected.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
-        assert_eq!(buffer, expected);
+
+        // this sucks
+        let expected_content : Vec<String> = expected.content().iter().map(|x| x.symbol().to_string()).collect();
+        let actual_content : Vec<String> = buffer.content().iter().map(|x| x.symbol().to_string()).collect();
+
+        assert_eq!(actual_content, expected_content);
     }
 }
-
-/*
-─
-Row::new(vec!["┌", "─", "─", "─", "┬", "─", "─", "─", "┬", "─", "─", "─", "┬", "─", "─", "─", "┬", "─", "─", "─", "┬", "─", "─", "─", "┬", "─", "─", "─", "┬", "─", "─", "─", "┐"]),
-Row::new(vec!["│", " ", "♜", " ", "│", " ", "♞", " ", "│", " ", "♝", " ", "│", " ", "♛", " ", "│", " ", "♚", " ", "│", " ", "♝", " ", "│", " ", "♞", " ", "│", " ", "♜", " ", "│"]),
-Row::new(vec!["├", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┤"]),
-Row::new(vec!["│", " ", "♟", " ", "│", " ", "♟", " ", "│", " ", "♟", " ", "│", " ", "♟", " ", "│", " ", "♟", " ", "│", " ", "♟", " ", "│", " ", "♟", " ", "│", " ", "♟", " ", "│"]),
-Row::new(vec!["├", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┤"]),
-Row::new(vec!["│", " ", " ", " ", "│", " ", " ", " ", "│", " ", " ", " ", "│", " ", " ", " ", "│", " ", " ", " ", "│", " ", " ", " ", "│", " ", " ", " ", "│", " ", " ", " ", "│"]),
-Row::new(vec!["├", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┤"]),
-Row::new(vec!["│", " ", " ", " ", "│", " ", " ", " ", "│", " ", " ", " ", "│", " ", " ", " ", "│", " ", " ", " ", "│", " ", " ", " ", "│", " ", " ", " ", "│", " ", " ", " ", "│"]),
-Row::new(vec!["├", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┤"]),
-Row::new(vec!["│", " ", " ", " ", "│", " ", " ", " ", "│", " ", " ", " ", "│", " ", " ", " ", "│", " ", " ", " ", "│", " ", " ", " ", "│", " ", " ", " ", "│", " ", " ", " ", "│"]),
-Row::new(vec!["├", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┤"]),
-Row::new(vec!["│", " ", " ", " ", "│", " ", " ", " ", "│", " ", " ", " ", "│", " ", " ", " ", "│", " ", " ", " ", "│", " ", " ", " ", "│", " ", " ", " ", "│", " ", " ", " ", "│"]),
-Row::new(vec!["├", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┤"]),
-Row::new(vec!["│", " ", "♙", " ", "│", " ", "♙", " ", "│", " ", "♙", " ", "│", " ", "♙", " ", "│", " ", "♙", " ", "│", " ", "♙", " ", "│", " ", "♙", " ", "│", " ", "♙", " ", "│"]),
-Row::new(vec!["├", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┼", "─", "─", "─", "┤"]),
-Row::new(vec!["│", " ", "♖", " ", "│", " ", "♘", " ", "│", " ", "♗", " ", "│", " ", "♕", " ", "│", " ", "♔", " ", "│", " ", "♗", " ", "│", " ", "♘", " ", "│", " ", "♖", " ", "│"]),
-Row::new(vec!["└", "─", "─", "─", "┴", "─", "─", "─", "┴", "─", "─", "─", "┴", "─", "─", "─", "┴", "─", "─", "─", "┴", "─", "─", "─", "┴", "─", "─", "─", "┴", "─", "─", "─", "┘"]),
-
-
-*/

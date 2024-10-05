@@ -146,23 +146,27 @@ mod tests {
         board_widget.render(rect, &mut buffer);
 
         let mut expected = Buffer::with_lines(vec![
-            "A B C D E F G H",
-            "8 7 6 5 4 3 2 1",
-            "A B C D E F G H",
-            "8 7 6 5 4 3 2 1",
-            "A B C D E F G H",
-            "8 7 6 5 4 3 2 1",
-            "A B C D E F G H",
-            "8 7 6 5 4 3 2 1",
+            "                                 ",
+            "a8 b8 c8 d8 e8 f8 g8 h8          ",
+            "                                 ",
+            "a7 b7 c7 d7 e7 f7 g7 h7          ",
+            "                                 ",
+            "a6 b6 c6 d6 e6 f6 g6 h6          ",
+            "                                 ",
+            "a5 b5 c5 d5 e5 f5 g5 h5          ",
+            "                                 ",
+            "a4 b4 c4 d4 e4 f4 g4 h4          ",
+            "                                 ",
+            "a3 b3 c3 d3 e3 f3 g3 h3          ",
+            "                                 ",
+            "a2 b2 c2 d2 e2 f2 g2 h2          ",
+            "                                 ",
+            "a1 b1 c1 d1 e1 f1 g1 h1          ",
+            "                                 ",
         ]);
-        expected.set_style(Rect::new(0, 0, 1, 1), Style::default().fg(Color::White).bg(Color::Black));
-        expected.set_style(Rect::new(2, 0, 1, 1), Style::default().fg(Color::White).bg(Color::Black));
-        expected.set_style(Rect::new(4, 0, 1, 1), Style::default().fg(Color::White).bg(Color::Black));
-        expected.set_style(Rect::new(6, 0, 1, 1), Style::default().fg(Color::White).bg(Color::Black));
-        expected.set_style(Rect::new(8, 0, 1, 1), Style::default().fg(Color::White).bg(Color::Black));
-        expected.set_style(Rect::new(10, 0, 1, 1), Style::default().fg(Color::White).bg(Color::Black));
-        expected.set_style(Rect::new(12, 0, 1, 1), Style::default().fg(Color::White).bg(Color::Black));
-        expected.set_style(Rect::new(14, 0, 1, 1), Style::default().fg(Color::White).bg(Color::Black));
+        buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
+        expected.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
+
 
         assert_eq!(buffer, expected);
     }

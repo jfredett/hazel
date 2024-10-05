@@ -1,5 +1,7 @@
-use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph, Widget};
+use ratatui::layout::{Alignment, Rect};
+use ratatui::style::Style;
+use ratatui::widgets::Wrap;
 
 use ratatui::buffer::Buffer;
 
@@ -44,9 +46,11 @@ impl Placeholder {
         self
     }
 
-    fn calculate_text(&self) -> Span {
+    fn calculate_text(&self) -> Paragraph {
         let text = vec![self.text].repeat(self.height as usize).join("\n");
-        Span::styled(text, self.style)
+        Paragraph::new(text)
+            .style(self.style)
+            .wrap(Wrap { trim: false })
     }
 
     pub fn set_style(mut self, style: Style) -> Self {
@@ -57,7 +61,7 @@ impl Placeholder {
 
 impl Widget for &Placeholder {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let widget = Paragraph::new(self.calculate_text()).block(
+        let widget = self.calculate_text().block(
             Block::default()
                 .borders(self.borders)
         ).alignment(Alignment::Center);
@@ -69,14 +73,15 @@ impl Widget for &Placeholder {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ratatui::style::Color;
 
     #[test]
     fn calculates_text_correctly() {
         let placeholder = Placeholder::of_size(13, 3);
         let text = placeholder.calculate_text();
 
-        let expected = "Placeholder\nPlaceholder\nPlaceholder";
-        assert_eq!(text, expected.into());
+        let expected = Paragraph::new("Placeholder\nPlaceholder\nPlaceholder").wrap(Wrap { trim: false });
+        assert_eq!(text, expected);
     }
 
     mod rendering {
@@ -218,7 +223,7 @@ mod tests {
             let mut expected = Buffer::with_lines(vec![
                 "┌────────┐",
                 "│Placehol│",
-                "│Placehol│",
+                "│   der  │",
                 "└────────┘"
             ]);
             expected.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
