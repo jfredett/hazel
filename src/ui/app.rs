@@ -142,7 +142,7 @@ mod tests {
             hazel.render(f);
         });
 
-        let mut expected = Buffer::with_lines(vec![
+        let expected = Buffer::with_lines(vec![
             "               Placeholder               R  N  B  Q  K  B  N  R ",
             "               Placeholder              a8 b8 c8 d8 e8 f8 g8 h8 ",
             "               Placeholder               P  P  P  P  P  P  P  P ",

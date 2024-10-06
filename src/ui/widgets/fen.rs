@@ -64,7 +64,7 @@ impl FEN {
     }
 
     #[inline(always)]
-    pub fn center(mut self) -> Self {
+    pub fn center(self) -> Self {
         self.alignment(Alignment::Center)
     }
 }

@@ -101,7 +101,7 @@ mod tests {
         let mut actual = Buffer::empty(rect);
         actual.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
-        let mut tile = Tile::new();
+        let tile = Tile::new();
         tile.render(rect, &mut actual);
 
         // FIXME: https://github.com/ratatui/ratatui/issues/605 This issue does what I _wish_ this
@@ -155,7 +155,7 @@ mod tests {
         let mut actual = Buffer::empty(rect);
         actual.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
-        let mut tile = Tile::new();
+        let tile = Tile::new();
         tile.render(rect, &mut actual);
 
         // FIXME: see above
