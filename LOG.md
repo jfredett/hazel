@@ -654,3 +654,9 @@ subtasks. It'll make the `LOG` a little weird to maintain though -- parallel uni
 branch to the entry? It should be a straightforward merge process.
 
 I suppose I'll know by the next entry.
+
+## 2204 - ui
+
+Hi from a worktree. This worktree will track continued work on the ui. I expect this branch will merge multiple times
+over it's likely very long life. I'm running a few of these trees simultaneously, experimenting with the model, we'll
+see if it works.
