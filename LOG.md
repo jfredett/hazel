@@ -654,3 +654,10 @@ subtasks. It'll make the `LOG` a little weird to maintain though -- parallel uni
 branch to the entry? It should be a straightforward merge process.
 
 I suppose I'll know by the next entry.
+
+## 2300 - movegen-v1
+
+Hi from a worktree. This worktree will track work on `movegen-v1`, which is finishing up the existing movegen
+implementation. I expect this branch to merge once, if at all, as I'm going to simultaneously be working on `movegen-v2`
+in a separate worktree. I'm running a few of these trees simultaneously, experimenting with the model, we'll see if it
+works.
