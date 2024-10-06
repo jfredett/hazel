@@ -654,3 +654,9 @@ subtasks. It'll make the `LOG` a little weird to maintain though -- parallel uni
 branch to the entry? It should be a straightforward merge process.
 
 I suppose I'll know by the next entry.
+
+## 2258 - boardrep
+
+Hi from a worktree. This worktree will track work on the 'board rep', which is reorganizing and completing the
+implementation of different board representations. I expect this branch to merge to main multiple times over it's
+lifespan. I'm running a few of these trees simultaneously, experimenting with the model, we'll see if it works.
