@@ -35,6 +35,8 @@
             cloc
             linuxKernel.packages.linux_6_6.perf
             just
+            cargo-llvm-cov
+            cargo-nextest
             stockfish
           ];
         }];
