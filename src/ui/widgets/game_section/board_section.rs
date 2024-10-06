@@ -1,6 +1,3 @@
-pub mod boardwidget;
-pub mod fenwidget;
-pub mod board;
 
 
 use ratatui::layout::Direction;
@@ -9,7 +6,7 @@ use ratatui::widgets::Borders;
 
 use crate::ui::model::pieceboard::PieceBoard;
 use crate::ui::widgets::placeholder::Placeholder;
-use crate::ui::widgets::game_section::board_section::board::Board;
+use crate::ui::widgets::board::Board;
 
 lazy_static! {
     static ref LAYOUT : Layout = Layout::default()
@@ -23,7 +20,7 @@ lazy_static! {
 }
 
 pub struct BoardSection<'a> {
-    board_widget: Board<'a>
+    board_widget: Board<'a>,
 }
 
 impl From<PieceBoard> for BoardSection<'_> {
@@ -40,8 +37,8 @@ impl Widget for &BoardSection<'_> {
 
         self.board_widget.render(chunks[0], buf);
 
-        let query_widget = Placeholder::of_size(chunks[1].width, chunks[1].height).borders(Borders::NONE)  ; // &mut fenwidget::FenWidget::new();
-        query_widget.render(chunks[1], buf);//, state);
+        let query_widget = Placeholder::of_size(chunks[1].width, chunks[1].height).borders(Borders::NONE);
+        query_widget.render(chunks[1], buf);
     }
 }
 

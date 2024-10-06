@@ -11,3 +11,7 @@ pub mod placeholder;
 pub mod input;
 pub mod output;
 
+pub mod board;
+pub mod smallboard;
+pub mod fen;
+

@@ -628,3 +628,29 @@ const TRANSPARENT_PAWN : &'static str = "♙";
 ```
 
 They may be useful again someday.
+
+## 2143
+
+I got things cleaned up and merged, I think the board is basically done for now. It's pointed out a need to extract some
+of the UI to configuration, so I can change it more easily. I dislike the unicode pieces a lot, I imagine it's just the
+font I'm using not being particular legible, but I think I want to aim in a direction of sprites rendered using a
+terminal image api. This is a little bit trickier, and think my time is better spent elsewhere right now. When I do
+that, I'll spend some time looking at custom font patching as well, as keeping it all text is pretty nice, and I don't
+think it'd be too difficult to make some better looking pieces.
+
+I think next I want to set up an integration test, the goal will be to evaluate some deep `perft`, and send the games
+off to be 'validated' by `stockfish`, ideally in parallel (on both sides).
+
+The idea would require building some better abstractions around `Engine`s, and would also work towards finishing the
+movegen component. I do want to build the `Alteration` based model; but I think I'm close enough with my initial, naive
+approach that it's worth bringing to completion if I can before starting on the next version.
+
+I do want to get the UI finished soon, but it needs some design review, as the current deeply nested approach is a
+little tricky without some distinct 'main loop'. This should be straightforward to build with `tokio`, but I need to
+take some time to do it.
+
+I've been working with `worktrees` recently; and I'm debating just having three branches running so I can switch between
+subtasks. It'll make the `LOG` a little weird to maintain though -- parallel universes. Maybe I'll start adding the
+branch to the entry? It should be a straightforward merge process.
+
+I suppose I'll know by the next entry.

@@ -5,9 +5,6 @@ use ratatui::crossterm::event::{Event, KeyCode};
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders};
 
-use crate::ui::widgets::game_section::board_section::fenwidget::FENWidget;
-use crate::ui::widgets::game_section::board_section::boardwidget::BoardWidget;
-
 use tracing::{debug, instrument};
 
 use crate::uci::UCIMessage;
@@ -114,16 +111,6 @@ impl Hazel {
     }
 
     #[instrument]
-    pub fn fen_widget(&self) -> FENWidget {
-        FENWidget::from(&self.entry)
-    }
-
-    #[instrument]
-    pub fn board_widget(&self) -> BoardWidget {
-        BoardWidget::from(&self.entry.boardstate)
-    }
-
-    #[instrument]
     pub fn input_widget(&self) -> Block {
         Block::default()
             .title("Input")
@@ -147,7 +134,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn placeholder() {
+    fn renders_as_expected() {
         let mut hazel = Hazel::new();
 
         let mut t = Terminal::new(TestBackend::new(64, 32)).unwrap();
@@ -175,7 +162,7 @@ mod tests {
             "│    Placeholder   ││    Placeholder   │       Placeholder      ",
             "│    Placeholder   ││    Placeholder   │       Placeholder      ",
             "└──────────────────┘└──────────────────┘       Placeholder      ",
-            "│                          Placeholder                         │",
+            "│        rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR         │",
             "┌──────────────────────────────────────────────────────────────┐",
             "│                                                              │",
             "│                                                              │",
@@ -191,6 +178,10 @@ mod tests {
         ]);
 
         let actual = t.backend().buffer().clone();
+
+        // NOTE: This is going to be turned off most of the time, except when I need a snapshot of the UI
+        // to cheat the test.
+        //assert_eq!(actual, expected);
 
         // Ignore style differences for now, by... turning everything into a big list of chars
         // wrapped in &strs wrapped in my pain and suffering.

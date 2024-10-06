@@ -5,13 +5,12 @@ use ratatui::buffer::Buffer;
 
 use crate::ui::model::pieceboard::PieceBoard;
 
-// TODO: Rename and extract to the generic section, should be something like "Small Board Widget"
-// or something.
-pub struct BoardWidget {
+/// 8x8 text-only no color board.
+pub struct SmallBoard {
     board: PieceBoard
 }
 
-impl BoardWidget {
+impl SmallBoard {
     // TODO: This should be an actual From implementation, so I can build these from multiple
     // sources (e.g., Ply)
     pub fn from(board: &PieceBoard) -> Self {
@@ -25,32 +24,10 @@ impl BoardWidget {
 fn eight_cells(direction: Direction) -> Layout {
     Layout::default()
         .direction(direction)
-        .constraints(
-            [
-                Constraint::Max(1),
-                Constraint::Max(1),
-                Constraint::Max(1),
-                Constraint::Max(1),
-                Constraint::Max(1),
-                Constraint::Max(1),
-                Constraint::Max(1),
-                Constraint::Max(1),
-                /* TODO: Would be cool to scale up the board dynamically with the allotted size.
-                *  would need some scalable content for the cells.
-                Constraint::Ratio(1, 8),
-                Constraint::Ratio(1, 8),
-                Constraint::Ratio(1, 8),
-                Constraint::Ratio(1, 8),
-                Constraint::Ratio(1, 8),
-                Constraint::Ratio(1, 8),
-                Constraint::Ratio(1, 8),
-                Constraint::Ratio(1, 8),
-                */
-            ].as_ref()
-        )
+        .constraints(Constraint::from_maxes(vec![1].repeat(8)))
 }
 
-impl Widget for &BoardWidget {
+impl Widget for &SmallBoard {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let cols = eight_cells(Direction::Horizontal).split(area);
         let rows = [
@@ -86,7 +63,7 @@ mod tests {
         buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
         let board = PieceBoard::default();
-        let board_widget = &BoardWidget::from(&board);
+        let board_widget = &SmallBoard::from(&board);
         board_widget.render(rect, &mut buffer);
 
         let mut expected = Buffer::with_lines(vec![

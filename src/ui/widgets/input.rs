@@ -36,10 +36,10 @@ impl Default for Input {
 impl StatefulWidget for &Input {
     type State = String;
 
-    fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
+    fn render(self, area: Rect, buf: &mut Buffer, _state: &mut Self::State) {
         let block = Block::default()
             .borders(Borders::NONE)
-            .title(format!("$> {}", state))
+            .title(format!("$> {}", self.content))
             .border_style(Style::default().fg(Color::White).bg(Color::Black));
         block.render(area, buf);
     }

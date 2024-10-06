@@ -3,6 +3,7 @@ use ratatui::widgets::Borders;
 use ratatui::prelude::*;
 
 use super::engine_io_section::EngineIOSection;
+use super::fen::FEN;
 use super::game_section::GameSectionLayout;
 use super::placeholder::Placeholder;
 
@@ -39,7 +40,6 @@ impl Tile {
         Self {
             /*
             game_section: GameSection::new(),
-            query_line: Query::new(),
             */
             engine_io_section: EngineIOSection::default(),
             state: PieceBoard::default(),
@@ -61,6 +61,10 @@ impl Tile {
     pub fn set_state(&mut self, state: PieceBoard) {
         self.state = state;
     }
+
+    pub fn query_line(&self) -> FEN {
+        FEN::from(self.state).center()
+    }
 }
 
 impl Widget for &Tile {
@@ -81,7 +85,7 @@ impl Widget for &Tile {
         self.engine_io_section.render(chunks[2], buf);
 
         // self.game_section.render(chunks[0], buf, state);
-        // self.query_line.render(chunks[1], buf, state);
+        self.query_line().render(chunks[1], buf);
         // self.engine_io_section.render(chunks[2], buf, state);
     }
 }
@@ -124,7 +128,7 @@ mod tests {
             "│    Placeholder   ││    Placeholder   │       Placeholder       ",
             "│    Placeholder   ││    Placeholder   │       Placeholder       ",
             "└──────────────────┘└──────────────────┘       Placeholder       ",
-            "│                          Placeholder                         │ ",
+            "│                       8/8/8/8/8/8/8/8                        │ ",
             "┌──────────────────────────────────────────────────────────────┐ ",
             "│                                                              │ ",
             "│                                                              │ ",
@@ -175,7 +179,7 @@ mod tests {
             "│    Placeholder   ││    Placeholder   │       Placeholder      ",
             "│    Placeholder   ││    Placeholder   │       Placeholder      ",
             "└──────────────────┘└──────────────────┘       Placeholder      ",
-            "│                          Placeholder                         │",
+            "│                       8/8/8/8/8/8/8/8                        │",
             "┌──────────────────────────────────────────────────────────────┐",
             "│                                                              │",
             "│                                                              │",

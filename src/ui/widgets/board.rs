@@ -7,6 +7,9 @@ use crate::constants::Piece;
 
 use ratatui::widgets::{Table, Row};
 
+/// A widget what representeth a board in a 8x8 grid of 3x2 character cells. This is messy and bad
+/// and will undergo some kind of finishing someday when I tire of it. Be ye warned, dragons doth
+/// lie here.
 pub struct Board<'a> {
     state: PieceBoard,
     board: Table<'a>
