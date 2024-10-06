@@ -654,3 +654,9 @@ subtasks. It'll make the `LOG` a little weird to maintain though -- parallel uni
 branch to the entry? It should be a straightforward merge process.
 
 I suppose I'll know by the next entry.
+
+## 2201 - movegen-v2
+
+Hi from a worktree. This worktree will track work on the 'movegen-v2', which is a new approach to tracking gamestate and
+generating moves. I expect this branch to merge once over it's lifespan. I'm running a few of these worktrees
+simultaneously, experimenting with the model, we'll see if it works.
