@@ -654,3 +654,9 @@ subtasks. It'll make the `LOG` a little weird to maintain though -- parallel uni
 branch to the entry? It should be a straightforward merge process.
 
 I suppose I'll know by the next entry.
+
+## 2302 - stockfish-integration-test
+
+Hi from a worktree. This worktree is going to be tracking work on the `stockfish-integration-test` branch, which is a
+burn in test using `perft` and `stockfish` to check `hazel`'s work. If hazel detects a discrepancy, it will dump the
+game to PGNs for stockfish to analyze and isolate the incorrect entries.
