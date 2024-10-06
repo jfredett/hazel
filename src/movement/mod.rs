@@ -268,4 +268,70 @@ mod test {
             assert_eq!(pm.promotion_piece(), Piece::Queen)
         }
     }
+
+    mod castling {
+        use super::*;
+
+        #[test]
+        fn short_castle_parses_correctly() {
+            let m = Move::short_castle(Color::WHITE);
+            assert_eq!(m.source_idx(), 0o04);
+            assert_eq!(m.target_idx(), 0o06);
+            assert!(m.is_short_castle());
+        }
+
+        #[test]
+        fn long_castle_parses_correctly() {
+            let m = Move::long_castle(Color::WHITE);
+            assert_eq!(m.source_idx(), 0o04);
+            assert_eq!(m.target_idx(), 0o02);
+            assert!(m.is_long_castle());
+        }
+    }
+
+    mod proxy_methods {
+        use super::*;
+
+        #[test]
+        fn is_capture() {
+            let m = Move::from(0o13, 0o33, MoveType::CAPTURE);
+            assert!(m.is_capture());
+        }
+
+        #[test]
+        fn is_short_castle() {
+            let m = Move::short_castle(Color::WHITE);
+            assert!(m.is_short_castle());
+        }
+
+        #[test]
+        fn is_long_castle() {
+            let m = Move::long_castle(Color::WHITE);
+            assert!(m.is_long_castle());
+        }
+
+        #[test]
+        fn is_en_passant() {
+            let m = Move::from(0o13, 0o23, MoveType::EP_CAPTURE);
+            assert!(m.is_en_passant());
+        }
+
+        #[test]
+        fn is_double_pawn_push_for() {
+            let m = Move::from(0o13, 0o33, MoveType::DOUBLE_PAWN);
+            assert!(m.is_double_pawn_push_for(Color::WHITE));
+        }
+
+        #[test]
+        fn is_short_castling_move_for() {
+            let m = Move::short_castle(Color::WHITE);
+            assert!(m.is_short_castling_move_for(Color::WHITE));
+        }
+
+        #[test]
+        fn is_long_castling_move_for() {
+            let m = Move::long_castle(Color::WHITE);
+            assert!(m.is_long_castling_move_for(Color::WHITE));
+        }
+    }
 }
