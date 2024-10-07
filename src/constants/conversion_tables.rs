@@ -53,20 +53,25 @@ pub const COORDS_TO_INDEX: [[usize; 8]; 8] = {
     m
 };
 
-lazy_static! {
-    pub static ref INDEX_TO_COORDS: [(usize, usize); 64] = {
-        let mut m = [(0, 0); 64];
+pub const INDEX_TO_COORDS: [(usize, usize); 64] = {
+    let mut m = [(0, 0); 64];
 
-        let mut idx = 0;
-        for (rank, rank_arr) in COORDS_TO_INDEX.iter().enumerate() {
-            for file in rank_arr {
-                m[idx] = (rank, *file % 8);
-                idx += 1;
-            }
+    let mut idx = 0;
+
+    let mut rank = 0;
+    let mut file = 0;
+
+    while rank < 8 {
+        while file < 8 {
+            m[idx] = (rank, file);
+            idx += 1;
+            file += 1;
         }
-        m
-    };
-}
+        file = 0;
+        rank += 1;
+    }
+    m
+};
 
 #[cfg(test)]
 mod tests {
