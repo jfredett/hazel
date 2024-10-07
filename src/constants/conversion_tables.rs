@@ -1,8 +1,11 @@
 /// ! Conversion tables and functions which allow conversion between:
-/// ! 
+/// !
 /// ! Algebraic Notation: "c6", "d4", etc.
 /// ! Bitboard Index: 0o52, 0o33, etc.
 /// ! Rank/File: (5,2), (3,3), etc.
+///
+/// TODO: constify everything here. I should be able to use a magic hash for the NOTATION_TO_INDEX
+/// table. cast the string to a u16 and do ascii at it. I think that should work.
 
 
 #[inline(always)]
@@ -38,16 +41,19 @@ pub const INDEX_TO_NOTATION: [&'static str; 64] = [
     "e8", "f8", "g8", "h8"
 ];
 
+pub const COORDS_TO_INDEX: [[usize; 8]; 8] = {
+    let mut m = [[0; 8]; 8];
+    let mut idx = 0;
+
+    while idx < 64 {
+        m[idx >> 3][idx % 8] = idx;
+        idx += 1;
+    }
+
+    m
+};
+
 lazy_static! {
-    pub static ref COORDS_TO_INDEX: [[usize; 8]; 8] = {
-        let mut m = [[0; 8]; 8];
-
-        for idx in 0..64 {
-            m[idx >> 3][idx % 8] = idx
-        }
-
-        m
-    };
     pub static ref INDEX_TO_COORDS: [(usize, usize); 64] = {
         let mut m = [(0, 0); 64];
 
