@@ -1,8 +1,11 @@
 /// ! Conversion tables and functions which allow conversion between:
-/// ! 
+/// !
 /// ! Algebraic Notation: "c6", "d4", etc.
 /// ! Bitboard Index: 0o52, 0o33, etc.
 /// ! Rank/File: (5,2), (3,3), etc.
+///
+/// TODO: constify everything here. I should be able to use a magic hash for the NOTATION_TO_INDEX
+/// table. cast the string to a u16 and do ascii at it. I think that should work.
 
 
 #[inline(always)]
@@ -38,29 +41,37 @@ pub const INDEX_TO_NOTATION: [&'static str; 64] = [
     "e8", "f8", "g8", "h8"
 ];
 
-lazy_static! {
-    pub static ref COORDS_TO_INDEX: [[usize; 8]; 8] = {
-        let mut m = [[0; 8]; 8];
+pub const COORDS_TO_INDEX: [[usize; 8]; 8] = {
+    let mut m = [[0; 8]; 8];
+    let mut idx = 0;
 
-        for idx in 0..64 {
-            m[idx >> 3][idx % 8] = idx
+    while idx < 64 {
+        m[idx >> 3][idx % 8] = idx;
+        idx += 1;
+    }
+
+    m
+};
+
+pub const INDEX_TO_COORDS: [(usize, usize); 64] = {
+    let mut m = [(0, 0); 64];
+
+    let mut idx = 0;
+
+    let mut rank = 0;
+    let mut file = 0;
+
+    while rank < 8 {
+        while file < 8 {
+            m[idx] = (rank, file);
+            idx += 1;
+            file += 1;
         }
-
-        m
-    };
-    pub static ref INDEX_TO_COORDS: [(usize, usize); 64] = {
-        let mut m = [(0, 0); 64];
-
-        let mut idx = 0;
-        for (rank, rank_arr) in COORDS_TO_INDEX.iter().enumerate() {
-            for file in rank_arr {
-                m[idx] = (rank, *file % 8);
-                idx += 1;
-            }
-        }
-        m
-    };
-}
+        file = 0;
+        rank += 1;
+    }
+    m
+};
 
 #[cfg(test)]
 mod tests {
