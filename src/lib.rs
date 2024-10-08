@@ -37,6 +37,7 @@ pub mod constants;
 pub mod driver;
 pub mod engine;
 pub mod game;
+pub mod notation;
 pub mod movement;
 pub mod moveset;
 pub mod pextboard;

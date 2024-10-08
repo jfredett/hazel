@@ -660,3 +660,12 @@ I suppose I'll know by the next entry.
 Hi from a worktree. This worktree will track work on the 'movegen-v2', which is a new approach to tracking gamestate and
 generating moves. I expect this branch to merge once over it's lifespan. I'm running a few of these worktrees
 simultaneously, experimenting with the model, we'll see if it works.
+
+# 8-OCT-2024
+
+## 1526 - notation-spike
+
+I started on this spike to do a const-time 'notation' struct/system which would convert, e.g., `e4` to the equivalent
+numerical index (and eventually to other formats), but the `const_trait` system is still not really there, and there
+really isn't a better way to do what I want besides maybe some evil looking macro, so I suppose I'll have to wait till
+it's in a better state.
