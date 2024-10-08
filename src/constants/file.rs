@@ -18,6 +18,37 @@ impl File {
     pub fn to_bitboard(self) -> Bitboard {
         FILE_MASKS[self as usize]
     }
+
+    pub fn from_index(index: usize) -> Self {
+        match index & 0o70 >> 3 {
+            0 => File::A,
+            1 => File::B,
+            2 => File::C,
+            3 => File::D,
+            4 => File::E,
+            5 => File::F,
+            6 => File::G,
+            7 => File::H,
+            _ => panic!("Invalid file index"),
+        }
+    }
+
+    pub fn to_index(self) -> usize {
+        self as usize
+    }
+
+    pub fn to_pgn(self) -> &'static str {
+        match self {
+            File::A => "a",
+            File::B => "b",
+            File::C => "c",
+            File::D => "d",
+            File::E => "e",
+            File::F => "f",
+            File::G => "g",
+            File::H => "h",
+        }
+    }
 }
 
 pub const FILES: [File; 8] = [

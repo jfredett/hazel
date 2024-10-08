@@ -9,7 +9,7 @@ pub enum MoveType {
     LONG_CASTLE = 0b0011,
     CAPTURE = 0b0100,
     EP_CAPTURE = 0b0101,
-    UNUSED_1 = 0b0110,   // NOTE: unused at the moment
+    NULLMOVE = 0b0110,
     ///
     /// UCI sends moves in a simplified long algebraic notation that simply specifies:
     ///
@@ -41,7 +41,7 @@ impl MoveType {
             MoveType::LONG_CASTLE => "LONG_CASTLE",
             MoveType::CAPTURE => "CAPTURE",
             MoveType::EP_CAPTURE => "EP_CAPTURE",
-            MoveType::UNUSED_1 => "UNUSED_1",
+            MoveType::NULLMOVE => "NULLMOVE",
             MoveType::UCI_AMBIGUOUS => "UCI_AMBIGUOUS",
             MoveType::PROMOTION_KNIGHT => "PROMOTION_KNIGHT",
             MoveType::PROMOTION_BISHOP => "PROMOTION_BISHOP",
@@ -54,6 +54,23 @@ impl MoveType {
         }
     }
 
+    pub fn to_uci(&self) -> &'static str {
+        match self {
+            MoveType::PROMOTION_KNIGHT => "n",
+            MoveType::PROMOTION_BISHOP => "b",
+            MoveType::PROMOTION_ROOK => "r",
+            MoveType::PROMOTION_QUEEN => "q",
+            MoveType::PROMOTION_CAPTURE_KNIGHT => "n",
+            MoveType::PROMOTION_CAPTURE_BISHOP => "b",
+            MoveType::PROMOTION_CAPTURE_ROOK => "r",
+            MoveType::PROMOTION_CAPTURE_QUEEN => "q",
+            _ => "",
+        }
+    }
+
+    pub fn is_null(self) -> bool {
+        self == MoveType::NULLMOVE
+    }
 
     pub fn new(bits: u16) -> MoveType {
         // NOTE: This may not be necessary? I think I mask this on the way in.
@@ -64,7 +81,7 @@ impl MoveType {
             0b0011 => MoveType::LONG_CASTLE,
             0b0100 => MoveType::CAPTURE,
             0b0101 => MoveType::EP_CAPTURE,
-            0b0110 => MoveType::UNUSED_1,
+            0b0110 => MoveType::NULLMOVE,
             0b0111 => MoveType::UCI_AMBIGUOUS,
             0b1000 => MoveType::PROMOTION_KNIGHT,
             0b1001 => MoveType::PROMOTION_BISHOP,

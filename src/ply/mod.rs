@@ -25,11 +25,14 @@ use tests::*;
 
 use metadata::*;
 
-// FIXME: A lot of things right now are fighting uphill against the way I've laid out the ply struct.
-// I think probably we should refactor it -- if only to make looking up pieces quicker, a single array
-// with conventional locations for bitboards would be ideal. Being able to do some clever indexing shit
-// might also improve the general QOL when using this structure.
+// FIXME: 22-JUL-2021 | A lot of things right now are fighting uphill against the way I've laid out
+// the ply struct. I think probably we should refactor it -- if only to make looking up pieces
+// quicker, a single array with conventional locations for bitboards would be ideal. Being able to
+// do some clever indexing shit might also improve the general QOL when using this structure.
 
+// FIXME: #2 6-OCT-2024 | This is also misnamed severely. It's not a Ply, it's a Board
+// representation. It shouldn't be generating moves, it shouldn't be doing anything but being a
+// representation of all the pieces on the board, and that's not even a good way to do it.
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Serialize, Deserialize)]
 pub struct Ply {
