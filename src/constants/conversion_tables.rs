@@ -3,15 +3,14 @@
 /// ! Algebraic Notation: "c6", "d4", etc.
 /// ! Bitboard Index: 0o52, 0o33, etc.
 /// ! Rank/File: (5,2), (3,3), etc.
-///
-/// TODO: constify everything here. I should be able to use a magic hash for the NOTATION_TO_INDEX
-/// table. cast the string to a u16 and do ascii at it. I think that should work.
 
 
 #[inline(always)]
 #[allow(non_snake_case)]
 #[rustfmt::skip]
 pub fn NOTATION_TO_INDEX(notation: &str) -> usize {
+    // NOTE: If it's possible to constify this, then everything can be constified. since
+    // NOTATION_TO_COORDS is just composing this and INDEX_TO_COORDS
     match notation {
         "a1" => { 0o00 }, "b1" => { 0o01 }, "c1" => { 0o02 }, "d1" => { 0o03 }, "e1" => { 0o04 }, "f1" => { 0o05 }, "g1" => { 0o06 }, "h1" => { 0o07 },
         "a2" => { 0o10 }, "b2" => { 0o11 }, "c2" => { 0o12 }, "d2" => { 0o13 }, "e2" => { 0o14 }, "f2" => { 0o15 }, "g2" => { 0o16 }, "h2" => { 0o17 },
@@ -21,7 +20,7 @@ pub fn NOTATION_TO_INDEX(notation: &str) -> usize {
         "a6" => { 0o50 }, "b6" => { 0o51 }, "c6" => { 0o52 }, "d6" => { 0o53 }, "e6" => { 0o54 }, "f6" => { 0o55 }, "g6" => { 0o56 }, "h6" => { 0o57 },
         "a7" => { 0o60 }, "b7" => { 0o61 }, "c7" => { 0o62 }, "d7" => { 0o63 }, "e7" => { 0o64 }, "f7" => { 0o65 }, "g7" => { 0o66 }, "h7" => { 0o67 },
         "a8" => { 0o70 }, "b8" => { 0o71 }, "c8" => { 0o72 }, "d8" => { 0o73 }, "e8" => { 0o74 }, "f8" => { 0o75 }, "g8" => { 0o76 }, "h8" => { 0o77 },
-        _ => { panic!("Unrecognized notation {}", notation) }
+        _ => { panic!("Unrecognized notation: '{}'", notation) }
     }
 }
 

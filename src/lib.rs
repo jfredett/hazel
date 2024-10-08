@@ -1,4 +1,4 @@
-#![feature(stmt_expr_attributes,assert_matches)]
+#![feature(stmt_expr_attributes,assert_matches,const_refs_to_static,const_trait_impl,const_for)]
 #![cfg_attr(test, allow(unused_imports))]
 // NOTE: These lints are disabled for the following reasons:
 //
@@ -31,6 +31,7 @@ pub(crate) use tracing::{debug, error, info, instrument, warn};
 pub use tracing_test;
 
 #[macro_use]
+pub mod board;
 pub mod bitboard;
 pub mod constants;
 pub mod driver;
@@ -43,6 +44,8 @@ pub mod ply;
 pub mod uci;
 pub mod ui;
 pub mod util;
+
+pub mod movegen;
 
 /// passes if the left is a subset of the right
 #[macro_export]
