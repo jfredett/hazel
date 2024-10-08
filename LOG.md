@@ -660,3 +660,27 @@ I suppose I'll know by the next entry.
 Hi from a worktree. This worktree will track work on the 'movegen-v2', which is a new approach to tracking gamestate and
 generating moves. I expect this branch to merge once over it's lifespan. I'm running a few of these worktrees
 simultaneously, experimenting with the model, we'll see if it works.
+
+
+# 8-OCT-2024
+
+## 1827 - movegen-v2
+
+Got some initial work done getting a better game-tracking structure in place (`HalfPly`) and tying it to the existing
+`Move` struct. I also was able to abstract away a lot of the board rep stuff behind some interfaces.
+
+Remaining is to organize the various `move` related code and start tearing out the old crappy stuff and building
+something better. I briefly took a look in `notation-spike` at doing some const-time notation stuff, but I'm stymied by
+the half-implementation there.
+
+I've got plenty to do on this side now that the HalfPly work is done, I can start to build up the `Line` struct and
+build up to something that'll replace the current `Game` struct.
+
+Once that's done, I can start work on a movegen/legality checker. I think I want to build this as a collection of
+small services, one to generate all moves (no legality checking), a second to check for legality independently, and
+later evaluation services that can provide various evaluations, these evaluation tools can be tagged and run
+independently to compare them to each other in situ. The main process will spawn a process which has the engine backend
+and the some frontend that tracks boardstate, options-per-engine, etc. The main process can then spawn whatever child
+processes it likes based on the request from the Engine.
+
+It makes sense in my head, which means it almost certainly won't make sense anywhee else, but that's how it always goes.
