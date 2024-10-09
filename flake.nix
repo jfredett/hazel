@@ -37,6 +37,7 @@
                 just
                 cargo-llvm-cov
                 cargo-nextest
+                cargo-mutants
                 stockfish
                 bacon
               ];
