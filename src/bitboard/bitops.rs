@@ -281,4 +281,25 @@ mod tests {
             }
         }
     }
+
+    mod sh {
+        use super::*;
+
+        #[test]
+        fn shl() {
+            let b = Bitboard::from(0b1);
+            let expected = Bitboard::from(0b10);
+
+            assert_eq!(b << 1, expected);
+        }
+
+        #[test]
+        fn shr() {
+            let b = Bitboard::from(0b10);
+            let expected = Bitboard::from(0b1);
+
+            assert_eq!(b >> 1, expected);
+        }
+
+    }
 }
