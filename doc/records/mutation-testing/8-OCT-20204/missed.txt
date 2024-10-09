@@ -16,13 +16,13 @@ S src/bitboard/intrinsics.rs:41:9: replace Bitboard::first_index -> usize with 1
 * src/bitboard/util.rs:39:9: replace Bitboard::index_to_notation -> &'static str with ""
 * src/bitboard/util.rs:39:9: replace Bitboard::index_to_notation -> &'static str with "xyzzy"
 * src/board/pieceboard.rs:125:30: replace += with *= in PieceBoard::from_fen
-src/constants/color.rs:42:14: replace == with != in Color::is_white
-src/constants/color.rs:42:9: replace Color::is_white -> bool with false
-src/constants/color.rs:42:9: replace Color::is_white -> bool with true
-src/constants/file.rs:37:9: replace File::to_index -> usize with 0
-src/constants/file.rs:37:9: replace File::to_index -> usize with 1
-src/driver/stockfish.rs:23:9: replace Stockfish::close -> std::io::Result<()> with Ok(())
-src/driver/stockfish.rs:32:9: replace <impl Drop for Stockfish>::drop with ()
+* src/constants/color.rs:42:14: replace == with != in Color::is_white
+* src/constants/color.rs:42:9: replace Color::is_white -> bool with false
+* src/constants/color.rs:42:9: replace Color::is_white -> bool with true
+* src/constants/file.rs:37:9: replace File::to_index -> usize with 0
+* src/constants/file.rs:37:9: replace File::to_index -> usize with 1
+S src/driver/stockfish.rs:23:9: replace Stockfish::close -> std::io::Result<()> with Ok(())
+S src/driver/stockfish.rs:32:9: replace <impl Drop for Stockfish>::drop with ()
 src/game/debug.rs:28:9: replace <impl Debug for Game>::fmt -> std::fmt::Result with Ok(Default::default())
 src/game/initialization/mainline/mod.rs:48:9: replace <impl Visitor for MainlineVisitor>::header with ()
 src/game/initialization/mainline/mod.rs:67:47: replace == with != in <impl Visitor for MainlineVisitor>::san

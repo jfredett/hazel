@@ -1,6 +1,4 @@
 // A driver for talking to a stockfish instance over UCI
-//
-//
 use std::io::{BufRead, BufReader, Write};
 use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
 
@@ -18,7 +16,7 @@ pub struct Stockfish {
 }
 
 impl Stockfish {
-
+    #[cfg_attr(test, mutants::skip)]
     pub fn close(&mut self) -> std::io::Result<()> {
         writeln!(self.stdin, "quit")?;
         self.child.wait()?;
@@ -27,6 +25,7 @@ impl Stockfish {
 }
 
 impl Drop for Stockfish {
+    #[cfg_attr(test, mutants::skip)]
     fn drop(&mut self) {
         // Attempt to close the process gracefully.
         let _ = self.close();

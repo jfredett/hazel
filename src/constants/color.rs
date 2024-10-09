@@ -56,3 +56,50 @@ impl Not for Color {
         }
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn is_white() {
+        assert!(Color::WHITE.is_white());
+        assert!(!Color::BLACK.is_white());
+    }
+
+    #[test]
+    fn is_black() {
+        assert!(Color::BLACK.is_black());
+        assert!(!Color::WHITE.is_black());
+    }
+
+    #[test]
+    fn not() {
+        assert_eq!(!Color::WHITE, Color::BLACK);
+        assert_eq!(!Color::BLACK, Color::WHITE);
+    }
+
+    #[test]
+    fn pawn_direction() {
+        assert_eq!(Color::WHITE.pawn_direction(), Direction::N);
+        assert_eq!(Color::BLACK.pawn_direction(), Direction::S);
+    }
+
+    #[test]
+    fn pawn_rank() {
+        assert_eq!(Color::WHITE.pawn_rank(), *RANK_2);
+        assert_eq!(Color::BLACK.pawn_rank(), *RANK_7);
+    }
+
+    #[test]
+    fn promotion_rank() {
+        assert_eq!(Color::WHITE.promotion_rank(), *RANK_8);
+        assert_eq!(Color::BLACK.promotion_rank(), *RANK_1);
+    }
+
+    #[test]
+    fn color_count() {
+        assert_eq!(COLOR_COUNT, 2);
+    }
+}

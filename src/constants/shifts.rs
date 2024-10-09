@@ -1,8 +1,10 @@
-// Note the lack of sign, that's handled in the #shift and #shift_mut methods
+use serde::{Deserialize, Serialize};
+
+// Note the lack of sign, that's handled in the ,#shift and #shift_mut methods
 //                                               N  NE E  SE S SW  W NW
 pub const DIRECTION_INDEX_OFFSETS: [usize; 8] = [8, 9, 1, 7, 8, 9, 1, 7];
 
-#[derive(Hash, PartialEq, Eq, Clone, Copy)]
+#[derive(Hash, PartialEq, Eq, Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum Direction {
     N = 0,
     NE = 1,
@@ -16,7 +18,7 @@ pub enum Direction {
 
 impl Direction {
     /// shifts an index in the direction
-    pub fn index_shift(self, idx: usize) -> usize {
+    pub const fn index_shift(self, idx: usize) -> usize {
         match self {
             Direction::N => idx + 8,
             Direction::NE => idx + 9,
