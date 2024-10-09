@@ -1,0 +1,770 @@
+src/ui/model/pieceboard.rs:106:78: replace += with -= in PieceBoard::from_fen
+src/movement/mod.rs:63:23: replace << with >> in Move::from
+src/ui/widgets/tile/mod.rs:62:9: replace Tile::set_state with ()
+src/movement/generator.rs:78:39: replace & with ^ in Move::generate
+src/movement/generator.rs:73:13: replace & with ^ in Move::generate
+src/bitboard/util.rs:7:9: replace Bitboard::notation_to_coords -> (usize, usize) with (0, 0)
+src/ply/query/piece_lookup.rs:9:9: replace Ply::piece_at -> bool with false
+src/ply/creation.rs:172:32: replace > with == in Ply::to_fen
+src/driver/stockfish.rs:62:9: replace <impl Engine for Stockfish>::exec_message -> Vec<UCIMessage> with vec![]
+src/movement/generator.rs:83:45: replace & with ^ in Move::generate
+src/util/mod.rs:10:5: replace select_subset -> Vec<T> with vec![]
+src/ui/model/pieceboard.rs:109:30: replace += with -= in PieceBoard::from_fen
+src/board/pieceboard.rs:136:9: replace PieceBoard::set with ()
+src/board/pieceboard.rs:98:9: replace PieceBoard::from_fen -> Self with Default::default()
+src/constants/shifts.rs:26:34: replace - with / in Direction::index_shift
+src/movegen/halfply.rs:38:9: replace HalfPly::to_pgn -> String with String::new()
+src/ply/query/attacks.rs:27:13: replace | with & in Ply::influenced_squares_for
+src/constants/shifts.rs:22:34: replace + with - in Direction::index_shift
+src/game/initialization/mod.rs:36:9: replace Game::to_fen -> String with "xyzzy".into()
+src/ply/make.rs:385:48: replace | with & in Ply::long_castle
+src/constants/color.rs:38:14: replace == with != in Color::is_black
+src/ui/widgets/engine_io_section/mod.rs:55:9: replace <impl Widget for &EngineIOSection>::render with ()
+src/ply/query/piece_lookup.rs:111:42: replace & with | in Ply::can_castle_long
+src/constants/file.rs:41:9: replace File::to_pgn -> &'static str with ""
+src/ui/model/pieceboard.rs:118:30: replace -= with /= in PieceBoard::from_fen
+src/bitboard/mod.rs:229:16: replace & with ^ in Bitboard::is_index_set
+src/ply/query/attacks.rs:25:13: replace | with & in Ply::influenced_squares_for
+src/ui/widgets/game_section/board_section.rs:36:9: replace <impl Widget for &BoardSection<'_>>::render with ()
+src/ui/widgets/engine_io_section/mod.rs:37:9: replace EngineIOSection::handle_enter with ()
+src/ui/widgets/board.rs:126:72: replace * with + in <impl Widget for &Board<'_>>::render
+src/ui/model/pieceboard.rs:97:80: replace += with -= in PieceBoard::from_fen
+src/movement/generator.rs:153:37: replace & with | in Move::generate
+src/bitboard/intrinsics.rs:8:9: replace Bitboard::pext -> u64 with 1
+src/movement/generator.rs:68:39: replace & with | in Move::generate
+src/movement/generator.rs:74:41: delete ! in Move::generate
+src/ui/model/pieceboard.rs:111:30: replace += with *= in PieceBoard::from_fen
+src/movement/mod.rs:313:37: replace >> with << in Move::target_idx
+src/moveset/mod.rs:130:9: replace MoveSet::is_empty -> bool with false
+src/movement/generator.rs:83:71: replace & with ^ in Move::generate
+src/movement/generator.rs:85:80: replace & with ^ in Move::generate
+src/ui/widgets/board.rs:95:65: replace + with - in <impl Widget for &Board<'_>>::render
+src/movement/mod.rs:313:18: replace & with | in Move::target_idx
+src/board/pieceboard.rs:114:79: replace += with -= in PieceBoard::from_fen
+src/ply/creation.rs:87:26: replace += with *= in Ply::from_fen
+src/ui/model/pieceboard.rs:158:24: replace == with != in <impl Engine for PieceBoard>::exec
+src/movement/generator.rs:69:63: replace & with ^ in Move::generate
+src/ui/model/pieceboard.rs:106:78: replace += with *= in PieceBoard::from_fen
+src/ui/model/pieceboard.rs:112:30: replace += with *= in PieceBoard::from_fen
+src/util/mod.rs:12:22: replace & with | in select_subset
+src/movement/move_type.rs:124:9: replace MoveType::is_capture -> bool with true
+src/movement/generator.rs:74:39: replace & with | in Move::generate
+src/ui/widgets/fen.rs:62:9: replace FEN::alignment -> Self with Default::default()
+src/constants/conversion_tables.rs:14:5: replace NOTATION_TO_INDEX -> usize with 0
+src/moveset/mod.rs:36:9: replace MoveSet::add_short_castle with ()
+src/movement/generator.rs:153:37: replace & with ^ in Move::generate
+src/movement/generator.rs:112:42: replace - with / in Move::generate
+src/moveset/mod.rs:122:9: replace MoveSet::contains -> bool with false
+src/bitboard/mod.rs:73:9: replace Bitboard::is_empty -> bool with true
+src/ui/widgets/output.rs:52:27: replace > with < in <impl StatefulWidget for &Output>::render
+src/ui/model/pieceboard.rs:104:80: replace += with -= in PieceBoard::from_fen
+src/movement/mod.rs:358:9: replace Move::compile -> Vec<Alteration> with vec![]
+src/ply/creation.rs:172:36: replace && with || in Ply::to_fen
+src/ply/query/piece_lookup.rs:115:21: replace && with || in Ply::can_castle_long
+src/board/pieceboard.rs:176:9: replace <impl Engine for PieceBoard>::exec_message -> Vec<UCIMessage> with vec![]
+src/board/pieceboard.rs:137:25: replace % with / in PieceBoard::set
+src/constants/conversion_tables.rs:47:15: replace < with >
+src/bitboard/util.rs:7:9: replace Bitboard::notation_to_coords -> (usize, usize) with (0, 1)
+src/pextboard/mod.rs:55:16: delete ! in slow_attacks
+src/moveset/mod.rs:58:9: replace MoveSet::add_capture with ()
+src/movement/generator.rs:165:49: replace & with ^ in Move::generate
+src/ply/query/occupancy.rs:23:13: replace | with & in Ply::occupancy_for
+src/pextboard/mod.rs:86:50: replace | with & in attacks_for
+src/movement/move_type.rs:132:22: replace & with | in MoveType::is_promotion
+src/movement/mod.rs:125:9: replace Move::disambiguate -> Option<MoveType> with None
+src/ui/widgets/tile/mod.rs:77:9: replace <impl Widget for &Tile>::render with ()
+src/movement/generator.rs:128:54: replace - with + in Move::generate
+src/ui/widgets/output.rs:30:30: replace > with < in wrap_string
+src/game/perft.rs:19:43: replace - with + in Game::perft
+src/board/occupant.rs:16:9: replace Occupant::is_empty -> bool with true
+src/board/interface.rs:61:5: replace display_board -> String with "xyzzy".into()
+src/ply/make.rs:398:30: replace | with & in Ply::short_castle
+src/board/occupant.rs:20:9: replace Occupant::is_occupied -> bool with false
+src/movement/mod.rs:302:18: replace & with | in Move::source_idx
+src/constants/shifts.rs:25:33: replace - with + in Direction::index_shift
+src/ply/query/piece_lookup.rs:122:9: replace Ply::can_castle_short -> bool with true
+src/uci/mod.rs:94:9: replace UCIOption::is_keyword -> bool with true
+src/bitboard/iterator.rs:21:9: replace <impl Iterator for IndexIterator>::next -> Option<Self::Item> with None
+src/movement/generator.rs:77:33: delete ! in Move::generate
+src/ply/creation.rs:169:22: replace == with != in Ply::to_fen
+src/constants/shifts.rs:28:34: replace + with * in Direction::index_shift
+src/constants/file.rs:23:21: replace & with | in File::from_index
+src/movement/move_type.rs:124:22: replace & with ^ in MoveType::is_capture
+src/movement/generator.rs:78:41: delete ! in Move::generate
+src/movement/generator.rs:84:55: replace & with | in Move::generate
+src/movement/generator.rs:104:17: replace & with ^ in Move::generate
+src/pextboard/mod.rs:145:9: replace PEXTBoard<SIZE>::initialize_piece with ()
+src/ui/widgets/input.rs:22:9: replace Input::flush -> String with "xyzzy".into()
+src/pextboard/mod.rs:102:24: replace + with * in PEXTBoard<SIZE>::_attacks_for
+src/ui/model/pieceboard.rs:112:30: replace += with -= in PieceBoard::from_fen
+src/ply/mod.rs:73:9: delete ! in Ply::other_player
+src/movement/mod.rs:492:98: replace & with ^ in Move::is_double_pawn_push_for
+src/ui/widgets/output.rs:63:40: replace + with - in <impl StatefulWidget for &Output>::render
+src/movement/mod.rs:502:47: replace == with != in Move::is_short_castling_move_for
+src/ply/mod.rs:78:9: replace Ply::board_buffer -> [[char; 8]; 8] with [[Default::default(); 8]; 8]
+src/movement/move_type.rs:37:9: replace MoveType::decode -> &'static str with "xyzzy"
+src/ply/make.rs:398:48: replace | with & in Ply::short_castle
+src/ply/creation.rs:51:26: replace += with -= in Ply::from_fen
+src/movement/mod.rs:493:98: replace & with ^ in Move::is_double_pawn_push_for
+src/movement/mod.rs:176:46: replace == with != in Move::disambiguate
+src/ply/query/piece_lookup.rs:50:9: replace Ply::friendly_piece_at_index -> Option<Piece> with None
+src/ui/model/pieceboard.rs:115:30: replace += with -= in PieceBoard::from_fen
+src/ply/make.rs:55:33: replace == with != in Ply::disambiguate
+src/pextboard/mod.rs:115:9: replace PEXTBoard<SIZE>::offset_for -> usize with 1
+src/ui/widgets/output.rs:53:71: replace - with / in <impl StatefulWidget for &Output>::render
+src/ui/model/pieceboard.rs:118:30: replace -= with += in PieceBoard::from_fen
+src/board/pieceboard.rs:120:30: replace += with *= in PieceBoard::from_fen
+src/movement/move_type.rs:128:14: replace == with != in MoveType::is_quiet
+src/util/mask.rs:87:9: replace Mask::read -> Option<String> with Some("xyzzy".into())
+src/moveset/mod.rs:31:9: replace MoveSet::add_move with ()
+src/board/pieceboard.rs:136:25: replace / with % in PieceBoard::set
+src/util/mod.rs:12:22: replace & with ^ in select_subset
+src/movement/generator.rs:23:30: replace & with ^ in Move::generate
+src/ply/query/attacks.rs:13:46: delete ! in Ply::attacked_squares_for
+src/ui/widgets/output.rs:19:9: replace Output::push with ()
+src/ply/query/piece_lookup.rs:129:21: replace && with || in Ply::can_castle_short
+src/bitboard/mod.rs:139:9: replace Bitboard::all_set_indices -> Vec<usize> with vec![1]
+src/ply/creation.rs:90:26: replace += with -= in Ply::from_fen
+src/moveset/mod.rs:152:9: replace MoveSet::as_vec -> Vec<Move> with vec![]
+src/movement/generator.rs:71:13: replace & with | in Move::generate
+src/bitboard/mod.rs:86:9: replace Bitboard::is_nonempty -> bool with false
+src/movement/generator.rs:82:45: replace & with ^ in Move::generate
+src/movement/generator.rs:165:49: replace & with | in Move::generate
+src/movement/mod.rs:353:30: replace & with | in Move::move_metadata
+src/constants/shifts.rs:25:33: replace - with / in Direction::index_shift
+src/uci/mod.rs:283:42: replace == with != in UCIMessage::is_complete
+src/bitboard/mod.rs:168:19: delete ! in Bitboard::unset_by_index
+src/board/pieceboard.rs:67:9: replace PieceBoard::set_fen with ()
+src/movement/generator.rs:165:23: delete ! in Move::generate
+src/ply/query/attacks.rs:82:21: replace |= with &= in Ply::slider_attacks_for
+src/ply/creation.rs:162:9: replace Ply::to_fen -> String with String::new()
+src/board/pieceboard.rs:109:78: replace += with -= in PieceBoard::from_fen
+src/movement/mod.rs:501:9: replace Move::is_short_castling_move_for -> bool with false
+src/board/pieceboard.rs:123:30: replace += with *= in PieceBoard::from_fen
+src/movement/mod.rs:353:30: replace & with ^ in Move::move_metadata
+src/ui/model/pieceboard.rs:103:80: replace += with -= in PieceBoard::from_fen
+src/board/pieceboard.rs:145:25: replace % with / in <impl Query for PieceBoard>::get
+src/ply/metadata.rs:77:34: replace += with *= in Metadata::full_move_tick
+src/ply/metadata.rs:72:9: replace Metadata::half_move_reset with ()
+src/moveset/mod.rs:45:9: replace MoveSet::add_pawn_double_move with ()
+src/ui/widgets/board.rs:95:50: replace * with + in <impl Widget for &Board<'_>>::render
+src/ply/creation.rs:74:26: replace -= with += in Ply::from_fen
+src/bitboard/util.rs:18:9: replace Bitboard::notation_to_index -> usize with 1
+src/bitboard/util.rs:23:9: replace Bitboard::coords_to_index -> usize with 1
+src/constants/conversion_tables.rs:64:20: replace < with >
+src/bitboard/mod.rs:86:9: replace Bitboard::is_nonempty -> bool with true
+src/movement/mod.rs:512:76: replace == with != in Move::is_long_castling_move_for
+src/movement/generator.rs:52:34: replace & with | in Move::generate
+src/movement/mod.rs:261:9: replace Move::is_null -> bool with true
+src/board/pieceboard.rs:123:30: replace += with -= in PieceBoard::from_fen
+src/movement/generator.rs:77:13: replace & with | in Move::generate
+src/ply/mod.rs:85:53: replace + with * in Ply::board_buffer
+src/pextboard/mod.rs:186:36: replace << with >> in PEXTBoard<SIZE>::calculate_block_and_attack_board_for
+src/ui/widgets/board.rs:95:50: replace * with / in <impl Widget for &Board<'_>>::render
+src/movement/mod.rs:142:56: replace - with / in Move::disambiguate
+src/ui/widgets/board.rs:127:41: replace - with + in <impl Widget for &Board<'_>>::render
+src/constants/shifts.rs:24:34: replace - with / in Direction::index_shift
+src/movement/mod.rs:142:56: replace - with + in Move::disambiguate
+src/ply/make.rs:366:9: replace Ply::castle_rank_mask -> usize with 0
+src/board/pieceboard.rs:180:9: replace <impl Engine for PieceBoard>::exec -> Vec<UCIMessage> with vec![]
+src/ui/model/pieceboard.rs:96:80: replace += with *= in PieceBoard::from_fen
+src/movement/generator.rs:71:15: delete ! in Move::generate
+src/bitboard/mod.rs:168:16: replace &= with ^= in Bitboard::unset_by_index
+src/ply/make.rs:149:64: replace % with / in Ply::make
+src/bitboard/mod.rs:168:23: replace << with >> in Bitboard::unset_by_index
+src/moveset/mod.rs:130:9: replace MoveSet::is_empty -> bool with true
+src/ui/widgets/engine_io_section/mod.rs:29:9: replace EngineIOSection::handle_input with ()
+src/ply/metadata.rs:53:9: replace Metadata::king_moved with ()
+src/movement/mod.rs:474:9: replace Move::is_long_castle -> bool with true
+src/constants/shifts.rs:26:34: replace - with + in Direction::index_shift
+src/uci/mod.rs:98:9: replace UCIOption::set with ()
+src/bitboard/shifts.rs:24:51: replace >> with << in Bitboard::shift_mut
+src/movement/generator.rs:83:45: replace & with | in Move::generate
+src/movement/mod.rs:492:105: replace == with != in Move::is_double_pawn_push_for
+src/board/pieceboard.rs:59:9: replace PieceBoard::set_board with ()
+src/constants/shifts.rs:24:34: replace - with + in Direction::index_shift
+src/driver/driver.rs:33:9: replace <impl Engine for Driver>::exec_message -> Vec<UCIMessage> with vec![]
+src/ply/metadata.rs:46:33: replace &= with |= in Metadata::rook_moved
+src/ply/creation.rs:93:26: replace += with -= in Ply::from_fen
+src/ply/metadata.rs:76:9: replace Metadata::full_move_tick with ()
+src/board/pieceboard.rs:120:30: replace += with -= in PieceBoard::from_fen
+src/ply/creation.rs:81:26: replace += with -= in Ply::from_fen
+src/bitboard/bitops.rs:37:24: delete ! in <impl Not for Bitboard>::not
+src/bitboard/mod.rs:244:9: replace Bitboard::count -> u32 with 1
+src/ply/query/attacks.rs:26:13: replace | with & in Ply::influenced_squares_for
+src/movement/mod.rs:493:69: replace == with != in Move::is_double_pawn_push_for
+src/util/mod.rs:12:33: replace > with == in select_subset
+src/movement/generator.rs:151:48: replace & with ^ in Move::generate
+src/constants/shifts.rs:27:33: replace - with + in Direction::index_shift
+src/ply/creation.rs:78:26: replace += with -= in Ply::from_fen
+src/ply/metadata.rs:36:26: replace & with ^ in Metadata::en_passant
+src/board/pieceboard.rs:108:78: replace += with -= in PieceBoard::from_fen
+src/movement/generator.rs:101:17: replace | with & in Move::generate
+src/ply/metadata.rs:30:9: replace Metadata::en_passant -> Option<Bitboard> with None
+src/board/pieceboard.rs:24:9: replace <impl Debug for PieceBoard>::fmt -> std::fmt::Result with Ok(Default::default())
+src/movement/generator.rs:112:42: replace - with + in Move::generate
+src/uci/mod.rs:158:46: replace || with && in <impl Display for UCIMessage>::fmt
+src/movement/generator.rs:49:39: replace & with | in Move::generate
+src/moveset/mod.rs:47:29: delete - in MoveSet::add_pawn_double_move
+src/bitboard/shifts.rs:24:62: replace & with ^ in Bitboard::shift_mut
+src/ui/widgets/board.rs:126:69: replace + with * in <impl Widget for &Board<'_>>::render
+src/bitboard/mod.rs:244:9: replace Bitboard::count -> u32 with 0
+src/board/pieceboard.rs:137:25: replace % with + in PieceBoard::set
+src/movement/mod.rs:326:9: replace Move::is_promotion -> bool with false
+src/ui/model/pieceboard.rs:171:37: replace && with || in <impl Engine for PieceBoard>::exec
+src/ui/model/pieceboard.rs:110:30: replace += with -= in PieceBoard::from_fen
+src/uci/mod.rs:224:68: replace != with == in UCIMessage::parse
+src/ply/query/occupancy.rs:26:13: replace | with & in Ply::occupancy_for
+src/ui/model/pieceboard.rs:76:31: replace += with *= in PieceBoard::to_fen
+src/movement/mod.rs:466:9: replace Move::is_capture -> bool with true
+src/constants/piece.rs:30:19: replace & with | in <impl From for Piece>::from
+src/ui/model/occupant.rs:31:9: replace Occupant::piece -> Option<Piece> with None
+src/board/pieceboard.rs:121:30: replace += with -= in PieceBoard::from_fen
+src/board/pieceboard.rs:88:22: replace > with == in PieceBoard::to_fen
+src/ui/widgets/board.rs:126:54: replace * with / in <impl Widget for &Board<'_>>::render
+src/movement/generator.rs:70:36: replace & with ^ in Move::generate
+src/movement/mod.rs:313:9: replace Move::target_idx -> usize with 1
+src/moveset/mod.rs:76:9: replace MoveSet::add_promotion with ()
+src/movement/generator.rs:68:39: replace & with ^ in Move::generate
+src/bitboard/util.rs:7:9: replace Bitboard::notation_to_coords -> (usize, usize) with (1, 1)
+src/ui/model/pieceboard.rs:113:30: replace += with -= in PieceBoard::from_fen
+src/movement/generator.rs:131:54: replace + with - in Move::generate
+src/ply/metadata.rs:79:24: delete ! in Metadata::full_move_tick
+src/ui/widgets/output.rs:30:30: replace > with == in wrap_string
+src/bitboard/shifts.rs:23:51: replace >> with << in Bitboard::shift_mut
+src/ui/widgets/output.rs:43:9: replace <impl StatefulWidget for &Output>::render with ()
+src/movement/generator.rs:78:39: replace & with | in Move::generate
+src/board/pieceboard.rs:107:79: replace += with *= in PieceBoard::from_fen
+src/ply/query/attacks.rs:60:47: delete ! in Ply::knight_attack_board_for
+src/ui/widgets/output.rs:23:9: replace Output::buffer -> Vec<String> with vec!["xyzzy".into()]
+src/ply/query/piece_lookup.rs:73:9: replace Ply::enemy_piece_at_index -> Option<Piece> with None
+src/movement/move_type.rs:116:9: replace MoveType::is_long_castle -> bool with false
+src/movement/mod.rs:492:49: replace - with + in Move::is_double_pawn_push_for
+src/ui/model/pieceboard.rs:105:79: replace += with *= in PieceBoard::from_fen
+src/ui/model/pieceboard.rs:109:30: replace += with *= in PieceBoard::from_fen
+src/movement/generator.rs:167:41: replace & with | in Move::generate
+src/bitboard/creation.rs:75:9: delete ! in Bitboard::full
+src/movement/generator.rs:82:45: replace & with | in Move::generate
+src/movement/move_type.rs:132:9: replace MoveType::is_promotion -> bool with false
+src/ply/creation.rs:55:26: replace += with -= in Ply::from_fen
+src/movement/mod.rs:302:9: replace Move::source_idx -> usize with 1
+src/movement/generator.rs:157:36: replace & with ^ in Move::generate
+src/uci/mod.rs:275:9: replace UCIMessage::has_response -> bool with false
+src/ui/model/pieceboard.rs:95:78: replace += with -= in PieceBoard::from_fen
+src/bitboard/mod.rs:139:9: replace Bitboard::all_set_indices -> Vec<usize> with vec![]
+src/ply/query/occupancy.rs:25:13: replace | with & in Ply::occupancy_for
+src/ply/query/attacks.rs:28:13: replace | with & in Ply::influenced_squares_for
+src/bitboard/mod.rs:139:9: replace Bitboard::all_set_indices -> Vec<usize> with vec![0]
+src/constants/conversion_tables.rs:66:17: replace += with *=
+src/bitboard/mod.rs:73:9: replace Bitboard::is_empty -> bool with false
+src/board/pieceboard.rs:84:31: replace += with *= in PieceBoard::to_fen
+src/ui/model/pieceboard.rs:98:79: replace += with *= in PieceBoard::from_fen
+src/ui/model/pieceboard.rs:103:80: replace += with *= in PieceBoard::from_fen
+src/ui/model/pieceboard.rs:171:49: replace == with != in <impl Engine for PieceBoard>::exec
+src/bitboard/mod.rs:117:16: replace |= with &= in Bitboard::set_by_index
+src/movement/move_type.rs:37:9: replace MoveType::decode -> &'static str with ""
+src/ply/make.rs:396:30: replace | with & in Ply::short_castle
+src/board/pieceboard.rs:106:80: replace += with -= in PieceBoard::from_fen
+src/ui/widgets/output.rs:28:5: replace wrap_string -> Vec<String> with vec!["xyzzy".into()]
+src/pextboard/mod.rs:55:27: replace & with ^ in slow_attacks
+src/movement/mod.rs:125:12: delete ! in Move::disambiguate
+src/ui/model/pieceboard.rs:111:30: replace += with -= in PieceBoard::from_fen
+src/ui/widgets/board.rs:122:75: replace + with * in <impl Widget for &Board<'_>>::render
+src/movement/generator.rs:84:55: replace & with ^ in Move::generate
+src/ui/model/pieceboard.rs:80:22: replace > with == in PieceBoard::to_fen
+src/movement/generator.rs:157:36: replace & with | in Move::generate
+src/ui/model/pieceboard.rs:150:9: replace <impl Engine for PieceBoard>::exec -> Vec<UCIMessage> with vec![]
+src/pextboard/mod.rs:24:43: replace / with %
+src/moveset/mod.rs:51:30: replace + with * in MoveSet::add_pawn_double_move
+src/movement/generator.rs:83:47: delete ! in Move::generate
+src/ui/widgets/smallboard.rs:25:5: replace eight_cells -> Layout with Default::default()
+src/movement/move_type.rs:72:14: replace == with != in MoveType::is_null
+src/ply/creation.rs:170:26: replace += with *= in Ply::to_fen
+src/constants/conversion_tables.rs:47:15: replace < with ==
+src/ply/query/occupancy.rs:22:13: replace | with & in Ply::occupancy_for
+src/board/pieceboard.rs:116:78: replace += with -= in PieceBoard::from_fen
+src/board/pieceboard.rs:114:79: replace += with *= in PieceBoard::from_fen
+src/ui/widgets/input.rs:14:9: replace Input::pop with ()
+src/board/pieceboard.rs:115:78: replace += with -= in PieceBoard::from_fen
+src/bitboard/shifts.rs:19:41: replace <<= with >>= in Bitboard::shift_mut
+src/ui/widgets/input.rs:18:9: replace Input::content -> String with "xyzzy".into()
+src/board/pieceboard.rs:144:25: replace / with * in <impl Query for PieceBoard>::get
+src/ply/creation.rs:71:26: replace += with -= in Ply::from_fen
+src/ui/model/pieceboard.rs:110:30: replace += with *= in PieceBoard::from_fen
+src/pextboard/mod.rs:55:27: replace & with | in slow_attacks
+src/ui/widgets/smallboard.rs:32:9: replace <impl Widget for &SmallBoard>::render with ()
+src/movement/mod.rs:64:22: replace << with >> in Move::from
+src/movement/move_type.rs:137:22: replace & with ^ in MoveType::is_en_passant
+src/bitboard/mod.rs:168:9: replace Bitboard::unset_by_index with ()
+src/movement/generator.rs:165:21: replace & with | in Move::generate
+src/ui/widgets/output.rs:23:9: replace Output::buffer -> Vec<String> with vec![String::new()]
+src/movement/mod.rs:302:18: replace & with ^ in Move::source_idx
+src/movement/generator.rs:69:37: replace & with | in Move::generate
+src/board/pieceboard.rs:127:30: replace -= with += in PieceBoard::from_fen
+src/ply/query/piece_lookup.rs:20:27: replace - with / in Ply::piece_at
+src/movement/generator.rs:82:47: delete ! in Move::generate
+src/ply/query/occupancy.rs:24:13: replace | with & in Ply::occupancy_for
+src/bitboard/mod.rs:73:16: replace == with != in Bitboard::is_empty
+src/driver/stockfish.rs:81:28: replace != with == in <impl Engine for Stockfish>::exec
+src/game/perft.rs:19:23: replace += with -= in Game::perft
+src/movement/generator.rs:49:60: delete ! in Move::generate
+src/bitboard/iterator.rs:21:9: replace <impl Iterator for IndexIterator>::next -> Option<Self::Item> with Some(Default::default())
+src/board/occupant.rs:20:9: replace Occupant::is_occupied -> bool with true
+src/bitboard/from_into.rs:11:9: replace <impl From for u64>::from -> Self with Default::default()
+src/ui/widgets/game_section/mod.rs:40:9: replace <impl Widget for &GameSectionLayout<'_>>::render with ()
+src/board/pieceboard.rs:71:9: replace PieceBoard::to_fen -> String with String::new()
+src/ui/widgets/output.rs:64:15: replace -= with /= in <impl StatefulWidget for &Output>::render
+src/movement/generator.rs:171:40: replace & with ^ in Move::generate
+src/board/pieceboard.rs:108:78: replace += with *= in PieceBoard::from_fen
+src/ply/creation.rs:162:9: replace Ply::to_fen -> String with "xyzzy".into()
+src/board/occupant.rs:39:9: replace Occupant::piece -> Option<Piece> with None
+src/ply/metadata.rs:48:33: replace &= with ^= in Metadata::rook_moved
+src/ui/model/pieceboard.rs:99:78: replace += with *= in PieceBoard::from_fen
+src/board/pieceboard.rs:118:30: replace += with -= in PieceBoard::from_fen
+src/ply/creation.rs:43:26: replace += with *= in Ply::from_fen
+src/ui/model/pieceboard.rs:69:34: replace > with == in PieceBoard::to_fen
+src/movement/move_type.rs:132:46: replace != with == in MoveType::is_promotion
+src/movement/mod.rs:479:9: replace Move::is_en_passant -> bool with false
+src/pextboard/mod.rs:24:43: replace / with *
+src/movement/generator.rs:171:42: delete ! in Move::generate
+src/ui/model/pieceboard.rs:115:30: replace += with *= in PieceBoard::from_fen
+src/movement/generator.rs:84:80: replace & with | in Move::generate
+src/movement/generator.rs:45:71: replace | with ^ in Move::generate
+src/ply/creation.rs:63:26: replace += with *= in Ply::from_fen
+src/bitboard/shifts.rs:25:51: replace >> with << in Bitboard::shift_mut
+src/pextboard/mod.rs:26:44: replace / with *
+src/pextboard/mod.rs:125:9: replace PEXTBoard<SIZE>::key_for -> usize with 1
+src/movement/generator.rs:45:49: replace & with ^ in Move::generate
+src/ply/query/piece_lookup.rs:111:21: replace && with || in Ply::can_castle_long
+src/ply/creation.rs:35:26: replace += with -= in Ply::from_fen
+src/ply/creation.rs:185:21: replace > with < in Ply::to_fen
+src/movement/mod.rs:148:39: replace == with != in Move::disambiguate
+src/ui/model/pieceboard.rs:114:30: replace += with -= in PieceBoard::from_fen
+src/board/pieceboard.rs:112:80: replace += with -= in PieceBoard::from_fen
+src/ply/query/piece_lookup.rs:9:12: delete ! in Ply::piece_at
+src/ui/model/pieceboard.rs:114:30: replace += with *= in PieceBoard::from_fen
+src/bitboard/mod.rs:97:16: replace == with != in Bitboard::is_full
+src/constants/file.rs:41:9: replace File::to_pgn -> &'static str with "xyzzy"
+src/ui/widgets/board.rs:122:54: replace * with / in <impl Widget for &Board<'_>>::render
+src/ply/creation.rs:71:26: replace += with *= in Ply::from_fen
+src/movement/move_type.rs:116:9: replace MoveType::is_long_castle -> bool with true
+src/constants/piece.rs:30:19: replace & with ^ in <impl From for Piece>::from
+src/ui/model/occupant.rs:40:9: replace <impl Display for Occupant>::fmt -> std::fmt::Result with Ok(Default::default())
+src/ui/widgets/board.rs:96:41: replace - with / in <impl Widget for &Board<'_>>::render
+src/ui/widgets/output.rs:61:35: replace - with + in <impl StatefulWidget for &Output>::render
+src/constants/shifts.rs:27:33: replace - with / in Direction::index_shift
+src/uci/mod.rs:158:53: replace == with != in <impl Display for UCIMessage>::fmt
+src/game/perft.rs:8:9: replace Game::perft -> u64 with 0
+src/movement/generator.rs:45:71: replace | with & in Move::generate
+src/board/pieceboard.rs:160:9: replace <impl Alter for PieceBoard>::alter_mut -> &mut Self with Box::leak(Box::new(Default::default()))
+src/ui/widgets/input.rs:40:9: replace <impl StatefulWidget for &Input>::render with ()
+src/moveset/mod.rs:126:9: replace MoveSet::len -> usize with 0
+src/ply/query/piece_lookup.rs:20:27: replace - with + in Ply::piece_at
+src/movement/move_type.rs:132:9: replace MoveType::is_promotion -> bool with true
+src/board/pieceboard.rs:144:9: replace <impl Query for PieceBoard>::get -> Occupant with Default::default()
+src/constants/conversion_tables.rs:64:20: replace < with ==
+src/movement/mod.rs:313:9: replace Move::target_idx -> usize with 0
+src/movement/generator.rs:49:41: delete ! in Move::generate
+src/board/pieceboard.rs:153:9: replace <impl Alter for PieceBoard>::alter -> PieceBoard with Default::default()
+src/ui/model/pieceboard.rs:55:9: replace PieceBoard::set_startpos with ()
+src/ply/creation.rs:96:26: replace += with *= in Ply::from_fen
+src/ui/widgets/output.rs:28:5: replace wrap_string -> Vec<String> with vec![String::new()]
+src/board/pieceboard.rs:104:78: replace += with *= in PieceBoard::from_fen
+src/constants/conversion_tables.rs:31:5: replace NOTATION_TO_COORDS -> (usize, usize) with (0, 0)
+src/movement/generator.rs:82:71: replace & with ^ in Move::generate
+src/bitboard/mod.rs:117:21: replace << with >> in Bitboard::set_by_index
+src/movement/generator.rs:70:36: replace & with | in Move::generate
+src/board/pieceboard.rs:119:30: replace += with -= in PieceBoard::from_fen
+src/movement/move_type.rs:124:44: replace != with == in MoveType::is_capture
+src/movement/move_type.rs:175:9: replace MoveType::is_ambiguous -> bool with true
+src/bitboard/mod.rs:229:21: replace << with >> in Bitboard::is_index_set
+src/bitboard/intrinsics.rs:31:9: replace Bitboard::first_index -> usize with 0
+src/ply/creation.rs:35:26: replace += with *= in Ply::from_fen
+src/constants/color.rs:38:9: replace Color::is_black -> bool with true
+src/bitboard/shifts.rs:20:41: replace >>= with <<= in Bitboard::shift_mut
+src/movement/generator.rs:67:64: delete ! in Move::generate
+src/ply/query/piece_lookup.rs:122:9: replace Ply::can_castle_short -> bool with false
+src/ui/model/pieceboard.rs:105:79: replace += with -= in PieceBoard::from_fen
+src/uci/mod.rs:225:67: replace != with == in UCIMessage::parse
+src/ply/creation.rs:47:26: replace += with -= in Ply::from_fen
+src/board/pieceboard.rs:122:30: replace += with -= in PieceBoard::from_fen
+src/movement/generator.rs:73:13: replace & with | in Move::generate
+src/movement/generator.rs:22:58: delete ! in Move::generate
+src/movement/generator.rs:151:76: replace & with ^ in Move::generate
+src/ply/metadata.rs:36:26: replace & with | in Metadata::en_passant
+src/movement/mod.rs:502:76: replace == with != in Move::is_short_castling_move_for
+src/movement/move_type.rs:132:22: replace & with ^ in MoveType::is_promotion
+src/movement/generator.rs:167:41: replace & with ^ in Move::generate
+src/ui/widgets/board.rs:126:57: replace + with - in <impl Widget for &Board<'_>>::render
+src/board/pieceboard.rs:124:30: replace += with *= in PieceBoard::from_fen
+src/board/pieceboard.rs:116:78: replace += with *= in PieceBoard::from_fen
+src/bitboard/util.rs:23:9: replace Bitboard::coords_to_index -> usize with 0
+src/bitboard/mod.rs:173:9: replace Bitboard::move_piece with ()
+src/movement/mod.rs:466:9: replace Move::is_capture -> bool with false
+src/ply/query/piece_lookup.rs:108:9: replace Ply::can_castle_long -> bool with true
+src/movement/generator.rs:67:81: replace & with ^ in Move::generate
+src/ply/query/piece_lookup.rs:9:9: replace Ply::piece_at -> bool with true
+src/ui/widgets/board.rs:96:41: replace - with + in <impl Widget for &Board<'_>>::render
+src/ply/query/attacks.rs:40:21: replace |= with &= in Ply::king_attack_board_for
+src/board/occupant.rs:32:9: replace Occupant::color -> Option<Color> with None
+src/constants/shifts.rs:21:33: replace + with - in Direction::index_shift
+src/ply/metadata.rs:106:9: replace Metadata::set_en_passant with ()
+src/movement/generator.rs:52:34: replace & with ^ in Move::generate
+src/bitboard/mod.rs:97:9: replace Bitboard::is_full -> bool with false
+src/moveset/mod.rs:41:9: replace MoveSet::add_long_castle with ()
+src/board/pieceboard.rs:105:80: replace += with *= in PieceBoard::from_fen
+src/ui/widgets/fen.rs:74:9: replace <impl Widget for &FEN>::render with ()
+src/movement/debug.rs:7:9: replace <impl Debug for Move>::fmt -> Result with Ok(Default::default())
+src/ply/creation.rs:63:26: replace += with -= in Ply::from_fen
+src/ply/query/attacks.rs:60:45: replace & with | in Ply::knight_attack_board_for
+src/moveset/mod.rs:66:9: replace MoveSet::add_en_passant_capture with ()
+src/ply/creation.rs:96:26: replace += with -= in Ply::from_fen
+src/ply/metadata.rs:66:30: replace += with -= in Metadata::half_move_tick
+src/pextboard/mod.rs:148:60: replace + with - in PEXTBoard<SIZE>::initialize_piece
+src/ui/model/pieceboard.rs:102:78: replace += with *= in PieceBoard::from_fen
+src/movement/mod.rs:493:49: replace - with + in Move::is_double_pawn_push_for
+src/bitboard/util.rs:28:9: replace Bitboard::index_to_coords -> (usize, usize) with (0, 1)
+src/movement/mod.rs:492:69: replace == with != in Move::is_double_pawn_push_for
+src/ui/model/pieceboard.rs:76:31: replace += with -= in PieceBoard::to_fen
+src/movement/move_type.rs:120:9: replace MoveType::is_short_castle -> bool with true
+src/movement/generator.rs:23:30: replace & with | in Move::generate
+src/movement/generator.rs:171:40: replace & with | in Move::generate
+src/board/pieceboard.rs:84:31: replace += with -= in PieceBoard::to_fen
+src/util/mod.rs:12:27: replace << with >> in select_subset
+src/movement/move_type.rs:120:9: replace MoveType::is_short_castle -> bool with false
+src/ply/query/attacks.rs:29:13: replace | with & in Ply::influenced_squares_for
+src/ply/query/piece_lookup.rs:111:42: replace & with ^ in Ply::can_castle_long
+src/movement/generator.rs:157:38: delete ! in Move::generate
+src/ui/model/pieceboard.rs:100:78: replace += with -= in PieceBoard::from_fen
+src/bitboard/mod.rs:117:16: replace |= with ^= in Bitboard::set_by_index
+src/bitboard/util.rs:28:9: replace Bitboard::index_to_coords -> (usize, usize) with (1, 1)
+src/constants/shifts.rs:23:33: replace + with - in Direction::index_shift
+src/bitboard/mod.rs:188:16: replace ^= with |= in Bitboard::flip
+src/bitboard/shifts.rs:24:62: replace & with | in Bitboard::shift_mut
+src/bitboard/mod.rs:168:16: replace &= with |= in Bitboard::unset_by_index
+src/constants/conversion_tables.rs:14:5: replace NOTATION_TO_INDEX -> usize with 1
+src/movement/mod.rs:512:47: replace == with != in Move::is_long_castling_move_for
+src/movement/mod.rs:511:9: replace Move::is_long_castling_move_for -> bool with false
+src/bitboard/debug.rs:6:9: replace <impl Debug for Bitboard>::fmt -> Result with Ok(Default::default())
+src/board/pieceboard.rs:118:30: replace += with *= in PieceBoard::from_fen
+src/ui/widgets/board.rs:95:68: replace * with / in <impl Widget for &Board<'_>>::render
+src/movement/generator.rs:131:54: replace + with * in Move::generate
+src/movement/generator.rs:48:26: replace & with ^ in Move::generate
+src/board/pieceboard.rs:127:30: replace -= with /= in PieceBoard::from_fen
+src/ui/widgets/board.rs:122:57: replace + with * in <impl Widget for &Board<'_>>::render
+src/movement/generator.rs:67:62: replace & with ^ in Move::generate
+src/bitboard/util.rs:28:9: replace Bitboard::index_to_coords -> (usize, usize) with (0, 0)
+src/board/pieceboard.rs:113:80: replace += with -= in PieceBoard::from_fen
+src/bitboard/util.rs:12:9: replace Bitboard::coords_to_notation -> &'static str with ""
+src/bitboard/mod.rs:215:9: replace Bitboard::is_set -> bool with false
+src/ui/widgets/input.rs:10:9: replace Input::push with ()
+src/ui/model/pieceboard.rs:63:9: replace PieceBoard::to_fen -> String with "xyzzy".into()
+src/movement/mod.rs:484:9: replace Move::is_ambiguous -> bool with false
+src/board/pieceboard.rs:188:24: replace == with != in <impl Engine for PieceBoard>::exec
+src/ui/widgets/board.rs:122:69: replace + with - in <impl Widget for &Board<'_>>::render
+src/board/occupant.rs:16:9: replace Occupant::is_empty -> bool with false
+src/ply/query/occupancy.rs:43:42: replace | with & in Ply::occupancy
+src/movement/generator.rs:37:69: replace & with ^ in Move::generate
+src/game/mod.rs:38:9: replace Game::make with ()
+src/movegen/halfply.rs:38:9: replace HalfPly::to_pgn -> String with "xyzzy".into()
+src/bitboard/shifts.rs:21:51: replace << with >> in Bitboard::shift_mut
+src/movement/mod.rs:492:49: replace - with / in Move::is_double_pawn_push_for
+src/ui/widgets/board.rs:123:41: replace + with * in <impl Widget for &Board<'_>>::render
+src/ply/creation.rs:59:26: replace += with -= in Ply::from_fen
+src/ply/query/piece_lookup.rs:108:9: replace Ply::can_castle_long -> bool with false
+src/movement/generator.rs:85:80: replace & with | in Move::generate
+src/ply/creation.rs:170:26: replace += with -= in Ply::to_fen
+src/game/mod.rs:58:9: replace Game::unmake with ()
+src/movement/generator.rs:48:54: replace & with ^ in Move::generate
+src/ply/make.rs:388:41: replace | with & in Ply::long_castle
+src/bitboard/util.rs:28:9: replace Bitboard::index_to_coords -> (usize, usize) with (1, 0)
+src/ui/widgets/fen.rs:68:9: replace FEN::center -> Self with Default::default()
+src/ui/widgets/board.rs:126:75: replace + with * in <impl Widget for &Board<'_>>::render
+src/movement/mod.rs:65:13: replace | with & in Move::from
+src/ply/creation.rs:43:26: replace += with -= in Ply::from_fen
+src/bitboard/mod.rs:200:9: replace Bitboard::is_notation_set -> bool with true
+src/constants/piece.rs:24:9: replace Piece::to_fen -> char with Default::default()
+src/movement/generator.rs:37:46: replace | with & in Move::generate
+src/uci/mod.rs:282:9: replace UCIMessage::is_complete -> bool with true
+src/constants/conversion_tables.rs:31:5: replace NOTATION_TO_COORDS -> (usize, usize) with (1, 0)
+src/board/pieceboard.rs:136:25: replace / with * in PieceBoard::set
+src/uci/mod.rs:63:9: replace <impl Display for UCIOption>::fmt -> fmt::Result with Ok(Default::default())
+src/ply/creation.rs:59:26: replace += with *= in Ply::from_fen
+src/ui/model/pieceboard.rs:171:54: replace && with || in <impl Engine for PieceBoard>::exec
+src/board/pieceboard.rs:104:78: replace += with -= in PieceBoard::from_fen
+src/movement/mod.rs:470:9: replace Move::is_short_castle -> bool with false
+src/movement/move_type.rs:161:9: replace MoveType::promotion_piece -> Option<Piece> with None
+src/ui/model/pieceboard.rs:107:78: replace += with *= in PieceBoard::from_fen
+src/movement/generator.rs:167:61: delete ! in Move::generate
+src/movement/generator.rs:113:42: replace + with * in Move::generate
+src/movement/mod.rs:493:49: replace - with / in Move::is_double_pawn_push_for
+src/board/pieceboard.rs:121:30: replace += with *= in PieceBoard::from_fen
+src/movement/mod.rs:302:37: replace >> with << in Move::source_idx
+src/ply/creation.rs:51:26: replace += with *= in Ply::from_fen
+src/movement/generator.rs:74:39: replace & with ^ in Move::generate
+src/bitboard/mod.rs:200:9: replace Bitboard::is_notation_set -> bool with false
+src/movement/generator.rs:105:17: replace & with ^ in Move::generate
+src/movement/move_type.rs:120:14: replace == with != in MoveType::is_short_castle
+src/movement/generator.rs:48:26: replace & with | in Move::generate
+src/ply/creation.rs:90:26: replace += with *= in Ply::from_fen
+src/movement/generator.rs:67:81: replace & with | in Move::generate
+src/bitboard/mod.rs:229:16: replace & with | in Bitboard::is_index_set
+src/ply/make.rs:47:26: replace == with != in Ply::disambiguate
+src/constants/color.rs:38:9: replace Color::is_black -> bool with false
+src/ply/creation.rs:39:26: replace += with *= in Ply::from_fen
+src/ply/creation.rs:93:26: replace += with *= in Ply::from_fen
+src/bitboard/mod.rs:86:9: delete ! in Bitboard::is_nonempty
+src/ply/query/piece_lookup.rs:125:21: replace && with || in Ply::can_castle_short
+src/bitboard/mod.rs:123:9: replace Bitboard::set_by_notation with ()
+src/board/pieceboard.rs:111:78: replace += with -= in PieceBoard::from_fen
+src/ui/model/pieceboard.rs:51:9: replace PieceBoard::set_board with ()
+src/movement/generator.rs:71:13: replace & with ^ in Move::generate
+src/movement/move_type.rs:175:9: replace MoveType::is_ambiguous -> bool with false
+src/bitboard/shifts.rs:22:51: replace << with >> in Bitboard::shift_mut
+src/movement/generator.rs:54:52: replace && with || in Move::generate
+src/ui/model/pieceboard.rs:97:80: replace += with *= in PieceBoard::from_fen
+src/moveset/mod.rs:126:9: replace MoveSet::len -> usize with 1
+src/bitboard/util.rs:12:9: replace Bitboard::coords_to_notation -> &'static str with "xyzzy"
+src/bitboard/util.rs:18:9: replace Bitboard::notation_to_index -> usize with 0
+src/ui/widgets/board.rs:122:54: replace * with + in <impl Widget for &Board<'_>>::render
+src/ply/query/attacks.rs:26:13: replace | with ^ in Ply::influenced_squares_for
+src/ui/model/pieceboard.rs:172:54: replace && with || in <impl Engine for PieceBoard>::exec
+src/ply/metadata.rs:109:50: replace % with + in Metadata::set_en_passant
+src/ply/creation.rs:31:26: replace += with -= in Ply::from_fen
+src/movement/mod.rs:493:105: replace == with != in Move::is_double_pawn_push_for
+src/movement/mod.rs:178:53: replace == with != in Move::disambiguate
+src/movement/generator.rs:105:17: replace & with | in Move::generate
+src/movement/mod.rs:144:32: replace == with != in Move::disambiguate
+src/bitboard/mod.rs:229:9: replace Bitboard::is_index_set -> bool with true
+src/ply/debug.rs:6:9: replace <impl Debug for Ply>::fmt -> Result with Ok(Default::default())
+src/ply/query/piece_lookup.rs:125:42: replace & with | in Ply::can_castle_short
+src/movement/generator.rs:52:26: delete ! in Move::generate
+src/pextboard/mod.rs:26:44: replace / with %
+src/board/pieceboard.rs:105:80: replace += with -= in PieceBoard::from_fen
+src/ui/model/pieceboard.rs:172:49: replace == with != in <impl Engine for PieceBoard>::exec
+src/movement/generator.rs:151:48: replace & with | in Move::generate
+src/game/perft.rs:12:22: replace == with != in Game::perft
+src/ply/creation.rs:27:26: replace += with *= in Ply::from_fen
+src/bitboard/creation.rs:52:25: replace << with >> in Bitboard::from_index
+src/bitboard/mod.rs:229:27: replace != with == in Bitboard::is_index_set
+src/movement/generator.rs:49:39: replace & with ^ in Move::generate
+src/ply/metadata.rs:77:34: replace += with -= in Metadata::full_move_tick
+src/ui/widgets/board.rs:95:53: replace + with - in <impl Widget for &Board<'_>>::render
+src/ui/widgets/board.rs:126:51: replace + with - in <impl Widget for &Board<'_>>::render
+src/board/pieceboard.rs:111:78: replace += with *= in PieceBoard::from_fen
+src/movement/generator.rs:81:13: replace & with | in Move::generate
+src/constants/file.rs:23:28: replace >> with << in File::from_index
+src/movement/mod.rs:491:9: replace Move::is_double_pawn_push_for -> bool with false
+src/constants/conversion_tables.rs:63:16: replace < with ==
+src/ply/creation.rs:87:26: replace += with -= in Ply::from_fen
+src/ui/widgets/output.rs:28:5: replace wrap_string -> Vec<String> with vec![]
+src/ply/creation.rs:67:26: replace += with *= in Ply::from_fen
+src/ply/creation.rs:172:41: replace != with == in Ply::to_fen
+src/ply/query/attacks.rs:60:21: replace |= with &= in Ply::knight_attack_board_for
+src/constants/shifts.rs:22:34: replace + with * in Direction::index_shift
+src/driver/stockfish.rs:78:31: replace == with != in <impl Engine for Stockfish>::exec
+src/bitboard/mod.rs:188:9: replace Bitboard::flip with ()
+src/ui/model/pieceboard.rs:95:78: replace += with *= in PieceBoard::from_fen
+src/movement/mod.rs:470:9: replace Move::is_short_castle -> bool with true
+src/board/pieceboard.rs:125:30: replace += with -= in PieceBoard::from_fen
+src/movement/generator.rs:157:57: delete ! in Move::generate
+src/ui/model/pieceboard.rs:127:9: replace PieceBoard::alter with ()
+src/board/occupant.rs:20:9: delete ! in Occupant::is_occupied
+src/moveset/mod.rs:51:30: replace + with - in MoveSet::add_pawn_double_move
+src/game/perft.rs:19:23: replace += with *= in Game::perft
+src/bitboard/from_into.rs:25:9: replace <impl From for usize>::from -> Self with Default::default()
+src/movement/mod.rs:492:98: replace & with | in Move::is_double_pawn_push_for
+src/ui/widgets/input.rs:22:9: replace Input::flush -> String with String::new()
+src/movement/move_type.rs:116:14: replace == with != in MoveType::is_long_castle
+src/ply/creation.rs:31:26: replace += with *= in Ply::from_fen
+src/movement/generator.rs:68:64: replace & with ^ in Move::generate
+src/bitboard/mod.rs:215:9: replace Bitboard::is_set -> bool with true
+src/bitboard/mod.rs:229:9: replace Bitboard::is_index_set -> bool with false
+src/constants/file.rs:23:21: replace & with ^ in File::from_index
+src/ui/widgets/board.rs:95:47: replace + with - in <impl Widget for &Board<'_>>::render
+src/board/pieceboard.rs:109:78: replace += with *= in PieceBoard::from_fen
+src/board/pieceboard.rs:63:9: replace PieceBoard::set_startpos with ()
+src/game/perft.rs:8:9: replace Game::perft -> u64 with 1
+src/ply/query/piece_lookup.rs:125:42: replace & with ^ in Ply::can_castle_short
+src/ply/creation.rs:47:26: replace += with *= in Ply::from_fen
+src/movement/generator.rs:69:37: replace & with ^ in Move::generate
+src/ui/widgets/board.rs:95:53: replace + with * in <impl Widget for &Board<'_>>::render
+src/bitboard/mod.rs:154:9: replace Bitboard::unset with ()
+src/ply/creation.rs:67:26: replace += with -= in Ply::from_fen
+src/movement/move_type.rs:72:9: replace MoveType::is_null -> bool with true
+src/ply/debug.rs:17:34: replace == with != in <impl Debug for Ply>::fmt
+src/movement/move_type.rs:137:39: replace != with == in MoveType::is_en_passant
+src/movement/generator.rs:69:39: delete ! in Move::generate
+src/board/pieceboard.rs:107:79: replace += with -= in PieceBoard::from_fen
+src/ui/model/pieceboard.rs:102:78: replace += with -= in PieceBoard::from_fen
+src/ui/widgets/placeholder.rs:50:9: replace Placeholder::calculate_text -> Paragraph with Default::default()
+src/bitboard/mod.rs:188:21: replace << with >> in Bitboard::flip
+src/util/mask.rs:87:9: replace Mask::read -> Option<String> with None
+src/ui/model/pieceboard.rs:100:78: replace += with *= in PieceBoard::from_fen
+src/movement/generator.rs:81:13: replace & with ^ in Move::generate
+src/ply/creation.rs:84:26: replace += with -= in Ply::from_fen
+src/ply/creation.rs:39:26: replace += with -= in Ply::from_fen
+src/ui/widgets/board.rs:95:65: replace + with * in <impl Widget for &Board<'_>>::render
+src/ui/model/pieceboard.rs:185:42: replace != with == in <impl Engine for PieceBoard>::exec
+src/pextboard/mod.rs:102:24: replace + with - in PEXTBoard<SIZE>::_attacks_for
+src/ply/creation.rs:27:26: replace += with -= in Ply::from_fen
+src/movement/generator.rs:73:15: delete ! in Move::generate
+src/ui/widgets/engine_io_section/mod.rs:33:9: replace EngineIOSection::handle_backspace with ()
+src/driver/driver.rs:37:9: replace <impl Engine for Driver>::exec -> Vec<UCIMessage> with vec![]
+src/ui/widgets/board.rs:126:69: replace + with - in <impl Widget for &Board<'_>>::render
+src/movement/generator.rs:54:21: replace && with || in Move::generate
+src/ply/query/attacks.rs:20:44: replace & with ^ in Ply::defended_pieces_for
+src/movement/generator.rs:45:49: replace & with | in Move::generate
+src/ui/app.rs:123:9: replace Hazel::render with ()
+src/movement/generator.rs:151:50: delete ! in Move::generate
+src/board/pieceboard.rs:144:25: replace / with % in <impl Query for PieceBoard>::get
+src/constants/shifts.rs:23:33: replace + with * in Direction::index_shift
+src/ply/make.rs:396:48: replace | with & in Ply::short_castle
+src/movement/generator.rs:151:76: replace & with | in Move::generate
+src/movement/generator.rs:104:17: replace & with | in Move::generate
+src/ply/query/attacks.rs:13:44: replace & with ^ in Ply::attacked_squares_for
+src/ply/query/attacks.rs:60:45: replace & with ^ in Ply::knight_attack_board_for
+src/bitboard/util.rs:7:9: replace Bitboard::notation_to_coords -> (usize, usize) with (1, 0)
+src/game/initialization/mainline/mod.rs:55:9: replace <impl Visitor for MainlineVisitor>::san with ()
+src/ply/creation.rs:172:32: replace > with < in Ply::to_fen
+src/constants/shifts.rs:21:33: replace + with * in Direction::index_shift
+src/ui/widgets/output.rs:63:40: replace + with * in <impl StatefulWidget for &Output>::render
+src/pextboard/mod.rs:115:9: replace PEXTBoard<SIZE>::offset_for -> usize with 0
+src/movement/generator.rs:84:80: replace & with ^ in Move::generate
+src/movement/generator.rs:67:62: replace & with | in Move::generate
+src/ui/model/pieceboard.rs:107:78: replace += with -= in PieceBoard::from_fen
+src/ui/widgets/board.rs:122:51: replace + with * in <impl Widget for &Board<'_>>::render
+src/movement/mod.rs:134:25: delete ! in Move::disambiguate
+src/util/mask.rs:87:9: replace Mask::read -> Option<String> with Some(String::new())
+src/game/initialization/mod.rs:36:9: replace Game::to_fen -> String with String::new()
+src/movement/mod.rs:313:18: replace & with ^ in Move::target_idx
+src/ui/widgets/board.rs:122:72: replace * with / in <impl Widget for &Board<'_>>::render
+src/ui/widgets/output.rs:52:27: replace > with == in <impl StatefulWidget for &Output>::render
+src/movement/mod.rs:74:16: replace == with != in Move::from_uci
+src/ui/model/pieceboard.rs:69:34: replace > with < in PieceBoard::to_fen
+src/ply/make.rs:385:30: replace | with & in Ply::long_castle
+src/constants/conversion_tables.rs:48:25: replace % with /
+src/ui/widgets/placeholder.rs:40:9: replace Placeholder::borders -> Self with Default::default()
+src/ui/widgets/board.rs:95:68: replace * with + in <impl Widget for &Board<'_>>::render
+src/board/interface.rs:61:5: replace display_board -> String with String::new()
+src/uci/mod.rs:94:9: replace UCIOption::is_keyword -> bool with false
+src/movement/move_type.rs:124:22: replace & with | in MoveType::is_capture
+src/pextboard/mod.rs:148:60: replace + with * in PEXTBoard<SIZE>::initialize_piece
+src/movement/mod.rs:164:76: replace || with && in Move::disambiguate
+src/pextboard/mod.rs:125:9: replace PEXTBoard<SIZE>::key_for -> usize with 0
+src/movement/mod.rs:207:9: replace Move::to_pgn -> String with String::new()
+src/ui/widgets/placeholder.rs:30:9: replace Placeholder::of_size -> Self with Default::default()
+src/board/pieceboard.rs:112:80: replace += with *= in PieceBoard::from_fen
+src/movement/mod.rs:302:9: replace Move::source_idx -> usize with 0
+src/movement/generator.rs:85:55: replace & with | in Move::generate
+src/bitboard/mod.rs:97:19: delete ! in Bitboard::is_full
+src/constants/shifts.rs:20:9: replace Direction::index_shift -> usize with 0
+src/game/perft.rs:19:43: replace - with / in Game::perft
+src/movement/generator.rs:165:21: replace & with ^ in Move::generate
+src/ply/creation.rs:78:26: replace += with *= in Ply::from_fen
+src/uci/mod.rs:158:24: replace == with != in <impl Display for UCIMessage>::fmt
+src/ui/widgets/board.rs:126:54: replace * with + in <impl Widget for &Board<'_>>::render
+src/movement/generator.rs:171:61: delete ! in Move::generate
+src/ply/metadata.rs:109:50: replace % with / in Metadata::set_en_passant
+src/ply/creation.rs:55:26: replace += with *= in Ply::from_fen
+src/movement/generator.rs:128:54: replace - with / in Move::generate
+src/bitboard/shifts.rs:26:51: replace << with >> in Bitboard::shift_mut
+src/bitboard/debug.rs:25:9: replace <impl Display for Bitboard>::fmt -> Result with Ok(Default::default())
+src/ply/make.rs:366:9: replace Ply::castle_rank_mask -> usize with 1
+src/board/pieceboard.rs:122:30: replace += with *= in PieceBoard::from_fen
+src/ui/model/pieceboard.rs:80:22: replace > with < in PieceBoard::to_fen
+src/movement/move_type.rs:128:9: replace MoveType::is_quiet -> bool with false
+src/board/pieceboard.rs:77:34: replace > with < in PieceBoard::to_fen
+src/ui/widgets/board.rs:127:41: replace - with / in <impl Widget for &Board<'_>>::render
+src/movement/generator.rs:77:13: replace & with ^ in Move::generate
+src/bitboard/shifts.rs:17:9: replace Bitboard::shift_mut with ()
+src/driver/stockfish.rs:67:9: replace <impl Engine for Stockfish>::exec -> Vec<UCIMessage> with vec![]
+src/constants/conversion_tables.rs:31:5: replace NOTATION_TO_COORDS -> (usize, usize) with (0, 1)
+src/ui/widgets/game_section/info_section/pgn_section.rs:29:9: replace <impl Widget for &PGNSection>::render with ()
+src/ply/query/attacks.rs:52:22: replace | with & in Ply::pawn_attack_board_for
+src/ui/widgets/board.rs:126:51: replace + with * in <impl Widget for &Board<'_>>::render
+src/movement/mod.rs:326:9: replace Move::is_promotion -> bool with true
+src/board/pieceboard.rs:88:22: replace > with < in PieceBoard::to_fen
+src/movement/mod.rs:156:83: replace || with && in Move::disambiguate
+src/board/pieceboard.rs:113:80: replace += with *= in PieceBoard::from_fen
+src/movement/move_type.rs:137:9: replace MoveType::is_en_passant -> bool with false
+src/movement/generator.rs:153:57: delete ! in Move::generate
+src/movement/generator.rs:69:63: replace & with | in Move::generate
+src/constants/conversion_tables.rs:31:5: replace NOTATION_TO_COORDS -> (usize, usize) with (1, 1)
+src/board/pieceboard.rs:119:30: replace += with *= in PieceBoard::from_fen
+src/ui/model/pieceboard.rs:116:30: replace += with -= in PieceBoard::from_fen
+src/ui/model/pieceboard.rs:104:80: replace += with *= in PieceBoard::from_fen
+src/ply/query/attacks.rs:13:44: replace & with | in Ply::attacked_squares_for
+src/ui/widgets/output.rs:53:71: replace - with + in <impl StatefulWidget for &Output>::render
+src/ply/metadata.rs:48:33: replace &= with |= in Metadata::rook_moved
+src/ply/query/attacks.rs:52:22: replace | with ^ in Ply::pawn_attack_board_for
+src/movement/generator.rs:45:51: delete ! in Move::generate
+src/ui/widgets/game_section/info_section/mod.rs:33:9: replace <impl Widget for &InfoSection>::render with ()
+src/moveset/mod.rs:137:27: replace == with != in MoveSet::find_by_target
+src/ui/widgets/board.rs:122:69: replace + with * in <impl Widget for &Board<'_>>::render
+src/board/pieceboard.rs:145:25: replace % with + in <impl Query for PieceBoard>::get
+src/movement/mod.rs:207:9: replace Move::to_pgn -> String with "xyzzy".into()
+src/movement/generator.rs:48:54: replace & with | in Move::generate
+src/ply/creation.rs:74:26: replace -= with /= in Ply::from_fen
+src/ui/widgets/engine_io_section/mod.rs:25:9: replace EngineIOSection::push with ()
+src/constants/conversion_tables.rs:63:16: replace < with >
+src/ply/query/piece_lookup.rs:25:9: replace Ply::piece_at_index -> Option<(Color, Piece)> with None
+src/ui/widgets/board.rs:122:51: replace + with - in <impl Widget for &Board<'_>>::render
+src/uci/mod.rs:228:45: replace == with != in UCIMessage::parse
+src/ply/query/attacks.rs:25:13: replace | with ^ in Ply::influenced_squares_for
+src/ply/creation.rs:84:26: replace += with *= in Ply::from_fen
+src/board/occupant.rs:69:9: replace <impl Display for Occupant>::fmt -> std::fmt::Result with Ok(Default::default())
+src/ui/widgets/output.rs:23:9: replace Output::buffer -> Vec<String> with vec![]
+src/bitboard/mod.rs:188:16: replace ^= with &= in Bitboard::flip
+src/ui/widgets/tile/mod.rs:83:87: replace | with & in <impl Widget for &Tile>::render
+src/movement/generator.rs:82:71: replace & with | in Move::generate
+src/ui/model/pieceboard.rs:113:30: replace += with *= in PieceBoard::from_fen
+src/ui/widgets/output.rs:61:35: replace - with / in <impl StatefulWidget for &Output>::render
+src/movement/generator.rs:113:42: replace + with - in Move::generate
+src/pextboard/mod.rs:186:9: replace PEXTBoard<SIZE>::calculate_block_and_attack_board_for -> Vec<(Bitboard, Bitboard)> with vec![]
+src/movement/mod.rs:484:9: replace Move::is_ambiguous -> bool with true
+src/ply/mod.rs:85:53: replace + with - in Ply::board_buffer
+src/ui/model/pieceboard.rs:63:9: replace PieceBoard::to_fen -> String with String::new()
+src/ui/widgets/board.rs:126:75: replace + with - in <impl Widget for &Board<'_>>::render
+src/ui/widgets/board.rs:126:72: replace * with / in <impl Widget for &Board<'_>>::render
+src/bitboard/intrinsics.rs:8:9: replace Bitboard::pext -> u64 with 0
+src/ply/creation.rs:81:26: replace += with *= in Ply::from_fen
+src/board/pieceboard.rs:71:9: replace PieceBoard::to_fen -> String with "xyzzy".into()
+src/movement/mod.rs:474:9: replace Move::is_long_castle -> bool with false
+src/movement/mod.rs:493:98: replace & with | in Move::is_double_pawn_push_for
+src/movement/generator.rs:83:71: replace & with | in Move::generate
+src/board/pieceboard.rs:106:80: replace += with *= in PieceBoard::from_fen
+src/ui/model/pieceboard.rs:59:9: replace PieceBoard::get -> Occupant with Default::default()
+src/movement/mod.rs:152:24: delete ! in Move::disambiguate
+src/board/pieceboard.rs:124:30: replace += with -= in PieceBoard::from_fen
+src/movement/generator.rs:85:55: replace & with ^ in Move::generate
+src/ui/widgets/board.rs:122:72: replace * with + in <impl Widget for &Board<'_>>::render
+src/ui/widgets/tile/mod.rs:66:9: replace Tile::query_line -> FEN with Default::default()
+src/bitboard/mod.rs:111:9: replace Bitboard::set with ()
+src/ui/widgets/board.rs:81:9: replace <impl Widget for &Board<'_>>::render with ()
+src/ui/widgets/board.rs:126:57: replace + with * in <impl Widget for &Board<'_>>::render
+src/ui/model/pieceboard.rs:90:9: replace PieceBoard::from_fen -> Self with Default::default()
+src/bitboard/intrinsics.rs:31:9: replace Bitboard::first_index -> usize with 1
+src/ui/model/pieceboard.rs:99:78: replace += with -= in PieceBoard::from_fen
+src/movement/generator.rs:68:64: replace & with | in Move::generate
+src/util/mod.rs:12:33: replace > with < in select_subset
+src/ply/creation.rs:185:21: replace > with == in Ply::to_fen
+src/movement/mod.rs:64:13: replace | with & in Move::from
+src/ui/model/occupant.rs:24:9: replace Occupant::color -> Option<Color> with None
+src/ui/widgets/board.rs:123:41: replace + with - in <impl Widget for &Board<'_>>::render
+src/movement/move_type.rs:124:9: replace MoveType::is_capture -> bool with false
+src/movement/generator.rs:81:33: delete ! in Move::generate
+src/constants/shifts.rs:20:9: replace Direction::index_shift -> usize with 1
+src/ply/mod.rs:63:9: replace Ply::en_passant -> Option<Bitboard> with None
+src/movement/move_type.rs:175:14: replace == with != in MoveType::is_ambiguous
+src/constants/shifts.rs:28:34: replace + with - in Direction::index_shift
+src/ui/widgets/board.rs:122:75: replace + with - in <impl Widget for &Board<'_>>::render
+src/ui/model/pieceboard.rs:98:79: replace += with -= in PieceBoard::from_fen
+src/ui/model/pieceboard.rs:96:80: replace += with -= in PieceBoard::from_fen
+src/ui/widgets/fen.rs:43:9: replace <impl From for FEN>::from -> Self with Default::default()
+src/ui/widgets/placeholder.rs:64:9: replace <impl Widget for &Placeholder>::render with ()
+src/ui/widgets/board.rs:95:47: replace + with * in <impl Widget for &Board<'_>>::render
+src/ui/widgets/output.rs:64:15: replace -= with += in <impl StatefulWidget for &Output>::render
+src/board/pieceboard.rs:115:78: replace += with *= in PieceBoard::from_fen
+src/board/pieceboard.rs:77:34: replace > with == in PieceBoard::to_fen
+src/bitboard/mod.rs:117:9: replace Bitboard::set_by_index with ()

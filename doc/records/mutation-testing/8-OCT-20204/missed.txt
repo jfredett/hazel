@@ -1,0 +1,199 @@
+# These results come w/o adornment from the `cargo-mutants` tool. This comment, and the `*/S` that precede lines,
+# are added by hand as I address the underlying mutation and clear the tests; whether by marking with a `*` to indicate
+# new tests have been added to catch the mutant, and `S` to indicate that the underlying method has been marked as not
+# relevant for mutation testing.
+
+* src/bitboard/bitops.rs:69:31: replace << with >> in <impl Shl for Bitboard>::shl
+* src/bitboard/bitops.rs:77:31: replace >> with << in <impl Shr for Bitboard>::shr
+S src/bitboard/intrinsics.rs:14:9: replace Bitboard::pext -> u64 with 0
+S src/bitboard/intrinsics.rs:14:9: replace Bitboard::pext -> u64 with 1
+S src/bitboard/intrinsics.rs:41:9: replace Bitboard::first_index -> usize with 0
+S src/bitboard/intrinsics.rs:41:9: replace Bitboard::first_index -> usize with 1
+* src/bitboard/mod.rs:97:9: replace Bitboard::is_full -> bool with true
+* src/bitboard/util.rs:33:11: replace << with >> in Bitboard::coords_to_offset
+* src/bitboard/util.rs:33:9: replace Bitboard::coords_to_offset -> usize with 0
+* src/bitboard/util.rs:33:9: replace Bitboard::coords_to_offset -> usize with 1
+* src/bitboard/util.rs:39:9: replace Bitboard::index_to_notation -> &'static str with ""
+* src/bitboard/util.rs:39:9: replace Bitboard::index_to_notation -> &'static str with "xyzzy"
+src/board/pieceboard.rs:125:30: replace += with *= in PieceBoard::from_fen
+src/constants/color.rs:42:14: replace == with != in Color::is_white
+src/constants/color.rs:42:9: replace Color::is_white -> bool with false
+src/constants/color.rs:42:9: replace Color::is_white -> bool with true
+src/constants/file.rs:37:9: replace File::to_index -> usize with 0
+src/constants/file.rs:37:9: replace File::to_index -> usize with 1
+src/driver/stockfish.rs:23:9: replace Stockfish::close -> std::io::Result<()> with Ok(())
+src/driver/stockfish.rs:32:9: replace <impl Drop for Stockfish>::drop with ()
+src/game/debug.rs:28:9: replace <impl Debug for Game>::fmt -> std::fmt::Result with Ok(Default::default())
+src/game/initialization/mainline/mod.rs:48:9: replace <impl Visitor for MainlineVisitor>::header with ()
+src/game/initialization/mainline/mod.rs:67:47: replace == with != in <impl Visitor for MainlineVisitor>::san
+src/game/perft.rs:28:9: replace Game::last_played -> Option<Move> with None
+src/main.rs:24:5: replace main with ()
+src/movegen/game.rs:34:9: replace Line::push with ()
+src/movegen/game.rs:38:9: replace Line::pop -> Option<HalfPly> with None
+src/movegen/game.rs:42:9: replace Line::current_move -> Option<&HalfPly> with None
+src/movegen/game.rs:46:29: replace % with + in Line::current_color
+src/movegen/game.rs:46:29: replace % with / in Line::current_color
+src/movegen/game.rs:46:33: replace == with != in Line::current_color
+src/movegen/game.rs:54:9: replace Line::halfplies -> usize with 0
+src/movegen/game.rs:54:9: replace Line::halfplies -> usize with 1
+src/movegen/game.rs:61:9: replace Line::to_pgn -> String with "xyzzy".into()
+src/movegen/game.rs:61:9: replace Line::to_pgn -> String with String::new()
+src/movegen/game.rs:64:28: replace % with + in Line::to_pgn
+src/movegen/game.rs:64:28: replace % with / in Line::to_pgn
+src/movegen/game.rs:64:32: replace == with != in Line::to_pgn
+src/movegen/game.rs:75:9: replace Line::make_variation -> Line with Default::default()
+src/movegen/halfply.rs:34:9: replace HalfPly::notation -> &str with ""
+src/movegen/halfply.rs:34:9: replace HalfPly::notation -> &str with "xyzzy"
+src/movement/debug.rs:29:9: replace <impl Display for Move>::fmt -> Result with Ok(Default::default())
+src/movement/generator.rs:101:17: replace | with ^ in Move::generate
+src/movement/generator.rs:134:43: replace - with + in Move::generate
+src/movement/generator.rs:134:43: replace - with / in Move::generate
+src/movement/generator.rs:137:43: replace + with * in Move::generate
+src/movement/generator.rs:137:43: replace + with - in Move::generate
+src/movement/generator.rs:34:57: delete ! in Move::generate
+src/movement/generator.rs:37:46: replace | with ^ in Move::generate
+src/movement/generator.rs:37:69: replace & with | in Move::generate
+src/movement/generator.rs:48:46: delete ! in Move::generate
+src/movement/generator.rs:48:56: delete ! in Move::generate
+src/movement/generator.rs:48:81: delete ! in Move::generate
+src/movement/mod.rs:183:46: replace == with != in Move::disambiguate
+src/movement/mod.rs:185:53: replace == with != in Move::disambiguate
+src/movement/mod.rs:261:9: replace Move::is_null -> bool with false
+src/movement/mod.rs:452:9: replace Move::to_uci -> String with "xyzzy".into()
+src/movement/mod.rs:452:9: replace Move::to_uci -> String with String::new()
+src/movement/mod.rs:479:9: replace Move::is_en_passant -> bool with true
+src/movement/mod.rs:491:9: replace Move::is_double_pawn_push_for -> bool with true
+src/movement/mod.rs:492:77: replace && with || in Move::is_double_pawn_push_for
+src/movement/mod.rs:493:77: replace && with || in Move::is_double_pawn_push_for
+src/movement/mod.rs:501:9: replace Move::is_short_castling_move_for -> bool with true
+src/movement/mod.rs:502:55: replace && with || in Move::is_short_castling_move_for
+src/movement/mod.rs:503:47: replace == with != in Move::is_short_castling_move_for
+src/movement/mod.rs:503:55: replace && with || in Move::is_short_castling_move_for
+src/movement/mod.rs:503:76: replace == with != in Move::is_short_castling_move_for
+src/movement/mod.rs:511:9: replace Move::is_long_castling_move_for -> bool with true
+src/movement/mod.rs:512:55: replace && with || in Move::is_long_castling_move_for
+src/movement/mod.rs:513:47: replace == with != in Move::is_long_castling_move_for
+src/movement/mod.rs:513:55: replace && with || in Move::is_long_castling_move_for
+src/movement/mod.rs:513:76: replace == with != in Move::is_long_castling_move_for
+src/movement/mod.rs:64:13: replace | with ^ in Move::from
+src/movement/mod.rs:65:13: replace | with ^ in Move::from
+src/movement/move_type.rs:128:9: replace MoveType::is_quiet -> bool with true
+src/movement/move_type.rs:137:22: replace & with | in MoveType::is_en_passant
+src/movement/move_type.rs:137:9: replace MoveType::is_en_passant -> bool with true
+src/movement/move_type.rs:58:9: replace MoveType::to_uci -> &'static str with ""
+src/movement/move_type.rs:58:9: replace MoveType::to_uci -> &'static str with "xyzzy"
+src/movement/move_type.rs:72:9: replace MoveType::is_null -> bool with false
+src/moveset/mod.rs:122:9: replace MoveSet::contains -> bool with true
+src/moveset/mod.rs:145:23: replace == with != in MoveSet::find_by_target
+src/pextboard/mod.rs:86:50: replace | with ^ in attacks_for
+src/ply/debug.rs:27:9: replace <impl Display for Ply>::fmt -> Result with Ok(Default::default())
+src/ply/make.rs:13:9: replace <impl Display for MoveMode>::fmt -> std::fmt::Result with Ok(Default::default())
+src/ply/make.rs:149:64: replace % with + in Ply::make
+src/ply/make.rs:323:67: replace | with & in Ply::tick
+src/ply/make.rs:323:67: replace | with ^ in Ply::tick
+src/ply/make.rs:385:30: replace | with ^ in Ply::long_castle
+src/ply/make.rs:385:48: replace | with ^ in Ply::long_castle
+src/ply/make.rs:388:41: replace | with ^ in Ply::long_castle
+src/ply/make.rs:396:30: replace | with ^ in Ply::short_castle
+src/ply/make.rs:396:48: replace | with ^ in Ply::short_castle
+src/ply/make.rs:398:30: replace | with ^ in Ply::short_castle
+src/ply/make.rs:398:48: replace | with ^ in Ply::short_castle
+src/ply/make.rs:405:30: replace | with & in Ply::unshort_castle
+src/ply/make.rs:405:30: replace | with ^ in Ply::unshort_castle
+src/ply/make.rs:405:48: replace | with & in Ply::unshort_castle
+src/ply/make.rs:405:48: replace | with ^ in Ply::unshort_castle
+src/ply/make.rs:407:30: replace | with & in Ply::unshort_castle
+src/ply/make.rs:407:30: replace | with ^ in Ply::unshort_castle
+src/ply/make.rs:407:48: replace | with & in Ply::unshort_castle
+src/ply/make.rs:407:48: replace | with ^ in Ply::unshort_castle
+src/ply/make.rs:414:30: replace | with & in Ply::unlong_castle
+src/ply/make.rs:414:30: replace | with ^ in Ply::unlong_castle
+src/ply/make.rs:414:48: replace | with & in Ply::unlong_castle
+src/ply/make.rs:414:48: replace | with ^ in Ply::unlong_castle
+src/ply/make.rs:416:30: replace | with & in Ply::unlong_castle
+src/ply/make.rs:416:30: replace | with ^ in Ply::unlong_castle
+src/ply/metadata.rs:45:32: replace &= with ^= in Metadata::rook_moved
+src/ply/metadata.rs:45:32: replace &= with |= in Metadata::rook_moved
+src/ply/metadata.rs:45:35: delete ! in Metadata::rook_moved
+src/ply/metadata.rs:45:9: replace Metadata::rook_moved with ()
+src/ply/metadata.rs:46:33: replace &= with ^= in Metadata::rook_moved
+src/ply/metadata.rs:46:36: delete ! in Metadata::rook_moved
+src/ply/metadata.rs:47:32: replace &= with ^= in Metadata::rook_moved
+src/ply/metadata.rs:47:32: replace &= with |= in Metadata::rook_moved
+src/ply/metadata.rs:47:35: delete ! in Metadata::rook_moved
+src/ply/metadata.rs:48:36: delete ! in Metadata::rook_moved
+src/ply/metadata.rs:66:30: replace += with *= in Metadata::half_move_tick
+src/ply/metadata.rs:66:9: replace Metadata::half_move_tick with ()
+src/ply/metadata.rs:69:30: replace -= with += in Metadata::half_move_untick
+src/ply/metadata.rs:69:30: replace -= with /= in Metadata::half_move_untick
+src/ply/metadata.rs:69:9: replace Metadata::half_move_untick with ()
+src/ply/metadata.rs:82:9: replace Metadata::full_move_untick with ()
+src/ply/metadata.rs:83:34: replace -= with += in Metadata::full_move_untick
+src/ply/metadata.rs:83:34: replace -= with /= in Metadata::full_move_untick
+src/ply/metadata.rs:85:24: delete ! in Metadata::full_move_untick
+src/ply/metadata.rs:88:9: replace Metadata::full_move_reset with ()
+src/ply/metadata.rs:92:9: replace Metadata::can_castle_short -> bool with false
+src/ply/metadata.rs:92:9: replace Metadata::can_castle_short -> bool with true
+src/ply/metadata.rs:99:9: replace Metadata::can_castle_long -> bool with false
+src/ply/metadata.rs:99:9: replace Metadata::can_castle_long -> bool with true
+src/ply/movegen/mod.rs:49:66: replace & with ^ in Ply::pawn_advances
+src/ply/movegen/mod.rs:49:66: replace & with | in Ply::pawn_advances
+src/ply/movegen/mod.rs:49:68: delete ! in Ply::pawn_advances
+src/ply/query/attacks.rs:20:44: replace & with | in Ply::defended_pieces_for
+src/ply/query/attacks.rs:27:13: replace | with ^ in Ply::influenced_squares_for
+src/ply/query/attacks.rs:28:13: replace | with ^ in Ply::influenced_squares_for
+src/ply/query/attacks.rs:29:13: replace | with ^ in Ply::influenced_squares_for
+src/ply/query/attacks.rs:40:21: replace |= with ^= in Ply::king_attack_board_for
+src/ply/query/attacks.rs:60:21: replace |= with ^= in Ply::knight_attack_board_for
+src/ply/query/attacks.rs:82:21: replace |= with ^= in Ply::slider_attacks_for
+src/ply/query/mod.rs:50:48: replace | with & in Ply::all_pieces_for
+src/ply/query/mod.rs:50:48: replace | with ^ in Ply::all_pieces_for
+src/ply/query/occupancy.rs:22:13: replace | with ^ in Ply::occupancy_for
+src/ply/query/occupancy.rs:23:13: replace | with ^ in Ply::occupancy_for
+src/ply/query/occupancy.rs:24:13: replace | with ^ in Ply::occupancy_for
+src/ply/query/occupancy.rs:25:13: replace | with ^ in Ply::occupancy_for
+src/ply/query/occupancy.rs:26:13: replace | with ^ in Ply::occupancy_for
+src/ply/query/occupancy.rs:43:42: replace | with ^ in Ply::occupancy
+src/ply/query/piece_lookup.rs:115:42: replace & with ^ in Ply::can_castle_long
+src/ply/query/piece_lookup.rs:115:42: replace & with | in Ply::can_castle_long
+src/ply/query/piece_lookup.rs:129:42: replace & with ^ in Ply::can_castle_short
+src/ply/query/piece_lookup.rs:129:42: replace & with | in Ply::can_castle_short
+src/uci/connection.rs:15:5: replace run -> io::Result<()> with Ok(())
+src/uci/connection.rs:21:5: replace run_with_io -> io::Result<()> with Ok(())
+src/ui/app.rs:102:9: replace Hazel::set_flag with ()
+src/ui/app.rs:107:9: replace Hazel::check_flag -> bool with false
+src/ui/app.rs:107:9: replace Hazel::check_flag -> bool with true
+src/ui/app.rs:115:9: replace Hazel::input_widget -> Block with Default::default()
+src/ui/app.rs:32:9: replace <impl Debug for Hazel>::fmt -> std::fmt::Result with Ok(Default::default())
+src/ui/app.rs:62:9: replace Hazel::handle_events with ()
+src/ui/mod.rs:21:5: replace run -> Result<(), Box<dyn Error>> with Ok(())
+src/ui/mod.rs:40:5: replace run_app -> io::Result<bool> with Ok(false)
+src/ui/mod.rs:40:5: replace run_app -> io::Result<bool> with Ok(true)
+src/ui/model/entry.rs:22:9: replace <impl Debug for Entry>::fmt -> std::fmt::Result with Ok(Default::default())
+src/ui/model/entry.rs:83:9: replace <impl Engine for Entry>::exec -> Vec<UCIMessage> with vec![]
+src/ui/model/entry.rs:87:9: replace <impl Engine for Entry>::exec_message -> Vec<UCIMessage> with vec![]
+src/ui/model/pieceboard.rs:116:30: replace += with *= in PieceBoard::from_fen
+src/ui/model/pieceboard.rs:146:9: replace <impl Engine for PieceBoard>::exec_message -> Vec<UCIMessage> with vec![]
+src/ui/model/pieceboard.rs:170:70: replace == with != in <impl Engine for PieceBoard>::exec
+src/ui/model/pieceboard.rs:171:71: replace == with != in <impl Engine for PieceBoard>::exec
+src/ui/model/pieceboard.rs:172:37: replace || with && in <impl Engine for PieceBoard>::exec
+src/ui/model/pieceboard.rs:172:71: replace == with != in <impl Engine for PieceBoard>::exec
+src/ui/model/pieceboard.rs:19:9: replace <impl Debug for PieceBoard>::fmt -> std::fmt::Result with Ok(Default::default())
+src/ui/widgets/board.rs:122:57: replace + with - in <impl Widget for &Board<'_>>::render
+src/ui/widgets/fen.rs:25:9: replace <impl From for FEN>::from -> Self with Default::default()
+src/ui/widgets/fen.rs:31:9: replace <impl From for FEN>::from -> Self with Default::default()
+src/ui/widgets/fen.rs:37:9: replace <impl From for FEN>::from -> Self with Default::default()
+src/ui/widgets/fen.rs:57:9: replace FEN::set_style -> Self with Default::default()
+src/ui/widgets/input.rs:18:9: replace Input::content -> String with String::new()
+src/ui/widgets/output.rs:52:49: replace - with + in <impl StatefulWidget for &Output>::render
+src/ui/widgets/output.rs:52:49: replace - with / in <impl StatefulWidget for &Output>::render
+src/ui/widgets/placeholder.rs:45:9: replace Placeholder::text -> Self with Default::default()
+src/ui/widgets/placeholder.rs:57:9: replace Placeholder::set_style -> Self with Default::default()
+src/ui/widgets/tile/mod.rs:50:9: replace Tile::handle_input with ()
+src/ui/widgets/tile/mod.rs:54:9: replace Tile::handle_backspace with ()
+src/ui/widgets/tile/mod.rs:58:9: replace Tile::handle_enter with ()
+src/ui/widgets/tile/mod.rs:83:87: replace | with ^ in <impl Widget for &Tile>::render
+src/util/mask.rs:25:9: replace <impl Debug for Mask>::fmt -> std::fmt::Result with Ok(Default::default())
+src/util/mask.rs:93:9: replace Mask::read_err -> Option<String> with None
+src/util/mask.rs:93:9: replace Mask::read_err -> Option<String> with Some("xyzzy".into())
+src/util/mask.rs:93:9: replace Mask::read_err -> Option<String> with Some(String::new())
