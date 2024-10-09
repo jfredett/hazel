@@ -122,7 +122,7 @@ impl PieceBoard {
                 '5' => { col += 5; },
                 '6' => { col += 6; },
                 '7' => { col += 7; },
-                '8' => { col += 8; },
+                '8' => { /* col += 8; NOTE: This results in nothing happening anyway, the `col` value for valid fen will always reset on the next char. Thus, don't do anything */ },
 
                 '/' => { row -= 1; col = 0; },
                 _ => { debug!("Unsupported FEN character: '{}'", c); break; }
