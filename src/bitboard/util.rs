@@ -45,6 +45,29 @@ mod test {
     use super::*;
     mod coords_indexes_and_notation {
         use super::*;
+
+        mod coords_to_offset {
+            use super::*;
+
+            #[quickcheck]
+            fn coords_to_offset_correctly(rank_i: usize, file_i: usize) -> bool {
+                let (rank, file) = (rank_i % 8, file_i % 8);
+
+                Bitboard::coords_to_offset(rank, file) == 1 << Bitboard::coords_to_index(rank, file)
+            }
+        }
+
+        mod index_to_notation {
+            use super::*;
+
+            #[quickcheck]
+            fn index_to_notation_correctly(idx_i: usize) -> bool {
+                let idx = idx_i % 64;
+
+                Bitboard::index_to_notation(idx) == INDEX_TO_NOTATION[idx]
+            }
+        }
+
         mod correctly_parses_to_index {
             use super::*;
             #[test]

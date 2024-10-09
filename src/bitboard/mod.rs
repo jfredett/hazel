@@ -302,6 +302,16 @@ mod tests {
         }
     }
 
+    mod is_full {
+        use super::*;
+
+        #[test]
+        fn accurately_reports_if_board_is_full() {
+            let full_board = Bitboard::full();
+            assert!(full_board.is_full());
+        }
+    }
+
     mod flip {
         use super::*;
 
