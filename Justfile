@@ -40,3 +40,6 @@ miri-test:
 
 cloc *args:
   cloc --vcs=git --exclude-ext=.rc . {{args}}
+
+mutants:
+    cargo mutants -- --profile=mutants --all-targets

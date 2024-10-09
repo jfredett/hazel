@@ -95,10 +95,21 @@ mod test {
 
     #[test]
     fn sliding_off_the_edge_removes_bit() {
-        let mut b = Bitboard::empty();
-        b.set_by_notation("h4");
-        b.shift_mut(Direction::E);
-        assert!(b.is_empty());
+        // shifting off the top right of the board
+        for d in &[ Direction::N, Direction::NE, Direction::E, Direction::SE, Direction::NW, ] {
+            let mut b = Bitboard::empty();
+            b.set_by_notation("h8");
+            b.shift_mut(*d);
+            assert!(b.is_empty());
+        }
+
+        // shifting off the bottom left of the board
+        for d in &[Direction::S, Direction::SW, Direction::W, Direction::NW, Direction::SE] {
+            let mut b = Bitboard::empty();
+            b.set_by_notation("a1");
+            b.shift_mut(*d);
+            assert!(b.is_empty());
+        }
     }
 
     #[test]

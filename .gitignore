@@ -8,3 +8,5 @@ launch.json
 NOTES.mkd
 flamegraph.svg
 perf.*
+mutants.out/
+mutants.out.old/
