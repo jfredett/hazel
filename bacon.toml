@@ -101,6 +101,7 @@ allow_warnings = true
 c = "job:clippy-all" # comment this to have 'c' run clippy on only the default target
 
 [exports.locations]
+enabled = true
 auto = true
 path = ".bacon-locations"
 line_format = "{kind} {path}:{line}:{column} {message}"
