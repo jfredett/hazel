@@ -72,10 +72,39 @@ pub fn display_board(board: &impl Query) -> String {
     f
 }
 
+pub fn to_fen(board: &impl Query) -> String {
+    let mut f = String::new();
+    let mut empty = 0;
+
+    for rank in (0..=7).rev() {
+        for file in 0..=7 {
+            let occ = board.get(rank * 8 + file);
+            match occ {
+                Occupant::Empty => empty += 1,
+                _ => {
+                    if empty > 0 {
+                        f.push_str(&empty.to_string());
+                        empty = 0;
+                    }
+                    f.push_str(&occ.to_string());
+                }
+            }
+        }
+        if empty > 0 {
+            f.push_str(&empty.to_string());
+            empty = 0;
+        }
+        if rank > 0 {
+            f.push_str("/");
+        }
+    }
+    f
+}
+
 
 #[cfg(test)]
 mod tests {
-    use crate::board::pieceboard::PieceBoard;
+    use crate::{board::pieceboard::PieceBoard, constants::POS2_KIWIPETE_FEN};
 
     use super::*;
 
@@ -95,6 +124,30 @@ mod tests {
  2 P P P P P P P P
  1 R N B Q K B N R
    a b c d e f g h";
+
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn to_fen_test() {
+        let mut p = PieceBoard::default();
+        p.set_startpos();
+
+        let actual = to_fen(&p);
+        let expected = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn to_fen_test_kiwipete() {
+        let mut p = PieceBoard::default();
+        p.set_fen(POS2_KIWIPETE_FEN);
+
+        println!("{}", display_board(&p));
+
+        let actual = to_fen(&p);
+        let expected = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R";
 
         assert_eq!(actual, expected);
     }
