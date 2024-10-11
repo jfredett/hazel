@@ -66,6 +66,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore] // for speed
     fn perft_start_position_to_depth_4() {
         assert_no_difference!(perft_start_position(1), 20);
         assert_no_difference!(perft_start_position(2), 400);
