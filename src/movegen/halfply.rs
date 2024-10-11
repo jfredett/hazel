@@ -29,6 +29,18 @@ impl From<&str> for HalfPly {
     }
 }
 
+impl Into<Move> for HalfPly {
+    fn into(self) -> Move {
+        self.mov
+    }
+}
+
+impl Into<Move> for &HalfPly {
+    fn into(self) -> Move {
+        self.mov.clone()
+    }
+}
+
 impl HalfPly {
     pub fn notation(&self) -> &str {
         &self.notation
