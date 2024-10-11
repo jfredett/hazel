@@ -25,7 +25,7 @@ test *ARGS:
         just coverage
     else 
         echo "Using cached coverage data"
-        just nextest {{ARGS}}
+        just nextest run {{ARGS}}
     fi
 
 coverage:

@@ -684,3 +684,91 @@ and the some frontend that tracks boardstate, options-per-engine, etc. The main 
 processes it likes based on the request from the Engine.
 
 It makes sense in my head, which means it almost certainly won't make sense anywhee else, but that's how it always goes.
+
+# 10-OCT-2024
+
+## 0017 - movegen-v2
+
+Thinking about the `Notation` idea again. I think there is a different way I can approach it that won't encounter the
+type problems I was having. In particular I can use an associated type to track the format of the notation, so that I
+can convert internally between the formats.
+
+Another option is just to have an unassociated family of types with mutual `From` implementations. One called `Index`,
+one called `UCI`, and so on, then I can have them all be const impls, and everything in the crate can just use `Index`,
+but with a const `into()` method which converts to the correct type at compile time?
+
+I truly have no idea if that'll work, but it makes half sense in my head, and my lack of types for these things is
+starting to hurt.
+
+## 0100 - movegen-v2
+
+I think I have a better plan now.
+
+I'm going to reorganize the repo like this:
+
+
+```
+
+src/
+    board/
+        # Names subject to change
+        bitboard/    # Implementation of a bitboard-based representation. Not the bitboard type itself.
+        pieceboard/  # Implementation of a simpler array-of-objects representation.
+        planned/     # ... there may be other representations I put here eventually as well.
+        mod.rs       # Interface definitions and module stuff, Board and Query live here.
+    notation/
+        # Some kind of notation management object, ideally mostly const-time, as a QoL thing. Much
+        # easier to have a consistent way to represent notation, instead of the mix of octal and text and coords.
+        index/    # Index-based move notation
+        uci/      # UCI Move notation
+        san/      # SAN Move notation
+        fen/      # FEN gamestate parsing and generation
+        pgn/      # PGN game history parsing and generation
+        mod.rs
+    move/
+        rep/
+            # This contains various compact move representations, and probably also the `alteration` type and it's
+            # friends.
+        gen/
+            # Async Move generator, legality checker, etc.
+    game/
+        # This tracks the gamestate, it's home to:
+        halfply/    # Represents a single move/
+        line/
+        variation/
+        mod.rs      # The Game Representation object itself.
+    evaluator/
+        # evaluation here, someday
+    brain/
+        # Async Hazel Engine
+    engine/
+        # UCI interface
+        uci/
+        driver/
+            stockfish.rs # Wrapper around stockfish, for integration testing
+            hazel.rs     # Hazel Engine implementation wrapper (wrapping brain.
+            mod.rs
+        mod.rs
+    ui/
+        model/
+        widgets/
+        app.rs
+        mod.rs
+    types/
+        # generic/crossfunctional types that are used everywhere.
+        bitboard/  # bitboard type implementation
+        pextboard/ # pextboard type implementation
+        mask/      # async process wrapper.
+    constants/
+        # Constants used throughout the program
+```
+
+It's a bit easier to see the structure of the thing that way. The 'brain' is the main process that the UI will spawn
+and interact with. It will spawn the other components and maintain the engine state. I'd like it to have a little
+scripting language/VM sort of thing to control it via the UI in richer ways than UCI would allow. Ultimately, like
+everything, I want to make it's parts hotloadable so I can leave it running all the time and just reload the
+subcomponents on the fly. Everything must scale to infinite machines, uptime must grow.
+
+I'm not going to do this till I finish the new movegen stuff, which should get all the raw materials above (mod the
+evaluator, movegen, and brain bits, I suppose) in place, and then I can start to reorganize and clean up some of the
+duplication I have now.

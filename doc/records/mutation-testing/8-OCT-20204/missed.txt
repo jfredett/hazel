@@ -23,11 +23,11 @@ S src/bitboard/intrinsics.rs:41:9: replace Bitboard::first_index -> usize with 1
 * src/constants/file.rs:37:9: replace File::to_index -> usize with 1
 S src/driver/stockfish.rs:23:9: replace Stockfish::close -> std::io::Result<()> with Ok(())
 S src/driver/stockfish.rs:32:9: replace <impl Drop for Stockfish>::drop with ()
-src/game/debug.rs:28:9: replace <impl Debug for Game>::fmt -> std::fmt::Result with Ok(Default::default())
+S src/game/debug.rs:28:9: replace <impl Debug for Game>::fmt -> std::fmt::Result with Ok(Default::default())
 src/game/initialization/mainline/mod.rs:48:9: replace <impl Visitor for MainlineVisitor>::header with ()
 src/game/initialization/mainline/mod.rs:67:47: replace == with != in <impl Visitor for MainlineVisitor>::san
 src/game/perft.rs:28:9: replace Game::last_played -> Option<Move> with None
-src/main.rs:24:5: replace main with ()
+S src/main.rs:24:5: replace main with ()
 src/movegen/game.rs:34:9: replace Line::push with ()
 src/movegen/game.rs:38:9: replace Line::pop -> Option<HalfPly> with None
 src/movegen/game.rs:42:9: replace Line::current_move -> Option<&HalfPly> with None
