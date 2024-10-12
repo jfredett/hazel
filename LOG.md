@@ -711,11 +711,10 @@ I'm going to reorganize the repo like this:
 
 src/
     board/
-        # Names subject to change
-        bitboard/    # Implementation of a bitboard-based representation. Not the bitboard type itself.
-        pieceboard/  # Implementation of a simpler array-of-objects representation.
+        bit/         # Implementation of a bitboard-based representation. Not the bitboard type itself.
+        piece/       # Implementation of a simpler array-of-objects representation.
         planned/     # ... there may be other representations I put here eventually as well.
-        mod.rs       # Interface definitions and module stuff, Board and Query live here.
+        mod.rs       # Interface definitions and module stuff, Alter and Query live here.
     notation/
         # Some kind of notation management object, ideally mostly const-time, as a QoL thing. Much
         # easier to have a consistent way to represent notation, instead of the mix of octal and text and coords.
@@ -736,7 +735,8 @@ src/
         halfply/    # Represents a single move/
         line/
         variation/
-        mod.rs      # The Game Representation object itself.
+        mod.rs       # The Game Representation object itself.
+        interface.rs # The `Chess` trait goes here
     evaluator/
         # evaluation here, someday
     brain/
@@ -772,3 +772,19 @@ subcomponents on the fly. Everything must scale to infinite machines, uptime mus
 I'm not going to do this till I finish the new movegen stuff, which should get all the raw materials above (mod the
 evaluator, movegen, and brain bits, I suppose) in place, and then I can start to reorganize and clean up some of the
 duplication I have now.
+
+
+# 12-OCT-2024
+
+## 1500 - movegen-v2
+
+I think I have to commit to the reorg now, but some things have changed which makes the above not _quite_ right. I
+started to change it and I think I'm just going to get in and start moving things around on a clean commit of this
+branch. After that I think I'm going to merge and go back to working on main. It turns out I'm not so great at sticking
+to a single topic on a side project so branching isn't really what I need to do here, at least not till I've cleaned up
+some of the tech mess I've left for myself.
+
+Next update will hopefully have all that done and I can document it here.
+
+Also on the list is going to be getting `mkdocs` set up for a wiki, and maybe a local docserver, if only to motivate me
+to document more.
