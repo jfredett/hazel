@@ -7,7 +7,7 @@ use crate::movement::Move;
 use crate::uci::UCIMessage;
 use crate::board::occupant::Occupant;
 use crate::movegen::alteration::Alteration;
-use crate::board::interface::Board;
+use crate::board::interface::Chess;
 use tracing::instrument;
 
 use std::fmt::Debug;

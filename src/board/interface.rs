@@ -1,12 +1,15 @@
 use crate::board::occupant::Occupant;
 use crate::movegen::alteration::Alteration;
 use crate::movement::Move;
+use crate::notation::fen::FEN;
 
-/// A Board is an object which can be altered and unaltered by a Move. Both methods are specified,
-/// but if the underlying representation is capable of using interpreting Alterations (i.e., is
-/// Alterable) and can be queried for the Occupant at a given index (i.e., is Queryable), then the
-/// Board has a canonical implementation of make and unmake via Alterable.
-pub trait Board where Self: Sized {
+/// implementing Chess states that the implementor can interpret and produce the result of
+/// chess moves as represented by the `Move` type. The `make` and `unmake` methods should be
+/// implemented to apply and reverse the move, respectively.
+///
+/// implementors must also provide a `Default` implementation which represents the starting state
+/// of an _empty_ chessboard (no pieces).
+pub trait Chess where Self: Sized + Default {
     fn make(&self, mov: Move) -> Self;
     fn unmake(&self, mov: Move) -> Self;
 
@@ -21,6 +24,12 @@ pub trait Board where Self: Sized {
     }
 }
 
+// TODO: Require From<FEN> for Board, requires a FEN type though.
+//
+// QUESTION: FEN Metadata type that boards must manage? Probably that's better for Game to care about?
+
+/// implementing Alter states that the implementor can apply and reverse alterations to the board.
+/// An alteration is defined by the Alteration enum.
 pub trait Alter where Self: Sized {
     fn alter(&self, mov: Alteration) -> Self;
 
@@ -30,19 +39,22 @@ pub trait Alter where Self: Sized {
     }
 }
 
+/// implementing Query states that the implementor can provide the occupant of a square on the
+/// board using standard 'index' notation with the 0th square being a1 and the 63rd square being
+/// h8.
 pub trait Query {
     // TODO: Eventually this should take a Notation object, index is just a notation
     fn get(&self, index: usize) -> Occupant;
 }
 
-/// The canonical implementation of Board for any type which is Alterable and Queryable. The
+/// The canonical implementation of Chess for any type which is Alterable and Queryable. The
 /// algorithm is straightforward:
 /// 1. Compile the move in the context of the board, yielding a vector of Alterations.
 /// 2. Apply each alteration in sequence to the board, returning the final board state.
 ///
 /// Unmaking is trivial because Alterations are reversible. It's the same algorithm, but applying
 /// `inverse` first.
-impl<T> Board for T where T: Alter + Query + Clone {
+impl<T> Chess for T where T: Alter + Query + Clone + Default {
     fn make(&self, mov: Move) -> T {
         let alterations = mov.compile(self);
         alterations.iter().fold(self.clone(), |board, alteration| board.alter(alteration.clone()))

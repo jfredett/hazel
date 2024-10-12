@@ -1,6 +1,6 @@
 #![allow(dead_code, unused_imports)]
 
-use crate::{board::{pieceboard::PieceBoard, Board, Query}, constants::{Color, START_POSITION_FEN}, movegen::halfply::HalfPly};
+use crate::{board::{pieceboard::PieceBoard, Chess, Query}, constants::{Color, START_POSITION_FEN}, movegen::halfply::HalfPly};
 use std::fmt::{self, Display, Formatter};
 
 
@@ -53,7 +53,7 @@ impl From<Line> for Variation {
 
 impl Display for Line {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        // PieceBoard is used to do the conversion to PGN since it's very simple, and `Board` will
+        // PieceBoard is used to do the conversion to PGN since it's very simple, and `Chess` will
         // do.
         write!(f, "{}", self.to_pgn())
     }
@@ -87,7 +87,7 @@ impl Line {
         }
     }
 
-    fn current_position(&self) -> impl Board {
+    fn current_position(&self) -> impl Chess {
         let mut board = PieceBoard::from_fen(&self.initial_position);
         for halfply in &self.halfplies {
             board = board.make(halfply.into());
@@ -108,7 +108,7 @@ impl Line {
     }
 
     fn to_pgn(&self) -> String {
-        // PieceBoard is used to do the conversion to PGN since it's very simple, any `Board` will
+        // PieceBoard is used to do the conversion to PGN since it's very simple, any `Chess` will
         // do.
         let board = PieceBoard::from_fen(&self.initial_position);
         self.to_pgn_with_context(&board)
@@ -146,7 +146,7 @@ impl Line {
 mod tests {
     use super::*;
     use crate::board::pieceboard::PieceBoard;
-    use crate::board::Board;
+    use crate::board::Chess;
     use crate::constants::START_POSITION_FEN;
 
 
