@@ -441,7 +441,6 @@ impl Move {
             _ => todo!()
         };
 
-        alterations.push(Alteration::comment(self.to_uci()));
         alterations.push(Alteration::done());
 
         return alterations;

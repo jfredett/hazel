@@ -1,7 +1,6 @@
 use crate::board::occupant::Occupant;
 use crate::movegen::alteration::Alteration;
 use crate::movement::Move;
-use crate::notation::fen::FEN;
 
 /// implementing Chess states that the implementor can interpret and produce the result of
 /// chess moves as represented by the `Move` type. The `make` and `unmake` methods should be

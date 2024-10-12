@@ -1,11 +1,11 @@
 #![allow(dead_code)]
-use crate::{board::{occupant::Occupant, Alter, Chess}, constants::{Color, Piece}, movegen::Alteration};
+use crate::{board::{occupant::Occupant, Chess}, constants::{Color, Piece}, movegen::Alteration};
 
 
 #[derive(Debug)]
 pub struct FEN {
     original_fen: String,
-    position: String,
+    position: Vec<Alteration>,
     side_to_move: Color,
     castling: CastleRights,
     // The index of the square containing the en passant target square, or None if there is none
@@ -26,7 +26,8 @@ struct CastleRights {
 impl FEN {
     pub fn new(fen: &str) -> Self {
         let mut parts = fen.split_whitespace();
-        let position = parts.next().unwrap();
+        let position_str = parts.next().unwrap();
+        let position = Self::compile(position_str);
         let side_to_move = parts.next().unwrap();
         let castling = parts.next().unwrap();
         let en_passant = parts.next().unwrap();
@@ -53,7 +54,7 @@ impl FEN {
 
         Self {
             original_fen: fen.to_string(),
-            position: position.to_string(),
+            position,
             side_to_move,
             castling,
             en_passant,
@@ -64,19 +65,18 @@ impl FEN {
     }
 
     pub fn setup<C>(&self) -> C where C : Chess {
-        let alterations = self.compile();
         let mut board = C::default();
-        for alteration in alterations {
-            board.alter_mut(alteration);
+        for alteration in &self.position {
+            board.alter_mut(*alteration);
         }
         board
     }
 
-    fn compile(&self) -> Vec<Alteration> {
+    fn compile(fen: &str) -> Vec<Alteration> {
         let mut alterations = Vec::new();
         let mut rank = 7;
         let mut file = 0;
-        for c in self.position.chars() {
+        for c in fen.chars() {
             match c {
                 '/' => {
                     rank -= 1;
@@ -124,7 +124,7 @@ mod tests {
     fn fen_startpos() {
         let fen = FEN::new(START_POSITION_FEN);
         assert_eq!(fen.original_fen, START_POSITION_FEN);
-        assert_eq!(fen.position, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+        // We test the position part below in the #setup test
         assert_eq!(fen.side_to_move, Color::WHITE);
         assert_eq!(fen.castling.white_short, true);
         assert_eq!(fen.castling.white_long, true);
@@ -141,7 +141,7 @@ mod tests {
         let fen = FEN::new(POS2_KIWIPETE_FEN);
         dbg!(&fen);
         assert_eq!(fen.original_fen, POS2_KIWIPETE_FEN);
-        assert_eq!(fen.position, "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R");
+        // We test the position part below in the #setup test
         assert_eq!(fen.side_to_move, Color::WHITE);
         assert_eq!(fen.castling.white_short, true);
         assert_eq!(fen.castling.white_long, true);
@@ -164,5 +164,26 @@ mod tests {
         let expected = PieceBoard::from_fen(START_POSITION_FEN);
         assert_eq!(board, expected);
     }
+
+    #[test]
+    fn fen_kiwipete_setup() {
+        let fen = FEN::new(POS2_KIWIPETE_FEN);
+        // This is the new implementation
+        let board = fen.setup::<PieceBoard>();
+
+        // this is the old. It can be deprecated once this is done, then this test will need to
+        // change, probably.
+        let expected = PieceBoard::from_fen(POS2_KIWIPETE_FEN);
+        assert_eq!(board, expected);
+    }
+
+    #[test]
+    fn fen_empty_board_setup() {
+        let fen = FEN::new("8/8/8/8/8/8/8/8 w KQkq - 0 1");
+        let board = fen.setup::<PieceBoard>();
+        let expected = PieceBoard::default();
+        assert_eq!(board, expected);
+    }
+
 }
 

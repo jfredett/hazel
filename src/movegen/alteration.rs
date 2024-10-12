@@ -1,10 +1,9 @@
 use crate::board::occupant::Occupant;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Alteration {
     Place { index: usize, occupant: Occupant },
     Remove { index: usize, occupant: Occupant },
-    Comment { text: String },
     Done
 }
 
@@ -15,10 +14,6 @@ impl Alteration {
 
     pub fn remove(index: usize, occupant: Occupant) -> Self {
         Self::Remove { index, occupant }
-    }
-
-    pub fn comment(text: String) -> Self {
-        Self::Comment { text }
     }
 
     pub fn done() -> Self {
@@ -48,12 +43,6 @@ mod tests {
     fn remove() {
         let alteration = Alteration::remove(0, Occupant::black_king());
         assert_eq!(alteration, Alteration::Remove { index: 0, occupant: Occupant::black_king() });
-    }
-
-    #[test]
-    fn comment() {
-        let alteration = Alteration::comment("This is a comment".to_string());
-        assert_eq!(alteration, Alteration::Comment { text: "This is a comment".to_string() });
     }
 
     #[test]

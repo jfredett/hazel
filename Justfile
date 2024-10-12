@@ -5,8 +5,8 @@
 ci *ARGS: doctest nextest
 
 # Run the tests
-nextest:
-    cargo nextest run --no-fail-fast
+nextest *ARGS:
+    cargo nextest run --no-fail-fast {{ARGS}}
 
 # Run the doctests, which aren't done by nextest
 doctest:
@@ -25,7 +25,7 @@ test *ARGS:
         just coverage
     else 
         echo "Using cached coverage data"
-        just nextest run {{ARGS}}
+        just nextest {{ARGS}}
     fi
 
 coverage:
