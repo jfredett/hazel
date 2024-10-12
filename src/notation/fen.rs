@@ -2,6 +2,12 @@
 use crate::{board::{occupant::Occupant, Chess}, constants::{Color, Piece}, movegen::Alteration};
 
 
+// NOTE: There exists a metadata type in `Ply` which might be useful here. I intended it to be
+// packed into 4 bytes, but I think I implemented it as a plain struct, either way, it can come in
+// here.
+// I need to start reorganizing things more aggressively, and pruning out the stuff I won't need
+// anymore. It's messy in here.
+
 #[derive(Debug)]
 pub struct FEN {
     original_fen: String,
