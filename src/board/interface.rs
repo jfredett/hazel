@@ -9,7 +9,7 @@ use crate::notation::fen::FEN;
 ///
 /// implementors must also provide a `Default` implementation which represents the starting state
 /// of an _empty_ chessboard (no pieces).
-pub trait Chess where Self: Sized + Default {
+pub trait Chess where Self: Sized + Default + Alter + Query {
     fn make(&self, mov: Move) -> Self;
     fn unmake(&self, mov: Move) -> Self;
 

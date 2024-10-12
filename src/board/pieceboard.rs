@@ -14,7 +14,7 @@ use std::fmt::Debug;
 
 use super::{Alter, Query};
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone, Copy, PartialEq)]
 pub struct PieceBoard {
     pub board: [[Occupant; 8]; 8],
 }

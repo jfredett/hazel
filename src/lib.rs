@@ -46,6 +46,7 @@ pub mod ui;
 pub mod util;
 
 pub mod movegen;
+pub mod notation;
 
 /// passes if the left is a subset of the right
 #[macro_export]
