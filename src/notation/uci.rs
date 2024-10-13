@@ -3,6 +3,8 @@ use crate::notation::square::*;
 use crate::coup::rep::{Move, MoveType};
 use crate::game::interface::Chess;
 
+use super::MoveNotation;
+
 /// Represents a move in UCI format.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct UCI {
@@ -64,6 +66,8 @@ impl TryFrom<&str> for UCI {
     }
 }
 
+impl MoveNotation for UCI {
+}
 
 
 #[cfg(test)]
