@@ -1,9 +1,11 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Widget, Block, Borders};
 
+
 use ratatui::buffer::Buffer;
 
-use crate::ui::model::pieceboard::PieceBoard;
+use crate::board::Query;
+use crate::board::simple::PieceBoard;
 
 /// 8x8 text-only no color board.
 pub struct SmallBoard {
@@ -44,7 +46,7 @@ impl Widget for &SmallBoard {
         for i in 0..8 {
             for j in 0..8 {
                 let cell = Block::default()
-                    .title(self.board.get(i,j).to_string())
+                    .title(self.board.get(i * 8 + j).to_string())
                     .borders(Borders::NONE);
                 cell.render(rows[j][i], buf);
             }

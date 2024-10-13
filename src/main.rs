@@ -2,7 +2,7 @@
 
 use tracing::*;
 
-use hazel::uci;
+use hazel::engine::uci;
 use hazel::ui;
 
 use std::thread;

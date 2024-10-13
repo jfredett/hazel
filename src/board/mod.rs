@@ -1,13 +1,14 @@
+///! Board Representation
+
 // Trait defs
 pub mod interface;
-// Representation of a piece on an arbitrary square
-pub mod occupant;
 
 // Board Representations
-pub mod pieceboard; // represent a board as an array containing occupants
-// TODO: pub mod bitboard; // represent a board as a collection of bitboards
-// TODO: pub mod mailbox; // represent a board as a collection of pieces
-
-
+pub mod simple; // represent a board as an array containing occupants
+pub mod bit; // represent a board as a collection of bitboards
+pub mod mailbox; // represent a board as a collection of pieces
 
 pub use interface::*;
+
+pub use simple::PieceBoard;
+

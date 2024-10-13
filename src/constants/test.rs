@@ -1,5 +1,6 @@
-use super::*;
-use crate::movement::*;
+use crate::types::Color;
+use crate::coup::rep::{Move, MoveType};
+
 
 /// FEN for the starting position
 pub const START_POSITION_FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";

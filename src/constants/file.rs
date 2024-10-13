@@ -1,5 +1,5 @@
 use super::*;
-use crate::bitboard::Bitboard;
+use crate::types::Bitboard;
 use serde::{Deserialize, Serialize};
 
 #[derive(PartialEq, Eq, Clone, Copy, Hash, Debug, Serialize, Deserialize)]

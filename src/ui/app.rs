@@ -7,10 +7,10 @@ use ratatui::widgets::{Block, Borders};
 
 use tracing::{debug, instrument};
 
-use crate::uci::UCIMessage;
+use crate::engine::uci::UCIMessage;
 use crate::ui::model::entry::{Entry, stockfish};
 use crate::engine::Engine;
-use crate::ui::model::pieceboard::PieceBoard;
+use crate::board::simple::PieceBoard;
 
 use super::widgets::tile::Tile;
 

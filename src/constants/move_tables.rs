@@ -1,5 +1,6 @@
-use super::*;
-use crate::bitboard::Bitboard;
+use crate::types::Bitboard;
+use crate::types::Direction;
+
 
 lazy_static! {
     /// A lookup table to convert a knight on a given index -> it's bitboard of moves

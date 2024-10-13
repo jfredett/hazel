@@ -1,4 +1,6 @@
-use hazel::{bitboard::Bitboard, constants::Piece};
+use hazel::types::Bitboard;
+use hazel::types::Piece;
+use hazel::types::pextboard;
 
 /// This example is a Profile Hook for the PEXTBoard implementation. It simply executes random rook
 /// attack calculations repeatedly to generate sampledata for perf.
@@ -10,6 +12,6 @@ fn main() {
         let sq = rand::random::<u8>() % 64;
         let blocks: Bitboard = Bitboard::from(bb_in);
 
-        v[i % 10] = hazel::pextboard::attacks_for(Piece::Rook, sq as usize, blocks);
+        v[i % 10] = pextboard::attacks_for(Piece::Rook, sq as usize, blocks);
     }
 }

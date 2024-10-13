@@ -1,5 +1,6 @@
-#![allow(dead_code)]
-use crate::{board::{occupant::Occupant, Chess}, constants::{Color, Piece}, movegen::Alteration};
+use crate::board::Alteration;
+use crate::types::{Color, Occupant, Piece};
+use crate::game::interface::Chess;
 
 
 // NOTE: There exists a metadata type in `Ply` which might be useful here. I intended it to be
@@ -122,7 +123,10 @@ impl FEN {
 
 #[cfg(test)]
 mod tests {
-    use crate::{board::pieceboard::PieceBoard, constants::{POS2_KIWIPETE_FEN, START_POSITION_FEN}};
+    use crate::board::simple::PieceBoard;
+    use crate::constants::{POS2_KIWIPETE_FEN, START_POSITION_FEN};
+    use crate::types::Color;
+
 
     use super::*;
 

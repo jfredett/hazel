@@ -7,10 +7,8 @@ use tracing::{debug, instrument};
 
 use ratatui::buffer::Buffer;
 
-use crate::ui::model::{
-    pieceboard::PieceBoard,
-    entry::Entry
-};
+use crate::ui::model::entry::Entry;
+use crate::board::simple::PieceBoard;
 
 
 #[derive(Debug, Default)]

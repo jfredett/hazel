@@ -7,7 +7,7 @@ use super::fen::FEN;
 use super::game_section::GameSectionLayout;
 use super::placeholder::Placeholder;
 
-use crate::ui::model::pieceboard::PieceBoard;
+use crate::board::simple::PieceBoard;
 
 lazy_static! {
     static ref LAYOUT : Layout = Layout::default()

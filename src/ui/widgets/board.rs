@@ -1,9 +1,9 @@
 #![allow(unused_imports, dead_code)]
 
 use ratatui::prelude::*;
-use crate::{constants, ui::model::pieceboard::PieceBoard};
-use crate::ui::model::occupant::Occupant;
-use crate::constants::Piece;
+use crate::board::simple::PieceBoard;
+use crate::board::Query;
+use crate::types::{self, Occupant, Piece};
 
 use ratatui::widgets::{Table, Row};
 
@@ -93,7 +93,7 @@ impl Widget for &Board<'_> {
         for i in 0..8 {
             for j in 0..8 {
                 let cell = buf.get_mut(area.x + 3*i + 1, area.y + 2*j);
-                match self.state.get((7 - j).into(), i.into()) {
+                match self.state.get(((7 - j) * 8 + i).into()) {
                     Occupant::Occupied(piece, color) => {
                         let symbol = match piece {
                             Piece::Rook => { ROOK },
@@ -106,10 +106,10 @@ impl Widget for &Board<'_> {
                         cell.set_symbol(symbol);
 
                         match (cell.bg, color) {
-                            (WHITE_SQUARE, constants::Color::BLACK) => cell.fg = BLACK_PIECE_WHITE_SQUARE,
-                            (WHITE_SQUARE, constants::Color::WHITE) => cell.fg = WHITE_PIECE_WHITE_SQUARE, 
-                            (BLACK_SQUARE, constants::Color::BLACK) => cell.fg = BLACK_PIECE_BLACK_SQUARE,
-                            (BLACK_SQUARE, constants::Color::WHITE) => cell.fg = WHITE_PIECE_BLACK_SQUARE,
+                            (WHITE_SQUARE, types::Color::BLACK) => cell.fg = BLACK_PIECE_WHITE_SQUARE,
+                            (WHITE_SQUARE, types::Color::WHITE) => cell.fg = WHITE_PIECE_WHITE_SQUARE, 
+                            (BLACK_SQUARE, types::Color::BLACK) => cell.fg = BLACK_PIECE_BLACK_SQUARE,
+                            (BLACK_SQUARE, types::Color::WHITE) => cell.fg = WHITE_PIECE_BLACK_SQUARE,
                             _ => {}
                         }
 

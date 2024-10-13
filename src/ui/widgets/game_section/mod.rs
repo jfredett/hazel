@@ -7,7 +7,7 @@ use ratatui::prelude::*;
 use board_section::BoardSection;
 use info_section::InfoSection;
 
-use crate::ui::model::pieceboard::PieceBoard;
+use crate::board::simple::PieceBoard;
 
 lazy_static! {
     static ref LAYOUT : Layout = Layout::default()

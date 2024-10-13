@@ -1,10 +1,11 @@
 #![allow(dead_code)]
 
-use crate::driver::stockfish::Stockfish;
-use crate::ui::model::pieceboard::PieceBoard;
-use crate::driver::Driver;
-use crate::uci::UCIMessage;
+use crate::board::simple::PieceBoard;
 use crate::engine::Engine;
+use crate::engine::driver::Driver;
+use crate::engine::driver::stockfish::Stockfish;
+use crate::engine::uci::UCIMessage;
+
 
 use std::fmt::{Debug, Formatter};
 
