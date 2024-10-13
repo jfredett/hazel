@@ -18,7 +18,7 @@ lazy_static! {
                 out[idx] = RANK_MASKS[rank] | FILE_MASKS[file];
                 out[idx] &= mask;
                 out[idx] &= !*CORNERS;
-                out[idx] &= !Bitboard::from(1 << idx);
+                out[idx] &= !Bitboard::from_index(idx);
             }
         }
         out
@@ -30,7 +30,7 @@ lazy_static! {
         for rank in 0..8 {
             for file in 0..8 {
                 let idx = rank * 8 + file;
-                let bishop = Bitboard::from(1 << idx);
+                let bishop = Bitboard::from_index(idx);
                 let mut attacks = bishop;
                 for d in [Direction::NW, Direction::NE, Direction::SW, Direction::SE] {
                     let mut bb = bishop;
@@ -49,30 +49,28 @@ lazy_static! {
 #[cfg(test)]
 mod test {
     use crate::bitboard;
+    use crate::types::PEXTBoard;
+    use crate::notation::*;
 
     use super::*;
 
     mod bishops {
-
-        use crate::types::PEXTBoard;
-
         use super::*;
 
         #[test]
         fn nominal_bishop_attacks_calculate_correctly() {
             // stick a bishop on d4, it should be on the a1-h8 diag and the a8-h1 diag
             let expected: Bitboard = (*A1_H8_DIAG | *A7_G1_DIAG) & !*EDGES & !bitboard!("d4");
-            // d4 is 0o33
-            assert_eq!(NOMINAL_BISHOP_ATTACKS[0o33], expected);
+            assert_eq!(NOMINAL_BISHOP_ATTACKS[D4.index()], expected);
         }
 
         #[test]
         fn nominal_bishop_attacks_calculate_correctly_when_on_edge() {
             // stick a bishop on d4, it should be on the a1-h8 diag and the a8-h1 diag
             let expected: Bitboard = (*A1_H8_DIAG) & !*EDGES & !bitboard!("a1");
-            assert_eq!(NOMINAL_BISHOP_ATTACKS[0o00], expected);
-            assert!(!NOMINAL_BISHOP_ATTACKS[0o00].is_index_set(0o00));
-            assert!(!NOMINAL_BISHOP_ATTACKS[0o00].is_index_set(0o07));
+            assert_eq!(NOMINAL_BISHOP_ATTACKS[A1.index()], expected);
+            assert!(!NOMINAL_BISHOP_ATTACKS[A1.index()].is_index_set(A1.index()));
+            assert!(!NOMINAL_BISHOP_ATTACKS[A1.index()].is_index_set(A8.index()));
         }
     }
 
@@ -84,43 +82,21 @@ mod test {
             // stick a rook on d4, it should see...
             let expected: Bitboard = (*D_FILE | *RANK_4) & !*EDGES & !bitboard!("d4");
             // d4 is 0o33
-            assert_eq!(NOMINAL_ROOK_ATTACKS[0o33], expected);
-            assert!(!NOMINAL_ROOK_ATTACKS[0o33].is_index_set(0o37));
-            assert!(!NOMINAL_ROOK_ATTACKS[0o33].is_index_set(0o73));
-            assert!(!NOMINAL_ROOK_ATTACKS[0o33].is_index_set(0o30));
-            assert!(!NOMINAL_ROOK_ATTACKS[0o33].is_index_set(0o03));
+            assert_eq!(NOMINAL_ROOK_ATTACKS[D4.index()], expected);
         }
 
         #[test]
         fn nominal_rook_attacks_calculate_correctly_on_corner_of_board() {
             // stick a rook on d4, it should see...
             let expected: Bitboard = (*A_FILE | *RANK_1) & !*CORNERS & !bitboard!("a1");
-            assert_eq!(NOMINAL_ROOK_ATTACKS[0o00], expected);
-            assert!(!NOMINAL_ROOK_ATTACKS[0o00].is_index_set(0o00));
-            assert!(!NOMINAL_ROOK_ATTACKS[0o00].is_index_set(0o07));
-            assert!(!NOMINAL_ROOK_ATTACKS[0o00].is_index_set(0o70));
-
-            assert!(NOMINAL_ROOK_ATTACKS[0o00].is_index_set(0o01));
-            assert!(NOMINAL_ROOK_ATTACKS[0o00].is_index_set(0o02));
-            assert!(NOMINAL_ROOK_ATTACKS[0o00].is_index_set(0o03));
-            assert!(NOMINAL_ROOK_ATTACKS[0o00].is_index_set(0o04));
-            assert!(NOMINAL_ROOK_ATTACKS[0o00].is_index_set(0o05));
-            assert!(NOMINAL_ROOK_ATTACKS[0o00].is_index_set(0o06));
+            assert_eq!(NOMINAL_ROOK_ATTACKS[A1.index()], expected);
         }
 
         #[test]
         fn nominal_rook_attacks_calculate_correctly_on_first_rank_noncorner() {
             // stick a rook on d4, it should see...
             let expected: Bitboard = (*D_FILE | *RANK_1) & !*CORNERS & !*RANK_8 & !bitboard!("d1");
-            assert_eq!(NOMINAL_ROOK_ATTACKS[0o03], expected);
-
-            assert!(!NOMINAL_ROOK_ATTACKS[0o03].is_index_set(0o00));
-            assert!(NOMINAL_ROOK_ATTACKS[0o03].is_index_set(0o01));
-            assert!(NOMINAL_ROOK_ATTACKS[0o03].is_index_set(0o02));
-            assert!(NOMINAL_ROOK_ATTACKS[0o03].is_index_set(0o04));
-            assert!(NOMINAL_ROOK_ATTACKS[0o03].is_index_set(0o05));
-            assert!(NOMINAL_ROOK_ATTACKS[0o03].is_index_set(0o06));
-            assert!(!NOMINAL_ROOK_ATTACKS[0o03].is_index_set(0o07));
+            assert_eq!(NOMINAL_ROOK_ATTACKS[D1.index()], expected);
         }
     }
 }

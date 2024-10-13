@@ -236,7 +236,7 @@ mod tests {
         assert!(ply.meta.en_passant().is_some());
         assert_eq!(
             ply.meta.en_passant().unwrap(),
-            Bitboard::from_index(NOTATION_TO_INDEX("c6") as u8)
+            Bitboard::from("c6")
         );
 
         ply.make_by_notation("h3", "h4", MoveType::QUIET).unwrap();

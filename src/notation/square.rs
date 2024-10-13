@@ -1,3 +1,8 @@
+use std::fmt::Display;
+
+use crate::{notation::SquareNotation, types::Color};
+
+
 /// Represents a single square by it's index rooted at a1 = 0, h8 = 63
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Square(usize);
@@ -9,6 +14,50 @@ impl Square {
 
     pub const fn index(&self) -> usize {
         self.0
+    }
+
+    pub const fn file(&self) -> usize {
+        self.0 % 8
+    }
+
+    pub const fn rank(&self) -> usize {
+        self.0 / 8
+    }
+
+    pub const fn coords(&self) -> (usize, usize) {
+        (self.file(), self.rank())
+    }
+
+    pub const fn backrank_for(&self, color: Color) -> bool {
+        match color {
+            Color::WHITE => self.rank() == 0,
+            Color::BLACK => self.rank() == 7,
+        }
+    }
+
+    pub const fn backrank(&self) -> bool {
+        self.rank() == 0 || self.rank() == 7
+    }
+}
+
+impl Display for Square {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let (file, rank) = self.coords();
+        write!(f, "{}{}", (b'a' + file as u8) as char, (b'1' + rank as u8) as char)
+    }
+}
+
+impl SquareNotation for Square { }
+
+impl From<(usize, usize)> for Square {
+    fn from(coords: (usize, usize)) -> Self {
+        Self(coords.1 * 8 + coords.0)
+    }
+}
+
+impl From<(u16, u16)> for Square {
+    fn from(coords: (u16, u16)) -> Self {
+        Self(coords.1 as usize * 8 + coords.0 as usize)
     }
 }
 

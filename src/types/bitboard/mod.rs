@@ -56,9 +56,6 @@ mod iterator;
 mod shifts;
 mod util;
 
-use crate::constants::conversion_tables::*;
-
-
 impl Bitboard {
     /// True if the bitboard has no set bits.
     ///

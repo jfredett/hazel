@@ -78,7 +78,7 @@ pub fn slow_rook_attacks(rook_pos: Bitboard, occupancy: Bitboard) -> Bitboard {
 }
 
 pub fn attacks_for(piece: Piece, sq: usize, blocks: Bitboard) -> Bitboard {
-    let pos = Bitboard::from_index(sq as u8);
+    let pos = Bitboard::from_index(sq);
     match piece {
         Piece::Rook => ROOK_PEXTBOARD._attacks_for(Piece::Rook, pos, blocks),
         Piece::Bishop => BISHOP_PEXTBOARD._attacks_for(Piece::Bishop, pos, blocks),
@@ -175,15 +175,12 @@ impl<const SIZE: usize> PEXTBoard<SIZE> {
         }
     }
 
-    fn calculate_block_and_attack_board_for<F>(
-        sq: usize,
-        nominal_attacks: Bitboard,
-        attack_fn: F,
-    ) -> Vec<(Bitboard, Bitboard)>
+    // TODO: sq -> Square
+    fn calculate_block_and_attack_board_for<F>( sq: usize, nominal_attacks: Bitboard, attack_fn: F) -> Vec<(Bitboard, Bitboard)>
     where
         F: Fn(Bitboard, Bitboard) -> Bitboard,
     {
-        let pos = Bitboard::from(1 << sq);
+        let pos = Bitboard::from_index(sq);
         let blocker_indexes = nominal_attacks.all_set_indices();
         let mask_count = blocker_indexes.len();
         let mut out = vec![];
@@ -239,7 +236,7 @@ mod tests {
             sq_in: u64,
             blocks_in: Bitboard,
         ) -> bool {
-            let pos = Bitboard::from(1 << (sq_in % 64));
+            let pos = Bitboard::from_index((sq_in % 64) as usize);
             // make sure we aren't claiming the rook's square is already occupied
             let blocks = blocks_in & !pos;
 
@@ -298,7 +295,7 @@ mod tests {
             sq_in: u64,
             blocks_in: Bitboard,
         ) -> bool {
-            let pos = Bitboard::from(1 << (sq_in % 64));
+            let pos = Bitboard::from_index((sq_in % 64) as usize);
             // make sure we aren't claiming the bishop's square is already occupied
             let blocks = blocks_in & !pos;
 

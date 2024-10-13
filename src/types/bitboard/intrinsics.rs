@@ -65,7 +65,7 @@ mod tests {
 
         #[quickcheck]
         fn first_index_calculated_index_correctly(bb_in: u64) -> bool {
-            let bb = Bitboard::from(1 << (bb_in % 64));
+            let bb = Bitboard::from_index((bb_in % 64) as usize);
             (bb_in % 64) as usize == bb.first_index()
         }
 

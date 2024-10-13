@@ -71,14 +71,14 @@ mod test {
 
     #[test]
     fn to_bitboard() {
-        assert_eq!(File::A.to_bitboard(), Bitboard::from(0x0101010101010101));
-        assert_eq!(File::B.to_bitboard(), Bitboard::from(0x0202020202020202));
-        assert_eq!(File::C.to_bitboard(), Bitboard::from(0x0404040404040404));
-        assert_eq!(File::D.to_bitboard(), Bitboard::from(0x0808080808080808));
-        assert_eq!(File::E.to_bitboard(), Bitboard::from(0x1010101010101010));
-        assert_eq!(File::F.to_bitboard(), Bitboard::from(0x2020202020202020));
-        assert_eq!(File::G.to_bitboard(), Bitboard::from(0x4040404040404040));
-        assert_eq!(File::H.to_bitboard(), Bitboard::from(0x8080808080808080));
+        assert_eq!(File::A.to_bitboard(), Bitboard::from(0x0101010101010101u64));
+        assert_eq!(File::B.to_bitboard(), Bitboard::from(0x0202020202020202u64));
+        assert_eq!(File::C.to_bitboard(), Bitboard::from(0x0404040404040404u64));
+        assert_eq!(File::D.to_bitboard(), Bitboard::from(0x0808080808080808u64));
+        assert_eq!(File::E.to_bitboard(), Bitboard::from(0x1010101010101010u64));
+        assert_eq!(File::F.to_bitboard(), Bitboard::from(0x2020202020202020u64));
+        assert_eq!(File::G.to_bitboard(), Bitboard::from(0x4040404040404040u64));
+        assert_eq!(File::H.to_bitboard(), Bitboard::from(0x8080808080808080u64));
     }
 
     #[test]

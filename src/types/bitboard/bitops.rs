@@ -2,6 +2,7 @@ use super::*;
 use std::ops::{
     BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Mul, Not, Shl, Shr,
 };
+use crate::notation::*;
 
 /// Implements the various bit-ops for Bitboards
 macro_rules! binop_trait {
@@ -287,19 +288,18 @@ mod tests {
 
         #[test]
         fn shl() {
-            let b = Bitboard::from(0b1);
-            let expected = Bitboard::from(0b10);
+            let b = Bitboard::from(A1);
+            let expected = Bitboard::from(A2);
 
             assert_eq!(b << 1, expected);
         }
 
         #[test]
         fn shr() {
-            let b = Bitboard::from(0b10);
-            let expected = Bitboard::from(0b1);
+            let b = Bitboard::from(A2);
+            let expected = Bitboard::from(A1);
 
             assert_eq!(b >> 1, expected);
         }
-
     }
 }

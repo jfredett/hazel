@@ -47,62 +47,62 @@ pub const DIRECTIONS: [Direction; 8] = [
 mod tests {
     use super::*;
     use crate::types::Bitboard;
-    use crate::constants::NOTATION_TO_INDEX;
+    use crate::notation::*;
 
     #[test]
     fn shift_north() {
-        let mut b = NOTATION_TO_INDEX("e4");
+        let mut b = E4.index();
         b = Direction::N.index_shift(b);
-        assert_eq!(b, NOTATION_TO_INDEX("e5"));
+        assert_eq!(b, E5.index());
     }
 
     #[test]
     fn shift_north_east() {
-        let mut b = NOTATION_TO_INDEX("e4");
+        let mut b = E4.index();
         b = Direction::NE.index_shift(b);
-        assert_eq!(b, NOTATION_TO_INDEX("f5"));
+        assert_eq!(b, F5.index());
     }
 
     #[test]
     fn shift_east() {
-        let mut b = NOTATION_TO_INDEX("e4");
+        let mut b = E4.index();
         b = Direction::E.index_shift(b);
-        assert_eq!(b, NOTATION_TO_INDEX("f4"));
+        assert_eq!(b, F4.index());
     }
 
     #[test]
     fn shift_south_east() {
-        let mut b = NOTATION_TO_INDEX("e4");
+        let mut b = E4.index();
         b = Direction::SE.index_shift(b);
-        assert_eq!(b, NOTATION_TO_INDEX("f3"));
+        assert_eq!(b, F3.index());
     }
 
     #[test]
     fn shift_south() {
-        let mut b = NOTATION_TO_INDEX("e4");
+        let mut b = E4.index();
         b = Direction::S.index_shift(b);
-        assert_eq!(b, NOTATION_TO_INDEX("e3"));
+        assert_eq!(b, E3.index());
     }
 
     #[test]
     fn shift_south_west() {
-        let mut b = NOTATION_TO_INDEX("e4");
+        let mut b = E4.index();
         b = Direction::SW.index_shift(b);
-        assert_eq!(b, NOTATION_TO_INDEX("d3"));
+        assert_eq!(b, D3.index());
     }
 
     #[test]
     fn shift_west() {
-        let mut b = NOTATION_TO_INDEX("e4");
+        let mut b = E4.index();
         b = Direction::W.index_shift(b);
-        assert_eq!(b, NOTATION_TO_INDEX("d4"));
+        assert_eq!(b, D4.index());
     }
 
     #[test]
     fn shift_north_west() {
-        let mut b = NOTATION_TO_INDEX("e4");
+        let mut b = E4.index();
         b = Direction::NW.index_shift(b);
-        assert_eq!(b, NOTATION_TO_INDEX("d5"));
+        assert_eq!(b, D5.index());
     }
 
     #[test]
@@ -110,7 +110,6 @@ mod tests {
         let mut b = Bitboard::empty();
         b.set_by_notation("d4"); // Put a piece on d4.
         assert!(b.is_notation_set("d4")); // Put a piece on d4.
-
         let bb_after_shift = b.shift_by(Direction::N, 2);
 
         assert!(bb_after_shift.is_notation_set("d6"));

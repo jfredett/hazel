@@ -1,6 +1,7 @@
 use crate::board::Alteration;
 use crate::types::{Color, Occupant, Piece};
 use crate::game::interface::Chess;
+use crate::notation::*;
 
 
 // NOTE: There exists a metadata type in `Ply` which might be useful here. I intended it to be
@@ -84,6 +85,7 @@ impl FEN {
         let mut rank = 7;
         let mut file = 0;
         for c in fen.chars() {
+            let square = Square::from((file, rank));
             match c {
                 '/' => {
                     rank -= 1;
@@ -103,13 +105,13 @@ impl FEN {
                         'k' => Piece::King,
                         _ => {
                             // FIXME: This is ugly.
-                            alterations.push(Alteration::Place{ index: 8 * rank + file, occupant: Occupant::Empty } );
+                            alterations.push(Alteration::Place{ square, occupant: Occupant::Empty } );
                             file += 1;
                             continue;
                         },
                     };
                     let occupant = Occupant::Occupied(piece, color);
-                    alterations.push(Alteration::Place { index: 8 * rank + file, occupant } );
+                    alterations.push(Alteration::Place { square,  occupant } );
                     file += 1;
                 }
             }

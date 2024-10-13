@@ -3,6 +3,7 @@ use tracing::{instrument, debug};
 use crate::board::{alter::Alter, alteration::Alteration, query::Query};
 use crate::engine::Engine;
 use crate::coup::rep::Move;
+use crate::notation::*;
 use crate::types::{Piece, Occupant};
 use crate::engine::uci::UCIMessage;
 use crate::game::interface::Chess;
@@ -125,18 +126,17 @@ impl PieceBoard {
         Self { board }
     }
 
-    pub fn set(&mut self, index: usize, occupant: Occupant) {
-        let row = index / 8;
-        let col = index % 8;
-        self.board[row][col] = occupant;
+    pub fn set<S>(&mut self, square: S, occupant: Occupant) where S : SquareNotation {
+        let sq = square.into();
+
+        self.board[sq.rank()][sq.file()] = occupant;
     }
 }
 
 impl Query for PieceBoard {
-    fn get(&self, index: usize) -> Occupant {
-        let row = index / 8;
-        let col = index % 8;
-        self.board[row][col]
+    fn get<S>(&self, square: S) -> Occupant where S: SquareNotation {
+        let sq = square.into();
+        self.board[sq.rank()][sq.file()]
     }
 }
 
@@ -151,12 +151,12 @@ impl Alter for PieceBoard {
     #[instrument]
     fn alter_mut(&mut self, alter: Alteration) -> &mut Self {
         match alter {
-            Alteration::Place { index, occupant } => {
-                self.set(index, occupant);
+            Alteration::Place { square, occupant } => {
+                self.set(square, occupant);
             },
             #[allow(unused_variables)] // _occupant is does not work, syntax error.
-            Alteration::Remove { index, occupant } => {
-                self.set(index, Occupant::empty());
+            Alteration::Remove { square, occupant } => {
+                self.set(square, Occupant::empty());
             },
             _ => {}
         }
@@ -202,34 +202,35 @@ mod tests {
 
     mod get_set {
         use super::*;
+        use crate::notation::Square;
 
         #[test]
         pub fn gets_piece_correctly() {
             let fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
             let board = PieceBoard::from_fen(fen);
-            assert_eq!(board.get(0o00), Occupant::white(Piece::Rook));
-            assert_eq!(board.get(0o77), Occupant::black(Piece::Rook));
-            assert_eq!(board.get(0o33), Occupant::empty());
+            assert_eq!(board.get(A1), Occupant::white(Piece::Rook));
+            assert_eq!(board.get(H8), Occupant::black(Piece::Rook));
+            assert_eq!(board.get(D4), Occupant::empty());
         }
 
         #[test]
         pub fn sets_piece_correctly() {
             let mut board = PieceBoard::new();
-            board.set(0o00, Occupant::white(Piece::Rook));
-            board.set(0o77, Occupant::black(Piece::Rook));
-            assert_eq!(board.get(0o00), Occupant::white(Piece::Rook));
-            assert_eq!(board.get(0o77), Occupant::black(Piece::Rook));
+            board.set(A1, Occupant::white(Piece::Rook));
+            board.set(H8, Occupant::black(Piece::Rook));
+            assert_eq!(board.get(A1), Occupant::white(Piece::Rook));
+            assert_eq!(board.get(H8), Occupant::black(Piece::Rook));
         }
 
         #[test]
-        pub fn bottom_left_is_0o00() {
+        pub fn bottom_left_is_A1() {
             let mut board = PieceBoard::new();
-            board.set(0o00, Occupant::white(Piece::Rook));
+            board.set(A1, Occupant::white(Piece::Rook));
             let rep = format!("{:?}", board);
             let expected_rep = "\n........\n........\n........\n........\n........\n........\n........\nR.......\n";
 
             // The board should find the rook
-            assert_eq!(board.get(0o00), Occupant::white(Piece::Rook));
+            assert_eq!(board.get(A1), Occupant::white(Piece::Rook));
             // it should be in the bottom left of the representation
             assert_eq!(rep, expected_rep);
         }
@@ -286,14 +287,14 @@ mod tests {
         #[test]
         pub fn alters_board_correctly() {
             let mut board = PieceBoard::new();
-            assert_eq!(board.get(0o34), Occupant::empty());
+            assert_eq!(board.get(D5), Occupant::empty());
 
-            board.alter_mut(Alteration::place(0o34, Occupant::white_pawn()));
-            assert_eq!(board.get(0o34), Occupant::white_pawn());
+            board.alter_mut(Alteration::place(D5, Occupant::white_pawn()));
+            assert_eq!(board.get(D5), Occupant::white_pawn());
 
             // piece choice is irrelevant
-            board.alter_mut(Alteration::remove(0o34, Occupant::black_pawn()));
-            assert_eq!(board.get(0o34), Occupant::empty());
+            board.alter_mut(Alteration::remove(D5, Occupant::black_pawn()));
+            assert_eq!(board.get(D5), Occupant::empty());
         }
 
         #[test]
@@ -304,8 +305,8 @@ mod tests {
             board.set_startpos();
 
             // Note that it's a pawn being 'removed'.
-            board.alter_mut(Alteration::remove(0o40, Occupant::white_pawn()));
-            assert_eq!(board.get(0o40), Occupant::empty());
+            board.alter_mut(Alteration::remove(E1, Occupant::white_pawn()));
+            assert_eq!(board.get(E1), Occupant::empty());
         }
     }
 

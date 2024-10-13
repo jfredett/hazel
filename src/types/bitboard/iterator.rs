@@ -35,7 +35,7 @@ mod tests {
 
     #[test]
     fn bitboard_iterator() {
-        let b = Bitboard::from(0x0000000000000001);
+        let b = Bitboard::from(0x0000000000000001u64);
         let mut iter = b.into_iter();
         assert_eq!(iter.next(), Some(0));
         assert_eq!(iter.next(), None);

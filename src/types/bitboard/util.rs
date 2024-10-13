@@ -1,5 +1,7 @@
 use super::*;
 
+use crate::notation::*;
+
 impl Bitboard {
     /// Mostly for test convenience, this function may be used to convert typical
     /// algebraic notation ("a2", "b2", etc) to 1-indexed coordinates.
@@ -8,35 +10,23 @@ impl Bitboard {
     }
 
     #[inline(always)]
-    pub fn coords_to_notation(rank: usize, file: usize) -> &'static str {
-        let index = Bitboard::coords_to_index(rank, file);
-        INDEX_TO_NOTATION[index]
-    }
-
-    #[inline(always)]
     pub fn notation_to_index(notation: &str) -> usize {
-        NOTATION_TO_INDEX(notation)
+        Square::try_from(notation).unwrap().index()
     }
 
     #[inline(always)]
     pub fn coords_to_index(rank: usize, file: usize) -> usize {
-        COORDS_TO_INDEX[rank][file]
+        Square::from((rank, file)).index()
     }
 
     #[inline(always)]
     pub fn index_to_coords(idx: usize) -> (usize, usize) {
-        INDEX_TO_COORDS[idx]
+        Square::try_from(idx).unwrap().coords()
     }
 
     #[inline(always)]
     pub fn coords_to_offset(rank: usize, file: usize) -> usize {
-        1 << COORDS_TO_INDEX[rank][file]
-    }
-
-    /// _For Test Convenience Only_, not performant at all.
-    #[inline(always)]
-    pub fn index_to_notation(idx: usize) -> &'static str {
-        INDEX_TO_NOTATION[idx]
+        1 << Square::from((rank, file)).index()
     }
 }
 
@@ -54,17 +44,6 @@ mod test {
                 let (rank, file) = (rank_i % 8, file_i % 8);
 
                 Bitboard::coords_to_offset(rank, file) == 1 << Bitboard::coords_to_index(rank, file)
-            }
-        }
-
-        mod index_to_notation {
-            use super::*;
-
-            #[quickcheck]
-            fn index_to_notation_correctly(idx_i: usize) -> bool {
-                let idx = idx_i % 64;
-
-                Bitboard::index_to_notation(idx) == INDEX_TO_NOTATION[idx]
             }
         }
 
@@ -604,6 +583,7 @@ mod test {
         }
     }
 
+    /* FIXME: I think these are no longer needed, responsibility is now on the Square type
     mod inverses {
         use super::*;
 
@@ -621,4 +601,5 @@ mod test {
             Bitboard::notation_to_coords(Bitboard::coords_to_notation(rank, file)) == (rank, file)
         }
     }
+    */
 }

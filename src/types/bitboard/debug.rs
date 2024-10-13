@@ -1,5 +1,6 @@
 use super::*;
 use std::fmt::{Debug, Display, Formatter, Result};
+use crate::notation::*;
 
 impl Debug for Bitboard {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
@@ -48,7 +49,8 @@ mod test {
         ($method:ident, $notation:tt, $expected:tt) => {
             #[test]
             fn $method() {
-                let b = Bitboard::from_notation($notation);
+                let s = Square::try_from($notation).unwrap();
+                let b = Bitboard::from(s);
 
                 assert_eq!(format!("{:?}", b), $expected);
 

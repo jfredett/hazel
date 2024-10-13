@@ -4,6 +4,7 @@ use ratatui::prelude::*;
 use crate::board::simple::PieceBoard;
 use crate::board::Query;
 use crate::types::{self, Occupant, Piece};
+use crate::notation::*;
 
 use ratatui::widgets::{Table, Row};
 
@@ -93,7 +94,8 @@ impl Widget for &Board<'_> {
         for i in 0..8 {
             for j in 0..8 {
                 let cell = buf.get_mut(area.x + 3*i + 1, area.y + 2*j);
-                match self.state.get(((7 - j) * 8 + i).into()) {
+                let s = Square::from((i, j));
+                match self.state.get(s) {
                     Occupant::Occupied(piece, color) => {
                         let symbol = match piece {
                             Piece::Rook => { ROOK },

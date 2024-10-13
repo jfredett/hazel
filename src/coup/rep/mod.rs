@@ -13,7 +13,7 @@
 
 
 use crate::board::interface::{Alteration, Query};
-use crate::constants::{INDEX_TO_NOTATION, NOTATION_TO_INDEX};
+use crate::notation::*;
 use crate::types::{Color, Piece, Occupant};
 use crate::board::query::display_board;
 use crate::constants::File;
@@ -54,10 +54,11 @@ impl Move {
     /// Creates a move from a given source and target index,
     /// ```
     /// # use hazel::coup::rep::*;
+    /// # use hazel::notation::*;
     /// // the move from d2 -> d4
-    /// let m = Move::from(0o13, 0o33, MoveType::QUIET);
-    /// assert_eq!(m.source_idx(), 0o13);
-    /// assert_eq!(m.target_idx(), 0o33);
+    /// let m = Move::from(D2, D4, MoveType::QUIET);
+    /// assert_eq!(m.source_idx(), D2);
+    /// assert_eq!(m.target_idx(), D4);
     /// assert!(!m.is_promotion());
     /// assert!(m.move_metadata().is_quiet());
     /// ```
@@ -77,8 +78,8 @@ impl Move {
         if uci == "0000" {
             return Move::null();
         }
-        let source = NOTATION_TO_INDEX(&uci[0..2]) as u16;
-        let target = NOTATION_TO_INDEX(&uci[2..4]) as u16;
+        let source = Square::try_from(&uci[0..2]).unwrap().index() as u16;
+        let target = Square::try_from(&uci[2..4]).unwrap().index() as u16;
         // NOTE: Without context, we cannot determine, e.g., if `d2d4` is a double pawn move, or a
         // move of a rook, or a move of a bishop. It depends on the piece at d2, and we don't know
         // that. So instead we mark the move 'ambiguous' and defer disambiguation till later, when
@@ -95,26 +96,27 @@ impl Move {
     ///
     /// ```
     /// # use hazel::coup::rep::*;
+    /// # use hazel::notation::*;
     /// # use hazel::constants::*;
     /// # use hazel::types::Piece;
     /// # use either::Either;
     /// // the move from d2 -> d4
     /// let m = Move::from_notation("d2", "d4", MoveType::DOUBLE_PAWN);
     ///
-    /// assert_eq!(m.source_idx(), 0o13);
-    /// assert_eq!(m.target_idx(), 0o33);
+    /// assert_eq!(m.source_idx(), D2);
+    /// assert_eq!(m.target_idx(), D4);
     /// assert!(!m.is_promotion());
     ///
     /// let pm = Move::from_notation("d7", "d8", MoveType::PROMOTION_QUEEN);
-    /// assert_eq!(pm.source_idx(), 0o63);
-    /// assert_eq!(pm.target_idx(), 0o73);
+    /// assert_eq!(pm.source_idx(), D7);
+    /// assert_eq!(pm.target_idx(), D8);
     /// assert!(pm.is_promotion());
     /// assert_eq!(pm.promotion_piece(), Piece::Queen);
     /// ```
     pub fn from_notation(source: &str, target: &str, metadata: MoveType) -> Move {
         Move::from(
-            NOTATION_TO_INDEX(source) as u16,
-            NOTATION_TO_INDEX(target) as u16,
+            Square::try_from(source).unwrap().index() as u16,
+            Square::try_from(target).unwrap().index() as u16,
             metadata,
         )
     }
@@ -129,9 +131,8 @@ impl Move {
         // If we are not ambiguous, just return the move as is.
         if !self.is_ambiguous() { return Some(self.move_metadata()); }
 
-
-        let source = context.get(self.source_idx());
-        let target = context.get(self.target_idx());
+        let source = context.get(self.source());
+        let target = context.get(self.target());
 
         // If the source square is empty, we can't disambiguate
         if source.is_empty() { return None; }
@@ -139,6 +140,8 @@ impl Move {
         let capturing = !target.is_empty(); // If there is a piece on the target square, then we're capturing
 
         match source.piece().unwrap() {
+            // FIXME: ideally this'd look at the square notation and not the raw index, but that's
+            // a bigger refactor than is appropriate right now
             Piece::Pawn => {
                 // we might still be capturing en passant, we can check to see if we're moving
                 // diagonally. This can be done by checking the difference between the source
@@ -158,7 +161,7 @@ impl Move {
                         // So if the capture flag is unset, but we are doing a capture move, it
                         // must be EP_CAPTURE.
                         return Some(MoveType::EP_CAPTURE);
-                    } else if INDEX_TO_NOTATION[self.target_idx()].ends_with("8") || INDEX_TO_NOTATION[self.target_idx()].ends_with("1") {
+                    } else if self.target().backrank() {
                         // If we are moving to the backrank, and we are capturing, we must be capture-promoting
                         return Some(MoveType::PROMOTION_CAPTURE_QUEEN);
                     } else {
@@ -166,7 +169,7 @@ impl Move {
                         return Some(MoveType::CAPTURE);
                     }
                 } else {
-                    if INDEX_TO_NOTATION[self.target_idx()].ends_with("8") || INDEX_TO_NOTATION[self.target_idx()].ends_with("1") {
+                    if self.target().backrank() {
                         return Some(MoveType::PROMOTION_QUEEN);
                     } else {
                         // No capture, no double-pawn, no promotion, no en passant, just a quiet move.
@@ -174,6 +177,8 @@ impl Move {
                     }
                 }
             },
+            // FIXME: ideally this'd look at the square notation and not the raw index, but that's
+            // a bigger refactor than is appropriate right now
             Piece::King => {
                 // Castling is a king move in UCI, so it's a king move as far as I'm concerned.
                 match self.source_idx() {
@@ -203,8 +208,6 @@ impl Move {
         } else {
             return Some(MoveType::QUIET);
         }
-
-
     }
 
     #[instrument(skip(context))]
@@ -229,7 +232,7 @@ impl Move {
         let source_idx = self.source_idx();
         let target_idx = self.target_idx();
 
-        let source = context.get(source_idx);
+        let source = context.get(self.source());
 
         let source_file = File::from_index(source_idx).to_pgn();
 
@@ -246,7 +249,7 @@ impl Move {
             result.push_str("x");
         }
 
-        result.push_str(&INDEX_TO_NOTATION[target_idx]);
+        result.push_str(format!("{}", self.target()).to_owned().as_str());
 
         if metadata.is_promotion() {
             result.push_str("=");
@@ -269,13 +272,13 @@ impl Move {
     pub fn long_castle(color: Color) -> Move {
         match color {
             Color::WHITE => Move::from(
-                NOTATION_TO_INDEX("e1") as u16,
-                NOTATION_TO_INDEX("c1") as u16,
+                Square::try_from("e1").unwrap().index() as u16,
+                Square::try_from("c1").unwrap().index() as u16,
                 MoveType::LONG_CASTLE,
             ),
             Color::BLACK => Move::from(
-                NOTATION_TO_INDEX("e8") as u16,
-                NOTATION_TO_INDEX("c8") as u16,
+                Square::try_from("e8").unwrap().index() as u16,
+                Square::try_from("c8").unwrap().index() as u16,
                 MoveType::LONG_CASTLE,
             ),
         }
@@ -284,13 +287,13 @@ impl Move {
     pub fn short_castle(color: Color) -> Move {
         match color {
             Color::WHITE => Move::from(
-                NOTATION_TO_INDEX("e1") as u16,
-                NOTATION_TO_INDEX("g1") as u16,
+                Square::try_from("e1").unwrap().index() as u16,
+                Square::try_from("g1").unwrap().index() as u16,
                 MoveType::SHORT_CASTLE,
             ),
             Color::BLACK => Move::from(
-                NOTATION_TO_INDEX("e8") as u16,
-                NOTATION_TO_INDEX("g8") as u16,
+                Square::try_from("e8").unwrap().index() as u16,
+                Square::try_from("g8").unwrap().index() as u16,
                 MoveType::SHORT_CASTLE,
             ),
         }
@@ -298,32 +301,65 @@ impl Move {
 
     /// ```
     /// # use hazel::coup::rep::*;
+    /// # use hazel::notation::*;
     /// // the move from d2 -> d4
     ///
-    /// let m = Move::from(0o13, 0o33, MoveType::DOUBLE_PAWN);
-    /// assert_eq!(m.source_idx(), 0o13);
+    /// let m = Move::from(D2, D4, MoveType::DOUBLE_PAWN);
+    /// assert_eq!(m.source_idx(), D2.into());
     /// ```
     pub fn source_idx(&self) -> usize {
         ((self.0 & SOURCE_IDX_MASK) >> SOURCE_IDX_SHIFT).into()
     }
 
+    /// ```
+    /// # use hazel::coup::rep::*;
+    /// # use hazel::notation::*;
+    /// // the move from d2 -> d4
+    ///
+    /// let m = Move::from(D2, D4, MoveType::DOUBLE_PAWN);
+    /// assert_eq!(m.source(), D2);
+    pub fn source(&self) -> Square {
+        self.source_idx().try_into().unwrap()
+    }
+
     /// Gets the target index from the compact move representation
     /// ```
     /// # use hazel::coup::rep::*;
+    /// # use hazel::notation::*;
+    ///
     /// // the move from d2 -> d4
-    /// let m = Move::from(0o13, 0o33, MoveType::DOUBLE_PAWN);
-    /// assert_eq!(m.target_idx(), 0o33);
+    ///
+    /// let m = Move::from(D2, D4, MoveType::DOUBLE_PAWN);
+    ///
+    /// assert_eq!(m.target_idx(), D4.into());
     /// ```
     pub fn target_idx(&self) -> usize {
         ((self.0 & TARGET_IDX_MASK) >> TARGET_IDX_SHIFT).into()
     }
 
+    /// Gets the target index from the compact move representation
+    /// ```
+    /// # use hazel::coup::rep::*;
+    /// # use hazel::notation::*;
+    ///
+    /// // the move from d2 -> d4
+    ///
+    /// let m = Move::from(D2, D4, MoveType::DOUBLE_PAWN);
+    ///
+    /// assert_eq!(m.target(), D4);
+    /// ```
+    pub fn target(&self) -> Square {
+        self.target_idx().try_into().unwrap()
+    }
+
     /// True if the move indicates a promotion
     /// ```
     /// # use hazel::coup::rep::*;
+    /// # use hazel::notation::*;
+    ///
     /// // the move from d2 -> d4
-    /// let m1 = Move::from(0o13, 0o33, MoveType::DOUBLE_PAWN);
-    /// let m2 = Move::from(0o63, 0o73, MoveType::PROMOTION_QUEEN);
+    /// let m1 = Move::from(D2, D4, MoveType::DOUBLE_PAWN);
+    /// let m2 = Move::from(D7, D8, MoveType::PROMOTION_QUEEN);
     /// assert!(!m1.is_promotion());
     /// assert!(m2.is_promotion());
     /// ```
@@ -340,8 +376,8 @@ impl Move {
     /// # use hazel::constants::*;
     /// # use hazel::types::Piece;
     /// // the move from d2 -> d4
-    /// let m1 = Move::from(0o13, 0o33, MoveType::QUIET);
-    /// let m2 = Move::from(0o63, 0o73, MoveType::PROMOTION_QUEEN);
+    /// let m1 = Move::from(D2, D4, MoveType::DOUBLE_PAWN);
+    /// let m2 = Move::from(D7, D8, MoveType::PROMOTION_QUEEN);
     /// // assert!(m1.promotion_piece()); DON'T DO THIS! It's not a promotion so this is misinterpreting the union type.
     /// assert_eq!(m2.promotion_piece(), Piece::Queen);
     /// ```
@@ -354,7 +390,7 @@ impl Move {
     /// ```
     /// # use hazel::coup::rep::*;
     /// // the move from d2 -> d4
-    /// let m1 = Move::from(0o13, 0o33, MoveType::QUIET);
+    /// let m1 = Move::from(D2, D4, MoveType::QUIET);
     /// assert!(m1.move_metadata().is_quiet());
     /// ```
     pub fn move_metadata(&self) -> MoveType {
@@ -363,8 +399,8 @@ impl Move {
 
     #[instrument(skip(context))]
     pub fn compile<C>(&self, context: &C) -> Vec<Alteration> where C : Query {
-        let source = self.source_idx();
-        let target = self.target_idx();
+        let source = self.source();
+        let target = self.target();
 
         let source_occupant = context.get(source);
         let target_occupant = context.get(target);
@@ -380,44 +416,44 @@ impl Move {
             ],
             MoveType::SHORT_CASTLE => {
                 let color = source_occupant.color().unwrap();
-                let rook_source_idx = match color {
-                    Color::WHITE => NOTATION_TO_INDEX("h1"),
-                    Color::BLACK => NOTATION_TO_INDEX("h8"),
-                };
-                let rook_target_idx = match color {
-                    Color::WHITE => NOTATION_TO_INDEX("f1"),
-                    Color::BLACK => NOTATION_TO_INDEX("f8"),
-                };
+                let rook_source = match color {
+                    Color::WHITE => Square::try_from("h1"),
+                    Color::BLACK => Square::try_from("h8"),
+                }.unwrap();
+                let rook_target = match color {
+                    Color::WHITE => Square::try_from("f1"),
+                    Color::BLACK => Square::try_from("f8"),
+                }.unwrap();
                 return vec![
                     // remove the rook
-                    Alteration::remove(rook_source_idx, Occupant::rook(color)),
+                    Alteration::remove(rook_source.into(), Occupant::rook(color)),
                     // remove the king
                     Alteration::remove(source, source_occupant),
                     // place the king
                     Alteration::place(target, source_occupant),
                     // place the rook
-                    Alteration::place(rook_target_idx, Occupant::rook(color))
+                    Alteration::place(rook_target.into(), Occupant::rook(color))
                 ];
             },
             MoveType::LONG_CASTLE => { 
                 let color = source_occupant.color().unwrap();
-                let rook_source_idx = match color {
-                    Color::WHITE => NOTATION_TO_INDEX("a1"),
-                    Color::BLACK => NOTATION_TO_INDEX("a8"),
+                let rook_source = match color {
+                    Color::WHITE => A1,
+                    Color::BLACK => A8
                 };
-                let rook_target_idx = match color {
-                    Color::WHITE => NOTATION_TO_INDEX("d1"),
-                    Color::BLACK => NOTATION_TO_INDEX("d8"),
+                let rook_target = match color {
+                    Color::WHITE => D1,
+                    Color::BLACK => D8
                 };
                 return vec![
                     // remove the rook
-                    Alteration::remove(rook_source_idx, Occupant::rook(color)),
+                    Alteration::remove(rook_source, Occupant::rook(color)),
                     // remove the king
                     Alteration::remove(source, source_occupant),
                     // place the king
                     Alteration::place(target, source_occupant),
                     // place the rook
-                    Alteration::place(rook_target_idx, Occupant::rook(color))
+                    Alteration::place(rook_target, Occupant::rook(color))
                 ]
             },
             MoveType::CAPTURE => vec![
@@ -455,14 +491,15 @@ impl Move {
     }
 
 
+    // TODO: Produce a UCI object
     pub fn to_uci(&self) -> String {
-        let source = self.source_idx();
-        let target = self.target_idx();
+        let source = self.source();
+        let target = self.target();
         let metadata = self.move_metadata();
         if metadata.is_null() {
             return "0000".to_string();
         } else {
-            format!("{}{}{}", INDEX_TO_NOTATION[source], INDEX_TO_NOTATION[target], metadata.to_uci())
+            format!("{}{}{}", source, target, metadata.to_uci())
         }
     }
 
@@ -493,6 +530,8 @@ impl Move {
 
     /// This checks that the move is a two-square move forward (relative to color), and that it
     /// started on the correct row.
+    /// FIXME: Technically this could catch a two square move from, e.g., a rook or queen. So
+    /// there's a bug here. I think this only gets called if we already know the piece is a pawn.
     #[inline(always)]
     pub fn is_double_pawn_push_for(&self, color: Color) -> bool {
         match color {
@@ -503,21 +542,23 @@ impl Move {
 
     /// This checks that the move is a valid short castle for the color, assuming the piece at the
     /// source square is a king and that there are no castle blocks.
+    /// FIXME: Similar to above, this could catch a move from, e.g., e1g1 of a queen or rook.
     #[inline(always)]
     pub fn is_short_castling_move_for(&self, color: Color) -> bool {
         match color {
-            Color::WHITE => self.source_idx() == 0o04 && self.target_idx() == 0o06,
-            Color::BLACK => self.source_idx() == 0o74 && self.target_idx() == 0o76,
+            Color::WHITE => self.source() == E1 && self.target() == G1,
+            Color::BLACK => self.source() == E8 && self.target() == G8,
         }
     }
 
     /// This checks that the move is a valid long castle for the color, assuming the piece at the
     /// source square is a king and that there are no castle blocks.
     #[inline(always)]
+    /// FIXME: Similar to above, this could catch a move from, e.g., e1g1 of a queen or rook.
     pub fn is_long_castling_move_for(&self, color: Color) -> bool {
         match color {
-            Color::WHITE => self.source_idx() == 0o04 && self.target_idx() == 0o02,
-            Color::BLACK => self.source_idx() == 0o74 && self.target_idx() == 0o72,
+            Color::WHITE => self.source() == E1 && self.target() == C1,
+            Color::BLACK => self.source() == E8 && self.target() == C8,
         }
     }
 }

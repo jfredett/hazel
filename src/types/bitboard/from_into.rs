@@ -1,10 +1,6 @@
 use super::*;
 
-impl From<u64> for Bitboard {
-    fn from(u: u64) -> Self {
-        Bitboard::from(u)
-    }
-}
+use crate::notation::*;
 
 impl From<Bitboard> for u64 {
     fn from(val: Bitboard) -> Self {
@@ -26,6 +22,28 @@ impl From<Bitboard> for usize {
     }
 }
 
+impl<N : SquareNotation> From<N> for Bitboard {
+    fn from(n: N) -> Bitboard {
+        let s : Square = n.into();
+        Bitboard { 0: 1 << s.index() }
+    }
+}
+
+impl From<u64> for Bitboard {
+    fn from(b: u64) -> Bitboard {
+        Bitboard { 0: b }
+    }
+}
+
+// FIXME: This should probably be tryfrom, but I haven't decided to refactor to use Result yet.
+impl From<&str> for Bitboard {
+    fn from(n: &str) -> Bitboard {
+        let mut b = Bitboard::empty();
+        b.set_by_notation(n);
+        b
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -33,25 +51,25 @@ mod tests {
 
     #[test]
     fn bitboard_from_u64() {
-        let b = Bitboard::from(0x0000000000000001);
-        assert_eq!(b, Bitboard(0x0000000000000001));
+        let b = Bitboard::from(0x0000000000000001u64);
+        assert_eq!(b, Bitboard(0x0000000000000001u64));
     }
 
     #[test]
     fn u64_from_bitboard() {
-        let b = Bitboard(0x0000000000000001);
-        assert_eq!(u64::from(b), 0x0000000000000001);
+        let b = Bitboard(0x0000000000000001u64);
+        assert_eq!(u64::from(b), 0x0000000000000001u64);
     }
 
     #[test]
     fn bitboard_from_usize() {
-        let b = Bitboard::from(0x00000001);
+        let b = Bitboard::from(0x00000001usize);
         assert_eq!(b, Bitboard(0x0000000000000001));
     }
 
     #[test]
     fn usize_from_bitboard() {
-        let b = Bitboard(0x00000001);
-        assert_eq!(usize::from(b), 0x0000000000000001);
+        let b = Bitboard(0x00000001u64);
+        assert_eq!(usize::from(b), 0x0000000000000001usize);
     }
 }

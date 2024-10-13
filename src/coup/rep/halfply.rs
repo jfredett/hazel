@@ -1,5 +1,6 @@
 use crate::board::interface::Query;
 use crate::coup::rep::Move;
+use crate::notation::*;
 
 
 // This contains the source notation, the calculated Move object, and the board state prior to the
@@ -80,7 +81,6 @@ mod tests {
     mod to_pgn {
         use crate::types::{Occupant, Color};
         use crate::board::simple::PieceBoard;
-        use crate::constants::NOTATION_TO_INDEX;
         use crate::engine::Engine;
 
         use super::*;
@@ -116,7 +116,7 @@ mod tests {
         #[test]
         fn to_pgn_promotion() {
             let mut board = PieceBoard::default();
-            board.set(NOTATION_TO_INDEX("a7"), Occupant::white_pawn());
+            board.set(A7, Occupant::white_pawn());
             let half_ply = HalfPly::from("a7a8q");
             assert_eq!(half_ply.to_pgn(&board), "a8=Q");
         }
@@ -124,8 +124,8 @@ mod tests {
         #[test]
         fn to_pgn_capture_promotion() {
             let mut board = PieceBoard::default();
-            board.set(NOTATION_TO_INDEX("a7"), Occupant::white_pawn());
-            board.set(NOTATION_TO_INDEX("b8"), Occupant::black_queen());
+            board.set(A7, Occupant::white_pawn());
+            board.set(B8, Occupant::black_queen());
 
             dbg!(&board);
 

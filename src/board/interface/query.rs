@@ -1,11 +1,14 @@
-use crate::types::Occupant;
+
+use crate::{
+    notation::{Square, SquareNotation},
+    types::Occupant
+};
 
 /// implementing Query states that the implementor can provide the occupant of a square on the
 /// board using standard 'index' notation with the 0th square being a1 and the 63rd square being
 /// h8.
 pub trait Query {
-    // TODO: Eventually this should take a Notation object, index is just a notation
-    fn get(&self, index: usize) -> Occupant;
+    fn get<S>(&self, square: S) -> Occupant where S : SquareNotation;
 }
 
 /// For a variety of, I'm sure, very good reasons, I can't provide a generic `impl Debug for T where T: Query`.
@@ -18,7 +21,7 @@ pub fn display_board(board: &impl Query) -> String {
     for rank in (0..=7).rev() {
         f.push_str(&format!(" {}", rank + 1));
         for file in 0..=7 {
-            f.push_str(&format!(" {}", board.get(rank * 8 + file)));
+            f.push_str(&format!(" {}", board.get(Square::new(rank * 8 + file))));
         }
         f.push_str("\n");
     }
@@ -32,7 +35,7 @@ pub fn to_fen(board: &impl Query) -> String {
 
     for rank in (0..=7).rev() {
         for file in 0..=7 {
-            let occ = board.get(rank * 8 + file);
+            let occ = board.get(Square::new(rank * 8 + file));
             match occ {
                 Occupant::Empty => empty += 1,
                 _ => {

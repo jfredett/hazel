@@ -1,5 +1,4 @@
 use super::*;
-use crate::constants::INDEX_TO_NOTATION;
 use std::fmt::{Debug, Display, Formatter, Result};
 
 impl Debug for Move {
@@ -12,9 +11,9 @@ impl Debug for Move {
             write!(
                 f,
                 "{} ({:02}) -> {} ({:02}) ({}{}) [0o{:06o}]",
-                INDEX_TO_NOTATION[self.source_idx() as usize],
+                self.source(),
                 self.source_idx(),
-                INDEX_TO_NOTATION[self.target_idx() as usize],
+                self.target(),
                 self.target_idx(),
                 self.move_metadata().decode(),
                 if self.is_promotion() { ", P" } else { "" },

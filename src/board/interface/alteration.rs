@@ -1,19 +1,20 @@
 use crate::types::Occupant;
+use crate::notation::*;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Alteration {
-    Place { index: usize, occupant: Occupant },
-    Remove { index: usize, occupant: Occupant },
+    Place { square: Square, occupant: Occupant },
+    Remove { square: Square, occupant: Occupant },
     Done
 }
 
 impl Alteration {
-    pub fn place(index: usize, occupant: Occupant) -> Self {
-        Self::Place { index, occupant }
+    pub fn place(square: Square, occupant: Occupant) -> Self {
+        Self::Place { square, occupant }
     }
 
-    pub fn remove(index: usize, occupant: Occupant) -> Self {
-        Self::Remove { index, occupant }
+    pub fn remove(square: Square, occupant: Occupant) -> Self {
+        Self::Remove { square, occupant }
     }
 
     pub fn done() -> Self {
@@ -22,8 +23,8 @@ impl Alteration {
 
     pub fn inverse(&self) -> Self {
         match self {
-            Self::Place { index, occupant } => Self::Remove { index: *index, occupant: *occupant },
-            Self::Remove { index, occupant } => Self::Place { index: *index, occupant: *occupant },
+            Self::Place { square, occupant } => Self::Remove { square: *square, occupant: *occupant },
+            Self::Remove { square, occupant } => Self::Place { square: *square, occupant: *occupant },
             _ => self.clone()
         }
     }
@@ -35,14 +36,14 @@ mod tests {
 
     #[test]
     fn place() {
-        let alteration = Alteration::place(0, Occupant::black_king());
-        assert_eq!(alteration, Alteration::Place { index: 0, occupant: Occupant::black_king() });
+        let alteration = Alteration::place(A1, Occupant::black_king());
+        assert_eq!(alteration, Alteration::Place { square: A1, occupant: Occupant::black_king() });
     }
 
     #[test]
     fn remove() {
-        let alteration = Alteration::remove(0, Occupant::black_king());
-        assert_eq!(alteration, Alteration::Remove { index: 0, occupant: Occupant::black_king() });
+        let alteration = Alteration::remove(A1, Occupant::black_king());
+        assert_eq!(alteration, Alteration::Remove { square: A1, occupant: Occupant::black_king() });
     }
 
     #[test]
@@ -53,8 +54,8 @@ mod tests {
 
     #[test]
     fn inverse() {
-        let place = Alteration::place(0, Occupant::black_king());
-        let remove = Alteration::remove(0, Occupant::black_king());
+        let place = Alteration::place(A1, Occupant::black_king());
+        let remove = Alteration::remove(A1, Occupant::black_king());
         assert_eq!(place.inverse(), remove);
         assert_eq!(remove.inverse(), place);
     }

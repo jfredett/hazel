@@ -1,5 +1,7 @@
 use super::*;
 
+use crate::notation::*;
+
 /// Used for easily making bitboards from a list of set squares, use as follows:
 ///
 /// ```
@@ -15,11 +17,9 @@ macro_rules! bitboard {
         Bitboard::empty()
     );
     ($n:expr $(, $ns:expr)*) => (
-        Bitboard::from_notation($n) | bitboard!($($ns),*)
+        Bitboard::from($n) | bitboard!($($ns),*)
     );
 }
-
-
 
 impl Bitboard {
     /// Creates an empty bitboard
@@ -33,39 +33,6 @@ impl Bitboard {
         Bitboard { 0: 0 }
     }
 
-    /// Creates a bitboard from the given u64
-    /// ```
-    /// # use hazel::types::Bitboard;
-    /// let u = 0xC113_55B1_7B0A_2D55;
-    /// let b = Bitboard::from(u);
-    /// assert!(!b.is_empty());
-    /// ```
-    pub fn from(b: u64) -> Bitboard {
-        Bitboard { 0: b }
-    }
-
-    /// Creates a bitboard from the given index
-    /// ```
-    /// # use hazel::types::Bitboard;
-    /// let b = Bitboard::from_index(0);
-    /// assert!(b.is_set(0,0));
-    /// ```
-    pub fn from_index(idx: u8) -> Bitboard {
-        Bitboard { 0: 1 << idx }
-    }
-
-    /// Creates a bitboard from the given u64
-    /// ```
-    /// # use hazel::types::Bitboard;
-    /// let b = Bitboard::from_notation("e4");
-    /// assert!(b.is_notation_set("e4"));
-    /// ```
-    pub fn from_notation(n: &str) -> Bitboard {
-        let mut b = Bitboard::empty();
-        b.set_by_notation(n);
-        b
-    }
-
     /// Creates a bitboard with all bits set
     ///
     /// ```
@@ -75,5 +42,45 @@ impl Bitboard {
     /// ```
     pub fn full() -> Bitboard {
         !Bitboard::empty()
+    }
+
+    pub fn from_index(index: usize) -> Bitboard {
+        Bitboard { 0: 1 << index }
+    }
+}
+
+impl Default for Bitboard {
+    fn default() -> Self {
+        Bitboard::empty()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::notation::SquareNotation;
+
+    #[test]
+    fn empty() {
+        let b = Bitboard::empty();
+        assert_eq!(b.0, 0);
+    }
+
+    #[test]
+    fn from() {
+        let b = Bitboard::from(0x1234_5678_9ABC_DEF0u64);
+        assert_eq!(b.0, 0x1234_5678_9ABC_DEF0);
+    }
+
+    #[test]
+    fn full() {
+        let b = Bitboard::full();
+        assert_eq!(b.0, 0xFFFF_FFFF_FFFF_FFFF);
+    }
+
+    #[test]
+    fn from_square_notation() {
+        let b = Bitboard::from(Square::try_from("e4").unwrap());
+        assert_eq!(b.0, 1 << 36);
     }
 }

@@ -166,7 +166,6 @@ mod test {
 
     use crate::{
         assert_is_subset,
-        constants::{Piece, NOTATION_TO_INDEX},
         movement::Move,
     };
 
@@ -195,8 +194,8 @@ mod test {
 
         ml.add_capture(
             Piece::Bishop,
-            NOTATION_TO_INDEX("b4"),
-            NOTATION_TO_INDEX("d5"),
+            B4,
+            D5,
         );
 
         assert_eq!(ml.moves[Piece::Bishop as usize].len(), 1);
@@ -210,8 +209,8 @@ mod test {
 
         ml.add_move(
             Piece::Pawn,
-            NOTATION_TO_INDEX("b4"),
-            NOTATION_TO_INDEX("d5"),
+            B4,
+            D5,
         );
 
         assert_eq!(ml.moves[Piece::Pawn as usize].len(), 1);
