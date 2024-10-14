@@ -788,3 +788,53 @@ Next update will hopefully have all that done and I can document it here.
 
 Also on the list is going to be getting `mkdocs` set up for a wiki, and maybe a local docserver, if only to motivate me
 to document more.
+
+# 13-OCT-2024
+
+## 2322 - movegen-v2
+
+A great culling has occurred as I move things towards the unified `Square` approach to notation. I've more or less got
+everything lined up, and am just chasing out bugs from the various bits that I tweaked incorrectly to return to
+compiling. At time of writing, six failing tests remain.
+
+The approach I took seems alright, though it was tricky in spots. Essentially I have everything rely on an implementor
+of `SquareNotation`, which requires the implementor be capable of converting to a `Square`, which is a simple newtype
+around `usize` that constrains to `0..64` and provides some convenient const-time functions for working with it. The
+trait wraps and provides those functions for general use, eventually it would be nice to push as much to const-time
+evaluation as possible.
+
+This should make it easy to have alternative implementations I can experiment with if I find better represnetaitons
+later, and should smooth the cutover should the need arise.
+
+After getting `Square` setup throughout, I plan to do the same thing with `Move`, building my current, compact `Move`
+representation into the 'Default' `MoveNotation` implementation, similar to `SquareNotation` and `Square`. Also `FEN`
+needs to be factoryed in throughout. Here it will be much more likely that thr trait will be valuable, as there are lots
+of different move representation schemes, so by implementing the trait, I can set up a canonical pipeline to convert
+between different representations. Something like:
+
+```rust
+
+pub fn convert<M, N>(m: M) -> N where M: MoveNotation, N: MoveNotation {
+    let i = Move::from<m>;
+    N::from(i)
+}
+
+```
+
+I don't think it's possible to write the more general:
+
+```rust
+
+impl<M, N> From<N> for M where M: MoveNotation, N: MoveNotation {
+    fn from(n: N) -> M {
+        let i = Move::from(n);
+        M::from(i)
+    }
+}
+
+```
+
+because of orphan instances, but I think the first is good enough for now. I can always add more implementations later,
+and within hazel, it's most likely that I'll want to move to `Move` anyway.
+
+Lots of gruntwork to do, but I think the result will be worth it.
