@@ -11,4 +11,3 @@ pub trait Alter where Self: Sized {
         self
     }
 }
-

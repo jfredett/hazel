@@ -1,6 +1,6 @@
 
 use crate::{
-    notation::{Square, SquareNotation},
+    notation::{Square, SquareNotation, fen::FEN},
     types::Occupant
 };
 
@@ -18,10 +18,11 @@ pub fn display_board(board: &impl Query) -> String {
     let mut f = String::new();
 
     f.push_str("\n");
-    for rank in (0..=7).rev() {
-        f.push_str(&format!(" {}", rank + 1));
+    for rank in 0..=7 {
+        f.push_str(&format!(" {}", 7 - rank + 1));
         for file in 0..=7 {
-            f.push_str(&format!(" {}", board.get(Square::from((rank as usize, file as usize)))));
+            let s = Square::from((rank as usize, file as usize));
+            f.push_str(&format!(" {}", board.get(s)));
         }
         f.push_str("\n");
     }
@@ -29,13 +30,13 @@ pub fn display_board(board: &impl Query) -> String {
     f
 }
 
-pub fn to_fen(board: &impl Query) -> String {
+pub fn to_fen(board: &impl Query) -> FEN {
     let mut f = String::new();
     let mut empty = 0;
 
-    for rank in (0..=7).rev() {
+    for rank in 0..=7 {
         for file in 0..=7 {
-            let occ = board.get(Square::new(file * 8 + rank));
+            let occ = board.get(Square::new(rank * 8 + file));
             match occ {
                 Occupant::Empty => empty += 1,
                 _ => {
@@ -47,15 +48,17 @@ pub fn to_fen(board: &impl Query) -> String {
                 }
             }
         }
+
         if empty > 0 {
             f.push_str(&empty.to_string());
             empty = 0;
         }
-        if rank > 0 {
+
+        if rank < 7 {
             f.push_str("/");
         }
     }
-    f
+    FEN::new(&f)
 }
 
 #[cfg(test)]
@@ -94,17 +97,17 @@ mod tests {
         let actual = to_fen(&p);
         let expected = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 
-        assert_eq!(actual, expected);
+        assert_eq!(format!("{}", actual), expected);
     }
 
     #[test]
     fn to_fen_test_kiwipete() {
         let mut p = PieceBoard::default();
-        p.set_fen(POS2_KIWIPETE_FEN);
+        p.set_fen(&FEN::new(POS2_KIWIPETE_FEN));
 
         let actual = to_fen(&p);
         let expected = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R";
 
-        assert_eq!(actual, expected);
+        assert_eq!(format!("{}", actual), expected);
     }
 }

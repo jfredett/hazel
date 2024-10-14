@@ -11,6 +11,7 @@ use crate::engine::uci::UCIMessage;
 use crate::ui::model::entry::{Entry, stockfish};
 use crate::engine::Engine;
 use crate::board::simple::PieceBoard;
+use crate::notation::fen::FEN;
 
 use super::widgets::tile::Tile;
 
@@ -52,7 +53,9 @@ impl Hazel {
         debug!("setting startpos done");
 
         // s.entry.boardstate.set_startpos();
-        s.entry.boardstate = PieceBoard::from_fen("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR");
+        let mut b = PieceBoard::default();
+        b.set_fen(&FEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR"));
+        s.entry.boardstate = b;
 
         return s;
     }

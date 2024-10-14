@@ -1,5 +1,8 @@
 #![allow(dead_code)]
-use crate::board::Alteration;
+use std::fmt::Display;
+
+use crate::board::{Alter, Alteration};
+use crate::constants::EMPTY_POSITION_FEN;
 use crate::types::{Color, Occupant, Piece};
 use crate::game::interface::Chess;
 use crate::notation::*;
@@ -11,7 +14,7 @@ use crate::notation::*;
 // I need to start reorganizing things more aggressively, and pruning out the stuff I won't need
 // anymore. It's messy in here.
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FEN {
     original_fen: String,
     position: Vec<Alteration>,
@@ -24,12 +27,44 @@ pub struct FEN {
     fullmove_number: usize,
 }
 
-#[derive(Debug)]
+impl PartialEq for FEN {
+    fn eq(&self, other: &Self) -> bool {
+        self.original_fen == other.original_fen
+    }
+}
+impl Eq for FEN {}
+
+#[derive(Debug, Clone, Copy)]
 struct CastleRights {
     white_short: bool,
     white_long: bool,
     black_short: bool,
     black_long: bool,
+}
+
+impl Display for CastleRights {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut rights = String::new();
+        if self.white_short {
+            rights.push('K');
+        }
+        if self.white_long {
+            rights.push('Q');
+        }
+        if self.black_short {
+            rights.push('k');
+        }
+        if self.black_long {
+            rights.push('q');
+        }
+        write!(f, "{}", rights)
+    }
+}
+
+impl Default for FEN {
+    fn default() -> Self {
+        Self::new(EMPTY_POSITION_FEN)
+    }
 }
 
 impl FEN {
@@ -121,6 +156,32 @@ impl FEN {
     }
 }
 
+impl Display for FEN {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} {} {} {} {} {} {}",
+            self.original_fen,
+            self.side_to_move,
+            self.castling,
+            self.en_passant.unwrap_or(0),
+            self.halfmove_clock,
+            self.to_play,
+            self.fullmove_number,
+        )
+    }
+}
+
+
+pub fn setup<A : Alter + Default>(fen: &FEN) -> A {
+    let mut board = A::default();
+    setup_mut(fen, &mut board);
+    board
+}
+
+pub fn setup_mut<A : Alter>(fen: &FEN, board: &mut A) {
+    for alteration in &fen.position {
+        board.alter_mut(*alteration);
+    }
+}
 
 
 
@@ -168,13 +229,16 @@ mod tests {
 
     #[test]
     fn fen_startpos_setup() {
+        // FIXME:  This might be testing the same codepath now?
         let fen = FEN::new(START_POSITION_FEN);
         // This is the new implementation
         let board = fen.setup::<PieceBoard>();
 
         // this is the old. It can be deprecated once this is done, then this test will need to
         // change, probably.
-        let expected = PieceBoard::from_fen(START_POSITION_FEN);
+        let mut expected = PieceBoard::default();
+        expected.set_fen(&FEN::new(START_POSITION_FEN));
+
         assert_eq!(board, expected);
     }
 
@@ -186,7 +250,8 @@ mod tests {
 
         // this is the old. It can be deprecated once this is done, then this test will need to
         // change, probably.
-        let expected = PieceBoard::from_fen(POS2_KIWIPETE_FEN);
+        let mut expected = PieceBoard::default();
+        expected.set_fen(&FEN::new(POS2_KIWIPETE_FEN));
         assert_eq!(board, expected);
     }
 
@@ -196,6 +261,29 @@ mod tests {
         let board = fen.setup::<PieceBoard>();
         let expected = PieceBoard::default();
         assert_eq!(board, expected);
+    }
+
+    #[test]
+    fn fen_empty_board() {
+        let fen = FEN::new("8/8/8/8/8/8/8/8 w KQkq - 0 1");
+        assert_eq!(fen.original_fen, "8/8/8/8/8/8/8/8 w KQkq - 0 1");
+        // We test the position part below in the #setup test
+        assert_eq!(fen.side_to_move, Color::WHITE);
+        assert_eq!(fen.castling.white_short, true);
+        assert_eq!(fen.castling.white_long, true);
+        assert_eq!(fen.castling.black_short, true);
+        assert_eq!(fen.castling.black_long, true);
+        assert_eq!(fen.en_passant, None);
+        assert_eq!(fen.halfmove_clock, 0);
+        assert_eq!(fen.to_play, Color::WHITE);
+        assert_eq!(fen.fullmove_number, 1);
+    }
+    
+    #[test]
+    fn fen_display() {
+        let fen = FEN::new(START_POSITION_FEN);
+        let expected = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+        assert_eq!(format!("{}", fen), expected);
     }
 
 }

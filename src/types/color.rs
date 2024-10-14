@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use std::ops::Not;
 
 use crate::types::Bitboard;
@@ -10,6 +11,15 @@ use serde::{Deserialize, Serialize};
 pub enum Color {
     WHITE = 0,
     BLACK = 1,
+}
+
+impl Display for Color {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Color::WHITE => write!(f, "w"),
+            Color::BLACK => write!(f, "b"),
+        }
+    }
 }
 
 impl Color {

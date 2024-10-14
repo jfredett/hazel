@@ -33,7 +33,7 @@ impl Entry {
     fn new(engine: Box<dyn Engine<UCIMessage>>) -> Self {
         Self {
             config: HashMap::new(),
-            boardstate: PieceBoard::new(),
+            boardstate: PieceBoard::default(),
             engine
         }
     }

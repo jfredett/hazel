@@ -51,7 +51,7 @@ impl SquareNotation for Square { }
 
 impl From<(usize, usize)> for Square {
     fn from(coords: (usize, usize)) -> Self {
-        Self(coords.1 * 8 + coords.0)
+        Self(coords.0 * 8 + coords.1)
     }
 }
 

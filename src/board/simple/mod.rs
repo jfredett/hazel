@@ -5,126 +5,67 @@ use crate::constants::START_POSITION_FEN;
 use crate::engine::Engine;
 use crate::coup::rep::Move;
 use crate::notation::*;
+use crate::notation::fen::{self, setup_mut, FEN};
 use crate::types::{Piece, Occupant};
 use crate::engine::uci::UCIMessage;
 use crate::game::interface::Chess;
 
-#[derive(Default, Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct PieceBoard {
-    pub board: [[Occupant; 8]; 8],
+    pub board: [Occupant; 64],
+}
+
+impl Default for PieceBoard {
+    fn default() -> Self {
+        Self { board: [Occupant::empty(); 64] }
+    }
 }
 
 impl Debug for PieceBoard {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "")?;
-        for row in self.board.iter().rev() {
-            for occupant in row.iter() {
-                write!(f, "{}", occupant)?;
+        for i in 0..64 {
+            write!(f, "{}", self.board[i])?;
+            if i % 8 == 7 {
+                write!(f, "\n")?;
             }
-            write!(f, "\n")?;
         }
         Ok(())
     }
 }
 
-// FIXME: I think this renders the board upside down rn? indices are being read a 0oRF, with 0o0F
-// being the 'top' row as rendered, and 0o_7 being the 'rightmost' file
 impl PieceBoard {
-    pub fn new() -> Self {
-        Self {
-            board: [[Occupant::empty(); 8]; 8]
-        }
-    }
-
-    pub fn set_board(&mut self, board: [[Occupant; 8]; 8]) {
-        self.board = board;
-    }
-
     pub fn set_startpos(&mut self) {
-        self.set_fen(START_POSITION_FEN)
+        self.set_fen(&FEN::new(START_POSITION_FEN))
     }
 
-    pub fn set_fen(&mut self, fen: &str) {
-        self.set_board(Self::from_fen(fen).board);
-    }
-
-    /*
-    pub fn to_fen(&self) -> String {
-        let mut fen = String::new();
-        for row in self.board.iter().rev() {
-            let mut empty = 0;
-            for occupant in row.iter() {
-                match occupant {
-                    Occupant::Occupied(piece, color) => {
-                        if empty > 0 {
-                            fen.push_str(&empty.to_string());
-                            empty = 0;
-                        }
-                        fen.push(piece.to_fen(*color));
-                    },
-                    Occupant::Empty => {
-                        empty += 1;
-                    }
-                }
-            }
-            if empty > 0 {
-                fen.push_str(&empty.to_string());
-            }
-            fen.push('/');
-        }
-        fen.pop(); // remove the last '/'
-        fen
-    }
-    */
-
-    pub fn from_fen(fen: &str) -> Self {
-        let mut board = [[Occupant::empty(); 8]; 8];
-        let mut row = 7;
-        let mut col = 0;
-        for c in fen.chars() {
-            match c {
-                'r' => { board[row][col] = Occupant::black(Piece::Rook); col += 1; },
-                'n' => { board[row][col] = Occupant::black(Piece::Knight); col += 1; },
-                'b' => { board[row][col] = Occupant::black(Piece::Bishop); col += 1; },
-                'q' => { board[row][col] = Occupant::black(Piece::Queen); col += 1; },
-                'k' => { board[row][col] = Occupant::black(Piece::King); col += 1; },
-                'p' => { board[row][col] = Occupant::black(Piece::Pawn); col += 1; },
-
-                'R' => { board[row][col] = Occupant::white(Piece::Rook); col += 1; },
-                'N' => { board[row][col] = Occupant::white(Piece::Knight); col += 1; },
-                'B' => { board[row][col] = Occupant::white(Piece::Bishop); col += 1; },
-                'Q' => { board[row][col] = Occupant::white(Piece::Queen); col += 1; },
-                'K' => { board[row][col] = Occupant::white(Piece::King); col += 1; },
-                'P' => { board[row][col] = Occupant::white(Piece::Pawn); col += 1; },
-
-                '1' => { col += 1; },
-                '2' => { col += 2; },
-                '3' => { col += 3; },
-                '4' => { col += 4; },
-                '5' => { col += 5; },
-                '6' => { col += 6; },
-                '7' => { col += 7; },
-                '8' => { /* col += 8; NOTE: This results in nothing happening anyway, the `col` value for valid fen will always reset on the next char. Thus, don't do anything */ },
-
-                '/' => { row -= 1; col = 0; },
-                _ => { debug!("Unsupported FEN character: '{}'", c); break; }
-            }
-        }
-
-        Self { board }
+    pub fn set_fen(&mut self, fen: &FEN) {
+        fen::setup_mut(fen, self);
     }
 
     pub fn set<S>(&mut self, square: S, occupant: Occupant) where S : SquareNotation {
         let sq = square.into();
 
-        self.board[sq.rank()][sq.file()] = occupant;
+        self.board[sq.index()] = occupant;
+    }
+}
+
+impl From<FEN> for PieceBoard {
+    fn from(fen: FEN) -> Self {
+        fen::setup(&fen)
+    }
+}
+
+impl From<&FEN> for PieceBoard {
+    fn from(fen: &FEN) -> Self {
+        fen::setup(fen)
     }
 }
 
 impl Query for PieceBoard {
     fn get<S>(&self, square: S) -> Occupant where S: SquareNotation {
         let sq = square.into();
-        self.board[sq.rank()][sq.file()]
+        self.board[sq.index()]
     }
 }
 
@@ -169,7 +110,7 @@ impl Engine<UCIMessage> for PieceBoard {
                 if fen == "startpos" {
                     self.set_startpos();
                 } else {
-                    self.set_fen(&fen);
+                    self.set_fen(&FEN::new(&fen));
                 }
 
                 for m in moves {
@@ -194,26 +135,26 @@ mod tests {
 
         #[test]
         pub fn gets_piece_correctly() {
-            let fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
-            let board = PieceBoard::from_fen(fen);
-            assert_eq!(board.get(A1), Occupant::white(Piece::Rook));
-            assert_eq!(board.get(H8), Occupant::black(Piece::Rook));
+            let mut board = PieceBoard::default();
+            board.set_fen(&FEN::new(START_POSITION_FEN));
+            assert_eq!(board.get(A1), Occupant::white_rook());
+            assert_eq!(board.get(H8), Occupant::black_rook());
             assert_eq!(board.get(D4), Occupant::empty());
         }
 
         #[test]
         pub fn sets_piece_correctly() {
-            let mut board = PieceBoard::new();
-            board.set(A1, Occupant::white(Piece::Rook));
-            board.set(H8, Occupant::black(Piece::Rook));
-            assert_eq!(board.get(A1), Occupant::white(Piece::Rook));
-            assert_eq!(board.get(H8), Occupant::black(Piece::Rook));
+            let mut board = PieceBoard::default();
+            board.set(A1, Occupant::white_rook());
+            board.set(H8, Occupant::black_rook());
+            assert_eq!(board.get(A1), Occupant::white_rook());
+            assert_eq!(board.get(H8), Occupant::black_rook());
         }
 
         #[test]
         pub fn bottom_left_is_A1() {
-            let mut board = PieceBoard::new();
-            board.set(A1, Occupant::white(Piece::Rook));
+            let mut board = PieceBoard::default();
+            board.set(A1, Occupant::white_rook());
             let rep = format!("{:?}", board);
             let expected_rep = "\n........\n........\n........\n........\n........\n........\n........\nR.......\n";
 
@@ -230,32 +171,34 @@ mod tests {
 
         #[test]
         pub fn converts_start_position_correctly() {
-            let mut board = PieceBoard::new();
+            let mut board = PieceBoard::default();
             board.set_startpos();
             dbg!(&board);
             let fen = query::to_fen(&board);
-            assert_eq!(fen, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+            assert_eq!(fen, FEN::new(START_POSITION_FEN));
         }
 
         #[test]
         pub fn converts_empty_board_correctly() {
-            let board = PieceBoard::new();
+            let board = PieceBoard::default();
             let fen = query::to_fen(&board);
-            assert_eq!(fen, "8/8/8/8/8/8/8/8");
+            assert_eq!(fen, FEN::new("8/8/8/8/8/8/8/8"));
         }
 
         #[test]
         pub fn converts_fen_to_board_correctly() {
-            let fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
-            let board = PieceBoard::from_fen(fen);
+            let fen = FEN::new(START_POSITION_FEN);
+            let mut board = PieceBoard::default();
+            board.set_fen(&fen);
             let fen2 = query::to_fen(&board);
             assert_eq!(fen, fen2);
         }
 
         #[test]
         pub fn converts_each_offset_correctly() {
-            let fen = "p7/1p6/2p5/3p4/4p3/5p2/6p1/7p";
-            let board = PieceBoard::from_fen(fen);
+            let fen = FEN::new("p7/1p6/2p5/3p4/4p3/5p2/6p1/7p");
+            let mut board = PieceBoard::default();
+            board.set_fen(&fen);
             let fen2 = query::to_fen(&board);
             assert_eq!(fen, fen2);
         }
@@ -275,7 +218,7 @@ mod tests {
 
         #[test]
         pub fn alters_board_correctly() {
-            let mut board = PieceBoard::new();
+            let mut board = PieceBoard::default();
             assert_eq!(board.get(D5), Occupant::empty());
 
             board.alter_mut(Alteration::place(D5, Occupant::white_pawn()));
@@ -290,7 +233,7 @@ mod tests {
         pub fn piece_removed_does_not_matter() {
             // This is only used as metadata for unmoving later. It's generally not used in the
             // forward alteration.
-            let mut board = PieceBoard::new();
+            let mut board = PieceBoard::default();
             board.set_startpos();
 
             // Note that it's a pawn being 'removed'.
@@ -308,7 +251,7 @@ mod tests {
         #[traced_test]
         #[test]
         pub fn executes_position_correctly() {
-            let mut board = PieceBoard::new();
+            let mut board = PieceBoard::default();
             let moves = vec!["e2e4", "e7e5", "g1f3", "b8c6", "f1c4", "g8f6", "d2d3", "d7d6", "c1e3", "c8e6"];
             let message = UCIMessage::Position("startpos".to_string(), moves.iter().map(|s| s.to_string()).collect());
             dbg!(&message);
@@ -316,7 +259,7 @@ mod tests {
             board.exec(message);
             dbg!(board);
             let fen = query::to_fen(&board);
-            assert_eq!(fen, "r2qkb1r/ppp2ppp/2npbn2/4p3/2B1P3/3PBN2/PPP2PPP/RN1QK2R");
+            assert_eq!(fen, FEN::new("r2qkb1r/ppp2ppp/2npbn2/4p3/2B1P3/3PBN2/PPP2PPP/RN1QK2R"));
         }
     }
 }

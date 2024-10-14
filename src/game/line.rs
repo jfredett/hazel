@@ -6,19 +6,20 @@ use crate::constants::START_POSITION_FEN;
 use crate::coup::rep::HalfPly;
 use crate::game::interface::Chess;
 use crate::types::Color;
+use crate::notation::fen::FEN;
 
 /// A Line is a single sequence of moves starting from the provided initial position (via FEN, by
 /// default, the standard start position).
 #[derive(Clone, Debug)]
 pub struct Line {
-    initial_position: String, // TODO: I should probably have a FEN type.
+    initial_position: FEN,
     halfplies: Vec<HalfPly>,
 }
 
 impl Default for Line {
     fn default() -> Self {
         Line {
-            initial_position: START_POSITION_FEN.to_string(),
+            initial_position: FEN::new(START_POSITION_FEN),
             halfplies: Vec::new(),
         }
     }
@@ -53,7 +54,10 @@ impl Line {
     }
 
     fn current_position(&self) -> impl Chess {
-        let mut board = PieceBoard::from_fen(&self.initial_position);
+        let mut board = PieceBoard::default();
+
+        board.set_fen(&self.initial_position);
+
         for halfply in &self.halfplies {
             board = board.make(halfply.into());
         }
@@ -75,7 +79,8 @@ impl Line {
     fn to_pgn(&self) -> String {
         // PieceBoard is used to do the conversion to PGN since it's very simple, any `Chess` will
         // do.
-        let board = PieceBoard::from_fen(&self.initial_position);
+        let mut board = PieceBoard::default();
+        board.set_fen(&self.initial_position);
         self.to_pgn_with_context(&board)
     }
 
