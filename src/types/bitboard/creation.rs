@@ -7,6 +7,8 @@ use crate::notation::*;
 /// ```
 /// #[macro_use] extern crate hazel;
 /// use hazel::types::Bitboard;
+/// use hazel::notation::*;
+///
 /// let bb = bitboard!("d4", "c6");
 /// assert!(bb.is_set(D4));
 /// assert!(bb.is_set(C6));

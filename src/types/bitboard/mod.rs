@@ -64,9 +64,10 @@ impl Bitboard {
     ///
     /// ```
     /// # use hazel::types::Bitboard;
+    /// # use hazel::notation::*;
     /// let mut b = Bitboard::empty();
     /// assert!(b.is_empty());
-    /// b.set(1,1);
+    /// b.set(A1);
     /// assert!(!b.is_empty());
     /// ```
     pub fn is_empty(&self) -> bool {
@@ -77,9 +78,10 @@ impl Bitboard {
     ///
     /// ```
     /// # use hazel::types::Bitboard;
+    /// # use hazel::notation::*;
     /// let mut b = Bitboard::empty();
     /// assert!(b.is_empty());
-    /// b.set(1,1);
+    /// b.set(A1);
     /// assert!(b.is_nonempty());
     /// ```
     pub fn is_nonempty(&self) -> bool {
@@ -101,10 +103,11 @@ impl Bitboard {
     ///
     /// ```
     /// # use hazel::types::Bitboard;
+    /// # use hazel::notation::*;
     /// let mut b = Bitboard::empty();
-    /// assert!(!b.is_set(0,1));
-    /// b.set(0,1);
-    /// assert!(b.is_set(0,1));
+    /// assert!(!b.is_set(A1));
+    /// b.set(A1);
+    /// assert!(b.is_set(A1));
     /// ```
     #[inline]
     pub fn set<S : SquareNotation>(&mut self, square: S) {
@@ -134,12 +137,13 @@ impl Bitboard {
     ///
     /// ```
     /// # use hazel::types::Bitboard;
+    /// # use hazel::notation::*;
     /// let mut b = Bitboard::empty();
-    /// assert!(!b.is_set(0,1));
-    /// b.set(0,1);
-    /// assert!(b.is_set(0,1));
-    /// b.unset(0,1);
-    /// assert!(!b.is_set(0,1));
+    /// assert!(!b.is_set(A1));
+    /// b.set(A1);
+    /// assert!(b.is_set(A1));
+    /// b.unset(A1);
+    /// assert!(!b.is_set(A1));
     /// ```
     pub fn unset<S : SquareNotation>(&mut self, square: S) {
         self.0 &= !(1 << square.index());
@@ -154,12 +158,13 @@ impl Bitboard {
     /// unsets the bit at the given coordinates
     /// ```
     /// # use hazel::types::Bitboard;
+    /// # use hazel::notation::*;
     /// let mut b = Bitboard::empty();
-    /// assert!(!b.is_set(0,1));
-    /// b.flip(0,1);
-    /// assert!(b.is_set(0,1));
-    /// b.flip(0,1);
-    /// assert!(!b.is_set(0,1));
+    /// assert!(!b.is_set(A1));
+    /// b.flip(A1);
+    /// assert!(b.is_set(A1));
+    /// b.flip(A1);
+    /// assert!(!b.is_set(A1));
     /// ```
     pub fn flip<S : SquareNotation>(&mut self, square: S) {
         self.0 ^= 1 << square.index();
@@ -169,10 +174,11 @@ impl Bitboard {
     ///
     /// ```
     /// # use hazel::types::Bitboard;
+    /// # use hazel::notation::*;
     /// let mut b = Bitboard::empty();
-    /// b.set(1,1);
-    /// assert!(b.is_set(1,1));
-    /// assert!(!b.is_set(0,1));
+    /// b.set(A2);
+    /// assert!(b.is_set(A2));
+    /// assert!(!b.is_set(A1));
     /// ```
     #[inline]
     pub fn is_set<S : SquareNotation>(&self, square: S) -> bool {
@@ -183,11 +189,12 @@ impl Bitboard {
     ///
     /// ```
     /// # use hazel::types::Bitboard;
+    /// # use hazel::notation::*;
     /// let mut b = Bitboard::empty();
     /// assert_eq!(b.count(), 0);
-    /// b.set(A1)
-    /// b.set(B1)
-    /// b.set(C1)
+    /// b.set(A1);
+    /// b.set(B1);
+    /// b.set(C1);
     /// assert_eq!(b.count(), 3);
     /// ```
     pub fn count(&self) -> u32 {
