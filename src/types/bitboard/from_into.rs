@@ -39,7 +39,8 @@ impl From<u64> for Bitboard {
 impl From<&str> for Bitboard {
     fn from(n: &str) -> Bitboard {
         let mut b = Bitboard::empty();
-        b.set_by_notation(n);
+        let s = Square::try_from(n).unwrap();
+        b.set(s);
         b
     }
 }

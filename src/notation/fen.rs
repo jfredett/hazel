@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::board::Alteration;
 use crate::types::{Color, Occupant, Piece};
 use crate::game::interface::Chess;

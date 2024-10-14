@@ -69,8 +69,8 @@ mod test {
             // stick a bishop on d4, it should be on the a1-h8 diag and the a8-h1 diag
             let expected: Bitboard = (*A1_H8_DIAG) & !*EDGES & !bitboard!("a1");
             assert_eq!(NOMINAL_BISHOP_ATTACKS[A1.index()], expected);
-            assert!(!NOMINAL_BISHOP_ATTACKS[A1.index()].is_index_set(A1.index()));
-            assert!(!NOMINAL_BISHOP_ATTACKS[A1.index()].is_index_set(A8.index()));
+            assert!(!NOMINAL_BISHOP_ATTACKS[A1.index()].is_set(A1));
+            assert!(!NOMINAL_BISHOP_ATTACKS[A1.index()].is_set(A8));
         }
     }
 

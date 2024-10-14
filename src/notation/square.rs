@@ -12,37 +12,37 @@ impl Square {
         Self(index)
     }
 
-    pub const fn index(&self) -> usize {
+    pub(crate) const fn _index(&self) -> usize {
         self.0
     }
 
-    pub const fn file(&self) -> usize {
-        self.0 % 8
-    }
-
-    pub const fn rank(&self) -> usize {
+    pub(crate) const fn _file(&self) -> usize {
         self.0 / 8
     }
 
-    pub const fn coords(&self) -> (usize, usize) {
-        (self.file(), self.rank())
+    pub(crate) const fn _rank(&self) -> usize {
+        self.0 % 8
+    }
+
+    pub(crate) const fn coords(&self) -> (usize, usize) {
+        (self._file(), self._rank())
     }
 
     pub const fn backrank_for(&self, color: Color) -> bool {
         match color {
-            Color::WHITE => self.rank() == 0,
-            Color::BLACK => self.rank() == 7,
+            Color::WHITE => self._rank() == 0,
+            Color::BLACK => self._rank() == 7,
         }
     }
 
     pub const fn backrank(&self) -> bool {
-        self.rank() == 0 || self.rank() == 7
+        self._rank() == 0 || self._rank() == 7
     }
 }
 
 impl Display for Square {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let (file, rank) = self.coords();
+        let (rank, file) = self.coords();
         write!(f, "{}{}", (b'a' + file as u8) as char, (b'1' + rank as u8) as char)
     }
 }
@@ -253,5 +253,80 @@ mod tests {
     fn index_from_square() {
         assert_eq!(usize::from(A1), 0);
         assert_eq!(usize::from(H8), 63);
+    }
+
+    #[test]
+    fn square_displays_correctly() {
+        assert_eq!(format!("{}", A1), "a1");
+        assert_eq!(format!("{}", A2), "a2");
+        assert_eq!(format!("{}", A3), "a3");
+        assert_eq!(format!("{}", A4), "a4");
+        assert_eq!(format!("{}", A5), "a5");
+        assert_eq!(format!("{}", A6), "a6");
+        assert_eq!(format!("{}", A7), "a7");
+        assert_eq!(format!("{}", A8), "a8");
+
+        assert_eq!(format!("{}", B1), "b1");
+        assert_eq!(format!("{}", B2), "b2");
+        assert_eq!(format!("{}", B3), "b3");
+        assert_eq!(format!("{}", B4), "b4");
+        assert_eq!(format!("{}", B5), "b5");
+        assert_eq!(format!("{}", B6), "b6");
+        assert_eq!(format!("{}", B7), "b7");
+        assert_eq!(format!("{}", B8), "b8");
+
+        assert_eq!(format!("{}", C1), "c1");
+        assert_eq!(format!("{}", C2), "c2");
+        assert_eq!(format!("{}", C3), "c3");
+        assert_eq!(format!("{}", C4), "c4");
+        assert_eq!(format!("{}", C5), "c5");
+        assert_eq!(format!("{}", C6), "c6");
+        assert_eq!(format!("{}", C7), "c7");
+        assert_eq!(format!("{}", C8), "c8");
+
+        assert_eq!(format!("{}", D1), "d1");
+        assert_eq!(format!("{}", D2), "d2");
+        assert_eq!(format!("{}", D3), "d3");
+        assert_eq!(format!("{}", D4), "d4");
+        assert_eq!(format!("{}", D5), "d5");
+        assert_eq!(format!("{}", D6), "d6");
+        assert_eq!(format!("{}", D7), "d7");
+        assert_eq!(format!("{}", D8), "d8");
+
+        assert_eq!(format!("{}", E1), "e1");
+        assert_eq!(format!("{}", E2), "e2");
+        assert_eq!(format!("{}", E3), "e3");
+        assert_eq!(format!("{}", E4), "e4");
+        assert_eq!(format!("{}", E5), "e5");
+        assert_eq!(format!("{}", E6), "e6");
+        assert_eq!(format!("{}", E7), "e7");
+        assert_eq!(format!("{}", E8), "e8");
+
+        assert_eq!(format!("{}", F1), "f1");
+        assert_eq!(format!("{}", F2), "f2");
+        assert_eq!(format!("{}", F3), "f3");
+        assert_eq!(format!("{}", F4), "f4");
+        assert_eq!(format!("{}", F5), "f5");
+        assert_eq!(format!("{}", F6), "f6");
+        assert_eq!(format!("{}", F7), "f7");
+        assert_eq!(format!("{}", F8), "f8");
+
+        assert_eq!(format!("{}", G1), "g1");
+        assert_eq!(format!("{}", G2), "g2");
+        assert_eq!(format!("{}", G3), "g3");
+        assert_eq!(format!("{}", G4), "g4");
+        assert_eq!(format!("{}", G5), "g5");
+        assert_eq!(format!("{}", G6), "g6");
+        assert_eq!(format!("{}", G7), "g7");
+        assert_eq!(format!("{}", G8), "g8");
+
+        assert_eq!(format!("{}", H1), "h1");
+        assert_eq!(format!("{}", H2), "h2");
+        assert_eq!(format!("{}", H3), "h3");
+        assert_eq!(format!("{}", H4), "h4");
+        assert_eq!(format!("{}", H5), "h5");
+        assert_eq!(format!("{}", H6), "h6");
+        assert_eq!(format!("{}", H7), "h7");
+        assert_eq!(format!("{}", H8), "h8");
     }
 }

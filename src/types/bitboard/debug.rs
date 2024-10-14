@@ -8,7 +8,7 @@ impl Debug for Bitboard {
         for rank in (0..=7).rev() {
             write!(f, " {}", rank + 1)?;
             for file in 0..=7 {
-                if self.is_set(rank, file) {
+                if self.is_set(Square::from((rank as usize, file as usize))) {
                     write!(f, " *")?;
                 } else {
                     write!(f, " .")?;

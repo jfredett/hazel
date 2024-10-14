@@ -21,7 +21,7 @@ pub fn display_board(board: &impl Query) -> String {
     for rank in (0..=7).rev() {
         f.push_str(&format!(" {}", rank + 1));
         for file in 0..=7 {
-            f.push_str(&format!(" {}", board.get(Square::new(rank * 8 + file))));
+            f.push_str(&format!(" {}", board.get(Square::from((rank as usize, file as usize)))));
         }
         f.push_str("\n");
     }
@@ -35,7 +35,7 @@ pub fn to_fen(board: &impl Query) -> String {
 
     for rank in (0..=7).rev() {
         for file in 0..=7 {
-            let occ = board.get(Square::new(rank * 8 + file));
+            let occ = board.get(Square::new(file * 8 + rank));
             match occ {
                 Occupant::Empty => empty += 1,
                 _ => {
@@ -101,8 +101,6 @@ mod tests {
     fn to_fen_test_kiwipete() {
         let mut p = PieceBoard::default();
         p.set_fen(POS2_KIWIPETE_FEN);
-
-        println!("{}", display_board(&p));
 
         let actual = to_fen(&p);
         let expected = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R";

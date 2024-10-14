@@ -2,6 +2,7 @@ use crate::types::Bitboard;
 use crate::types::Direction;
 use crate::types::Piece;
 use crate::util::select_subset;
+use crate::notation::*;
 
 use nominal_attacks::*;
 
@@ -51,7 +52,8 @@ pub fn slow_attacks(pos: Bitboard, occupancy: Bitboard, dirs: [Direction; 4]) ->
             if try_move.is_empty() {
                 break 'next_dir;
             }
-            out.set_by_index(try_move.all_set_indices()[0]);
+            let mov = try_move.all_set_indices()[0];
+            out.set(Square::new(mov));
             if !(try_move & occupancy).is_empty() {
                 break 'next_dir;
             }
@@ -188,7 +190,7 @@ impl<const SIZE: usize> PEXTBoard<SIZE> {
         for i in 0..2u64.pow(mask_count as u32) {
             let mut occupancy_board = Bitboard::empty();
             for idx in select_subset(i, &blocker_indexes) {
-                occupancy_board.set_by_index(idx);
+                occupancy_board.set(Square::new(idx));
             }
             let attack_board = attack_fn(pos, occupancy_board);
             out.push((occupancy_board, attack_board));

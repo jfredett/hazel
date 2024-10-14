@@ -22,7 +22,7 @@ impl Iterator for IndexIterator {
             None
         } else {
             let idx = self.source.first_index();
-            self.source.unset_by_index(idx);
+            self.source.unset(Square::new(idx));
             Some(idx)
         }
     }

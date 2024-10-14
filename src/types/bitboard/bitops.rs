@@ -1,6 +1,6 @@
 use super::*;
 use std::ops::{
-    BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Mul, Not, Shl, Shr,
+    BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Mul, Not, 
 };
 use crate::notation::*;
 
@@ -63,22 +63,6 @@ impl Mul<Bitboard> for u64 {
     }
 }
 
-impl Shl<u64> for Bitboard {
-    type Output = Bitboard;
-
-    fn shl(self, rhs: u64) -> Self::Output {
-        Bitboard::from(self.0 << rhs)
-    }
-}
-
-impl Shr<u64> for Bitboard {
-    type Output = Bitboard;
-
-    fn shr(self, rhs: u64) -> Self::Output {
-        Bitboard::from(self.0 >> rhs)
-    }
-}
-
 binop_trait!(BitAnd, bitand);
 binop_trait!(BitXor, bitxor);
 binop_trait!(BitOr, bitor);
@@ -90,6 +74,8 @@ binop_assign_trait!(BitAndAssign, bitand_assign);
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::notation::*;
+
     mod bitops {
         use super::*;
 
@@ -280,26 +266,6 @@ mod tests {
 
                 b1 == expected
             }
-        }
-    }
-
-    mod sh {
-        use super::*;
-
-        #[test]
-        fn shl() {
-            let b = Bitboard::from(A1);
-            let expected = Bitboard::from(A2);
-
-            assert_eq!(b << 1, expected);
-        }
-
-        #[test]
-        fn shr() {
-            let b = Bitboard::from(A2);
-            let expected = Bitboard::from(A1);
-
-            assert_eq!(b >> 1, expected);
         }
     }
 }

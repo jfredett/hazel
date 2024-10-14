@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 use tracing::{instrument, debug};
 use crate::board::{alter::Alter, alteration::Alteration, query::Query};
+use crate::constants::START_POSITION_FEN;
 use crate::engine::Engine;
 use crate::coup::rep::Move;
 use crate::notation::*;
@@ -26,20 +27,6 @@ impl Debug for PieceBoard {
     }
 }
 
-pub const START_POSITION : PieceBoard = PieceBoard {
-    board: [
-        [ Occupant::white_rook() , Occupant::white_knight() , Occupant::white_bishop() , Occupant::white_queen() , Occupant::white_king() , Occupant::white_bishop() , Occupant::white_knight() , Occupant::white_rook() ] ,
-        [ Occupant::white_pawn() , Occupant::white_pawn()   , Occupant::white_pawn()   , Occupant::white_pawn()  , Occupant::white_pawn() , Occupant::white_pawn()   , Occupant::white_pawn()   , Occupant::white_pawn() ] ,
-        [ Occupant::empty()      , Occupant::empty()        , Occupant::empty()        , Occupant::empty()       , Occupant::empty()      , Occupant::empty()        , Occupant::empty()        , Occupant::empty()      ] ,
-        [ Occupant::empty()      , Occupant::empty()        , Occupant::empty()        , Occupant::empty()       , Occupant::empty()      , Occupant::empty()        , Occupant::empty()        , Occupant::empty()      ] ,
-        [ Occupant::empty()      , Occupant::empty()        , Occupant::empty()        , Occupant::empty()       , Occupant::empty()      , Occupant::empty()        , Occupant::empty()        , Occupant::empty()      ] ,
-        [ Occupant::empty()      , Occupant::empty()        , Occupant::empty()        , Occupant::empty()       , Occupant::empty()      , Occupant::empty()        , Occupant::empty()        , Occupant::empty()      ] ,
-        [ Occupant::black_pawn() , Occupant::black_pawn()   , Occupant::black_pawn()   , Occupant::black_pawn()  , Occupant::black_pawn() , Occupant::black_pawn()   , Occupant::black_pawn()   , Occupant::black_pawn() ] ,
-        [ Occupant::black_rook() , Occupant::black_knight() , Occupant::black_bishop() , Occupant::black_queen() , Occupant::black_king() , Occupant::black_bishop() , Occupant::black_knight() , Occupant::black_rook() ] ,
-    ]
-};
-
-
 // FIXME: I think this renders the board upside down rn? indices are being read a 0oRF, with 0o0F
 // being the 'top' row as rendered, and 0o_7 being the 'rightmost' file
 impl PieceBoard {
@@ -54,13 +41,14 @@ impl PieceBoard {
     }
 
     pub fn set_startpos(&mut self) {
-        self.set_board(START_POSITION.board);
+        self.set_fen(START_POSITION_FEN)
     }
 
     pub fn set_fen(&mut self, fen: &str) {
         self.set_board(Self::from_fen(fen).board);
     }
 
+    /*
     pub fn to_fen(&self) -> String {
         let mut fen = String::new();
         for row in self.board.iter().rev() {
@@ -87,12 +75,12 @@ impl PieceBoard {
         fen.pop(); // remove the last '/'
         fen
     }
+    */
 
     pub fn from_fen(fen: &str) -> Self {
         let mut board = [[Occupant::empty(); 8]; 8];
         let mut row = 7;
         let mut col = 0;
-        dbg!(fen);
         for c in fen.chars() {
             match c {
                 'r' => { board[row][col] = Occupant::black(Piece::Rook); col += 1; },
@@ -238,20 +226,21 @@ mod tests {
 
     mod fen {
         use super::*;
+        use crate::board::interface::query;
 
         #[test]
         pub fn converts_start_position_correctly() {
             let mut board = PieceBoard::new();
             board.set_startpos();
             dbg!(&board);
-            let fen = board.to_fen();
+            let fen = query::to_fen(&board);
             assert_eq!(fen, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
         }
 
         #[test]
         pub fn converts_empty_board_correctly() {
             let board = PieceBoard::new();
-            let fen = board.to_fen();
+            let fen = query::to_fen(&board);
             assert_eq!(fen, "8/8/8/8/8/8/8/8");
         }
 
@@ -259,7 +248,7 @@ mod tests {
         pub fn converts_fen_to_board_correctly() {
             let fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
             let board = PieceBoard::from_fen(fen);
-            let fen2 = board.to_fen();
+            let fen2 = query::to_fen(&board);
             assert_eq!(fen, fen2);
         }
 
@@ -267,7 +256,7 @@ mod tests {
         pub fn converts_each_offset_correctly() {
             let fen = "p7/1p6/2p5/3p4/4p3/5p2/6p1/7p";
             let board = PieceBoard::from_fen(fen);
-            let fen2 = board.to_fen();
+            let fen2 = query::to_fen(&board);
             assert_eq!(fen, fen2);
         }
 
@@ -312,6 +301,7 @@ mod tests {
 
     mod engine {
         use tracing_test::traced_test;
+        use crate::board::interface::query;
 
         use super::*;
 
@@ -325,7 +315,7 @@ mod tests {
             dbg!(board);
             board.exec(message);
             dbg!(board);
-            let fen = board.to_fen();
+            let fen = query::to_fen(&board);
             assert_eq!(fen, "r2qkb1r/ppp2ppp/2npbn2/4p3/2B1P3/3PBN2/PPP2PPP/RN1QK2R");
         }
     }

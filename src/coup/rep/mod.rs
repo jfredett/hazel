@@ -57,29 +57,34 @@ impl Move {
     /// # use hazel::notation::*;
     /// // the move from d2 -> d4
     /// let m = Move::from(D2, D4, MoveType::QUIET);
-    /// assert_eq!(m.source_idx(), D2);
-    /// assert_eq!(m.target_idx(), D4);
+    /// assert_eq!(m.source(), D2);
+    /// assert_eq!(m.target(), D4);
     /// assert!(!m.is_promotion());
     /// assert!(m.move_metadata().is_quiet());
     /// ```
-    pub const fn from(source: u16, target: u16, metadata: MoveType) -> Move {
+    pub fn from<S>(source: S, target: S, metadata: MoveType) -> Move where S : SquareNotation {
+        let s : Square = source.into();
+        let t : Square = target.into();
+
         #[rustfmt::skip] Move {
-            0: source << SOURCE_IDX_SHIFT
-            | target << TARGET_IDX_SHIFT
-            | metadata as u16,
+            0: (s.index() as u16) << SOURCE_IDX_SHIFT
+            |  (t.index() as u16) << TARGET_IDX_SHIFT
+            |  metadata as u16,
         }
     }
 
-    pub const fn null() -> Move {
-        Move::from(0,0, MoveType::NULLMOVE)
+    pub fn null() -> Move {
+        // We only care about the metadata bits for a null move. So the source/target are just
+        // whatever is convenient.
+        Move::from(A1, A1, MoveType::NULLMOVE)
     }
 
     pub fn from_uci(uci: &str) -> Move {
         if uci == "0000" {
             return Move::null();
         }
-        let source = Square::try_from(&uci[0..2]).unwrap().index() as u16;
-        let target = Square::try_from(&uci[2..4]).unwrap().index() as u16;
+        let source = Square::try_from(&uci[0..2]).unwrap();
+        let target = Square::try_from(&uci[2..4]).unwrap();
         // NOTE: Without context, we cannot determine, e.g., if `d2d4` is a double pawn move, or a
         // move of a rook, or a move of a bishop. It depends on the piece at d2, and we don't know
         // that. So instead we mark the move 'ambiguous' and defer disambiguation till later, when
@@ -103,20 +108,20 @@ impl Move {
     /// // the move from d2 -> d4
     /// let m = Move::from_notation("d2", "d4", MoveType::DOUBLE_PAWN);
     ///
-    /// assert_eq!(m.source_idx(), D2);
-    /// assert_eq!(m.target_idx(), D4);
+    /// assert_eq!(m.source(), D2);
+    /// assert_eq!(m.target(), D4);
     /// assert!(!m.is_promotion());
     ///
     /// let pm = Move::from_notation("d7", "d8", MoveType::PROMOTION_QUEEN);
-    /// assert_eq!(pm.source_idx(), D7);
-    /// assert_eq!(pm.target_idx(), D8);
+    /// assert_eq!(pm.source(), D7);
+    /// assert_eq!(pm.target(), D8);
     /// assert!(pm.is_promotion());
     /// assert_eq!(pm.promotion_piece(), Piece::Queen);
     /// ```
     pub fn from_notation(source: &str, target: &str, metadata: MoveType) -> Move {
         Move::from(
-            Square::try_from(source).unwrap().index() as u16,
-            Square::try_from(target).unwrap().index() as u16,
+            Square::try_from(source).unwrap(),
+            Square::try_from(target).unwrap(),
             metadata,
         )
     }
@@ -272,13 +277,13 @@ impl Move {
     pub fn long_castle(color: Color) -> Move {
         match color {
             Color::WHITE => Move::from(
-                Square::try_from("e1").unwrap().index() as u16,
-                Square::try_from("c1").unwrap().index() as u16,
+                Square::try_from("e1").unwrap(),
+                Square::try_from("c1").unwrap(),
                 MoveType::LONG_CASTLE,
             ),
             Color::BLACK => Move::from(
-                Square::try_from("e8").unwrap().index() as u16,
-                Square::try_from("c8").unwrap().index() as u16,
+                Square::try_from("e8").unwrap(),
+                Square::try_from("c8").unwrap(),
                 MoveType::LONG_CASTLE,
             ),
         }
@@ -287,13 +292,13 @@ impl Move {
     pub fn short_castle(color: Color) -> Move {
         match color {
             Color::WHITE => Move::from(
-                Square::try_from("e1").unwrap().index() as u16,
-                Square::try_from("g1").unwrap().index() as u16,
+                Square::try_from("e1").unwrap(),
+                Square::try_from("g1").unwrap(),
                 MoveType::SHORT_CASTLE,
             ),
             Color::BLACK => Move::from(
-                Square::try_from("e8").unwrap().index() as u16,
-                Square::try_from("g8").unwrap().index() as u16,
+                Square::try_from("e8").unwrap(),
+                Square::try_from("g8").unwrap(),
                 MoveType::SHORT_CASTLE,
             ),
         }
@@ -305,7 +310,7 @@ impl Move {
     /// // the move from d2 -> d4
     ///
     /// let m = Move::from(D2, D4, MoveType::DOUBLE_PAWN);
-    /// assert_eq!(m.source_idx(), D2.into());
+    /// assert_eq!(m.source(), D2);
     /// ```
     pub fn source_idx(&self) -> usize {
         ((self.0 & SOURCE_IDX_MASK) >> SOURCE_IDX_SHIFT).into()
@@ -374,6 +379,7 @@ impl Move {
     /// ```
     /// # use hazel::coup::rep::*;
     /// # use hazel::constants::*;
+    /// # use hazel::notation::*;
     /// # use hazel::types::Piece;
     /// // the move from d2 -> d4
     /// let m1 = Move::from(D2, D4, MoveType::DOUBLE_PAWN);
@@ -389,6 +395,7 @@ impl Move {
     /// on MoveType to interpret the data.
     /// ```
     /// # use hazel::coup::rep::*;
+    /// # use hazel::notation::*;
     /// // the move from d2 -> d4
     /// let m1 = Move::from(D2, D4, MoveType::QUIET);
     /// assert!(m1.move_metadata().is_quiet());
@@ -615,7 +622,7 @@ mod test {
 
         #[test]
         fn is_capture() {
-            let m = Move::from(0o13, 0o33, MoveType::CAPTURE);
+            let m = Move::from(D2, D4, MoveType::CAPTURE);
             assert!(m.is_capture());
         }
 
@@ -633,13 +640,13 @@ mod test {
 
         #[test]
         fn is_en_passant() {
-            let m = Move::from(0o13, 0o23, MoveType::EP_CAPTURE);
+            let m = Move::from(D6, E7, MoveType::EP_CAPTURE);
             assert!(m.is_en_passant());
         }
 
         #[test]
         fn is_double_pawn_push_for() {
-            let m = Move::from(0o13, 0o33, MoveType::DOUBLE_PAWN);
+            let m = Move::from(D2, D4, MoveType::DOUBLE_PAWN);
             assert!(m.is_double_pawn_push_for(Color::WHITE));
         }
 

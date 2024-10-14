@@ -1,5 +1,6 @@
 use crate::types::Bitboard;
 use crate::types::Direction;
+use crate::notation::*;
 
 
 lazy_static! {
@@ -8,7 +9,7 @@ lazy_static! {
         let mut out : [Bitboard; 64] = [Bitboard::empty(); 64];
         for i in 0..64 {
                 let mut bb = Bitboard::empty();
-                bb.set_by_index(i);
+                bb.set(Square::new(i));
 
                 let position_board = bb.shift(Direction::N).shift(Direction::N).shift(Direction::E) // NNE
                                    | bb.shift(Direction::N).shift(Direction::N).shift(Direction::W) // NNW
@@ -31,9 +32,9 @@ lazy_static! {
         // pawn moves, initial rank
         for i in 8..17 {
             let mut wbb = Bitboard::empty();
-            wbb.set_by_index(i);
+            wbb.set(Square::new(i));
             let mut bbb = Bitboard::empty();
-            bbb.set_by_index(64-i);
+            bbb.set(Square::new(64-i));
 
             wbb |= wbb.shift(Direction::N)
                 |  wbb.shift(Direction::N).shift(Direction::N)
@@ -53,9 +54,9 @@ lazy_static! {
         // all other pawn moves
         for i in 17..64 {
             let mut wbb = Bitboard::empty();
-            wbb.set_by_index(i);
+            wbb.set(Square::new(i));
             let mut bbb = Bitboard::empty();
-            bbb.set_by_index(64-i);
+            bbb.set(Square::new(64-i));
 
             wbb |= wbb.shift(Direction::N)
                 |  wbb.shift(Direction::NE)

@@ -44,54 +44,56 @@ mod test {
     #[test]
     fn shift_by_shifts_by_given_amount() {
         let mut b = Bitboard::empty();
-        b.set_by_notation("d4"); // Put a piece on d4.
-        assert!(b.is_notation_set("d4")); // Put a piece on d4.
+        b.set(D4); // Put a piece on d4.
+        assert!(b.is_set(D4)); // Put a piece on d4.
 
         let bb_after_shift = b.shift_by(Direction::N, 2);
 
-        assert!(bb_after_shift.is_notation_set("d6"));
+        dbg!(&b);
+        dbg!(&bb_after_shift);
+        assert!(bb_after_shift.is_set(D6));
 
-        assert!(!bb_after_shift.is_notation_set("d4"));
-        assert!(!bb_after_shift.is_notation_set("d5"));
+        assert!(!bb_after_shift.is_set(D4));
+        assert!(!bb_after_shift.is_set(D5));
     }
 
     #[test]
     fn slide_moves_pieces_appropriately() {
         let mut b = Bitboard::empty();
-        b.set_by_notation("d4"); // Put a piece on d4.
-        assert!(b.is_notation_set("d4")); // Put a piece on d4.
+        b.set(D4); // Put a piece on d4.
+        assert!(b.is_set(D4)); // Put a piece on d4.
 
         b.shift_mut(Direction::N);
-        assert!(!b.is_notation_set("d4"));
-        assert!(b.is_notation_set("d5"));
+        assert!(!b.is_set(D4));
+        assert!(b.is_set(D5));
 
         b.shift_mut(Direction::NE);
-        assert!(!b.is_notation_set("d5"));
-        assert!(b.is_notation_set("e6"));
+        assert!(!b.is_set(D5));
+        assert!(b.is_set(E6));
 
         b.shift_mut(Direction::E);
-        assert!(!b.is_notation_set("e6"));
-        assert!(b.is_notation_set("f6"));
+        assert!(!b.is_set(E6));
+        assert!(b.is_set(F6));
 
         b.shift_mut(Direction::SE);
-        assert!(!b.is_notation_set("f6"));
-        assert!(b.is_notation_set("g5"));
+        assert!(!b.is_set(F6));
+        assert!(b.is_set(G5));
 
         b.shift_mut(Direction::S);
-        assert!(!b.is_notation_set("g5"));
-        assert!(b.is_notation_set("g4"));
+        assert!(!b.is_set(G5));
+        assert!(b.is_set(G4));
 
         b.shift_mut(Direction::SW);
-        assert!(!b.is_notation_set("g4"));
-        assert!(b.is_notation_set("f3"));
+        assert!(!b.is_set(G4));
+        assert!(b.is_set(F3));
 
         b.shift_mut(Direction::W);
-        assert!(!b.is_notation_set("f3"));
-        assert!(b.is_notation_set("e3"));
+        assert!(!b.is_set(F3));
+        assert!(b.is_set(E3));
 
         b.shift_mut(Direction::NW);
-        assert!(!b.is_notation_set("e3"));
-        assert!(b.is_notation_set("d4"));
+        assert!(!b.is_set(E3));
+        assert!(b.is_set(D4));
     }
 
     #[test]
@@ -99,7 +101,7 @@ mod test {
         // shifting off the top right of the board
         for d in &[ Direction::N, Direction::NE, Direction::E, Direction::SE, Direction::NW, ] {
             let mut b = Bitboard::empty();
-            b.set_by_notation("h8");
+            b.set(H8);
             b.shift_mut(*d);
             assert!(b.is_empty());
         }
@@ -107,7 +109,7 @@ mod test {
         // shifting off the bottom left of the board
         for d in &[Direction::S, Direction::SW, Direction::W, Direction::NW, Direction::SE] {
             let mut b = Bitboard::empty();
-            b.set_by_notation("a1");
+            b.set(A1);
             b.shift_mut(*d);
             assert!(b.is_empty());
         }
@@ -116,11 +118,11 @@ mod test {
     #[test]
     fn sliding_multiple_bits_works() {
         let mut b = Bitboard::empty();
-        b.set_by_notation("g4");
-        b.set_by_notation("b5");
+        b.set(G4);
+        b.set(B5);
         b.shift_mut(Direction::NE);
 
-        assert!(b.is_notation_set("h5"));
-        assert!(b.is_notation_set("c6"));
+        assert!(b.is_set(H5));
+        assert!(b.is_set(C6));
     }
 }

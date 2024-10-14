@@ -1,3 +1,4 @@
+#![allow(unused_imports, dead_code, unused_variables, non_snake_case)] // FIXME: I need less noise while I'm refactoring
 #![feature(stmt_expr_attributes,assert_matches,const_refs_to_static,const_trait_impl,const_for)]
 #![cfg_attr(test, allow(unused_imports))]
 // NOTE: These lints are disabled for the following reasons:

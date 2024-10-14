@@ -9,6 +9,7 @@ use ratatui::buffer::Buffer;
 
 use crate::ui::model::entry::Entry;
 use crate::board::simple::PieceBoard;
+use crate::board::interface::query;
 
 
 #[derive(Debug, Default)]
@@ -20,25 +21,25 @@ pub struct FEN {
 
 impl From<&Entry> for FEN {
     fn from(entry: &Entry) -> Self {
-        Self::new(entry.boardstate.to_fen())
+        Self::new(query::to_fen(&entry.boardstate))
     }
 }
 
 impl From<Entry> for FEN {
     fn from(entry: Entry) -> Self {
-        Self::new(entry.boardstate.to_fen())
+        Self::new(query::to_fen(&entry.boardstate))
     }
 }
 
 impl From<&PieceBoard> for FEN {
     fn from(board: &PieceBoard) -> Self {
-        Self::new(board.to_fen())
+        Self::new(query::to_fen(board))
     }
 }
 
 impl From<PieceBoard> for FEN {
     fn from(board: PieceBoard) -> Self {
-        Self::new(board.to_fen())
+        Self::new(query::to_fen(&board))
     }
 }
 

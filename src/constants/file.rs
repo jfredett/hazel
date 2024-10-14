@@ -20,7 +20,7 @@ impl File {
     }
 
     pub fn from_index(index: usize) -> Self {
-        match index & 0o70 >> 3 {
+        match index & 0o07 {
             0 => File::A,
             1 => File::B,
             2 => File::C,
