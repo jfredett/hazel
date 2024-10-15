@@ -1,7 +1,8 @@
 
 use crate::{
     notation::{Square, SquareNotation, fen::FEN},
-    types::Occupant
+    types::Occupant,
+    util::charray::{Origin, Charray},
 };
 
 /// implementing Query states that the implementor can provide the occupant of a square on the
@@ -11,23 +12,39 @@ pub trait Query {
     fn get<S>(&self, square: S) -> Occupant where S : SquareNotation;
 }
 
+lazy_static! {
+    static ref TEXTURE: Vec<&'static str> = vec![
+         "8 . . . . . . . .",
+         "7 . . . . . . . .",
+         "6 . . . . . . . .",
+         "5 . . . . . . . .",
+         "4 . . . . . . . .",
+         "3 . . . . . . . .",
+         "2 . . . . . . . .",
+         "1 . . . . . . . .",
+         "  a b c d e f g h"
+    ];
+}
+
 /// For a variety of, I'm sure, very good reasons, I can't provide a generic `impl Debug for T where T: Query`.
 /// Something about orphans, I'm sure there is some kind of hack.
 /// For now, this does what's needed.
 pub fn display_board(board: &impl Query) -> String {
-    let mut f = String::new();
+    let mut charray : Charray<9,17> = Charray::new().with_texture(TEXTURE.to_vec());
+    charray.set_origin(Origin::TopLeft);
 
-    f.push_str("\n");
     for rank in 0..=7 {
-        f.push_str(&format!(" {}", 7 - rank + 1));
         for file in 0..=7 {
-            let s = Square::from((rank as usize, file as usize));
-            f.push_str(&format!(" {}", board.get(s)));
+            // FIXME: I truly do not understand why this works. I built Charray specifically to
+            // help me avoid this weird 'sometimes file and rank need to be in opposite places'
+            // malarky. I think maybe somewhere I have flipped a sign and I cannot chase it down to
+            // save my fucking life.
+            let occ = board.get(Square::from((file, rank)));
+            charray.set(7 - rank, 2*file + 2, occ.to_string().as_bytes()[0]);
         }
-        f.push_str("\n");
     }
-    f.push_str("   a b c d e f g h");
-    f
+
+    charray.to_string()
 }
 
 pub fn to_fen(board: &impl Query) -> FEN {
@@ -75,17 +92,19 @@ mod tests {
         p.set_startpos();
 
         let actual = display_board(&p);
-        let expected = "
- 8 r n b q k b n r
- 7 p p p p p p p p
- 6 . . . . . . . .
- 5 . . . . . . . .
- 4 . . . . . . . .
- 3 . . . . . . . .
- 2 P P P P P P P P
- 1 R N B Q K B N R
-   a b c d e f g h";
+        let expected = "8 r n b q k b n r
+7 p p p p p p p p
+6 . . . . . . . .
+5 . . . . . . . .
+4 . . . . . . . .
+3 . . . . . . . .
+2 P P P P P P P P
+1 R N B Q K B N R
+  a b c d e f g h
+";
 
+        println!("{}", actual);
+        println!("{}", expected);
         assert_eq!(actual, expected);
     }
 

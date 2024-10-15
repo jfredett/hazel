@@ -1,24 +1,19 @@
 use std::fmt::{Debug, Display};
 
 #[derive(Debug, Clone, Copy)]
-enum Origin {
+pub enum Origin {
     BottomLeft,
     TopLeft,
     TopRight,
     BottomRight,
 }
 
-#[derive(Clone)]
-struct Charray<const H: usize, const W: usize> {
+#[derive(Debug, Clone)]
+pub struct Charray<const H: usize, const W: usize> {
     origin: Origin,
     data: [[u8; W]; H],
 }
 
-impl Debug for Charray<3, 3> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "\n{}\n", self.to_string())
-    }
-}
 
 impl<const H: usize, const W: usize> Charray<H, W> {
     pub fn new() -> Self {
@@ -32,16 +27,21 @@ impl<const H: usize, const W: usize> Charray<H, W> {
         format!("{}", self)
     }
 
-    pub fn get(&self, x: usize, y: usize) -> u8 {
-        let (xprime, yprime) = self.origin.adjust_coordinates(x, y, H, W);
-        self.data[xprime][yprime]
+    pub fn get(&self, rank: usize, file: usize) -> u8 {
+        let (rprime, fprime) = self.adjust_coordinates(rank, file);
+        self.data[rprime][fprime]
     }
 
-    pub fn set(&mut self, x: usize, y: usize, value: u8) {
-        let (xprime, yprime) = self.origin.adjust_coordinates(x, y, H, W);
-        self.data[xprime][yprime] = value;
+    pub fn set(&mut self, rank: usize, file: usize, value: u8) {
+        let (rprime, fprime) = self.adjust_coordinates(rank, file);
+        self.data[rprime][fprime] = value;
     }
 
+    pub fn set_origin(&mut self, origin: Origin) {
+        self.origin = origin;
+    }
+
+    /* TODO: This really needs to do math on the thing, so probably needs to be an external method
     pub fn transform(&self, origin: Origin) -> Self {
         let mut new = Self {
             origin,
@@ -56,41 +56,42 @@ impl<const H: usize, const W: usize> Charray<H, W> {
 
         new
     }
+    */
 
     pub fn with_texture(&self, texture: Vec<&str>) -> Self {
         let mut new = Self {
-            origin: self.origin,
+            origin: Origin::TopLeft, // for textures to load correctly, we need to start at the top
+                                     // left
             data: [[0; W]; H],
         };
 
         for i in 0..H {
             for j in 0..W {
-                new.set(i, j, texture[i].as_bytes()[j] - b'0');
+                let b = texture[i].as_bytes()[j];
+                new.set(i, j, b);
             }
         }
 
+        new.origin = self.origin; // now we'll non-transformatively switch the origin to what the
+                                  // user expects
         new
     }
-}
 
-
-impl Origin {
-    fn adjust_coordinates(&self, x: usize, y: usize, h: usize, w: usize) -> (usize, usize) {
-        match self {
-            Origin::BottomLeft => (w - x - 1, y),
-            Origin::TopLeft => (x, y),
-            Origin::TopRight => (x, h - y - 1),
-            Origin::BottomRight => (w - x - 1, h - y - 1),
+    fn adjust_coordinates(&self, rank: usize, file: usize) -> (usize, usize) {
+        match self.origin {
+            Origin::BottomLeft => (H - rank - 1, file),
+            Origin::TopLeft => (rank, file),
+            Origin::TopRight => (rank, W - file - 1),
+            Origin::BottomRight => (H - rank - 1, W - file - 1),
         }
     }
-
 }
 
 impl<const H: usize, const W: usize> Display for Charray<H, W> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for i in 0..H {
             for j in 0..W {
-                write!(f, "{}", self.data[i][j])?;
+                write!(f, "{}", self.data[i][j] as char)?;
             }
             write!(f, "\n")?;
         }
@@ -117,31 +118,30 @@ mod tests {
         #[test]
         fn to_string() {
             let mut charray = Charray::<3, 3>::new();
-            charray.set(0, 0, 1);
-            charray.set(1, 1, 2);
-            charray.set(2, 2, 3);
-            dbg!(charray.to_string());
-            assert_eq!(charray.to_string(), "003\n020\n100\n");
+            charray.set(0, 0, b'1');
+            charray.set(1, 1, b'2');
+            charray.set(2, 2, b'3');
+            assert_eq!(charray.to_string(), "\0\03\n\02\0\n1\0\0\n");
         }
 
         #[test]
         fn set() {
             let mut charray = Charray::<3, 3>::new();
-            charray.set(0, 0, 1);
-            charray.set(1, 1, 2);
-            charray.set(2, 2, 3);
-            assert_eq!(charray.get(0, 0), 1);
-            assert_eq!(charray.get(1, 1), 2);
-            assert_eq!(charray.get(2, 2), 3);
+            charray.set(0, 0, b'1');
+            charray.set(1, 1, b'2');
+            charray.set(2, 2, b'3');
+            assert_eq!(charray.get(0, 0), b'1');
+            assert_eq!(charray.get(1, 1), b'2');
+            assert_eq!(charray.get(2, 2), b'3');
         }
 
         #[test]
         fn display() {
             let mut charray = Charray::<3, 3>::new();
-            charray.set(0, 0, 1);
-            charray.set(1, 1, 2);
-            charray.set(2, 2, 3);
-            assert_eq!(format!("{}", charray), "003\n020\n100\n");
+            charray.set(0, 0, b'1');
+            charray.set(1, 1, b'2');
+            charray.set(2, 2, b'3');
+            assert_eq!(format!("{}", charray), "\0\03\n\02\0\n1\0\0\n");
         }
     }
 
@@ -165,10 +165,10 @@ mod tests {
                 origin: Origin::TopLeft,
                 data: [[0; 3]; 3],
             };
-            charray.set(0, 0, 1);
-            charray.set(1, 1, 2);
-            charray.set(2, 2, 3);
-            assert_eq!(charray.to_string(), "100\n020\n003\n");
+            charray.set(0, 0, b'1');
+            charray.set(1, 1, b'2');
+            charray.set(2, 2, b'3');
+            assert_eq!(charray.to_string(), "1\0\0\n\02\0\n\0\03\n");
         }
 
         #[test]
@@ -191,10 +191,10 @@ mod tests {
                 origin: Origin::TopLeft,
                 data: [[0; 3]; 3],
             };
-            charray.set(0, 0, 1);
-            charray.set(1, 1, 2);
-            charray.set(2, 2, 3);
-            assert_eq!(format!("{}", charray), "100\n020\n003\n");
+            charray.set(0, 0, b'1');
+            charray.set(1, 1, b'2');
+            charray.set(2, 2, b'3');
+            assert_eq!(format!("{}", charray), "1\0\0\n\02\0\n\0\03\n");
         }
     }
 
@@ -218,10 +218,10 @@ mod tests {
                 origin: Origin::BottomRight,
                 data: [[0; 3]; 3],
             };
-            charray.set(0, 0, 1);
-            charray.set(1, 1, 2);
-            charray.set(2, 2, 3);
-            assert_eq!(charray.to_string(), "300\n020\n001\n");
+            charray.set(0, 0, b'1');
+            charray.set(1, 1, b'2');
+            charray.set(2, 2, b'3');
+            assert_eq!(charray.to_string(), "3\0\0\n\02\0\n\0\01\n");
         }
 
         #[test]
@@ -244,10 +244,10 @@ mod tests {
                 origin: Origin::BottomRight,
                 data: [[0; 3]; 3],
             };
-            charray.set(0, 0, 1);
-            charray.set(1, 1, 2);
-            charray.set(2, 2, 3);
-            assert_eq!(format!("{}", charray), "300\n020\n001\n");
+            charray.set(0, 0, b'1');
+            charray.set(1, 1, b'2');
+            charray.set(2, 2, b'3');
+            assert_eq!(format!("{}", charray), "3\0\0\n\02\0\n\0\01\n");
         }
     }
 
@@ -271,10 +271,10 @@ mod tests {
                 origin: Origin::TopRight,
                 data: [[0; 3]; 3],
             };
-            charray.set(0, 0, 1);
-            charray.set(1, 1, 2);
-            charray.set(2, 2, 3);
-            assert_eq!(charray.to_string(), "001\n020\n300\n");
+            charray.set(0, 0, b'1');
+            charray.set(1, 1, b'2');
+            charray.set(2, 2, b'3');
+            assert_eq!(charray.to_string(), "\0\01\n\02\0\n3\0\0\n");
         }
 
         #[test]
@@ -297,10 +297,10 @@ mod tests {
                 origin: Origin::TopRight,
                 data: [[0; 3]; 3],
             };
-            charray.set(0, 0, 1);
-            charray.set(1, 1, 2);
-            charray.set(2, 2, 3);
-            assert_eq!(format!("{}", charray), "001\n020\n300\n");
+            charray.set(0, 0, b'1');
+            charray.set(1, 1, b'2');
+            charray.set(2, 2, b'3');
+            assert_eq!(format!("{}", charray), "\0\01\n\02\0\n3\0\0\n");
         }
     }
 
@@ -354,116 +354,62 @@ mod tests {
         assert_eq!(before, after);
     }
 
+    /*
     mod transform {
         use super::*;
 
-        #[test]
-        fn bottomleft_to_topleft() {
-            let mut charray = Charray::<3, 3>::new();
-            charray.set(0, 0, 1);
-            charray.set(1, 1, 2);
-            charray.set(2, 2, 3);
+        fn transform_test(start: Origin, dest: Origin, prediction: &str) {
+            let mut charray = Charray::<4, 3>::new().transform(start);
 
-            assert_eq!(charray.get(0, 0), 1);
-            assert_eq!(charray.get(1, 1), 2);
-            assert_eq!(charray.get(2, 2), 3);
+            dbg!(&charray);
+
+            charray.set(0, 0, b'1');
+            charray.set(1, 1, b'2');
+            charray.set(2, 2, b'3');
+            charray.set(3, 0, b'4');
+
+            assert_eq!(charray.get(0, 0), b'1');
+            assert_eq!(charray.get(1, 1), b'2');
+            assert_eq!(charray.get(2, 2), b'3');
+            assert_eq!(charray.get(3, 0), b'4');
 
             let before = charray.to_string();
 
-            let expected = "100\n020\n003\n";
-
-            let transformed = charray.transform(Origin::TopLeft);
+            let transformed = charray.transform(dest);
             let after = transformed.to_string();
 
-            assert_eq!(charray.get(0, 0), 1);
-            assert_eq!(charray.get(1, 1), 2);
-            assert_eq!(charray.get(2, 2), 3);
+
+            assert_eq!(charray.get(0, 0), b'1');
+            assert_eq!(charray.get(1, 1), b'2');
+            assert_eq!(charray.get(2, 2), b'3');
+            assert_eq!(charray.get(3, 0), b'4');
 
             assert_ne!(before, after);
-            assert_eq!(after, expected);
+            assert_eq!(after, prediction);
+        }
+
+        #[test]
+        fn bottomleft_to_topleft() {
+            transform_test(Origin::BottomLeft, Origin::TopLeft, "1\0\0\0\n\02\0\0\n\0\03\0\n\0\0\04\n");
         }
 
         #[test]
         fn bottomleft_to_bottomright() {
-            let mut charray = Charray::<3, 3>::new();
-            charray.set(0, 0, 1);
-            charray.set(1, 1, 2);
-            charray.set(2, 2, 3);
-
-            assert_eq!(charray.get(0, 0), 1);
-            assert_eq!(charray.get(1, 1), 2);
-            assert_eq!(charray.get(2, 2), 3);
-
-            let before = charray.to_string();
-
-            let expected = "300\n020\n001\n";
-
-            let transformed = charray.transform(Origin::BottomRight);
-            let after = transformed.to_string();
-
-            assert_eq!(charray.get(0, 0), 1);
-            assert_eq!(charray.get(1, 1), 2);
-            assert_eq!(charray.get(2, 2), 3);
-
-            assert_ne!(before, after);
-            assert_eq!(after, expected);
+            transform_test(Origin::BottomLeft, Origin::BottomRight, "\0\0\01\n\0\02\0\n\03\0\0\n4\0\0\0\n");
         }
 
         #[test]
         fn bottomleft_to_topright() {
-            let mut charray = Charray::<3, 3>::new();
-            charray.set(0, 0, 1);
-            charray.set(1, 1, 2);
-            charray.set(2, 2, 3);
-
-            assert_eq!(charray.get(0, 0), 1);
-            assert_eq!(charray.get(1, 1), 2);
-            assert_eq!(charray.get(2, 2), 3);
-
-            let before = charray.to_string();
-
-            let expected = "001\n020\n300\n";
-
-            let transformed = charray.transform(Origin::TopRight);
-            let after = transformed.to_string();
-
-            assert_eq!(charray.get(0, 0), 1);
-            assert_eq!(charray.get(1, 1), 2);
-            assert_eq!(charray.get(2, 2), 3);
-
-            assert_ne!(before, after);
-            assert_eq!(after, expected);
+            transform_test(Origin::BottomLeft, Origin::TopRight, "\0\0\01\n\0\02\0\n\03\0\0\n4\0\0\0\n");
         }
 
         #[test]
-        fn topleft_to_bottomleft() {
-            let mut charray = Charray::<3, 3> {
-                origin: Origin::TopLeft,
-                data: [[0; 3]; 3],
-            };
-            charray.set(0, 0, 1);
-            charray.set(1, 1, 2);
-            charray.set(2, 2, 3);
-
-            assert_eq!(charray.get(0, 0), 1);
-            assert_eq!(charray.get(1, 1), 2);
-            assert_eq!(charray.get(2, 2), 3);
-
-            let before = charray.to_string();
-
-            let expected = "003\n020\n100\n";
-
-            let transformed = charray.transform(Origin::BottomLeft);
-            let after = transformed.to_string();
-
-            assert_eq!(charray.get(0, 0), 1);
-            assert_eq!(charray.get(1, 1), 2);
-            assert_eq!(charray.get(2, 2), 3);
-
-            assert_ne!(before, after);
-            assert_eq!(after, expected);
+        fn bottomleft_to_bottomleft() {
+            transform_test(Origin::BottomLeft, Origin::BottomLeft, "\0\03\0\n\02\0\0\n1\0\0\0\n\0\0\04\n");
         }
+
     }
+    */
 
     mod with_texture {
         use super::*;
@@ -478,9 +424,11 @@ mod tests {
 
             let charray = Charray::<3, 3>::new().with_texture(texture);
 
-            assert_eq!(charray.get(0, 0), 1);
-            assert_eq!(charray.get(1, 1), 5);
-            assert_eq!(charray.get(2, 2), 9);
+            dbg!(&charray);
+
+            assert_eq!(charray.get(0, 0), b'7');
+            assert_eq!(charray.get(1, 1), b'5');
+            assert_eq!(charray.get(2, 2), b'3');
         }
 
         #[test]
@@ -496,9 +444,9 @@ mod tests {
                 data: [[0; 3]; 3],
             }.with_texture(texture);
 
-            assert_eq!(charray.get(0, 0), 1);
-            assert_eq!(charray.get(1, 1), 5);
-            assert_eq!(charray.get(2, 2), 9);
+            assert_eq!(charray.get(0, 0), b'1');
+            assert_eq!(charray.get(1, 1), b'5');
+            assert_eq!(charray.get(2, 2), b'9');
         }
 
         #[test]
@@ -514,9 +462,9 @@ mod tests {
                 data: [[0; 3]; 3],
             }.with_texture(texture);
 
-            assert_eq!(charray.get(0, 0), 1);
-            assert_eq!(charray.get(1, 1), 5);
-            assert_eq!(charray.get(2, 2), 9);
+            assert_eq!(charray.get(0, 0), b'9');
+            assert_eq!(charray.get(1, 1), b'5');
+            assert_eq!(charray.get(2, 2), b'1');
         }
 
         #[test]
@@ -532,9 +480,11 @@ mod tests {
                 data: [[0; 3]; 3],
             }.with_texture(texture);
 
-            assert_eq!(charray.get(0, 0), 1);
-            assert_eq!(charray.get(1, 1), 5);
-            assert_eq!(charray.get(2, 2), 9);
+            dbg!(&charray);
+
+            assert_eq!(charray.get(0, 0), b'3');
+            assert_eq!(charray.get(1, 1), b'5');
+            assert_eq!(charray.get(2, 2), b'7');
         }
     }
 }
