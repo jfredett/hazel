@@ -82,7 +82,7 @@ mod tests {
 
     #[test]
     fn from_square_notation() {
-        let b = Bitboard::from(Square::try_from("e4").unwrap());
-        assert_eq!(b.0, 1 << 36);
+        let b = Bitboard::from(E4);
+        assert_eq!(b.0, 1 << E4.index() as u64);
     }
 }

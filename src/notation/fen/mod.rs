@@ -1,5 +1,8 @@
-#![allow(dead_code)]
+mod position_metadata;
+mod castle_rights;
+
 use std::fmt::Display;
+use std::str::SplitWhitespace;
 
 use crate::board::{Alter, Alteration};
 use crate::constants::EMPTY_POSITION_FEN;
@@ -7,6 +10,9 @@ use crate::types::{Color, Occupant, Piece};
 use crate::game::interface::Chess;
 use crate::notation::*;
 
+
+use position_metadata::PositionMetadata;
+use castle_rights::CastleRights;
 
 // NOTE: There exists a metadata type in `Ply` which might be useful here. I intended it to be
 // packed into 4 bytes, but I think I implemented it as a plain struct, either way, it can come in
@@ -18,14 +24,9 @@ use crate::notation::*;
 pub struct FEN {
     original_fen: String,
     position: Vec<Alteration>,
-    side_to_move: Color,
-    castling: CastleRights,
-    // The index of the square containing the en passant target square, or None if there is none
-    en_passant: Option<usize>,
-    halfmove_clock: usize,
-    to_play: Color,
-    fullmove_number: usize,
+    metadata: PositionMetadata
 }
+
 
 impl PartialEq for FEN {
     fn eq(&self, other: &Self) -> bool {
@@ -34,32 +35,6 @@ impl PartialEq for FEN {
 }
 impl Eq for FEN {}
 
-#[derive(Debug, Clone, Copy)]
-struct CastleRights {
-    white_short: bool,
-    white_long: bool,
-    black_short: bool,
-    black_long: bool,
-}
-
-impl Display for CastleRights {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut rights = String::new();
-        if self.white_short {
-            rights.push('K');
-        }
-        if self.white_long {
-            rights.push('Q');
-        }
-        if self.black_short {
-            rights.push('k');
-        }
-        if self.black_long {
-            rights.push('q');
-        }
-        write!(f, "{}", rights)
-    }
-}
 
 impl Default for FEN {
     fn default() -> Self {
@@ -68,44 +43,55 @@ impl Default for FEN {
 }
 
 impl FEN {
+    /// Sometimes you just want to specify the position without all the metadata, this
+    /// assumes you are describing a position with white-to-move, all castling rights, no en
+    /// passant square.
+    pub fn with_default_metadata(fen: &str) -> Self {
+        let fenprime = format!("{} {}", fen, PositionMetadata::default());
+        let position = Self::compile(&fenprime);
+
+        Self {
+            original_fen: fenprime,
+            position,
+            metadata: PositionMetadata::default(),
+        }
+    }
+
+    /// Expects a full FEN string with all metadata.
     pub fn new(fen: &str) -> Self {
+        let mut metadata = PositionMetadata::default();
+
         let mut parts = fen.split_whitespace();
         let position_str = parts.next().unwrap();
         let position = Self::compile(position_str);
-        let side_to_move = parts.next().unwrap();
-        let castling = parts.next().unwrap();
-        let en_passant = parts.next().unwrap();
-        let halfmove_clock = parts.next().unwrap();
-        let fullmove_number = parts.next().unwrap();
 
-        let side_to_move = match side_to_move {
-            "w" => Color::WHITE,
-            "b" => Color::BLACK,
-            _ => panic!("Invalid side to move"),
-        };
-
-        let castling = CastleRights {
-            white_short: castling.contains('K'),
-            white_long: castling.contains('Q'),
-            black_short: castling.contains('k'),
-            black_long: castling.contains('q'),
-        };
-
-        let en_passant = match en_passant {
-            "-" => None,
-            square => Some(square.parse().unwrap()),
-        };
+        metadata.parse(&mut parts);
 
         Self {
             original_fen: fen.to_string(),
             position,
-            side_to_move,
-            castling,
-            en_passant,
-            halfmove_clock: halfmove_clock.parse().unwrap(),
-            to_play: side_to_move,
-            fullmove_number: fullmove_number.parse().unwrap(),
+            metadata
         }
+    }
+
+    pub fn side_to_move(&self) -> Color {
+        self.metadata.side_to_move
+    }
+
+    pub fn castling(&self) -> CastleRights {
+        self.metadata.castling
+    }
+
+    pub fn en_passant(&self) -> Option<Square> {
+        self.metadata.en_passant
+    }
+
+    pub fn halfmove_clock(&self) -> usize {
+        self.metadata.halfmove_clock
+    }
+
+    pub fn fullmove_number(&self) -> usize {
+        self.metadata.fullmove_number
     }
 
     pub fn setup<C>(&self) -> C where C : Chess {
@@ -158,18 +144,11 @@ impl FEN {
 
 impl Display for FEN {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} {} {} {} {} {} {}",
+        write!(f, "{}",
             self.original_fen,
-            self.side_to_move,
-            self.castling,
-            self.en_passant.unwrap_or(0),
-            self.halfmove_clock,
-            self.to_play,
-            self.fullmove_number,
         )
     }
 }
-
 
 pub fn setup<A : Alter + Default>(fen: &FEN) -> A {
     let mut board = A::default();
@@ -182,8 +161,6 @@ pub fn setup_mut<A : Alter>(fen: &FEN, board: &mut A) {
         board.alter_mut(*alteration);
     }
 }
-
-
 
 #[cfg(test)]
 mod tests {
@@ -199,32 +176,29 @@ mod tests {
         let fen = FEN::new(START_POSITION_FEN);
         assert_eq!(fen.original_fen, START_POSITION_FEN);
         // We test the position part below in the #setup test
-        assert_eq!(fen.side_to_move, Color::WHITE);
-        assert_eq!(fen.castling.white_short, true);
-        assert_eq!(fen.castling.white_long, true);
-        assert_eq!(fen.castling.black_short, true);
-        assert_eq!(fen.castling.black_long, true);
-        assert_eq!(fen.en_passant, None);
-        assert_eq!(fen.halfmove_clock, 0);
-        assert_eq!(fen.to_play, Color::WHITE);
-        assert_eq!(fen.fullmove_number, 1);
+        assert_eq!(fen.side_to_move(), Color::WHITE);
+        assert_eq!(fen.castling().white_short, true);
+        assert_eq!(fen.castling().white_long, true);
+        assert_eq!(fen.castling().black_short, true);
+        assert_eq!(fen.castling().black_long, true);
+        assert_eq!(fen.en_passant(), None);
+        assert_eq!(fen.halfmove_clock(), 0);
+        assert_eq!(fen.fullmove_number(), 1);
     }
 
     #[test]
     fn fen_kiwipete_position() {
         let fen = FEN::new(POS2_KIWIPETE_FEN);
-        dbg!(&fen);
         assert_eq!(fen.original_fen, POS2_KIWIPETE_FEN);
         // We test the position part below in the #setup test
-        assert_eq!(fen.side_to_move, Color::WHITE);
-        assert_eq!(fen.castling.white_short, true);
-        assert_eq!(fen.castling.white_long, true);
-        assert_eq!(fen.castling.black_short, true);
-        assert_eq!(fen.castling.black_long, true);
-        assert_eq!(fen.en_passant, None);
-        assert_eq!(fen.halfmove_clock, 0);
-        assert_eq!(fen.to_play, Color::WHITE);
-        assert_eq!(fen.fullmove_number, 1);
+        assert_eq!(fen.side_to_move(), Color::WHITE);
+        assert_eq!(fen.castling().white_short, true);
+        assert_eq!(fen.castling().white_long, true);
+        assert_eq!(fen.castling().black_short, true);
+        assert_eq!(fen.castling().black_long, true);
+        assert_eq!(fen.en_passant(), None);
+        assert_eq!(fen.halfmove_clock(), 0);
+        assert_eq!(fen.fullmove_number(), 1);
     }
 
     #[test]
@@ -268,15 +242,14 @@ mod tests {
         let fen = FEN::new("8/8/8/8/8/8/8/8 w KQkq - 0 1");
         assert_eq!(fen.original_fen, "8/8/8/8/8/8/8/8 w KQkq - 0 1");
         // We test the position part below in the #setup test
-        assert_eq!(fen.side_to_move, Color::WHITE);
-        assert_eq!(fen.castling.white_short, true);
-        assert_eq!(fen.castling.white_long, true);
-        assert_eq!(fen.castling.black_short, true);
-        assert_eq!(fen.castling.black_long, true);
-        assert_eq!(fen.en_passant, None);
-        assert_eq!(fen.halfmove_clock, 0);
-        assert_eq!(fen.to_play, Color::WHITE);
-        assert_eq!(fen.fullmove_number, 1);
+        assert_eq!(fen.side_to_move(), Color::WHITE);
+        assert_eq!(fen.castling().white_short, true);
+        assert_eq!(fen.castling().white_long, true);
+        assert_eq!(fen.castling().black_short, true);
+        assert_eq!(fen.castling().black_long, true);
+        assert_eq!(fen.en_passant(), None);
+        assert_eq!(fen.halfmove_clock(), 0);
+        assert_eq!(fen.fullmove_number(), 1);
     }
     
     #[test]

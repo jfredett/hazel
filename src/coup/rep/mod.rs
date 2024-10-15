@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 
+
 // TODO:
 //
 // I think this can basically be shoved into const time and fully precomputed. Every move is
@@ -21,7 +22,7 @@ use crate::constants::File;
 use serde::{Deserialize, Serialize};
 
 use tracing::instrument;
-use tracing::debug;
+use tracing::{debug, trace};
 
 ///! This module defines a compact representation of chess moves from a given ply.
 ///!
@@ -62,7 +63,7 @@ impl Move {
     /// assert!(!m.is_promotion());
     /// assert!(m.move_metadata().is_quiet());
     /// ```
-    pub fn from<S>(source: S, target: S, metadata: MoveType) -> Move where S : SquareNotation {
+    pub fn new<S>(source: S, target: S, metadata: MoveType) -> Move where S : SquareNotation {
         let s : Square = source.into();
         let t : Square = target.into();
 
@@ -73,24 +74,19 @@ impl Move {
         }
     }
 
+    pub fn from<S>(source: S, target: S, metadata: MoveType) -> Move where S : SquareNotation {
+        trace!("Deprecated use of Move::from, use Move::new instead");
+        Move::new(
+            source,
+            target,
+            metadata
+        )
+    }
+
     pub fn null() -> Move {
         // We only care about the metadata bits for a null move. So the source/target are just
         // whatever is convenient.
         Move::from(A1, A1, MoveType::NULLMOVE)
-    }
-
-    pub fn from_uci(uci: &str) -> Move {
-        if uci == "0000" {
-            return Move::null();
-        }
-        let source = Square::try_from(&uci[0..2]).unwrap();
-        let target = Square::try_from(&uci[2..4]).unwrap();
-        // NOTE: Without context, we cannot determine, e.g., if `d2d4` is a double pawn move, or a
-        // move of a rook, or a move of a bishop. It depends on the piece at d2, and we don't know
-        // that. So instead we mark the move 'ambiguous' and defer disambiguation till later, when
-        // we explicitly ask for a context.
-        let metadata = MoveType::UCI_AMBIGUOUS;
-        Move::from(source, target, metadata)
     }
 
     /// Creates a move from the given source and target squares (given in notation), and
@@ -138,6 +134,8 @@ impl Move {
 
         let source = context.get(self.source());
         let target = context.get(self.target());
+
+        debug!("DISPLAY:\n{}\nSource: should be {},  is {:?}", display_board(context), self.source(), source);
 
         // If the source square is empty, we can't disambiguate
         if source.is_empty() { return None; }
@@ -217,14 +215,11 @@ impl Move {
 
     #[instrument(skip(context))]
     pub fn to_pgn<C>(&self, context: &C) -> String where C: Query {
-        debug!("Generating PGN for move: {:?}", self);
-        debug!("Context: {}", display_board(context));
         if self.is_null() {
             return "".to_string();
         }
 
         let metadata = self.disambiguate(context).unwrap();
-        debug!("Disambiguated metadata: {:?}", metadata);
 
         if metadata.is_short_castle() {
             return "O-O".to_string();
@@ -412,7 +407,10 @@ impl Move {
         let source_occupant = context.get(source);
         let target_occupant = context.get(target);
 
-        let mut alterations = match self.disambiguate(context).unwrap() {
+        let contextprime = self.disambiguate(context);
+
+
+        let mut alterations = match contextprime.unwrap() {
             MoveType::QUIET => vec![
                 Alteration::place(target, source_occupant),
                 Alteration::remove(source, source_occupant)

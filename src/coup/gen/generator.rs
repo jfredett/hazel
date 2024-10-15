@@ -248,7 +248,7 @@ mod tests {
 
         let moves = Move::generate(&ply, Color::BLACK);
 
-        assert!(moves.contains(&Move::from_notation("c4", "d3", MoveType::EP_CAPTURE)));
+        assert!(moves.contains(&Move::from(C4, D3, MoveType::EP_CAPTURE)));
     }
 
 }

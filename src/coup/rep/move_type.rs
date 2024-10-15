@@ -99,18 +99,6 @@ impl MoveType {
     const CAPTURE_MASK: u16 = 0b0100;
     const EP_MASK: u16 = 0b0101;
 
-    #[inline]
-    pub fn from_uci(uci: &str) -> MoveType {
-        match uci {
-            "q" => MoveType::PROMOTION_QUEEN,
-            "r" => MoveType::PROMOTION_ROOK,
-            "b" => MoveType::PROMOTION_BISHOP,
-            "n" => MoveType::PROMOTION_KNIGHT,
-            "" => MoveType::UCI_AMBIGUOUS,
-            _ => unimplemented!(),
-        }
-    }
-
     #[inline(always)]
     pub fn is_long_castle(self) -> bool {
         self == MoveType::LONG_CASTLE

@@ -1,6 +1,7 @@
 use crate::board::interface::Query;
 use crate::coup::rep::Move;
 use crate::notation::*;
+use crate::notation::uci::UCI;
 
 
 // This contains the source notation, the calculated Move object, and the board state prior to the
@@ -25,9 +26,10 @@ impl From<&str> for HalfPly {
     /// TODO: Implement `Notation`, a type which tags a string with its notation type, allows
     /// conversion to canonical type, and then this method can be implemented for `Notation`.
     fn from(notation: &str) -> Self {
+        let m = UCI::try_from(notation).expect(format!("Invalid Move: {}", notation).as_str());
         Self {
             notation: notation.to_string(),
-            mov: Move::from_uci(notation),
+            mov: m.into(),
         }
     }
 }
@@ -63,18 +65,11 @@ mod tests {
         use super::*;
 
         #[test]
-        fn from_uci() {
+        fn from_notation() {
             let half_ply = HalfPly::from("d2d4");
-            dbg!(&half_ply);
-            assert_eq!(half_ply.mov.source_idx(), 0o13);
-            assert_eq!(half_ply.mov.target_idx(), 0o33);
-        }
-
-        #[test]
-        fn from_move() {
-            let half_ply = HalfPly::from(Move::from_uci("d2d4"));
-            assert_eq!(half_ply.mov.source_idx(), 0o13);
-            assert_eq!(half_ply.mov.target_idx(), 0o33);
+            // TODO: Demeter
+            assert_eq!(half_ply.mov.source(), D2);
+            assert_eq!(half_ply.mov.target(), D4);
         }
     }
 
@@ -127,7 +122,6 @@ mod tests {
             board.set(A7, Occupant::white_pawn());
             board.set(B8, Occupant::black_queen());
 
-            dbg!(&board);
 
             let half_ply = HalfPly::from("a7b8q");
             assert_eq!(half_ply.to_pgn(&board), "axb8=Q");

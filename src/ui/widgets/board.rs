@@ -94,7 +94,7 @@ impl Widget for &Board<'_> {
         for i in 0..8 {
             for j in 0..8 {
                 let cell = buf.get_mut(area.x + 3*i + 1, area.y + 2*j);
-                let s = Square::from((i, j));
+                let s = Square::from((j, i));
                 match self.state.get(s) {
                     Occupant::Occupied(piece, color) => {
                         let symbol = match piece {

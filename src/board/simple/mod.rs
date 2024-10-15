@@ -1,14 +1,16 @@
 use std::fmt::Debug;
 use tracing::{instrument, debug};
-use crate::board::{alter::Alter, alteration::Alteration, query::Query};
-use crate::constants::START_POSITION_FEN;
+use crate::board::{alter::Alter, alteration::Alteration, query::{display_board , Query}};
+use crate::constants::{START_POSITION_FEN, EMPTY_POSITION_FEN};
 use crate::engine::Engine;
 use crate::coup::rep::Move;
 use crate::notation::*;
+use crate::notation::uci::UCI;
 use crate::notation::fen::{self, setup_mut, FEN};
 use crate::types::{Piece, Occupant};
 use crate::engine::uci::UCIMessage;
 use crate::game::interface::Chess;
+
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct PieceBoard {
@@ -24,13 +26,7 @@ impl Default for PieceBoard {
 impl Debug for PieceBoard {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "")?;
-        for i in 0..64 {
-            write!(f, "{}", self.board[i])?;
-            if i % 8 == 7 {
-                write!(f, "\n")?;
-            }
-        }
-        Ok(())
+        write!(f, "{}", display_board(self))
     }
 }
 
@@ -98,8 +94,9 @@ impl Engine<UCIMessage> for PieceBoard {
         self.exec(UCIMessage::parse(message))
     }
 
+    #[instrument]
     fn exec(&mut self, message: UCIMessage) -> Vec<UCIMessage> {
-        match message {
+        let ret = match message {
             UCIMessage::UCI => vec![UCIMessage::ID("name".to_string(), "Hazel Pieceboard".to_string()), UCIMessage::UCIOk],
             UCIMessage::IsReady => vec![UCIMessage::ReadyOk],
             UCIMessage::UCINewGame => {
@@ -113,14 +110,19 @@ impl Engine<UCIMessage> for PieceBoard {
                     self.set_fen(&FEN::new(&fen));
                 }
 
+                debug!("Here");
+
                 for m in moves {
-                    self.make_mut(Move::from_uci(&m));
+                    let uci = UCI::try_from(&m).expect(format!("Invalid Move: {}", &m).as_str());
+                    self.make_mut(uci.into());
                 }
 
                 vec![]
             },
             _ => vec![]
-        }
+        };
+        debug!("Done With Exec");
+        ret
     }
 }
 
@@ -156,7 +158,19 @@ mod tests {
             let mut board = PieceBoard::default();
             board.set(A1, Occupant::white_rook());
             let rep = format!("{:?}", board);
-            let expected_rep = "\n........\n........\n........\n........\n........\n........\n........\nR.......\n";
+            let expected_rep = "
+8 . . . . . . . .
+7 . . . . . . . .
+6 . . . . . . . .
+5 . . . . . . . .
+4 . . . . . . . .
+3 . . . . . . . .
+2 . . . . . . . .
+1 R . . . . . . .
+  a b c d e f g h
+";
+            println!("{}", rep);
+            println!("{}", expected_rep);
 
             // The board should find the rook
             assert_eq!(board.get(A1), Occupant::white(Piece::Rook));
@@ -173,7 +187,6 @@ mod tests {
         pub fn converts_start_position_correctly() {
             let mut board = PieceBoard::default();
             board.set_startpos();
-            dbg!(&board);
             let fen = query::to_fen(&board);
             assert_eq!(fen, FEN::new(START_POSITION_FEN));
         }
@@ -182,7 +195,7 @@ mod tests {
         pub fn converts_empty_board_correctly() {
             let board = PieceBoard::default();
             let fen = query::to_fen(&board);
-            assert_eq!(fen, FEN::new("8/8/8/8/8/8/8/8"));
+            assert_eq!(fen, FEN::new(EMPTY_POSITION_FEN));
         }
 
         #[test]
@@ -196,7 +209,7 @@ mod tests {
 
         #[test]
         pub fn converts_each_offset_correctly() {
-            let fen = FEN::new("p7/1p6/2p5/3p4/4p3/5p2/6p1/7p");
+            let fen = FEN::new("p7/1p6/2p5/3p4/4p3/5p2/6p1/7p w KQkq - 0 1");
             let mut board = PieceBoard::default();
             board.set_fen(&fen);
             let fen2 = query::to_fen(&board);
@@ -254,10 +267,7 @@ mod tests {
             let mut board = PieceBoard::default();
             let moves = vec!["e2e4", "e7e5", "g1f3", "b8c6", "f1c4", "g8f6", "d2d3", "d7d6", "c1e3", "c8e6"];
             let message = UCIMessage::Position("startpos".to_string(), moves.iter().map(|s| s.to_string()).collect());
-            dbg!(&message);
-            dbg!(board);
             board.exec(message);
-            dbg!(board);
             let fen = query::to_fen(&board);
             assert_eq!(fen, FEN::new("r2qkb1r/ppp2ppp/2npbn2/4p3/2B1P3/3PBN2/PPP2PPP/RN1QK2R"));
         }

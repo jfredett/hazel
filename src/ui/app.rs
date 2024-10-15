@@ -54,7 +54,7 @@ impl Hazel {
 
         // s.entry.boardstate.set_startpos();
         let mut b = PieceBoard::default();
-        b.set_fen(&FEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR"));
+        b.set_fen(&FEN::with_default_metadata("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR"));
         s.entry.boardstate = b;
 
         return s;
@@ -165,7 +165,7 @@ mod tests {
             "│    Placeholder   ││    Placeholder   │       Placeholder      ",
             "│    Placeholder   ││    Placeholder   │       Placeholder      ",
             "└──────────────────┘└──────────────────┘       Placeholder      ",
-            "│        rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR         │",
+            "│  rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 1  │",
             "┌──────────────────────────────────────────────────────────────┐",
             "│                                                              │",
             "│                                                              │",
@@ -184,7 +184,7 @@ mod tests {
 
         // NOTE: This is going to be turned off most of the time, except when I need a snapshot of the UI
         // to cheat the test.
-        //assert_eq!(actual, expected);
+        assert_eq!(actual, expected);
 
         // Ignore style differences for now, by... turning everything into a big list of chars
         // wrapped in &strs wrapped in my pain and suffering.

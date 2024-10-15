@@ -59,14 +59,6 @@ impl Engine<UCIMessage> for Driver {
                 vec![]
             }
             UCIMessage::Position(_fen, _moves) => {
-                /*
-                let mut game = Game::from_fen(&fen);
-                for m in moves {
-                    game.make(Move::from_uci(&m));
-                }
-
-                self.game = Some(game);
-                */
                 vec![]
             }
             UCIMessage::Go(_) => {

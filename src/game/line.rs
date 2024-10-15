@@ -45,7 +45,6 @@ impl Line {
     fn pop(&mut self) -> Option<HalfPly> {
         self.halfplies.pop()
     }
-
     fn current_move(&self) -> Option<HalfPly> {
         match self.halfplies.last() {
             Some(halfply) => Some(halfply.clone()),

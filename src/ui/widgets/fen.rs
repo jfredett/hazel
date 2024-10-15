@@ -72,7 +72,7 @@ impl FEN {
 
 impl Widget for &FEN {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let fenstring = self.fen.to_string();
+        let fenstring = format!("{}", self.fen);
         Text::styled(fenstring, self.style).alignment(self.alignment).render(area, buf);
     }
 }
@@ -94,7 +94,7 @@ mod tests {
         fen_widget.render(rect, &mut buffer);
 
         let mut expected = Buffer::with_lines(vec![
-            "8/8/8/8/8/8/8/8                                                 "
+            "8/8/8/8/8/8/8/8 w KQkq - 0 1                                    "
         ]);
         expected.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
@@ -114,7 +114,7 @@ mod tests {
         fen_widget.render(rect, &mut buffer);
 
         let mut expected = Buffer::with_lines(vec![
-            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR                     "
+            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1        "
         ]);
         expected.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 

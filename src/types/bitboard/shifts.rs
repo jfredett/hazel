@@ -49,8 +49,6 @@ mod test {
 
         let bb_after_shift = b.shift_by(Direction::N, 2);
 
-        dbg!(&b);
-        dbg!(&bb_after_shift);
         assert!(bb_after_shift.is_set(D6));
 
         assert!(!bb_after_shift.is_set(D4));

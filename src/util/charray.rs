@@ -361,7 +361,6 @@ mod tests {
         fn transform_test(start: Origin, dest: Origin, prediction: &str) {
             let mut charray = Charray::<4, 3>::new().transform(start);
 
-            dbg!(&charray);
 
             charray.set(0, 0, b'1');
             charray.set(1, 1, b'2');
@@ -424,7 +423,6 @@ mod tests {
 
             let charray = Charray::<3, 3>::new().with_texture(texture);
 
-            dbg!(&charray);
 
             assert_eq!(charray.get(0, 0), b'7');
             assert_eq!(charray.get(1, 1), b'5');
@@ -480,7 +478,6 @@ mod tests {
                 data: [[0; 3]; 3],
             }.with_texture(texture);
 
-            dbg!(&charray);
 
             assert_eq!(charray.get(0, 0), b'3');
             assert_eq!(charray.get(1, 1), b'5');

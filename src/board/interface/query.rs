@@ -53,7 +53,7 @@ pub fn to_fen(board: &impl Query) -> FEN {
 
     for rank in 0..=7 {
         for file in 0..=7 {
-            let occ = board.get(Square::new(rank * 8 + file));
+            let occ = board.get(Square::from((file as usize, 7 - rank as usize)));
             match occ {
                 Occupant::Empty => empty += 1,
                 _ => {
@@ -75,7 +75,7 @@ pub fn to_fen(board: &impl Query) -> FEN {
             f.push_str("/");
         }
     }
-    FEN::new(&f)
+    FEN::with_default_metadata(&f)
 }
 
 #[cfg(test)]
@@ -114,7 +114,7 @@ mod tests {
         p.set_startpos();
 
         let actual = to_fen(&p);
-        let expected = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+        let expected = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
         assert_eq!(format!("{}", actual), expected);
     }
@@ -125,7 +125,7 @@ mod tests {
         p.set_fen(&FEN::new(POS2_KIWIPETE_FEN));
 
         let actual = to_fen(&p);
-        let expected = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R";
+        let expected = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
 
         assert_eq!(format!("{}", actual), expected);
     }
