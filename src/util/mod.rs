@@ -1,4 +1,5 @@
 mod mask;
+mod charray;
 
 /// Selects a subset from a vector using the given `selection` bitset as a
 /// selection mask -- if the `nth` bit is high, then the `nth` element will be
