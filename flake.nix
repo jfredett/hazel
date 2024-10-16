@@ -21,12 +21,15 @@
             inherit inputs pkgs;
 
             modules = [{
-              languages.rust.enable = true;
-              languages.rust.channel = "nightly";
-              languages.rust.components = [ "rustc" "cargo" "clippy" "rustfmt" "rust-analyzer" "miri" "llvm-tools" ];
+              languages.rust = {
+                enable = true;
+                mold.enable = true;
+                channel = "nightly";
+                components = [ "rustc" "cargo" "clippy" "rustfmt" "rust-analyzer" "miri" "llvm-tools" ];
+                # FIXME: I would love for this to be part of the Cargo.toml, and not the flake.
+                rustflags = "-C target-feature=+bmi1,+bmi2";
+              };
 
-              # FIXME: I would love for this to be part of the Cargo.toml, and not the flake.
-              languages.rust.rustflags = "-C target-feature=+bmi1,+bmi2";
 
               packages = with pkgs; [
                 gnuplot
@@ -40,6 +43,7 @@
                 cargo-mutants
                 stockfish
                 bacon
+                mold
               ];
             }];
           };
