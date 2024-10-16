@@ -1,6 +1,5 @@
-
 use crate::{
-    notation::{Square, SquareNotation, fen::FEN},
+    notation::{*, fen::FEN},
     types::Occupant,
     util::charray::{Origin, Charray},
 };
@@ -13,6 +12,7 @@ pub trait Query {
 }
 
 lazy_static! {
+    /// A Charray texture to display the empty board
     static ref TEXTURE: Vec<&'static str> = vec![
          "8 . . . . . . . .",
          "7 . . . . . . . .",
@@ -24,57 +24,80 @@ lazy_static! {
          "1 . . . . . . . .",
          "  a b c d e f g h"
     ];
+    static ref EMPTY_BOARD : Charray<9,17> = Charray::new().with_texture(TEXTURE.to_vec());
 }
 
 /// For a variety of, I'm sure, very good reasons, I can't provide a generic `impl Debug for T where T: Query`.
 /// Something about orphans, I'm sure there is some kind of hack.
 /// For now, this does what's needed.
 pub fn display_board(board: &impl Query) -> String {
-    let mut charray : Charray<9,17> = Charray::new().with_texture(TEXTURE.to_vec());
-    charray.set_origin(Origin::TopLeft);
+    let mut charray = EMPTY_BOARD.clone();
+    charray.set_origin(Origin::BottomLeft);
 
-    for rank in 0..=7 {
-        for file in 0..=7 {
-            // FIXME: I truly do not understand why this works. I built Charray specifically to
-            // help me avoid this weird 'sometimes file and rank need to be in opposite places'
-            // malarky. I think maybe somewhere I have flipped a sign and I cannot chase it down to
-            // save my fucking life.
-            let occ = board.get(Square::from((file, rank)));
-            charray.set(7 - rank, 2*file + 2, occ.to_string().as_bytes()[0]);
-        }
+    for s in Square::by_rank_and_file() {
+        let occ = board.get(s);
+        charray.set(1 + s.rank(), 2 * s.file() + 2, occ.to_string().as_bytes()[0]);
     }
 
-    charray.to_string()
+    format!("{}", charray.to_string())
 }
 
 pub fn to_fen(board: &impl Query) -> FEN {
     let mut f = String::new();
     let mut empty = 0;
 
-    for rank in 0..=7 {
-        for file in 0..=7 {
-            let occ = board.get(Square::from((file as usize, 7 - rank as usize)));
-            match occ {
-                Occupant::Empty => empty += 1,
-                _ => {
-                    if empty > 0 {
-                        f.push_str(&empty.to_string());
-                        empty = 0;
-                    }
-                    f.push_str(&occ.to_string());
+    /*
+    for s in Square::by_rank_and_file() {
+        if s.index() % 8 == 0 && s != A1 {
+            if empty != 0 {
+                f.push_str(&empty.to_string());
+                empty = 0;
+            }
+            f.push_str("/");
+        }
+        let occ = board.get(s);
+        match occ {
+            Occupant::Empty => empty += 1,
+            _ => {
+                if empty > 0 {
+                    f.push_str(&empty.to_string());
+                    empty = 0;
                 }
+                f.push_str(&occ.to_string());
             }
         }
 
-        if empty > 0 {
-            f.push_str(&empty.to_string());
+        if empty == 8 {
+            f.push_str("8");
             empty = 0;
         }
+    }
+    */
 
-        if rank < 7 {
+    for s in Square::by_rank_and_file().downward() {
+        let occ = board.get(s);
+        match occ {
+            Occupant::Empty => empty += 1,
+            _ => {
+                if empty != 0 {
+                    f.push_str(&empty.to_string());
+                    empty = 0;
+                }
+                f.push_str(&occ.to_string());
+            }
+        }
+
+        if s.file() == 7 && s != A8 {
+            if empty != 0 {
+                f.push_str(&empty.to_string());
+                empty = 0;
+            }
             f.push_str("/");
         }
     }
+
+    f.pop(); // remove the last slash
+
     FEN::with_default_metadata(&f)
 }
 

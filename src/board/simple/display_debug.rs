@@ -5,7 +5,6 @@ use super::*;
 
 impl Debug for PieceBoard {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "")?;
         write!(f, "{}", display_board(self))
     }
 }
@@ -13,7 +12,6 @@ impl Debug for PieceBoard {
 
 impl Display for PieceBoard {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "")?;
         write!(f, "{}", display_board(self))
     }
 }
@@ -27,8 +25,7 @@ mod tests {
         let mut board = PieceBoard::default();
         board.set(A1, Occupant::white_rook());
         let rep = format!("{:?}", board);
-        let expected_rep = "
-8 . . . . . . . .
+        let expected_rep = "8 . . . . . . . .
 7 . . . . . . . .
 6 . . . . . . . .
 5 . . . . . . . .

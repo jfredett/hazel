@@ -104,17 +104,18 @@ impl FEN {
 
     fn compile(fen: &str) -> Vec<Alteration> {
         let mut alterations = Vec::new();
-        let mut rank = 7;
-        let mut file = 0;
+        let mut cursor = Square::by_rank_and_file();
+        cursor.downward();
         for c in fen.chars() {
-            let square = Square::from((file, rank));
+            if cursor.is_done() { break; }
+
             match c {
-                '/' => {
-                    rank -= 1;
-                    file = 0;
-                }
                 '1'..='8' => {
-                    file += c.to_digit(10).unwrap() as usize;
+                    let skip = c.to_digit(10).unwrap() as usize;
+                    for _ in 0..skip { cursor.next(); }
+                }
+                '/' => {
+                    continue;
                 }
                 _ => {
                     let color = if c.is_uppercase() { Color::WHITE } else { Color::BLACK };
@@ -126,19 +127,21 @@ impl FEN {
                         'q' => Piece::Queen,
                         'k' => Piece::King,
                         _ => {
-                            // FIXME: This is ugly.
-                            alterations.push(Alteration::Place{ square, occupant: Occupant::Empty } );
-                            file += 1;
                             continue;
                         },
                     };
                     let occupant = Occupant::Occupied(piece, color);
-                    alterations.push(Alteration::Place { square,  occupant } );
-                    file += 1;
+                    alterations.push(Alteration::Place { square: cursor.current_square(), occupant } );
+
+                    cursor.next();
                 }
             }
+
         }
-        alterations
+
+
+
+        return alterations;
     }
 }
 

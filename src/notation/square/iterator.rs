@@ -43,6 +43,7 @@ enum FileDirection {
 
 #[derive(Clone, Copy)]
 pub struct RankFile {
+    done: bool,
     rank: usize,
     file: usize,
     rank_direction: RankDirection,
@@ -71,6 +72,7 @@ impl Default for RankFile {
     /// By Default, a RankFile iterator iterates from A1 to H8
     fn default() -> Self {
         Self {
+            done: false,
             rank: 0,
             file: 0,
             rank_direction: RankDirection::Upward,
@@ -82,6 +84,7 @@ impl Default for RankFile {
 impl From<Square> for RankFile {
     fn from(square: Square) -> Self {
         Self {
+            done: false,
             rank: square.rank(),
             file: square.file(),
             rank_direction: RankDirection::Upward,
@@ -94,27 +97,24 @@ impl Iterator for RankFile {
     type Item = Square;
 
     fn next(&mut self) -> Option<Square> {
+        if self.done { return None; }
+
         let current = self.current_square();
+
+        let s = Square::new(self.rank * 8 + self.file);
+
+        if s == self.last_square() {
+            self.done = true;
+            return Some(current);
+        }
 
         match self.file_direction {
             FileDirection::LeftToRight => {
                 if self.file == 7 {
                     self.file = 0;
                     match self.rank_direction {
-                        RankDirection::Upward => {
-                            if self.rank == 7 {
-                                return None;
-                            } else {
-                                self.rank += 1;
-                            }
-                        }
-                        RankDirection::Downward => {
-                            if self.rank == 0 {
-                                return None;
-                            } else {
-                                self.rank -= 1;
-                            }
-                        }
+                        RankDirection::Upward => { self.rank += 1; }
+                        RankDirection::Downward => { self.rank -= 1; }
                     }
                 } else {
                     self.file += 1;
@@ -124,20 +124,8 @@ impl Iterator for RankFile {
                 if self.file == 0 {
                     self.file = 7;
                     match self.rank_direction {
-                        RankDirection::Upward => {
-                            if self.rank == 7 {
-                                return None;
-                            } else {
-                                self.rank += 1;
-                            }
-                        }
-                        RankDirection::Downward => {
-                            if self.rank == 0 {
-                                return None;
-                            } else {
-                                self.rank -= 1;
-                            }
-                        }
+                        RankDirection::Upward => { self.rank += 1; }
+                        RankDirection::Downward => { self.rank -= 1; }
                     }
                 } else {
                     self.file -= 1;
@@ -150,6 +138,48 @@ impl Iterator for RankFile {
 }
 
 impl RankFile {
+
+    ///
+    ///
+    /// 8 W . . . . . . X
+    /// 7 . . . . . . . .
+    /// 6 . . . . . . . .
+    /// 5 . . . . . . . .
+    /// 4 . . . . . . . .
+    /// 3 . . . . . . . .
+    /// 2 . . . . . . . .
+    /// 1 Z . . . . . . Y
+    ///   a b c d e f g h
+    ///
+    /// In the above, you always _end_ at the corner _opposite where you start_ when starting in
+    /// the default positions. So if you choose `downward` and `right_to_left` you will start on
+    /// the top rank by default, meaning either W or X, and right to left means you choose the
+    /// rightmost option, so you start on X (H8).
+    ///
+    /// You end, therefore, on Z (A1). Similar for the rest.
+    ///
+    fn last_square(&self) -> Square {
+        match self.rank_direction {
+            RankDirection::Upward => {
+                match self.file_direction {
+                    FileDirection::LeftToRight => H8,
+                    FileDirection::RightToLeft => A8,
+                }
+            }
+            RankDirection::Downward => {
+                match self.file_direction {
+                    FileDirection::LeftToRight => H1,
+                    FileDirection::RightToLeft => A1,
+                }
+            }
+        }
+    }
+
+    /// True if the iterator has reached the end and been marked as 'done'
+    pub fn is_done(&self) -> bool {
+        self.done
+    }
+
     /// Sets the iterator to go left to right, snaps the file to the leftmost value.
     /// ```
     /// # use hazel::notation::*;
@@ -244,42 +274,6 @@ impl RankFile {
     }
 }
 
-/// The FEN Iterator for Squares
-///
-/// It iterates from rank 8 to 0, from A to H. So Reverse Ranks, Forward Files
-
-/*
-struct FENWise {
-inner: RankFile
-}
-
-impl Default for FENWise {
-fn default() -> Self {
-Self {
-inner: RankFile {
-rank: 8,
-file: 0,
-rank_direction: RankDirection::Downward,
-file_direction: FileDirection::LeftToRight,
-}
-}
-}
-}
-
-impl IntoIterator for FENWise {
-type Item = Square;
-
-fn into_iter(self) -> Self::IntoIter {
-self
-}
-}
-
-impl Iterator for FENWise {
-
-}
-*/
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -287,13 +281,13 @@ mod tests {
     mod iterator {
         use super::*;
 
+        // FIXME: Ideally this mode gets deprecated in favor of the RankFile iterator
         mod standard {
             use super::*;
 
             #[test]
             fn iterator() {
                 let mut s = A1;
-
 
                 assert_eq!(s.next(), Some(A1));
                 assert_eq!(s.next(), Some(B1));
@@ -318,11 +312,83 @@ mod tests {
         mod rankfile {
             use super::*;
 
+            mod touches_all_squares {
+                use super::*;
+
+                #[test]
+                fn when_default() {
+                    let a = RankFile::default();
+                    let mut v = vec![];
+                    for s in a {
+                        v.push(s);
+                    }
+                    assert_eq!(v.len(), 64);
+                }
+
+                #[test]
+                fn when_downwards() {
+                    let mut a = RankFile::default();
+                    a.downward();
+                    let mut v = vec![];
+                    for s in a {
+                        v.push(s);
+                    }
+                    assert_eq!(v.len(), 64);
+                }
+
+                #[test]
+                fn when_right_to_left() {
+                    let mut a = RankFile::default();
+                    a.right_to_left();
+                    let mut v = vec![];
+                    for s in a {
+                        v.push(s);
+                    }
+                    assert_eq!(v.len(), 64);
+                }
+
+                #[test]
+                fn when_downward_and_right_to_left() {
+                    let mut a = RankFile::default();
+                    a.downward().right_to_left();
+                    let mut v = vec![];
+                    for s in a {
+                        v.push(s);
+                    }
+                    assert_eq!(v.len(), 64);
+                }
+
+                #[test]
+                fn when_start_on_h8() {
+                    let mut a = RankFile::default();
+                    a.downward().right_to_left().start_on(H8);
+                    let mut v = vec![];
+                    for s in a {
+                        v.push(s);
+                    }
+                    assert_eq!(v.len(), 64);
+                }
+
+            }
+
             mod left_to_right {
                 use super::*;
 
                 mod upward {
                     use super::*;
+
+                    #[test]
+                    fn first_square_is_A1() {
+                        let a = RankFile::default();
+                        assert_eq!(a, A1);
+                    }
+
+                    #[test]
+                    fn last_square_is_H8() {
+                        let a = RankFile::default();
+                        assert_eq!(a.last_square(), H8);
+                    }
+
                     #[test]
                     fn left_to_right_and_upward_is_default_starts_on_a1() {
                         let mut a = RankFile::default();
@@ -346,6 +412,21 @@ mod tests {
 
                 mod downward {
                     use super::*;
+
+                    #[test]
+                    fn first_square_is_A8() {
+                        let mut a = RankFile::default();
+                        a.downward();
+                        assert_eq!(a, A8);
+                    }
+
+                    #[test]
+                    fn last_square_is_H1() {
+                        let mut a = RankFile::default();
+                        a.downward();
+                        assert_eq!(a.last_square(), H1);
+                    }
+
                     #[test]
                     fn left_to_right_and_downward_starts_on_a8() {
                         let mut a = RankFile::default();
@@ -374,6 +455,20 @@ mod tests {
                     use super::*;
 
                     #[test]
+                    fn first_square_is_H1() {
+                        let mut a = RankFile::default();
+                        a.right_to_left();
+                        assert_eq!(a, H1);
+                    }
+
+                    #[test]
+                    fn last_square_is_A8() {
+                        let mut a = RankFile::default();
+                        a.right_to_left();
+                        assert_eq!(a.last_square(), A8);
+                    }
+
+                    #[test]
                     fn right_to_left_and_upward_starts_on_h1() {
                         let mut a = RankFile::default();
                         a.right_to_left().upward();
@@ -396,6 +491,21 @@ mod tests {
 
                 mod downward {
                     use super::*;
+
+                    #[test]
+                    fn first_square_is_H8() {
+                        let mut a = RankFile::default();
+                        a.downward().right_to_left();
+                        assert_eq!(a, H8);
+                    }
+
+                    #[test]
+                    fn last_square_is_A1() {
+                        let mut a = RankFile::default();
+                        a.downward().right_to_left();
+                        assert_eq!(a.last_square(), A1);
+                    }
+
 
                     #[test]
                     fn right_to_left_and_downward_starts_on_h8() {
@@ -432,6 +542,17 @@ mod tests {
                 assert_eq!(iter, A2);
                 iter.next();
                 assert_eq!(iter, B2);
+            }
+
+            #[test]
+            fn reaches_all_squares() {
+                let mut iter = Square::by_rank_and_file();
+                iter.start_on(G8);
+                assert_eq!(iter, G8);
+                iter.next();
+                assert_eq!(iter, H8);
+                iter.next();
+                assert_eq!(iter.next(), None);
             }
         }
 

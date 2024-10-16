@@ -21,8 +21,6 @@ impl PieceBoard {
     pub fn set_fen(&mut self, fen: &FEN) {
         fen::setup_mut(fen, self);
     }
-
-
 }
 
 #[cfg(test)]
