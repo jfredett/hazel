@@ -34,7 +34,7 @@ impl Mask {
     /// Creates a new instance of `Mask` by starting the Stockfish process.
     #[instrument]
     pub async fn new(command: &str) -> tokio::io::Result<Self> {
-        let mut process = Command::new(command.to_string())
+        let mut process = Command::new(command)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())

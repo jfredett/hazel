@@ -1,6 +1,5 @@
-///! Types useful for representing parts of a chess game that don't naturally fit into other
-///! modules.
-
+//! Types useful for representing parts of a chess game that don't naturally fit into other
+//! modules.
 
 // Bitboard-related types
 pub mod bitboard;

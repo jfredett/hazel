@@ -1,6 +1,5 @@
 use super::*;
 
-use crate::notation::*;
 
 /// Used for easily making bitboards from a list of set squares, use as follows:
 ///
@@ -32,7 +31,7 @@ impl Bitboard {
     /// assert!(b.is_empty());
     /// ```
     pub const fn empty() -> Bitboard {
-        Bitboard { 0: 0 }
+        Bitboard(0)
     }
 
     /// Creates a bitboard with all bits set
@@ -47,7 +46,7 @@ impl Bitboard {
     }
 
     pub fn from_index(index: usize) -> Bitboard {
-        Bitboard { 0: 1 << index }
+        Bitboard(1 << index)
     }
 }
 

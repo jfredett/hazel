@@ -15,6 +15,7 @@ lazy_static! {
         );
 }
 
+#[derive(Default)]
 pub struct EngineIOSection {
     output: Output,
     input: Input,
@@ -38,15 +39,6 @@ impl EngineIOSection {
 
         self.output.push(format!("> {}",  content));
         // TODO: Send to engine as well
-    }
-}
-
-impl Default for EngineIOSection {
-    fn default() -> Self {
-        Self {
-            output: Output::default(),
-            input: Input::default(),
-        }
     }
 }
 

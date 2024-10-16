@@ -10,6 +10,8 @@ use crate::engine::uci::UCIMessage;
 pub use crate::engine::Engine;
 
 
+// TODO: Rename this to Hazel
+#[derive(Default)]
 pub struct Driver {
     debug: bool,
     game: Option<()>

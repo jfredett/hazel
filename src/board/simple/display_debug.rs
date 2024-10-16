@@ -20,8 +20,13 @@ impl Display for PieceBoard {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use crate::types::Piece;
+    use crate::types::Occupant;
+
+
     #[test]
-    pub fn bottom_left_is_A1() {
+    pub fn bottom_left_is_a1() {
         let mut board = PieceBoard::default();
         board.set(A1, Occupant::white_rook());
         let rep = format!("{:?}", board);

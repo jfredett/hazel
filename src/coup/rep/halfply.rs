@@ -1,6 +1,5 @@
 use crate::board::interface::Query;
 use crate::coup::rep::Move;
-use crate::notation::*;
 use crate::notation::uci::UCI;
 
 
@@ -26,7 +25,7 @@ impl From<&str> for HalfPly {
     /// TODO: Implement `Notation`, a type which tags a string with its notation type, allows
     /// conversion to canonical type, and then this method can be implemented for `Notation`.
     fn from(notation: &str) -> Self {
-        let m = UCI::try_from(notation).expect(format!("Invalid Move: {}", notation).as_str());
+        let m = UCI::try_from(notation).unwrap_or_else(|_| panic!("Invalid Move: {}", notation));
         Self {
             notation: notation.to_string(),
             mov: m.into(),
@@ -34,15 +33,15 @@ impl From<&str> for HalfPly {
     }
 }
 
-impl Into<Move> for HalfPly {
-    fn into(self) -> Move {
-        self.mov
+impl From<&HalfPly> for Move {
+    fn from(half_ply: &HalfPly) -> Self {
+        half_ply.mov
     }
 }
 
-impl Into<Move> for &HalfPly {
-    fn into(self) -> Move {
-        self.mov.clone()
+impl From<HalfPly> for Move {
+    fn from(half_ply: HalfPly) -> Self {
+        half_ply.mov
     }
 }
 
@@ -60,6 +59,7 @@ impl HalfPly {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::notation::*;
 
     mod creation {
         use super::*;

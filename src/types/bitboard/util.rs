@@ -1,6 +1,5 @@
 use super::*;
 
-use crate::notation::*;
 
 impl Bitboard {
     #[inline(always)]

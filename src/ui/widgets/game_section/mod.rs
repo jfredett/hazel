@@ -20,6 +20,7 @@ lazy_static! {
         );
 }
 
+#[derive(Default)]
 pub struct GameSectionLayout<'a> {
     info_section: InfoSection,
     board_section: BoardSection<'a>

@@ -113,10 +113,10 @@ mod tests {
         metadata.parse(&mut parts);
 
         assert_eq!(metadata.side_to_move, Color::WHITE);
-        assert_eq!(metadata.castling.white_short, true);
-        assert_eq!(metadata.castling.white_long, true);
-        assert_eq!(metadata.castling.black_short, true);
-        assert_eq!(metadata.castling.black_long, true);
+        assert!(metadata.castling.white_short);
+        assert!(metadata.castling.white_long);
+        assert!(metadata.castling.black_short);
+        assert!(metadata.castling.black_long);
         assert_eq!(metadata.en_passant, None);
         assert_eq!(metadata.halfmove_clock, 0);
         assert_eq!(metadata.fullmove_number, 1);

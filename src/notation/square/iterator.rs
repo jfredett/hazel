@@ -1,7 +1,6 @@
 use super::*;
 
 use std::fmt::Debug;
-use std::iter::IntoIterator;
 use std::iter::Iterator;
 
 /// The Standard Iterator for Squares
@@ -10,18 +9,18 @@ impl Iterator for Square {
 
     fn next(&mut self) -> Option<Square> {
         if self.index() < 64 {
-            let ret = self.clone();
+            let ret = *self;
             self.0 += 1;
-            return Some(ret);
+            Some(ret)
         } else {
-            return None;
+            None
         }
     }
 }
 
 impl Square {
     pub fn by_rank_and_file() -> RankFile {
-        *&RankFile::default()
+        RankFile::default()
     }
 
     pub fn fenwise() -> RankFile {
@@ -301,10 +300,8 @@ mod tests {
 
             #[test]
             fn for_loop() {
-                let mut idx = 0;
-                for s in A1 {
+                for (idx, s) in A1.enumerate() {
                     assert_eq!(s.index(), idx);
-                    idx += 1;
                 }
             }
         }
@@ -378,13 +375,13 @@ mod tests {
                     use super::*;
 
                     #[test]
-                    fn first_square_is_A1() {
+                    fn first_square_is_a1() {
                         let a = RankFile::default();
                         assert_eq!(a, A1);
                     }
 
                     #[test]
-                    fn last_square_is_H8() {
+                    fn last_square_is_h8() {
                         let a = RankFile::default();
                         assert_eq!(a.last_square(), H8);
                     }
@@ -414,14 +411,14 @@ mod tests {
                     use super::*;
 
                     #[test]
-                    fn first_square_is_A8() {
+                    fn first_square_is_a8() {
                         let mut a = RankFile::default();
                         a.downward();
                         assert_eq!(a, A8);
                     }
 
                     #[test]
-                    fn last_square_is_H1() {
+                    fn last_square_is_h1() {
                         let mut a = RankFile::default();
                         a.downward();
                         assert_eq!(a.last_square(), H1);
@@ -455,14 +452,14 @@ mod tests {
                     use super::*;
 
                     #[test]
-                    fn first_square_is_H1() {
+                    fn first_square_is_h1() {
                         let mut a = RankFile::default();
                         a.right_to_left();
                         assert_eq!(a, H1);
                     }
 
                     #[test]
-                    fn last_square_is_A8() {
+                    fn last_square_is_a8() {
                         let mut a = RankFile::default();
                         a.right_to_left();
                         assert_eq!(a.last_square(), A8);
@@ -493,14 +490,14 @@ mod tests {
                     use super::*;
 
                     #[test]
-                    fn first_square_is_H8() {
+                    fn first_square_is_h8() {
                         let mut a = RankFile::default();
                         a.downward().right_to_left();
                         assert_eq!(a, H8);
                     }
 
                     #[test]
-                    fn last_square_is_A1() {
+                    fn last_square_is_a1() {
                         let mut a = RankFile::default();
                         a.downward().right_to_left();
                         assert_eq!(a.last_square(), A1);

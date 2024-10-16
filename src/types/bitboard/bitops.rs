@@ -2,7 +2,6 @@ use super::*;
 use std::ops::{
     BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Mul, Not, 
 };
-use crate::notation::*;
 
 /// Implements the various bit-ops for Bitboards
 macro_rules! binop_trait {

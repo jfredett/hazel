@@ -7,9 +7,7 @@ mod from_into;
 
 
 pub use constants::*;
-pub use display_debug::*;
 pub use iterator::*;
-pub use from_into::*;
 
 
 /// Represents a single square by it's index rooted at a1 = 0, h8 = 63
@@ -33,10 +31,6 @@ impl Square {
 
     pub(crate) const fn _rank(&self) -> usize {
         self.0 / 8
-    }
-
-    pub(crate) const fn coords(&self) -> (usize, usize) {
-        (self._rank(), self._file())
     }
 
     pub const fn backrank_for(&self, color: Color) -> bool {

@@ -2,16 +2,9 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders};
 
+#[derive(Default)]
 pub struct Output {
     buffer: Vec<String>
-}
-
-impl Default for Output {
-    fn default() -> Self {
-        Self {
-            buffer: vec![]
-        }
-    }
 }
 
 impl Output {

@@ -13,6 +13,7 @@ use crate::board::interface::query;
 
 
 #[derive(Debug, Default)]
+#[allow(clippy::upper_case_acronyms)]
 pub struct FEN {
     // TODO: This can probably be aliased so I don't have to use it's full legal name here, but I
     // am lazy and don't want to read the docs.

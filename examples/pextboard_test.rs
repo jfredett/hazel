@@ -6,7 +6,7 @@ use hazel::types::pextboard;
 /// attack calculations repeatedly to generate sampledata for perf.
 const COUNT: usize = 1_000_000_000;
 fn main() {
-    let mut v = vec![Bitboard::empty(); 10];
+    let mut v = [Bitboard::empty(); 10];
     for i in 0..COUNT {
         let bb_in = rand::random::<u64>();
         let sq = rand::random::<u8>() % 64;

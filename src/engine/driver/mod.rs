@@ -1,5 +1,5 @@
-pub mod driver;
+pub mod hazel;
 pub mod stockfish;
 
 
-pub use driver::*;
+pub use hazel::*;

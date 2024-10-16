@@ -1,3 +1,9 @@
+//! This module defines a compact representation of chess moves from a given ply.
+//!
+//! NOTE: With respect to the name of this module. Ideally, this would be named 'move', like the
+//! struct it ! defines, but alas, we are limited by rust reserving the `move` keyword for silly
+//! things like memory safety or something.
+//!
 #![allow(non_snake_case)]
 
 
@@ -24,12 +30,6 @@ use serde::{Deserialize, Serialize};
 use tracing::instrument;
 use tracing::{debug, trace};
 
-///! This module defines a compact representation of chess moves from a given ply.
-///!
-///! NOTE: With respect to the name of this module. Ideally, this would be named 'move', like the
-///! struct it ! defines, but alas, we are limited by rust reserving the `move` keyword for silly
-///! things like memory safety or something.
-///!
 #[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Serialize, Deserialize)]
 pub struct Move(pub(crate) u16);
 
@@ -49,7 +49,7 @@ pub use move_type::*;
 
 impl Move {
     pub const fn empty() -> Move {
-        Move { 0: 0 }
+        Move (0)
     }
 
     /// Creates a move from a given source and target index,
@@ -67,11 +67,9 @@ impl Move {
         let s : Square = source.into();
         let t : Square = target.into();
 
-        #[rustfmt::skip] Move {
-            0: (s.index() as u16) << SOURCE_IDX_SHIFT
-            |  (t.index() as u16) << TARGET_IDX_SHIFT
-            |  metadata as u16,
-        }
+        #[rustfmt::skip] Move( (s.index() as u16) << SOURCE_IDX_SHIFT
+                             | (t.index() as u16) << TARGET_IDX_SHIFT
+                             |   metadata as u16 )
     }
 
     pub fn from<S>(source: S, target: S, metadata: MoveType) -> Move where S : SquareNotation {
@@ -171,13 +169,11 @@ impl Move {
                         // Otherwise, we are just capturing as normal
                         return Some(MoveType::CAPTURE);
                     }
+                } else if self.target().backrank() {
+                    return Some(MoveType::PROMOTION_QUEEN);
                 } else {
-                    if self.target().backrank() {
-                        return Some(MoveType::PROMOTION_QUEEN);
-                    } else {
-                        // No capture, no double-pawn, no promotion, no en passant, just a quiet move.
-                        return Some(MoveType::QUIET);
-                    }
+                    // No capture, no double-pawn, no promotion, no en passant, just a quiet move.
+                    return Some(MoveType::QUIET);
                 }
             },
             // FIXME: ideally this'd look at the square notation and not the raw index, but that's
@@ -229,14 +225,11 @@ impl Move {
 
         let mut result = String::new();
 
-        let source_idx = self.source_idx();
-        let target_idx = self.target_idx();
+        let occ = context.get(self.source());
 
-        let source = context.get(self.source());
+        let source_file = File::from_index(self.source().index()).to_pgn();
 
-        let source_file = File::from_index(source_idx).to_pgn();
-
-        result.push_str(match source.piece().unwrap() {
+        result.push_str(match occ.piece().unwrap() {
             Piece::Pawn => if metadata.is_capture() { source_file } else { "" },
             Piece::Knight => "N",
             Piece::Bishop => "B",
@@ -246,13 +239,13 @@ impl Move {
         });
 
         if metadata.is_capture() {
-            result.push_str("x");
+            result.push('x');
         }
 
         result.push_str(format!("{}", self.target()).to_owned().as_str());
 
         if metadata.is_promotion() {
-            result.push_str("=");
+            result.push('=');
             result.push_str(match metadata.promotion_piece().unwrap() {
                 Piece::Knight => "N",
                 Piece::Bishop => "B",
@@ -431,13 +424,13 @@ impl Move {
                 }.unwrap();
                 return vec![
                     // remove the rook
-                    Alteration::remove(rook_source.into(), Occupant::rook(color)),
+                    Alteration::remove(rook_source, Occupant::rook(color)),
                     // remove the king
                     Alteration::remove(source, source_occupant),
                     // place the king
                     Alteration::place(target, source_occupant),
                     // place the rook
-                    Alteration::place(rook_target.into(), Occupant::rook(color))
+                    Alteration::place(rook_target, Occupant::rook(color))
                 ];
             },
             MoveType::LONG_CASTLE => { 
@@ -502,7 +495,7 @@ impl Move {
         let target = self.target();
         let metadata = self.move_metadata();
         if metadata.is_null() {
-            return "0000".to_string();
+            "0000".to_string()
         } else {
             format!("{}{}{}", source, target, metadata.to_uci())
         }

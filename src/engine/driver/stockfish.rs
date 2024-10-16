@@ -32,6 +32,12 @@ impl Drop for Stockfish {
     }
 }
 
+impl Default for Stockfish {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Stockfish {
     pub fn new() -> Stockfish {
         // start the stockfish process
@@ -83,7 +89,7 @@ impl Engine<UCIMessage> for Stockfish {
                     debug!("{}", line);
                 }
 
-                if message.is_complete(&line) { break; } // Check if the response is complete.
+                if message.is_complete(line) { break; } // Check if the response is complete.
             }
             return response
         } else {

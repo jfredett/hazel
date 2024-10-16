@@ -27,9 +27,9 @@ lazy_static! {
     static ref EMPTY_BOARD : Charray<9,17> = Charray::new().with_texture(TEXTURE.to_vec());
 }
 
-/// For a variety of, I'm sure, very good reasons, I can't provide a generic `impl Debug for T where T: Query`.
-/// Something about orphans, I'm sure there is some kind of hack.
-/// For now, this does what's needed.
+// For a variety of, I'm sure, very good reasons, I can't provide a generic `impl Debug for T
+// where T: Query`. Something about orphans, I'm sure there is some kind of hack. For now, this
+// does what's needed.
 pub fn display_board(board: &impl Query) -> String {
     let mut charray = EMPTY_BOARD.clone();
     charray.set_origin(Origin::BottomLeft);
@@ -39,7 +39,7 @@ pub fn display_board(board: &impl Query) -> String {
         charray.set(1 + s.rank(), 2 * s.file() + 2, occ.to_string().as_bytes()[0]);
     }
 
-    format!("{}", charray.to_string())
+    charray.to_string()
 }
 
 pub fn to_fen(board: &impl Query) -> FEN {
@@ -92,7 +92,7 @@ pub fn to_fen(board: &impl Query) -> FEN {
                 f.push_str(&empty.to_string());
                 empty = 0;
             }
-            f.push_str("/");
+            f.push('/');
         }
     }
 

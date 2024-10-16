@@ -1,8 +1,13 @@
+// These are fine in this module for now. Since a Charray is a collection of bytes, testing fills
+// the slots with nulls on initialization, so the literal `\0` being a null character is in fact
+// what we want. At some point I'll build a better test macro for this.
+#![allow(clippy::octal_escapes)]
+
 use std::fmt::{Debug, Display};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy)]
 pub enum Origin {
-    BottomLeft,
+    #[default] BottomLeft,
     TopLeft,
     TopRight,
     BottomRight,
@@ -14,6 +19,12 @@ pub struct Charray<const H: usize, const W: usize> {
     data: [[u8; W]; H],
 }
 
+impl<const H: usize, const W: usize> Default for Charray<H, W> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 
 impl<const H: usize, const W: usize> Charray<H, W> {
     pub fn new() -> Self {
@@ -21,10 +32,6 @@ impl<const H: usize, const W: usize> Charray<H, W> {
             origin: Origin::BottomLeft,
             data: [[0; W]; H],
         }
-    }
-
-    pub fn to_string(&self) -> String {
-        format!("{}", self)
     }
 
     pub fn get(&self, rank: usize, file: usize) -> u8 {
@@ -93,7 +100,7 @@ impl<const H: usize, const W: usize> Display for Charray<H, W> {
             for j in 0..W {
                 write!(f, "{}", self.data[i][j] as char)?;
             }
-            write!(f, "\n")?;
+            writeln!(f)?;
         }
 
         Ok(())

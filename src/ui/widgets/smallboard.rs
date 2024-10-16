@@ -7,6 +7,7 @@ use crate::board::simple::PieceBoard;
 use crate::notation::*;
 
 /// 8x8 text-only no color board.
+#[derive(Default)]
 pub struct SmallBoard {
     board: PieceBoard
 }
@@ -16,7 +17,7 @@ impl SmallBoard {
     // sources (e.g., Ply)
     pub fn from(board: &PieceBoard) -> Self {
         Self {
-            board: board.clone()
+            board: *board
         }
     }
 }
@@ -25,7 +26,7 @@ impl SmallBoard {
 fn eight_cells(direction: Direction) -> Layout {
     Layout::default()
         .direction(direction)
-        .constraints(Constraint::from_maxes(vec![1].repeat(8)))
+        .constraints(Constraint::from_maxes([1].repeat(8)))
 }
 
 impl Widget for &SmallBoard {

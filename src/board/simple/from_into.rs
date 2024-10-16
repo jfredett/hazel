@@ -34,6 +34,7 @@ mod tests {
         use super::*;
 
         use crate::board::interface::query;
+        use crate::constants::{EMPTY_POSITION_FEN, START_POSITION_FEN};
 
         #[test]
         pub fn converts_start_position_correctly() {

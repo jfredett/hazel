@@ -1,6 +1,5 @@
 use super::*;
 
-use crate::notation::*;
 
 impl From<Bitboard> for u64 {
     fn from(val: Bitboard) -> Self {
@@ -25,13 +24,13 @@ impl From<Bitboard> for usize {
 impl<N : SquareNotation> From<N> for Bitboard {
     fn from(n: N) -> Bitboard {
         let s : Square = n.into();
-        Bitboard { 0: 1 << s.index() }
+        Bitboard(1 << s.index())
     }
 }
 
 impl From<u64> for Bitboard {
     fn from(b: u64) -> Bitboard {
-        Bitboard { 0: b }
+        Bitboard(b)
     }
 }
 

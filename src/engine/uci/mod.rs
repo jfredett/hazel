@@ -272,10 +272,7 @@ impl UCIMessage {
     }
 
     pub fn has_response(&self) -> bool {
-        match self {
-            UCIMessage::UCINewGame | UCIMessage::Position(_, _) | UCIMessage::Quit => false,
-            _ => true
-        }
+        !matches!(self, UCIMessage::UCINewGame | UCIMessage::Position(_, _) | UCIMessage::Quit)
     }
 
     pub fn is_complete(&self, last_line: &str) -> bool {

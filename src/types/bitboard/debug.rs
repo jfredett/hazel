@@ -1,6 +1,5 @@
 use super::*;
 use std::fmt::{Debug, Display, Formatter, Result};
-use crate::notation::*;
 
 impl Debug for Bitboard {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {

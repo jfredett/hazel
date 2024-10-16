@@ -25,6 +25,7 @@ lazy_static! {
 const WIDTH : u16 = 64;
 const HEIGHT : u16 = 32;
 
+#[derive(Default)]
 pub struct Tile {
     /*
     game_section: GameSection,

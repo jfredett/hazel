@@ -11,6 +11,7 @@ use ratatui::widgets::{Table, Row};
 /// A widget what representeth a board in a 8x8 grid of 3x2 character cells. This is messy and bad
 /// and will undergo some kind of finishing someday when I tire of it. Be ye warned, dragons doth
 /// lie here.
+#[derive(Default)]
 pub struct Board<'a> {
     state: PieceBoard,
     board: Table<'a>
@@ -20,10 +21,10 @@ impl From<PieceBoard> for Board<'_> {
     fn from(state: PieceBoard) -> Self {
         let white_bg = Style::default().bg(WHITE_SQUARE).fg(Color::Black);
         let black_bg = Style::default().bg(BLACK_SQUARE).fg(Color::White);
-        let white_triple = vec![white_bg].repeat(3);
-        let black_triple = vec![black_bg].repeat(3);
-        let white_first_row = Row::new(vec![white_triple.clone(), black_triple.clone(), white_triple.clone(), black_triple.clone(), white_triple.clone(), black_triple.clone(), white_triple.clone(), black_triple.clone()].concat().into_iter().map(|style| Span::styled(" ", style)));
-        let black_first_row = Row::new(vec![black_triple.clone(), white_triple.clone(), black_triple.clone(), white_triple.clone(), black_triple.clone(), white_triple.clone(), black_triple.clone(), white_triple.clone()].concat().into_iter().map(|style| Span::styled(" ", style)));
+        let white_triple = [white_bg].repeat(3);
+        let black_triple = [black_bg].repeat(3);
+        let white_first_row = Row::new([white_triple.clone(), black_triple.clone(), white_triple.clone(), black_triple.clone(), white_triple.clone(), black_triple.clone(), white_triple.clone(), black_triple.clone()].concat().into_iter().map(|style| Span::styled(" ", style)));
+        let black_first_row = Row::new([black_triple.clone(), white_triple.clone(), black_triple.clone(), white_triple.clone(), black_triple.clone(), white_triple.clone(), black_triple.clone(), white_triple.clone()].concat().into_iter().map(|style| Span::styled(" ", style)));
 
         let table = Table::new([
             white_first_row.clone(),
@@ -42,7 +43,7 @@ impl From<PieceBoard> for Board<'_> {
             white_first_row.clone(),
             black_first_row.clone(),
             black_first_row.clone(),
-        ], Constraint::from_maxes(vec![1].repeat(24))).column_spacing(0);
+        ], Constraint::from_maxes([1].repeat(24))).column_spacing(0);
 
         Self {
             state,
@@ -59,12 +60,12 @@ const QUEEN : &'static str = "♛";
 const KING : &'static str = "♚";
 const PAWN : &'static str = "♟";
 */
-const ROOK: &'static str = "R";
-const KNIGHT : &'static str = "N";
-const BISHOP : &'static str = "B";
-const QUEEN : &'static str = "Q";
-const KING : &'static str = "K";
-const PAWN : &'static str = "P";
+const ROOK: &str = "R";
+const KNIGHT : &str = "N";
+const BISHOP : &str = "B";
+const QUEEN : &str = "Q";
+const KING : &str = "K";
+const PAWN : &str = "P";
 
 
 const WHITE_SQUARE : ratatui::prelude::Color = Color::Rgb(0x80, 0x80, 0x80);

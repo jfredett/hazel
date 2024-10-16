@@ -1,7 +1,6 @@
 use std::convert::TryFrom;
 use crate::notation::square::*;
 use crate::coup::rep::{Move, MoveType};
-use crate::game::interface::Chess;
 use crate::types::Piece;
 
 use super::MoveNotation;

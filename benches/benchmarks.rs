@@ -3,16 +3,31 @@
 // NOTE: This is necessary because `bench!` is not super bright and just makes everything mutable for convenience sake.
 #![allow(unused_mut)]
 
+
+/*
+*
+* NOTE: FIXME:
+*
+* These benchmarks are old and crusty, someday, I will reimplement them, but a functioning engine
+* is my priority right now. Originally I mostly wanted to mess around with Criterion, but along the
+* way it turns our I preferred working on Chess as a problem then on benchmarking as a tool.
+*
+* So until I need to start optimizing for performance, these are bitrot.
+*/
+
 pub use criterion::{black_box, Criterion, Throughput};
 pub use criterion_macro::criterion;
 
 use rand::distributions::{Distribution, Uniform};
 
+/*
 #[macro_use]
 extern crate lazy_static;
+*/
 #[macro_use]
 extern crate paste;
 
+/*
 use hazel::bitboard::*;
 use hazel::constants::*;
 use hazel::ply::*;
@@ -20,6 +35,7 @@ use hazel::ply::*;
 mod bitboard;
 mod movegen;
 mod ply;
+*/
 
 /// A helper macro for quickly defining benchmarks. Invoke as follows:
 ///
@@ -97,6 +113,8 @@ pub fn random_u64() -> u64 {
     range.sample(&mut rng)
 }
 
+/*
 pub fn random_bitboard() -> Bitboard {
     Bitboard::from(random_u64())
 }
+*/

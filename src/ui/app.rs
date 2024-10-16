@@ -10,8 +10,6 @@ use tracing::{debug, instrument};
 use crate::engine::uci::UCIMessage;
 use crate::ui::model::entry::{Entry, stockfish};
 use crate::engine::Engine;
-use crate::board::simple::PieceBoard;
-use crate::notation::fen::FEN;
 
 use super::widgets::tile::Tile;
 
@@ -124,7 +122,7 @@ impl Hazel {
 
     #[instrument]
     pub fn render(&mut self, frame: &mut Frame) {
-        self.tile.set_state(self.entry.boardstate.clone());
+        self.tile.set_state(self.entry.boardstate);
         frame.render_widget(&self.tile, Rect::new(0,0,64,32));
     }
 }

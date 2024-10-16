@@ -25,7 +25,7 @@ impl Alteration {
         match self {
             Self::Place { square, occupant } => Self::Remove { square: *square, occupant: *occupant },
             Self::Remove { square, occupant } => Self::Place { square: *square, occupant: *occupant },
-            _ => self.clone()
+            _ => *self
         }
     }
 }

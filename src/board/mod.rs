@@ -1,5 +1,3 @@
-///! Board Representation
-
 // Trait defs
 pub mod interface;
 

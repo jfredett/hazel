@@ -46,10 +46,7 @@ impl Line {
         self.halfplies.pop()
     }
     fn current_move(&self) -> Option<HalfPly> {
-        match self.halfplies.last() {
-            Some(halfply) => Some(halfply.clone()),
-            None => None,
-        }
+        self.halfplies.last().cloned()
     }
 
     fn current_position(&self) -> impl Chess {

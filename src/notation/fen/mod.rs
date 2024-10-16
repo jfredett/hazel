@@ -2,10 +2,8 @@ mod position_metadata;
 mod castle_rights;
 
 use std::fmt::Display;
-use std::str::SplitWhitespace;
 
 use tracing::instrument;
-use tracing::debug;
 
 use crate::board::{Alter, Alteration};
 use crate::constants::EMPTY_POSITION_FEN;
@@ -192,10 +190,10 @@ mod tests {
         assert_eq!(fen.original_fen, START_POSITION_FEN);
         // We test the position part below in the #setup test
         assert_eq!(fen.side_to_move(), Color::WHITE);
-        assert_eq!(fen.castling().white_short, true);
-        assert_eq!(fen.castling().white_long, true);
-        assert_eq!(fen.castling().black_short, true);
-        assert_eq!(fen.castling().black_long, true);
+        assert!(fen.castling().white_short);
+        assert!(fen.castling().white_long);
+        assert!(fen.castling().black_short);
+        assert!(fen.castling().black_long);
         assert_eq!(fen.en_passant(), None);
         assert_eq!(fen.halfmove_clock(), 0);
         assert_eq!(fen.fullmove_number(), 1);
@@ -207,10 +205,10 @@ mod tests {
         assert_eq!(fen.original_fen, POS2_KIWIPETE_FEN);
         // We test the position part below in the #setup test
         assert_eq!(fen.side_to_move(), Color::WHITE);
-        assert_eq!(fen.castling().white_short, true);
-        assert_eq!(fen.castling().white_long, true);
-        assert_eq!(fen.castling().black_short, true);
-        assert_eq!(fen.castling().black_long, true);
+        assert!(fen.castling().white_short);
+        assert!(fen.castling().white_long);
+        assert!(fen.castling().black_short);
+        assert!(fen.castling().black_long);
         assert_eq!(fen.en_passant(), None);
         assert_eq!(fen.halfmove_clock(), 0);
         assert_eq!(fen.fullmove_number(), 1);
@@ -258,10 +256,10 @@ mod tests {
         assert_eq!(fen.original_fen, "8/8/8/8/8/8/8/8 w KQkq - 0 1");
         // We test the position part below in the #setup test
         assert_eq!(fen.side_to_move(), Color::WHITE);
-        assert_eq!(fen.castling().white_short, true);
-        assert_eq!(fen.castling().white_long, true);
-        assert_eq!(fen.castling().black_short, true);
-        assert_eq!(fen.castling().black_long, true);
+        assert!(fen.castling().white_short);
+        assert!(fen.castling().white_long);
+        assert!(fen.castling().black_short);
+        assert!(fen.castling().black_long);
         assert_eq!(fen.en_passant(), None);
         assert_eq!(fen.halfmove_clock(), 0);
         assert_eq!(fen.fullmove_number(), 1);

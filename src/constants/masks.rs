@@ -1,6 +1,4 @@
-///! various bitboard masks
-// I don't know why this triggers this lint, this fails if I don't import the macro.
-// Macro imports are blerg.
+//! various bitboard masks
 
 use crate::types::Bitboard;
 use crate::types::Direction;

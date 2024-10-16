@@ -81,8 +81,8 @@ impl Engine<UCIMessage> for EntryPair {
 impl Engine<UCIMessage> for Entry {
     fn exec(&mut self, message: &UCIMessage) -> Vec<UCIMessage> {
         // update the boardstate
-        self.boardstate.exec(&message);
-        self.engine.exec(&message)
+        self.boardstate.exec(message);
+        self.engine.exec(message)
     }
 
     fn exec_message(&mut self, message: &str) -> Vec<UCIMessage> {

@@ -21,7 +21,7 @@ async fn main() {
     // TODO: actually parse arguments
     let headless : bool = false;
 
-    let _ = if headless {
+    if headless {
         // Log to STDERR
         let (non_blocking, _guard) = tracing_appender::non_blocking(std::io::stderr());
         tracing_subscriber::fmt()
@@ -39,5 +39,5 @@ async fn main() {
         let _ = ui::run();
     };
 
-    ()
+    
 }

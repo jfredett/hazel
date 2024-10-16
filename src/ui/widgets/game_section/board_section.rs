@@ -19,6 +19,7 @@ lazy_static! {
         );
 }
 
+#[derive(Default)]
 pub struct BoardSection<'a> {
     board_widget: Board<'a>,
 }
