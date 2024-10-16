@@ -58,11 +58,11 @@ impl Engine<UCIMessage> for Stockfish {
 
     #[instrument]
     fn exec_message(&mut self, message: &str) -> Vec<UCIMessage> {
-        self.exec(UCIMessage::parse(message))
+        self.exec(&UCIMessage::parse(message))
     }
 
     #[instrument]
-    fn exec(&mut self, message: UCIMessage) -> Vec<UCIMessage> {
+    fn exec(&mut self, message: &UCIMessage) -> Vec<UCIMessage> {
         debug!("{}", message.to_string());
         let cmd_str = message.to_string();
 
@@ -77,7 +77,7 @@ impl Engine<UCIMessage> for Stockfish {
                 if bytes_read == 0 { break; } // EOF reached.
 
                 let line = line.trim_end();
-                if message != UCIMessage::D {
+                if *message != UCIMessage::D {
                     response.push(UCIMessage::parse(line));
                 } else {
                     debug!("{}", line);

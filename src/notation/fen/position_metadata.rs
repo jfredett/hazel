@@ -1,6 +1,8 @@
 use std::fmt::Display;
 use std::str::SplitWhitespace;
 
+use tracing::{instrument, debug};
+
 use crate::notation::fen::castle_rights::CastleRights;
 use crate::notation::*;
 use crate::types::Color;
@@ -16,6 +18,7 @@ pub struct PositionMetadata {
 }
 
 impl Default for PositionMetadata {
+    #[instrument]
     fn default() -> Self {
         Self {
             side_to_move: Color::WHITE,
@@ -50,36 +53,51 @@ impl Display for PositionMetadata {
 }
 
 impl PositionMetadata {
+    #[instrument]
     pub fn parse(&mut self, parts: &mut SplitWhitespace<'_>) {
-        let side_to_move = parts.next().unwrap();
-        let castling = parts.next().unwrap();
-        let en_passant = parts.next().unwrap();
-        let halfmove_clock = parts.next().unwrap();
-        let fullmove_number = parts.next().unwrap();
+        let side_to_move = parts.next();
+        let castling = parts.next();
+        let en_passant = parts.next();
+        let halfmove_clock = parts.next();
+        let fullmove_number = parts.next();
 
+        debug!("Side to move: {:?}", side_to_move);
         let side_to_move = match side_to_move {
-            "w" => Color::WHITE,
-            "b" => Color::BLACK,
+            Some("w") => Color::WHITE,
+            Some("b") => Color::BLACK,
             _ => panic!("Invalid side to move"),
         };
 
-        let castling = CastleRights {
-            white_short: castling.contains('K'),
-            white_long: castling.contains('Q'),
-            black_short: castling.contains('k'),
-            black_long: castling.contains('q'),
+        let castling = if castling.is_some() {
+            let castling = castling.unwrap();
+            CastleRights {
+                white_short: castling.contains('K'),
+                white_long: castling.contains('Q'),
+                black_short: castling.contains('k'),
+                black_long: castling.contains('q'),
+            }
+        } else {
+            CastleRights {
+                white_short: false,
+                white_long: false,
+                black_short: false,
+                black_long: false,
+            }
         };
 
         let en_passant = match en_passant {
-            "-" => None,
-            square => Some(Square::new(square.parse().unwrap())),
+            Some("-") => None,
+            Some(square) => Some(Square::new(square.parse().unwrap())),
+            None => panic!("Invalid en passant square"),
         };
+
 
         self.side_to_move = side_to_move;
         self.castling = castling;
         self.en_passant = en_passant;
-        self.halfmove_clock = halfmove_clock.parse().unwrap();
-        self.fullmove_number = fullmove_number.parse().unwrap();
+
+        self.halfmove_clock = halfmove_clock.unwrap().parse().unwrap();
+        self.fullmove_number = fullmove_number.unwrap().parse().unwrap();
     }
 
 }

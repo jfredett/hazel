@@ -8,5 +8,5 @@ pub trait Engine<T> {
     fn exec_message(&mut self, message: &str) -> Vec<T>;
 
     /// Take a message type, return a series of response messages of the same type
-    fn exec(&mut self, message: T) -> Vec<T>;
+    fn exec(&mut self, message: &T) -> Vec<T>;
 }

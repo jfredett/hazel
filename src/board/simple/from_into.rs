@@ -14,10 +14,12 @@ impl From<&FEN> for PieceBoard {
 }
 
 impl PieceBoard {
+    #[instrument]
     pub fn set_startpos(&mut self) {
         self.set_fen(&FEN::new(START_POSITION_FEN))
     }
 
+    #[instrument]
     pub fn set_fen(&mut self, fen: &FEN) {
         fen::setup_mut(fen, self);
     }

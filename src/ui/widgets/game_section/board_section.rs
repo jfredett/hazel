@@ -116,11 +116,11 @@ mod tests {
         ]);
         expected.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
-
         // this sucks
         let expected_content : Vec<String> = expected.content().iter().map(|x| x.symbol().to_string()).collect();
         let actual_content : Vec<String> = buffer.content().iter().map(|x| x.symbol().to_string()).collect();
 
-        assert_eq!(actual_content, expected_content);
+
+        assert_eq!(actual_content.join(""), expected_content.join(""));
     }
 }

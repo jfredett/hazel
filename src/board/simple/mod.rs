@@ -72,11 +72,11 @@ impl Alter for PieceBoard {
 
 impl Engine<UCIMessage> for PieceBoard {
     fn exec_message(&mut self, message: &str) -> Vec<UCIMessage> {
-        self.exec(UCIMessage::parse(message))
+        self.exec(&UCIMessage::parse(message))
     }
 
     #[instrument]
-    fn exec(&mut self, message: UCIMessage) -> Vec<UCIMessage> {
+    fn exec(&mut self, message: &UCIMessage) -> Vec<UCIMessage> {
         let ret = match message {
             UCIMessage::UCI => vec![UCIMessage::ID("name".to_string(), "Hazel Pieceboard".to_string()), UCIMessage::UCIOk],
             UCIMessage::IsReady => vec![UCIMessage::ReadyOk],
@@ -94,7 +94,7 @@ impl Engine<UCIMessage> for PieceBoard {
                 debug!("Here");
 
                 for m in moves {
-                    let uci = UCI::try_from(&m).expect(format!("Invalid Move: {}", &m).as_str());
+                    let uci = UCI::try_from(m).expect(format!("Invalid Move: {}", &m).as_str());
                     self.make_mut(uci.into());
                 }
 
@@ -178,9 +178,9 @@ mod tests {
             let mut board = PieceBoard::default();
             let moves = vec!["e2e4", "e7e5", "g1f3", "b8c6", "f1c4", "g8f6", "d2d3", "d7d6", "c1e3", "c8e6"];
             let message = UCIMessage::Position("startpos".to_string(), moves.iter().map(|s| s.to_string()).collect());
-            board.exec(message);
+            board.exec(&message);
             let fen = query::to_fen(&board);
-            assert_eq!(fen, FEN::new("r2qkb1r/ppp2ppp/2npbn2/4p3/2B1P3/3PBN2/PPP2PPP/RN1QK2R"));
+            assert_eq!(fen, FEN::with_default_metadata("r2qkb1r/ppp2ppp/2npbn2/4p3/2B1P3/3PBN2/PPP2PPP/RN1QK2R"));
         }
     }
 }

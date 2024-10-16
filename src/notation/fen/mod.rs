@@ -4,6 +4,9 @@ mod castle_rights;
 use std::fmt::Display;
 use std::str::SplitWhitespace;
 
+use tracing::instrument;
+use tracing::debug;
+
 use crate::board::{Alter, Alteration};
 use crate::constants::EMPTY_POSITION_FEN;
 use crate::types::{Color, Occupant, Piece};
@@ -46,6 +49,7 @@ impl FEN {
     /// Sometimes you just want to specify the position without all the metadata, this
     /// assumes you are describing a position with white-to-move, all castling rights, no en
     /// passant square.
+    #[instrument]
     pub fn with_default_metadata(fen: &str) -> Self {
         let fenprime = format!("{} {}", fen, PositionMetadata::default());
         let position = Self::compile(&fenprime);
@@ -58,6 +62,7 @@ impl FEN {
     }
 
     /// Expects a full FEN string with all metadata.
+    #[instrument]
     pub fn new(fen: &str) -> Self {
         let mut metadata = PositionMetadata::default();
 
@@ -74,26 +79,32 @@ impl FEN {
         }
     }
 
+    #[instrument]
     pub fn side_to_move(&self) -> Color {
         self.metadata.side_to_move
     }
 
+    #[instrument]
     pub fn castling(&self) -> CastleRights {
         self.metadata.castling
     }
 
+    #[instrument]
     pub fn en_passant(&self) -> Option<Square> {
         self.metadata.en_passant
     }
 
+    #[instrument]
     pub fn halfmove_clock(&self) -> usize {
         self.metadata.halfmove_clock
     }
 
+    #[instrument]
     pub fn fullmove_number(&self) -> usize {
         self.metadata.fullmove_number
     }
 
+    #[instrument]
     pub fn setup<C>(&self) -> C where C : Chess {
         let mut board = C::default();
         for alteration in &self.position {
@@ -102,6 +113,7 @@ impl FEN {
         board
     }
 
+    #[instrument]
     fn compile(fen: &str) -> Vec<Alteration> {
         let mut alterations = Vec::new();
         let mut cursor = Square::by_rank_and_file();

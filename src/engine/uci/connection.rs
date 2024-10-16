@@ -24,7 +24,7 @@ pub fn run_with_io<T: io::Read, U: io::Write>(input: T, mut output: U) -> io::Re
         let line = line?;
         let message = UCIMessage::parse(&line);
         info!("Received UCI message: {:?}", message);
-        let response = driver.exec(message) ;
+        let response = driver.exec(&message) ;
         for r in response {
             output.write_all(r.to_string().as_bytes())?;
         }

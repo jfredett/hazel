@@ -30,11 +30,11 @@ impl Engine<UCIMessage> for Driver {
     /// implementation. Since Driver doesn't handle the UCI stream directly, we know we'll
     /// always be listening to our dialect of UCI anyway.
     fn exec_message(&mut self, message: &str) -> Vec<UCIMessage> {
-        self.exec(UCIMessage::parse(message))
+        self.exec(&UCIMessage::parse(message))
     }
 
-    fn exec(&mut self, message: UCIMessage) -> Vec<UCIMessage> {
-        info!("Executing UCI instruction: {:?}", message);
+    fn exec(&mut self, message: &UCIMessage) -> Vec<UCIMessage> {
+        info!("Executing UCI instruction: {:?}", &message);
 
         match message {
             // GUI -> Engine
@@ -45,7 +45,7 @@ impl Engine<UCIMessage> for Driver {
                 vec![UCIMessage::ID("Hazel".to_string(), "0.1".to_string())]
             }
             UCIMessage::Debug(flag) => {
-                self.debug = flag;
+                self.debug = *flag;
                 vec![]
             }
             UCIMessage::SetOption(_name, _values) => {
@@ -107,7 +107,7 @@ mod tests {
     #[test]
     fn driver_parses_isready() {
         let mut driver = Driver::new();
-        let response = driver.exec(UCIMessage::IsReady);
+        let response = driver.exec(&UCIMessage::IsReady);
         assert_eq!(response, vec![UCIMessage::ReadyOk]);
         // this but with a vec![] instead of Some
     }
@@ -115,7 +115,7 @@ mod tests {
     #[test]
     fn driver_parses_uci() {
         let mut driver = Driver::new();
-        let response = driver.exec(UCIMessage::UCI);
+        let response = driver.exec(&UCIMessage::UCI);
         assert_eq!(response, vec![UCIMessage::ID("Hazel".to_string(), "0.1".to_string())]);
     }
 
@@ -123,7 +123,7 @@ mod tests {
     fn driver_parses_debug() {
         let mut driver = Driver::new();
         assert!(!driver.debug);
-        let response = driver.exec(UCIMessage::Debug(true));
+        let response = driver.exec(&UCIMessage::Debug(true));
         assert_eq!(response, vec![]);
         assert!(driver.debug)
     }
