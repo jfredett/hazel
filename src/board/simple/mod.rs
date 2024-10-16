@@ -1,5 +1,5 @@
-use std::fmt::Debug;
 use tracing::{instrument, debug};
+
 use crate::board::{alter::Alter, alteration::Alteration, query::{display_board , Query}};
 use crate::constants::{START_POSITION_FEN, EMPTY_POSITION_FEN};
 use crate::engine::Engine;
@@ -12,6 +12,13 @@ use crate::engine::uci::UCIMessage;
 use crate::game::interface::Chess;
 
 
+
+pub mod display_debug;
+pub mod from_into;
+
+pub use display_debug::*;
+pub use from_into::*;
+
 #[derive(Clone, Copy, PartialEq)]
 pub struct PieceBoard {
     pub board: [Occupant; 64],
@@ -23,38 +30,12 @@ impl Default for PieceBoard {
     }
 }
 
-impl Debug for PieceBoard {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "")?;
-        write!(f, "{}", display_board(self))
-    }
-}
 
 impl PieceBoard {
-    pub fn set_startpos(&mut self) {
-        self.set_fen(&FEN::new(START_POSITION_FEN))
-    }
-
-    pub fn set_fen(&mut self, fen: &FEN) {
-        fen::setup_mut(fen, self);
-    }
-
     pub fn set<S>(&mut self, square: S, occupant: Occupant) where S : SquareNotation {
         let sq = square.into();
 
         self.board[sq.index()] = occupant;
-    }
-}
-
-impl From<FEN> for PieceBoard {
-    fn from(fen: FEN) -> Self {
-        fen::setup(&fen)
-    }
-}
-
-impl From<&FEN> for PieceBoard {
-    fn from(fen: &FEN) -> Self {
-        fen::setup(fen)
     }
 }
 
@@ -153,78 +134,8 @@ mod tests {
             assert_eq!(board.get(H8), Occupant::black_rook());
         }
 
-        #[test]
-        pub fn bottom_left_is_A1() {
-            let mut board = PieceBoard::default();
-            board.set(A1, Occupant::white_rook());
-            let rep = format!("{:?}", board);
-            let expected_rep = "
-8 . . . . . . . .
-7 . . . . . . . .
-6 . . . . . . . .
-5 . . . . . . . .
-4 . . . . . . . .
-3 . . . . . . . .
-2 . . . . . . . .
-1 R . . . . . . .
-  a b c d e f g h
-";
-            println!("{}", rep);
-            println!("{}", expected_rep);
-
-            // The board should find the rook
-            assert_eq!(board.get(A1), Occupant::white(Piece::Rook));
-            // it should be in the bottom left of the representation
-            assert_eq!(rep, expected_rep);
-        }
     }
 
-    mod fen {
-        use super::*;
-        use crate::board::interface::query;
-
-        #[test]
-        pub fn converts_start_position_correctly() {
-            let mut board = PieceBoard::default();
-            board.set_startpos();
-            let fen = query::to_fen(&board);
-            assert_eq!(fen, FEN::new(START_POSITION_FEN));
-        }
-
-        #[test]
-        pub fn converts_empty_board_correctly() {
-            let board = PieceBoard::default();
-            let fen = query::to_fen(&board);
-            assert_eq!(fen, FEN::new(EMPTY_POSITION_FEN));
-        }
-
-        #[test]
-        pub fn converts_fen_to_board_correctly() {
-            let fen = FEN::new(START_POSITION_FEN);
-            let mut board = PieceBoard::default();
-            board.set_fen(&fen);
-            let fen2 = query::to_fen(&board);
-            assert_eq!(fen, fen2);
-        }
-
-        #[test]
-        pub fn converts_each_offset_correctly() {
-            let fen = FEN::new("p7/1p6/2p5/3p4/4p3/5p2/6p1/7p w KQkq - 0 1");
-            let mut board = PieceBoard::default();
-            board.set_fen(&fen);
-            let fen2 = query::to_fen(&board);
-            assert_eq!(fen, fen2);
-        }
-
-        /* For want of a FEN type and an Arbitrary instance 
-        #[quickcheck]
-        pub fn converts_fen_to_board_correctly_quickcheck(fen: FEN) -> bool {
-            let board = PieceBoard::from_fen(&fen);
-            let fen2 = board.to_fen();
-            fen == fen2
-        }
-        */
-    }
 
     mod alter {
         use super::*;
