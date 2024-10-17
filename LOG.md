@@ -838,3 +838,136 @@ because of orphan instances, but I think the first is good enough for now. I can
 and within hazel, it's most likely that I'll want to move to `Move` anyway.
 
 Lots of gruntwork to do, but I think the result will be worth it.
+
+# 16-OCT-2024
+
+## 2104
+
+I merged it. I got everything working again and I merged it. I was able to delete a ton of old code that wasn't needed,
+and really improve the ergonomics of working in `hazel`. Now that it's at least partially done, let me take stock of
+where things live and what it cost.
+
+
+### Costs:
+
+I binned the `NOTATION_TO_INDEX` and related constant lookup tables, and replaced them with a common `Square` type that
+is tucked behind a `SquareNotation` trait. This leaves a door open to change this later, but for the moment having a
+consistent type for referring to squares everywhere, and allowing me to easily convert between rank/file/index is very
+handy. Saves me writing octal constants everywhere, too.
+
+I also deleted, more impactffully, the `Game` and Ply` types, these were trying to do way too much, and I have a better
+approach in mind. This does mean I gave up my progress towards `perft`, but I think I can bet back there in a more
+stable configuration and not have to worry about carrying the mess with me.
+
+Two weeks of work, and I'm technically behind where I was, but I think it was worth it.
+
+Oh, and the benchmarks are toast. I changed a lot of the bitboard API and that's all that really had benchmarks. I'm
+going to get the thing fully working and then go back and write benches. Originally I had started this as a reason to
+learn `criterion`, but rapidly I found I was less interested in chasing performance then in the core problem of a chess
+engine itself, so it bitrot.
+
+### Benefits and new Design
+
+The main benefit is that this enables moving forward with a new design. The organization is slightly improved. It looks
+like this now.
+
+
+```
+
+src/
+    board/
+        # Board Representation
+        interface/
+        <board reps>
+    brain/
+        # Primary Subsystem, manages all the other processes.
+    constants/
+        # Useful _constants_
+    coup/
+        # Move related code
+        rep/
+            # Move representation
+        gen/
+            # Move Generation
+    engine/
+        # UCI Interface Substystem
+    evaluator/
+        # Position Evaluation Subsystem
+    game/
+        # Game State Representation
+    notation/
+        # Notation Representation + Conversion to internal canonical formats.
+        fen/
+        uci/
+        square/
+        pgn/
+        ...
+    types/
+        # General types that don't fit in other subsystems.
+        bitboard/
+        pextboard/
+        color.rs
+        direction.rs
+        occupant.rs
+        piece.rs
+    ui/
+        # UI code
+        model/
+            # View Models
+        widgets/
+            # Widgets
+        app.rs
+    util/
+        # Utility functions and some types
+```
+
+Ultimately, the `hazel` lib will provide a single tokio process `hazel` which spawns a ``brain` process, which in turn
+spawns whatever other subsystems it wants according to it's configuration. This will include a gamestate represnetaiton,
+some way to speak UCI, evaluation and movegen, etc. The idea is that `brain` can dynamically adjust how it's set up,
+connect with other hazel instances, etc.
+
+The `hazel` process can also optionally spawn a UI, which will allow deeper insight into the engine state.
+
+Already existing is an ability to wrap other engines, so another subproject here is to build some cross-testing tools as
+well.
+
+So the thing looks roughly like:
+
+```
+
+Hazel
+|               /--A- Engine Driver Backend
+|               |
+|------ Brain --|--A- Move Generator(s)
+|               |
+|               |---- Game State
+|               |
+|               \--A- Evaluator(s)
+|
+|
+|
+\------ UI
+
+```
+
+The `Hazel` process will be the main entrypoint, and will have a VM+scripting language to control it and the other
+processes. This might be custom, for fun, not sure. I might just embed lua or something, like a responsible adult.
+
+The goal would be to have a DSL that can load games, do analysis, process that analysis, etc. Less an engine to beat
+other engines, more an engine to study positions efficiently, etc.
+
+The next step is to rebuild the Game Representation, it's mostly done, but I want to get Move and PGN represented in the
+notation module and Move's abstracted towards the `MoveNotation` trait similar to what I did for`SquareNotation`, and
+`Square`. This is already underway as well.
+
+After that, MoveGen and Perft. I still have the old `Ply` code so I can borrow from it where it makes sense. This is new
+territory, I want to build it as a `tokio` process that speaks over some API. Ultimately I want `hazel` to be natively
+multi-system, so it can run it's components across any system you like, so building up the engine as a bunch of
+independent components is going to be necessary. I'll probably take that opportunity to scaffold in the whole process,
+and also get a diagnostic environment set up.
+
+Somewhere in there I also want to make more progress on the UI.
+
+My plan is to have two worktrees, `UI` and whatever thing I''m working on at the time. As I implement stuff, I can keep
+chipping at the UI as I go.
+
