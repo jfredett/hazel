@@ -1,6 +1,7 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders};
 
+#[derive(Default)]
 pub struct Input {
     content: String
 }
@@ -22,14 +23,6 @@ impl Input {
         let content = self.content.clone();
         self.content.clear();
         content
-    }
-}
-
-impl Default for Input {
-    fn default() -> Self {
-        Self {
-            content: String::new()
-        }
     }
 }
 

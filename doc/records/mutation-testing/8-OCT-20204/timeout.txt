@@ -1,0 +1,15 @@
+src/bitboard/shifts.rs:25:62: replace & with ^ in Bitboard::shift_mut
+src/bitboard/shifts.rs:21:62: replace & with | in Bitboard::shift_mut
+src/uci/mod.rs:145:9: replace <impl Display for UCIMessage>::fmt -> fmt::Result with Ok(Default::default())
+src/bitboard/shifts.rs:23:62: replace & with ^ in Bitboard::shift_mut
+src/uci/mod.rs:275:9: replace UCIMessage::has_response -> bool with true
+src/bitboard/shifts.rs:22:62: replace & with | in Bitboard::shift_mut
+src/bitboard/shifts.rs:26:62: replace & with ^ in Bitboard::shift_mut
+src/bitboard/shifts.rs:23:62: replace & with | in Bitboard::shift_mut
+src/bitboard/shifts.rs:25:62: replace & with | in Bitboard::shift_mut
+src/bitboard/shifts.rs:21:62: replace & with ^ in Bitboard::shift_mut
+src/util/mask.rs:79:9: replace Mask::send -> tokio::io::Result<()> with Ok(())
+src/bitboard/shifts.rs:22:62: replace & with ^ in Bitboard::shift_mut
+src/bitboard/shifts.rs:26:62: replace & with | in Bitboard::shift_mut
+src/uci/mod.rs:284:46: replace == with != in UCIMessage::is_complete
+src/uci/mod.rs:282:9: replace UCIMessage::is_complete -> bool with false

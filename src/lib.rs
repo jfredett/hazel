@@ -1,4 +1,4 @@
-#![feature(stmt_expr_attributes,assert_matches)]
+#![feature(stmt_expr_attributes,assert_matches,const_trait_impl,const_for)]
 #![cfg_attr(test, allow(unused_imports))]
 // NOTE: These lints are disabled for the following reasons:
 //
@@ -23,24 +23,18 @@ extern crate lazy_static;
 extern crate either;
 extern crate rand;
 
-pub(crate) use thiserror::Error;
-#[allow(unused_imports)] // I want all the tracing stuff available regardless of whether it's used
-pub(crate) use tracing::{debug, error, info, instrument, warn};
-
 #[cfg(test)]
 pub use tracing_test;
 
-#[macro_use]
-pub mod bitboard;
+pub mod board;
+pub mod brain;
 pub mod constants;
-pub mod driver;
+pub mod coup;
 pub mod engine;
 pub mod game;
-pub mod movement;
-pub mod moveset;
-pub mod pextboard;
-pub mod ply;
-pub mod uci;
+pub mod notation;
+#[macro_use]
+pub mod types;
 pub mod ui;
 pub mod util;
 

@@ -14,6 +14,7 @@ lazy_static! {
         );
 }
 
+#[derive(Default)]
 pub struct PGNSection {
 }
 

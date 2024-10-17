@@ -1,8 +1,9 @@
-///! various bitboard masks
-// I don't know why this triggers this lint, this fails if I don't import the macro.
-// Macro imports are blerg.
+//! various bitboard masks
+
+use crate::types::Bitboard;
+use crate::types::Direction;
+
 use crate::bitboard;
-use crate::{bitboard::Bitboard, constants::Direction};
 
 lazy_static! {
     pub static ref A_FILE : Bitboard = bitboard!("a1", "a2", "a3", "a4", "a5", "a6", "a7", "a8");
@@ -25,6 +26,7 @@ lazy_static! {
         *H_FILE
     ];
 
+    pub static ref BACKRANKS : Bitboard = *RANK_1 | *RANK_8;
     pub static ref EDGES : Bitboard = *A_FILE | *H_FILE | *RANK_1 | *RANK_8;
     pub static ref CORNERS : Bitboard = bitboard!("a1", "a8", "h1", "h8");
 

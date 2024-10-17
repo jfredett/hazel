@@ -1,0 +1,3 @@
+# test_tool = "nextest"
+exclude_globs = ["src/main.rs", "src/lib.rs"]
+exclude_re = ["impl Debug", "impl Display"]

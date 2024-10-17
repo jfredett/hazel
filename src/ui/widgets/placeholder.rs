@@ -47,7 +47,7 @@ impl Placeholder {
     }
 
     fn calculate_text(&self) -> Paragraph {
-        let text = vec![self.text].repeat(self.height as usize).join("\n");
+        let text = [self.text].repeat(self.height as usize).join("\n");
         Paragraph::new(text)
             .style(self.style)
             .wrap(Wrap { trim: false })

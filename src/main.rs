@@ -2,7 +2,7 @@
 
 use tracing::*;
 
-use hazel::uci;
+use hazel::engine::uci;
 use hazel::ui;
 
 use std::thread;
@@ -12,13 +12,8 @@ use tracing_subscriber::EnvFilter;
 use tracing_subscriber::fmt;
 use tracing_subscriber::prelude::*;
 
-#[derive(Debug, PartialEq)]
-#[allow(dead_code)] // this is a stub, not dead code
-enum RaceControlMessage {
-    Exit
-}
-
-
+// NOTE: No need to mutation test the main wrapper.
+#[cfg_attr(test, mutants::skip)]
 #[tokio::main]
 async fn main() {
     info!("Welcome to Hazel.");
@@ -26,7 +21,7 @@ async fn main() {
     // TODO: actually parse arguments
     let headless : bool = false;
 
-    let _ = if headless {
+    if headless {
         // Log to STDERR
         let (non_blocking, _guard) = tracing_appender::non_blocking(std::io::stderr());
         tracing_subscriber::fmt()
@@ -44,5 +39,5 @@ async fn main() {
         let _ = ui::run();
     };
 
-    ()
+    
 }

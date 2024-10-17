@@ -654,3 +654,187 @@ subtasks. It'll make the `LOG` a little weird to maintain though -- parallel uni
 branch to the entry? It should be a straightforward merge process.
 
 I suppose I'll know by the next entry.
+
+## 2201 - movegen-v2
+
+Hi from a worktree. This worktree will track work on the 'movegen-v2', which is a new approach to tracking gamestate and
+generating moves. I expect this branch to merge once over it's lifespan. I'm running a few of these worktrees
+simultaneously, experimenting with the model, we'll see if it works.
+
+
+# 8-OCT-2024
+
+## 1827 - movegen-v2
+
+Got some initial work done getting a better game-tracking structure in place (`HalfPly`) and tying it to the existing
+`Move` struct. I also was able to abstract away a lot of the board rep stuff behind some interfaces.
+
+Remaining is to organize the various `move` related code and start tearing out the old crappy stuff and building
+something better. I briefly took a look in `notation-spike` at doing some const-time notation stuff, but I'm stymied by
+the half-implementation there.
+
+I've got plenty to do on this side now that the HalfPly work is done, I can start to build up the `Line` struct and
+build up to something that'll replace the current `Game` struct.
+
+Once that's done, I can start work on a movegen/legality checker. I think I want to build this as a collection of
+small services, one to generate all moves (no legality checking), a second to check for legality independently, and
+later evaluation services that can provide various evaluations, these evaluation tools can be tagged and run
+independently to compare them to each other in situ. The main process will spawn a process which has the engine backend
+and the some frontend that tracks boardstate, options-per-engine, etc. The main process can then spawn whatever child
+processes it likes based on the request from the Engine.
+
+It makes sense in my head, which means it almost certainly won't make sense anywhee else, but that's how it always goes.
+
+# 10-OCT-2024
+
+## 0017 - movegen-v2
+
+Thinking about the `Notation` idea again. I think there is a different way I can approach it that won't encounter the
+type problems I was having. In particular I can use an associated type to track the format of the notation, so that I
+can convert internally between the formats.
+
+Another option is just to have an unassociated family of types with mutual `From` implementations. One called `Index`,
+one called `UCI`, and so on, then I can have them all be const impls, and everything in the crate can just use `Index`,
+but with a const `into()` method which converts to the correct type at compile time?
+
+I truly have no idea if that'll work, but it makes half sense in my head, and my lack of types for these things is
+starting to hurt.
+
+## 0100 - movegen-v2
+
+I think I have a better plan now.
+
+I'm going to reorganize the repo like this:
+
+
+```
+
+src/
+    board/
+        bit/         # Implementation of a bitboard-based representation. Not the bitboard type itself.
+        piece/       # Implementation of a simpler array-of-objects representation.
+        planned/     # ... there may be other representations I put here eventually as well.
+        mod.rs       # Interface definitions and module stuff, Alter and Query live here.
+    notation/
+        # Some kind of notation management object, ideally mostly const-time, as a QoL thing. Much
+        # easier to have a consistent way to represent notation, instead of the mix of octal and text and coords.
+        index/    # Index-based move notation
+        uci/      # UCI Move notation
+        san/      # SAN Move notation
+        fen/      # FEN gamestate parsing and generation
+        pgn/      # PGN game history parsing and generation
+        mod.rs
+    move/
+        rep/
+            # This contains various compact move representations, and probably also the `alteration` type and it's
+            # friends.
+        gen/
+            # Async Move generator, legality checker, etc.
+    game/
+        # This tracks the gamestate, it's home to:
+        halfply/    # Represents a single move/
+        line/
+        variation/
+        mod.rs       # The Game Representation object itself.
+        interface.rs # The `Chess` trait goes here
+    evaluator/
+        # evaluation here, someday
+    brain/
+        # Async Hazel Engine
+    engine/
+        # UCI interface
+        uci/
+        driver/
+            stockfish.rs # Wrapper around stockfish, for integration testing
+            hazel.rs     # Hazel Engine implementation wrapper (wrapping brain.
+            mod.rs
+        mod.rs
+    ui/
+        model/
+        widgets/
+        app.rs
+        mod.rs
+    types/
+        # generic/crossfunctional types that are used everywhere.
+        bitboard/  # bitboard type implementation
+        pextboard/ # pextboard type implementation
+        mask/      # async process wrapper.
+    constants/
+        # Constants used throughout the program
+```
+
+It's a bit easier to see the structure of the thing that way. The 'brain' is the main process that the UI will spawn
+and interact with. It will spawn the other components and maintain the engine state. I'd like it to have a little
+scripting language/VM sort of thing to control it via the UI in richer ways than UCI would allow. Ultimately, like
+everything, I want to make it's parts hotloadable so I can leave it running all the time and just reload the
+subcomponents on the fly. Everything must scale to infinite machines, uptime must grow.
+
+I'm not going to do this till I finish the new movegen stuff, which should get all the raw materials above (mod the
+evaluator, movegen, and brain bits, I suppose) in place, and then I can start to reorganize and clean up some of the
+duplication I have now.
+
+
+# 12-OCT-2024
+
+## 1500 - movegen-v2
+
+I think I have to commit to the reorg now, but some things have changed which makes the above not _quite_ right. I
+started to change it and I think I'm just going to get in and start moving things around on a clean commit of this
+branch. After that I think I'm going to merge and go back to working on main. It turns out I'm not so great at sticking
+to a single topic on a side project so branching isn't really what I need to do here, at least not till I've cleaned up
+some of the tech mess I've left for myself.
+
+Next update will hopefully have all that done and I can document it here.
+
+Also on the list is going to be getting `mkdocs` set up for a wiki, and maybe a local docserver, if only to motivate me
+to document more.
+
+# 13-OCT-2024
+
+## 2322 - movegen-v2
+
+A great culling has occurred as I move things towards the unified `Square` approach to notation. I've more or less got
+everything lined up, and am just chasing out bugs from the various bits that I tweaked incorrectly to return to
+compiling. At time of writing, six failing tests remain.
+
+The approach I took seems alright, though it was tricky in spots. Essentially I have everything rely on an implementor
+of `SquareNotation`, which requires the implementor be capable of converting to a `Square`, which is a simple newtype
+around `usize` that constrains to `0..64` and provides some convenient const-time functions for working with it. The
+trait wraps and provides those functions for general use, eventually it would be nice to push as much to const-time
+evaluation as possible.
+
+This should make it easy to have alternative implementations I can experiment with if I find better represnetaitons
+later, and should smooth the cutover should the need arise.
+
+After getting `Square` setup throughout, I plan to do the same thing with `Move`, building my current, compact `Move`
+representation into the 'Default' `MoveNotation` implementation, similar to `SquareNotation` and `Square`. Also `FEN`
+needs to be factoryed in throughout. Here it will be much more likely that thr trait will be valuable, as there are lots
+of different move representation schemes, so by implementing the trait, I can set up a canonical pipeline to convert
+between different representations. Something like:
+
+```rust
+
+pub fn convert<M, N>(m: M) -> N where M: MoveNotation, N: MoveNotation {
+    let i = Move::from<m>;
+    N::from(i)
+}
+
+```
+
+I don't think it's possible to write the more general:
+
+```rust
+
+impl<M, N> From<N> for M where M: MoveNotation, N: MoveNotation {
+    fn from(n: N) -> M {
+        let i = Move::from(n);
+        M::from(i)
+    }
+}
+
+```
+
+because of orphan instances, but I think the first is good enough for now. I can always add more implementations later,
+and within hazel, it's most likely that I'll want to move to `Move` anyway.
+
+Lots of gruntwork to do, but I think the result will be worth it.

@@ -1,10 +1,11 @@
 #![allow(dead_code)]
 
-use crate::driver::stockfish::Stockfish;
-use crate::ui::model::pieceboard::PieceBoard;
-use crate::driver::Driver;
-use crate::uci::UCIMessage;
+use crate::board::simple::PieceBoard;
 use crate::engine::Engine;
+use crate::engine::driver::Driver;
+use crate::engine::driver::stockfish::Stockfish;
+use crate::engine::uci::UCIMessage;
+
 
 use std::fmt::{Debug, Formatter};
 
@@ -32,7 +33,7 @@ impl Entry {
     fn new(engine: Box<dyn Engine<UCIMessage>>) -> Self {
         Self {
             config: HashMap::new(),
-            boardstate: PieceBoard::new(),
+            boardstate: PieceBoard::default(),
             engine
         }
     }
@@ -78,12 +79,14 @@ impl Engine<UCIMessage> for EntryPair {
 */
 
 impl Engine<UCIMessage> for Entry {
-    fn exec(&mut self, message: UCIMessage) -> Vec<UCIMessage> {
+    fn exec(&mut self, message: &UCIMessage) -> Vec<UCIMessage> {
         // update the boardstate
+        self.boardstate.exec(message);
         self.engine.exec(message)
     }
 
     fn exec_message(&mut self, message: &str) -> Vec<UCIMessage> {
+        self.boardstate.exec_message(message);
         self.engine.exec_message(message)
     }
 }

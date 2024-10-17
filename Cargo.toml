@@ -36,7 +36,8 @@ tokio = { version = "1.16.0", features = ["full"] }
 tokio-stream = "0.1.16"
 tokio-util = { version = "0.7.12", features = ["io"] }
 tui-input = "0.10.1"
-
+const-str = "0.5.7"
+mutants = "0.0.3"
 
 [dev-dependencies]
 criterion = "0.4.0"
@@ -45,9 +46,6 @@ quickcheck = "1.0.3"
 quickcheck_macros = "1.0.0"
 paste = "1.0.15"
 tracing-test = "0.2.5"
-cargo-llvm-cov = "0.6.11"
-cargo-nextest = "0.9.72"
-#cargo-mutants = "24.7.1"
 
 [[bench]]
 name = "benchmarks"
@@ -66,3 +64,10 @@ overflow-checks = false
 [profile.release]
 opt-level = 3
 debug = true
+
+[profile.mutants]
+inherits = "test"
+debug = false
+debug-assertions = false
+opt-level = 3
+

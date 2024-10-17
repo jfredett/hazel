@@ -7,7 +7,7 @@ use super::fen::FEN;
 use super::game_section::GameSectionLayout;
 use super::placeholder::Placeholder;
 
-use crate::ui::model::pieceboard::PieceBoard;
+use crate::board::simple::PieceBoard;
 
 lazy_static! {
     static ref LAYOUT : Layout = Layout::default()
@@ -25,6 +25,7 @@ lazy_static! {
 const WIDTH : u16 = 64;
 const HEIGHT : u16 = 32;
 
+#[derive(Default)]
 pub struct Tile {
     /*
     game_section: GameSection,
@@ -128,7 +129,7 @@ mod tests {
             "│    Placeholder   ││    Placeholder   │       Placeholder       ",
             "│    Placeholder   ││    Placeholder   │       Placeholder       ",
             "└──────────────────┘└──────────────────┘       Placeholder       ",
-            "│                       8/8/8/8/8/8/8/8                        │ ",
+            "│                 8/8/8/8/8/8/8/8 w KQkq - 0 1                 │",
             "┌──────────────────────────────────────────────────────────────┐ ",
             "│                                                              │ ",
             "│                                                              │ ",
@@ -179,7 +180,7 @@ mod tests {
             "│    Placeholder   ││    Placeholder   │       Placeholder      ",
             "│    Placeholder   ││    Placeholder   │       Placeholder      ",
             "└──────────────────┘└──────────────────┘       Placeholder      ",
-            "│                       8/8/8/8/8/8/8/8                        │",
+            "│                 8/8/8/8/8/8/8/8 w KQkq - 0 1                 │",
             "┌──────────────────────────────────────────────────────────────┐",
             "│                                                              │",
             "│                                                              │",

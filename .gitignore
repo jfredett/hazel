@@ -1,3 +1,5 @@
+.last_run
+.bacon-locations
 .lcov
 hazel.log
 .env
@@ -8,3 +10,5 @@ launch.json
 NOTES.mkd
 flamegraph.svg
 perf.*
+mutants.out/
+mutants.out.old/

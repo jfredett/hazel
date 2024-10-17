@@ -1,11 +1,13 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Widget, Block, Borders};
-
 use ratatui::buffer::Buffer;
 
-use crate::ui::model::pieceboard::PieceBoard;
+use crate::board::Query;
+use crate::board::simple::PieceBoard;
+use crate::notation::*;
 
 /// 8x8 text-only no color board.
+#[derive(Default)]
 pub struct SmallBoard {
     board: PieceBoard
 }
@@ -15,7 +17,7 @@ impl SmallBoard {
     // sources (e.g., Ply)
     pub fn from(board: &PieceBoard) -> Self {
         Self {
-            board: board.clone()
+            board: *board
         }
     }
 }
@@ -24,7 +26,7 @@ impl SmallBoard {
 fn eight_cells(direction: Direction) -> Layout {
     Layout::default()
         .direction(direction)
-        .constraints(Constraint::from_maxes(vec![1].repeat(8)))
+        .constraints(Constraint::from_maxes([1].repeat(8)))
 }
 
 impl Widget for &SmallBoard {
@@ -43,8 +45,9 @@ impl Widget for &SmallBoard {
 
         for i in 0..8 {
             for j in 0..8 {
+                let sq = Square::from((i, j));
                 let cell = Block::default()
-                    .title(self.board.get(i,j).to_string())
+                    .title(self.board.get(sq).to_string())
                     .borders(Borders::NONE);
                 cell.render(rows[j][i], buf);
             }

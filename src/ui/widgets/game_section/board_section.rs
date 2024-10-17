@@ -4,7 +4,7 @@ use ratatui::layout::Direction;
 use ratatui::prelude::*;
 use ratatui::widgets::Borders;
 
-use crate::ui::model::pieceboard::PieceBoard;
+use crate::board::simple::PieceBoard;
 use crate::ui::widgets::placeholder::Placeholder;
 use crate::ui::widgets::board::Board;
 
@@ -19,6 +19,7 @@ lazy_static! {
         );
 }
 
+#[derive(Default)]
 pub struct BoardSection<'a> {
     board_widget: Board<'a>,
 }
@@ -116,11 +117,11 @@ mod tests {
         ]);
         expected.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
-
         // this sucks
         let expected_content : Vec<String> = expected.content().iter().map(|x| x.symbol().to_string()).collect();
         let actual_content : Vec<String> = buffer.content().iter().map(|x| x.symbol().to_string()).collect();
 
-        assert_eq!(actual_content, expected_content);
+
+        assert_eq!(actual_content.join(""), expected_content.join(""));
     }
 }

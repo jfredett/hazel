@@ -7,10 +7,9 @@ use ratatui::widgets::{Block, Borders};
 
 use tracing::{debug, instrument};
 
-use crate::uci::UCIMessage;
+use crate::engine::uci::UCIMessage;
 use crate::ui::model::entry::{Entry, stockfish};
 use crate::engine::Engine;
-use crate::ui::model::pieceboard::PieceBoard;
 
 use super::widgets::tile::Tile;
 
@@ -45,14 +44,17 @@ impl Hazel {
             tile: Tile::new(),
         };
 
-        s.entry.exec(UCIMessage::UCI);
-        s.entry.exec(UCIMessage::IsReady);
-        debug!("setting startpos");
-        s.entry.exec(UCIMessage::Position("startpos moves d2d4".to_string(), vec![]));
-        debug!("setting startpos done");
+        let startup_commands = vec![
+            UCIMessage::UCI,
+            UCIMessage::IsReady,
+            UCIMessage::Position("startpos".to_string(), vec!["d2d4".to_string()]),
+        ];
 
-        // s.entry.boardstate.set_startpos();
-        s.entry.boardstate = PieceBoard::from_fen("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR");
+
+        for command in startup_commands {
+            debug!("{}", &command);
+            s.entry.exec(&command);
+        }
 
         return s;
     }
@@ -120,7 +122,7 @@ impl Hazel {
 
     #[instrument]
     pub fn render(&mut self, frame: &mut Frame) {
-        self.tile.set_state(self.entry.boardstate.clone());
+        self.tile.set_state(self.entry.boardstate);
         frame.render_widget(&self.tile, Rect::new(0,0,64,32));
     }
 }
@@ -133,6 +135,9 @@ mod tests {
 
     use super::*;
 
+    use tracing_test::traced_test;
+
+    #[traced_test]
     #[test]
     fn renders_as_expected() {
         let mut hazel = Hazel::new();
@@ -162,7 +167,7 @@ mod tests {
             "│    Placeholder   ││    Placeholder   │       Placeholder      ",
             "│    Placeholder   ││    Placeholder   │       Placeholder      ",
             "└──────────────────┘└──────────────────┘       Placeholder      ",
-            "│        rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR         │",
+            "│  rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 1  │",
             "┌──────────────────────────────────────────────────────────────┐",
             "│                                                              │",
             "│                                                              │",
@@ -181,13 +186,13 @@ mod tests {
 
         // NOTE: This is going to be turned off most of the time, except when I need a snapshot of the UI
         // to cheat the test.
-        //assert_eq!(actual, expected);
+        // assert_eq!(actual, expected);
 
         // Ignore style differences for now, by... turning everything into a big list of chars
         // wrapped in &strs wrapped in my pain and suffering.
         let expected_content : Vec<String> = expected.content().iter().map(|x| x.symbol().to_string()).collect();
         let actual_content : Vec<String> = actual.content().iter().map(|x| x.symbol().to_string()).collect();
 
-        assert_eq!(actual_content, expected_content);
+        assert_eq!(actual_content.join(""), expected_content.join(""));
     }
 }

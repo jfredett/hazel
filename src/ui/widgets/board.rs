@@ -1,15 +1,17 @@
 #![allow(unused_imports, dead_code)]
 
 use ratatui::prelude::*;
-use crate::{constants, ui::model::pieceboard::PieceBoard};
-use crate::ui::model::occupant::Occupant;
-use crate::constants::Piece;
+use crate::board::simple::PieceBoard;
+use crate::board::Query;
+use crate::types::{self, Occupant, Piece};
+use crate::notation::*;
 
 use ratatui::widgets::{Table, Row};
 
 /// A widget what representeth a board in a 8x8 grid of 3x2 character cells. This is messy and bad
 /// and will undergo some kind of finishing someday when I tire of it. Be ye warned, dragons doth
 /// lie here.
+#[derive(Default)]
 pub struct Board<'a> {
     state: PieceBoard,
     board: Table<'a>
@@ -19,10 +21,10 @@ impl From<PieceBoard> for Board<'_> {
     fn from(state: PieceBoard) -> Self {
         let white_bg = Style::default().bg(WHITE_SQUARE).fg(Color::Black);
         let black_bg = Style::default().bg(BLACK_SQUARE).fg(Color::White);
-        let white_triple = vec![white_bg].repeat(3);
-        let black_triple = vec![black_bg].repeat(3);
-        let white_first_row = Row::new(vec![white_triple.clone(), black_triple.clone(), white_triple.clone(), black_triple.clone(), white_triple.clone(), black_triple.clone(), white_triple.clone(), black_triple.clone()].concat().into_iter().map(|style| Span::styled(" ", style)));
-        let black_first_row = Row::new(vec![black_triple.clone(), white_triple.clone(), black_triple.clone(), white_triple.clone(), black_triple.clone(), white_triple.clone(), black_triple.clone(), white_triple.clone()].concat().into_iter().map(|style| Span::styled(" ", style)));
+        let white_triple = [white_bg].repeat(3);
+        let black_triple = [black_bg].repeat(3);
+        let white_first_row = Row::new([white_triple.clone(), black_triple.clone(), white_triple.clone(), black_triple.clone(), white_triple.clone(), black_triple.clone(), white_triple.clone(), black_triple.clone()].concat().into_iter().map(|style| Span::styled(" ", style)));
+        let black_first_row = Row::new([black_triple.clone(), white_triple.clone(), black_triple.clone(), white_triple.clone(), black_triple.clone(), white_triple.clone(), black_triple.clone(), white_triple.clone()].concat().into_iter().map(|style| Span::styled(" ", style)));
 
         let table = Table::new([
             white_first_row.clone(),
@@ -41,7 +43,7 @@ impl From<PieceBoard> for Board<'_> {
             white_first_row.clone(),
             black_first_row.clone(),
             black_first_row.clone(),
-        ], Constraint::from_maxes(vec![1].repeat(24))).column_spacing(0);
+        ], Constraint::from_maxes([1].repeat(24))).column_spacing(0);
 
         Self {
             state,
@@ -58,12 +60,12 @@ const QUEEN : &'static str = "♛";
 const KING : &'static str = "♚";
 const PAWN : &'static str = "♟";
 */
-const ROOK: &'static str = "R";
-const KNIGHT : &'static str = "N";
-const BISHOP : &'static str = "B";
-const QUEEN : &'static str = "Q";
-const KING : &'static str = "K";
-const PAWN : &'static str = "P";
+const ROOK: &str = "R";
+const KNIGHT : &str = "N";
+const BISHOP : &str = "B";
+const QUEEN : &str = "Q";
+const KING : &str = "K";
+const PAWN : &str = "P";
 
 
 const WHITE_SQUARE : ratatui::prelude::Color = Color::Rgb(0x80, 0x80, 0x80);
@@ -80,55 +82,59 @@ impl Widget for &Board<'_> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         ratatui::prelude::Widget::render(&self.board, area, buf);
 
-        // This is a total mess of magic I am not proud of, here is the breakdown:
-        //
-        // It's a lot easier to set up the big 24x16 board as it's own table once
-        // and just render it by reference as a sort of texture.
-        //
-        // In a second pass, I jump around to the placement of the pieces on the board (centered,
-        // upper row o each 3x2 'square'). I then set the symbol and color of the cell based on the
-        // state of the board and the offset of the current area I'm rendering.
-        //
-        // After that, I go and set the style of the cell to make the pieces show up.
-        for i in 0..8 {
-            for j in 0..8 {
-                let cell = buf.get_mut(area.x + 3*i + 1, area.y + 2*j);
-                match self.state.get((7 - j).into(), i.into()) {
-                    Occupant::Occupied(piece, color) => {
-                        let symbol = match piece {
-                            Piece::Rook => { ROOK },
-                            Piece::Knight => { KNIGHT },
-                            Piece::Bishop => { BISHOP },
-                            Piece::Queen => { QUEEN },
-                            Piece::King => { KING },
-                            Piece::Pawn => { PAWN }
-                        };
-                        cell.set_symbol(symbol);
+        let mut cursor = Square::by_rank_and_file();
+        cursor.downward();
+        for s in cursor {
+            // Ratatui uses an Origin in the Top Left, with the first component being the
+            // left/right offset ('file') and the second being the up/down offset ('rank').
+            //
+            // Chess, and in particular Hazel, uses an Origin in the Bottom Left, with the first
+            // component being the rank and the second being the file. This is deeply annoying, but
+            // can be neatly solved by doing some magic here.
+            let buf_file : u16 = 14 - 2*s.rank() as u16;
+            let buf_rank : u16 = 3*s.file() as u16 + 1;
 
-                        match (cell.bg, color) {
-                            (WHITE_SQUARE, constants::Color::BLACK) => cell.fg = BLACK_PIECE_WHITE_SQUARE,
-                            (WHITE_SQUARE, constants::Color::WHITE) => cell.fg = WHITE_PIECE_WHITE_SQUARE, 
-                            (BLACK_SQUARE, constants::Color::BLACK) => cell.fg = BLACK_PIECE_BLACK_SQUARE,
-                            (BLACK_SQUARE, constants::Color::WHITE) => cell.fg = WHITE_PIECE_BLACK_SQUARE,
-                            _ => {}
-                        }
+            let cell = buf.get_mut(area.x + buf_rank, area.y + buf_file);
+            let occ = self.state.get(s);
 
-                        cell.set_style(cell.style().bold());
+            match occ {
+                Occupant::Occupied(piece, color) => {
+                    let symbol = match piece {
+                        Piece::Rook => { ROOK },
+                        Piece::Knight => { KNIGHT },
+                        Piece::Bishop => { BISHOP },
+                        Piece::Queen => { QUEEN },
+                        Piece::King => { KING },
+                        Piece::Pawn => { PAWN }
+                    };
+                    cell.set_symbol(symbol);
+
+                    match (cell.bg, color) {
+                        (WHITE_SQUARE, types::Color::BLACK) => cell.fg = BLACK_PIECE_WHITE_SQUARE,
+                        (WHITE_SQUARE, types::Color::WHITE) => cell.fg = WHITE_PIECE_WHITE_SQUARE,
+                        (BLACK_SQUARE, types::Color::BLACK) => cell.fg = BLACK_PIECE_BLACK_SQUARE,
+                        (BLACK_SQUARE, types::Color::WHITE) => cell.fg = WHITE_PIECE_BLACK_SQUARE,
+                        _ => {}
                     }
-                    Occupant::Empty => {} // Empty is the default state of the board.
+
+                    cell.set_style(cell.style().bold());
                 }
-                // while we're here, I want to do write column/row information on the bottom bit of
-                // the board in a nearly invisible color.
-                let col_mark = buf.get_mut(area.x + 3*i + 0, area.y + 2*j + 1);
-                col_mark.set_char((b'a' + i as u8) as char);
-                col_mark.fg = MARK_COLOR;
-
-                let row_mark = buf.get_mut(area.x + 3*i + 1, area.y + 2*j + 1);
-                row_mark.set_char((b'8' - j as u8) as char);
-                row_mark.fg = MARK_COLOR;
-
+                Occupant::Empty => {} // Empty is the default state of the board.
             }
+
+            // while we're here, I want to do write column/row information on the bottom bit of
+            // the board in a nearly invisible color.
+            let col_mark = buf.get_mut(area.x + buf_rank - 1, area.y + buf_file + 1);
+            col_mark.set_char((b'a' + s.file() as u8) as char);
+            col_mark.fg = MARK_COLOR;
+
+            let row_mark = buf.get_mut(area.x + buf_rank, area.y + buf_file + 1);
+            // note this sign flip, counting up from 'a' above, down from '8' here.
+            row_mark.set_char((b'1' + s.rank() as u8) as char);
+            row_mark.fg = MARK_COLOR;
         }
+
+
     }
 }
 
