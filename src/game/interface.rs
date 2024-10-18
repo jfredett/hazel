@@ -42,3 +42,44 @@ impl<T> Chess for T where T: Alter + Query + Clone + Default {
         alterations.iter().fold(self.clone(), |board, alteration| board.alter(alteration.inverse()))
     }
 }
+/*
+
+trait MoveGenerator<C : Chess> {
+    fn moves_for(&self, c: &C) -> &impl MoveSet;
+}
+
+// This should be an efficient storage for moves, not sure how to implement that yet though, maybe
+// stick it behind a trait?
+type MoveSetImpl = Vec<Move>;
+
+// a trait for quickly filtering/indexing/doing stuff in a moveset. used by MoveGen as a cached
+// move store.
+trait MoveSet : Iterator<Item = Move> + IntoIterator<Item = Move> {
+    fn filter(&self, f: impl Fn(Move) -> bool) -> Self;
+    fn is_empty(&self) -> bool;
+}
+
+
+pub fn perft<C, M>(chessboard : &C, movegen : &M, depth: usize) -> u64 
+where C : Chess, M : MoveGenerator<C> {
+    let moveset = movegen.moves_for(chessboard);
+
+    if moveset.is_empty() {
+        0
+    } else {
+        if depth == 0 {
+            1
+        } else {
+            let mut count = 0;
+            for m in moveset {
+                chessboard.make(m);
+
+                count += perft(chessboard, movegen, depth - 1);
+
+                chessboard.unmake(m);
+            }
+            count
+        }
+    }
+}
+*/

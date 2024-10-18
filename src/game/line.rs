@@ -38,18 +38,18 @@ impl From<Vec<&str>> for Line {
 }
 
 impl Line {
-    fn push(&mut self, halfply: HalfPly) {
+    pub fn push(&mut self, halfply: HalfPly) {
         self.halfplies.push(halfply);
     }
 
-    fn pop(&mut self) -> Option<HalfPly> {
+    pub fn pop(&mut self) -> Option<HalfPly> {
         self.halfplies.pop()
     }
-    fn current_move(&self) -> Option<HalfPly> {
+    pub fn current_move(&self) -> Option<HalfPly> {
         self.halfplies.last().cloned()
     }
 
-    fn current_position(&self) -> impl Chess {
+    pub fn current_position(&self) -> impl Chess {
         let mut board = PieceBoard::default();
 
         board.set_fen(&self.initial_position);
@@ -60,7 +60,7 @@ impl Line {
         board
     }
 
-    fn current_color(&self) -> Color {
+    pub fn current_color(&self) -> Color {
         if self.halfplies() % 2 == 0 {
             Color::WHITE
         } else {
@@ -68,11 +68,11 @@ impl Line {
         }
     }
 
-    fn halfplies(&self) -> usize {
+    pub fn halfplies(&self) -> usize {
         self.halfplies.len()
     }
 
-    fn to_pgn(&self) -> String {
+    pub fn to_pgn(&self) -> String {
         // PieceBoard is used to do the conversion to PGN since it's very simple, any `Chess` will
         // do.
         let mut board = PieceBoard::default();
@@ -80,7 +80,7 @@ impl Line {
         self.to_pgn_with_context(&board)
     }
 
-    fn to_pgn_with_context<C>(&self, context: &C) -> String where C: Query {
+    pub fn to_pgn_with_context<C>(&self, context: &C) -> String where C: Query {
         //FIXME: The context is _completely_ wrong here, since I'm not actually making these moves.
         //UCI moves and PGN moves are both ambiguous, you have to calculate to unpack the
         //boardstate, which is understandable but pretty annoying.
@@ -94,16 +94,6 @@ impl Line {
             }
         }
         pgn
-    }
-
-    /// Clones the line into a new line, suitable for making a variation from the current move.
-    /// DEPRECATED: This is going to be a whole struct thing...
-    fn make_variation(&self) -> Line {
-        let mut variation = Line::default();
-        for halfply in &self.halfplies {
-            variation.push(halfply.clone());
-        }
-        variation
     }
 }
 
