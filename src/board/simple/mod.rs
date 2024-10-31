@@ -9,6 +9,10 @@ use crate::notation::fen::{self, FEN};
 use crate::types::Occupant;
 use crate::engine::uci::UCIMessage;
 use crate::game::interface::Chess;
+use crate::notation::*;
+use crate::notation::fen::*;
+
+use tracing::instrument;
 
 
 
@@ -27,9 +31,8 @@ impl Default for PieceBoard {
     }
 }
 
-
 impl PieceBoard {
-    pub fn set<S>(&mut self, square: S, occupant: Occupant) where S : SquareNotation {
+    pub fn set(&mut self, square: impl Into<Square>, occupant: Occupant) {
         let sq = square.into();
 
         self.board[sq.index()] = occupant;
@@ -37,7 +40,7 @@ impl PieceBoard {
 }
 
 impl Query for PieceBoard {
-    fn get<S>(&self, square: S) -> Occupant where S: SquareNotation {
+    fn get(&self, square: impl Into<Square>) -> Occupant {
         let sq = square.into();
         self.board[sq.index()]
     }

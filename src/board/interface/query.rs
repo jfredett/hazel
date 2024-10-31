@@ -8,7 +8,7 @@ use crate::{
 /// board using standard 'index' notation with the 0th square being a1 and the 63rd square being
 /// h8.
 pub trait Query {
-    fn get<S>(&self, square: S) -> Occupant where S : SquareNotation;
+    fn get(&self, square: impl Into<Square>) -> Occupant;
 }
 
 lazy_static! {
@@ -45,34 +45,6 @@ pub fn display_board(board: &impl Query) -> String {
 pub fn to_fen(board: &impl Query) -> FEN {
     let mut f = String::new();
     let mut empty = 0;
-
-    /*
-    for s in Square::by_rank_and_file() {
-        if s.index() % 8 == 0 && s != A1 {
-            if empty != 0 {
-                f.push_str(&empty.to_string());
-                empty = 0;
-            }
-            f.push_str("/");
-        }
-        let occ = board.get(s);
-        match occ {
-            Occupant::Empty => empty += 1,
-            _ => {
-                if empty > 0 {
-                    f.push_str(&empty.to_string());
-                    empty = 0;
-                }
-                f.push_str(&occ.to_string());
-            }
-        }
-
-        if empty == 8 {
-            f.push_str("8");
-            empty = 0;
-        }
-    }
-    */
 
     for s in Square::by_rank_and_file().downward() {
         let occ = board.get(s);

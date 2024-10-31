@@ -63,7 +63,7 @@ impl Move {
     /// assert!(!m.is_promotion());
     /// assert!(m.move_metadata().is_quiet());
     /// ```
-    pub fn new<S>(source: S, target: S, metadata: MoveType) -> Move where S : SquareNotation {
+    pub fn new(source: impl Into<Square>, target: impl Into<Square>, metadata: MoveType) -> Move {
         let s : Square = source.into();
         let t : Square = target.into();
 
@@ -72,7 +72,7 @@ impl Move {
                              |   metadata as u16 )
     }
 
-    pub fn from<S>(source: S, target: S, metadata: MoveType) -> Move where S : SquareNotation {
+    pub fn from(source: impl Into<Square>, target: impl Into<Square>, metadata: MoveType) -> Move {
         trace!("Deprecated use of Move::from, use Move::new instead");
         Move::new(
             source,
@@ -133,16 +133,12 @@ impl Move {
         let source = context.get(self.source());
         let target = context.get(self.target());
 
-        debug!("DISPLAY:\n{}\nSource: should be {},  is {:?}", display_board(context), self.source(), source);
-
         // If the source square is empty, we can't disambiguate
         if source.is_empty() { return None; }
 
         let capturing = !target.is_empty(); // If there is a piece on the target square, then we're capturing
 
         match source.piece().unwrap() {
-            // FIXME: ideally this'd look at the square notation and not the raw index, but that's
-            // a bigger refactor than is appropriate right now
             Piece::Pawn => {
                 // we might still be capturing en passant, we can check to see if we're moving
                 // diagonally. This can be done by checking the difference between the source
@@ -176,30 +172,27 @@ impl Move {
                     return Some(MoveType::QUIET);
                 }
             },
-            // FIXME: ideally this'd look at the square notation and not the raw index, but that's
-            // a bigger refactor than is appropriate right now
             Piece::King => {
                 // Castling is a king move in UCI, so it's a king move as far as I'm concerned.
-                match self.source_idx() {
-                    0o04 => {
-                        if self.target_idx() == 0o06 {
+                match self.source() {
+                    A5 => {
+                        if self.target() == A7 {
                             return Some(MoveType::SHORT_CASTLE);
-                        } else if self.target_idx() == 0o02 {
+                        } else if self.target() == A3 {
                             return Some(MoveType::LONG_CASTLE);
                         }
                     },
-                    0o74 => {
-                        if self.target_idx() == 0o76 {
+                    H5 => {
+                        if self.target() == H7 {
                             return Some(MoveType::SHORT_CASTLE);
-                        } else if self.target_idx() == 0o72 {
+                        } else if self.target() == H3 {
                             return Some(MoveType::LONG_CASTLE);
                         }
                     },
                     _ => { },
                 }
             },
-            _ => {
-            },
+            _ => { },
         };
         // Otherwise, moves are just captures or quiet, simple as.
         if capturing {
@@ -265,13 +258,13 @@ impl Move {
     pub fn long_castle(color: Color) -> Move {
         match color {
             Color::WHITE => Move::from(
-                Square::try_from("e1").unwrap(),
-                Square::try_from("c1").unwrap(),
+                E1,
+                C1,
                 MoveType::LONG_CASTLE,
             ),
             Color::BLACK => Move::from(
-                Square::try_from("e8").unwrap(),
-                Square::try_from("c8").unwrap(),
+                E8,
+                C8,
                 MoveType::LONG_CASTLE,
             ),
         }
@@ -280,13 +273,13 @@ impl Move {
     pub fn short_castle(color: Color) -> Move {
         match color {
             Color::WHITE => Move::from(
-                Square::try_from("e1").unwrap(),
-                Square::try_from("g1").unwrap(),
+                E1,
+                G1,
                 MoveType::SHORT_CASTLE,
             ),
             Color::BLACK => Move::from(
-                Square::try_from("e8").unwrap(),
-                Square::try_from("g8").unwrap(),
+                E8,
+                G8,
                 MoveType::SHORT_CASTLE,
             ),
         }
@@ -324,7 +317,7 @@ impl Move {
     ///
     /// let m = Move::from(D2, D4, MoveType::DOUBLE_PAWN);
     ///
-    /// assert_eq!(m.target_idx(), D4.into());
+    /// assert_eq!(m.target_idx(), usize::from(D4));
     /// ```
     pub fn target_idx(&self) -> usize {
         ((self.0 & TARGET_IDX_MASK) >> TARGET_IDX_SHIFT).into()
@@ -400,37 +393,34 @@ impl Move {
         let source_occupant = context.get(source);
         let target_occupant = context.get(target);
 
-        let contextprime = self.disambiguate(context);
+        let contextprime = self.disambiguate(context).unwrap();
 
 
-        let mut alterations = match contextprime.unwrap() {
+        let mut alterations = match contextprime {
             MoveType::QUIET => vec![
+                Alteration::remove(source, source_occupant),
                 Alteration::place(target, source_occupant),
-                Alteration::remove(source, source_occupant)
             ],
             MoveType::DOUBLE_PAWN => vec![
+                Alteration::remove(source, source_occupant),
                 Alteration::place(target, source_occupant),
-                Alteration::remove(source, source_occupant)
             ],
             MoveType::SHORT_CASTLE => {
                 let color = source_occupant.color().unwrap();
                 let rook_source = match color {
-                    Color::WHITE => Square::try_from("h1"),
-                    Color::BLACK => Square::try_from("h8"),
-                }.unwrap();
+                    Color::WHITE => H1,
+                    Color::BLACK => H8,
+                };
                 let rook_target = match color {
-                    Color::WHITE => Square::try_from("f1"),
-                    Color::BLACK => Square::try_from("f8"),
-                }.unwrap();
+                    Color::WHITE => F1,
+                    Color::BLACK => F8,
+                };
                 return vec![
-                    // remove the rook
                     Alteration::remove(rook_source, Occupant::rook(color)),
-                    // remove the king
                     Alteration::remove(source, source_occupant),
-                    // place the king
                     Alteration::place(target, source_occupant),
-                    // place the rook
                     Alteration::place(rook_target, Occupant::rook(color))
+                    // TODO: Track Metadata here? I'm really starting to think I should.
                 ];
             },
             MoveType::LONG_CASTLE => { 
@@ -465,22 +455,43 @@ impl Move {
                 Alteration::place(target, source_occupant),
             ],
             MoveType::PROMOTION_KNIGHT => vec![
+                Alteration::remove(source, source_occupant),
+                Alteration::place(target, Occupant::knight(source_occupant.color().unwrap())),
             ],
             MoveType::PROMOTION_BISHOP => vec![
+                Alteration::remove(source, source_occupant),
+                Alteration::place(target, Occupant::bishop(source_occupant.color().unwrap())),
             ],
             MoveType::PROMOTION_ROOK => vec![
+                Alteration::remove(source, source_occupant),
+                Alteration::place(target, Occupant::rook(source_occupant.color().unwrap())),
             ],
             MoveType::PROMOTION_QUEEN => vec![
+                Alteration::remove(source, source_occupant),
+                Alteration::place(target, Occupant::queen(source_occupant.color().unwrap())),
             ],
             MoveType::PROMOTION_CAPTURE_KNIGHT => vec![
+                Alteration::remove(source, source_occupant),
+                Alteration::remove(target, target_occupant),
+                Alteration::place(target, Occupant::knight(source_occupant.color().unwrap())),
             ],
             MoveType::PROMOTION_CAPTURE_BISHOP => vec![
+                Alteration::remove(source, source_occupant),
+                Alteration::remove(target, target_occupant),
+                Alteration::place(target, Occupant::bishop(source_occupant.color().unwrap())),
             ],
             MoveType::PROMOTION_CAPTURE_ROOK => vec![
+                Alteration::remove(source, source_occupant),
+                Alteration::remove(target, target_occupant),
+                Alteration::place(target, Occupant::rook(source_occupant.color().unwrap())),
             ],
             MoveType::PROMOTION_CAPTURE_QUEEN => vec![
+                Alteration::remove(source, source_occupant),
+                Alteration::remove(target, target_occupant),
+                Alteration::place(target, Occupant::queen(source_occupant.color().unwrap())),
             ],
-            _ => todo!()
+            MoveType::NULLMOVE => vec![],
+            _ => { unreachable!(); }
         };
 
         alterations.push(Alteration::done());

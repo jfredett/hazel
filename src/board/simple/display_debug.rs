@@ -1,6 +1,7 @@
 use std::fmt::{Display, Debug};
 
-use super::*;
+use crate::board::query::display_board;
+use crate::board::PieceBoard;
 
 
 impl Debug for PieceBoard {
@@ -21,8 +22,10 @@ impl Display for PieceBoard {
 mod tests {
     use super::*;
 
+    use crate::board::query::Query;
     use crate::types::Piece;
     use crate::types::Occupant;
+    use crate::notation::*;
 
 
     #[test]

@@ -59,7 +59,6 @@ impl Default for Bitboard {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::notation::SquareNotation;
 
     #[test]
     fn empty() {

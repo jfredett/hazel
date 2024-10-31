@@ -21,7 +21,7 @@ impl From<Bitboard> for usize {
     }
 }
 
-impl<N : SquareNotation> From<N> for Bitboard {
+impl<N : Into<Square>> From<N> for Bitboard {
     fn from(n: N) -> Bitboard {
         let s : Square = n.into();
         Bitboard(1 << s.index())
