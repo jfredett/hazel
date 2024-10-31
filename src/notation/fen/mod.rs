@@ -1,33 +1,28 @@
 mod position_metadata;
+mod position;
 mod castle_rights;
 
 use std::fmt::Display;
 
 use tracing::instrument;
 
-use crate::board::{Alter, Alteration};
-use crate::constants::EMPTY_POSITION_FEN;
-use crate::types::{Color, Occupant, Piece};
-use crate::game::interface::Chess;
+use crate::board::Alter;
+use crate::board::Alteration;
+use crate::constants::{EMPTY_POSITION_FEN, START_POSITION_FEN};
+use crate::types::Color;
 use crate::notation::*;
 
 
-use position_metadata::PositionMetadata;
-use castle_rights::CastleRights;
-
-// NOTE: There exists a metadata type in `Ply` which might be useful here. I intended it to be
-// packed into 4 bytes, but I think I implemented it as a plain struct, either way, it can come in
-// here.
-// I need to start reorganizing things more aggressively, and pruning out the stuff I won't need
-// anymore. It's messy in here.
+pub use position_metadata::PositionMetadata;
+pub use castle_rights::CastleRights;
+use position::Position;
 
 #[derive(Debug, Clone)]
 pub struct FEN {
     original_fen: String,
-    position: Vec<Alteration>,
+    position: Position,
     metadata: PositionMetadata
 }
-
 
 impl PartialEq for FEN {
     fn eq(&self, other: &Self) -> bool {
@@ -36,7 +31,6 @@ impl PartialEq for FEN {
 }
 impl Eq for FEN {}
 
-
 impl Default for FEN {
     fn default() -> Self {
         Self::new(EMPTY_POSITION_FEN)
@@ -44,13 +38,17 @@ impl Default for FEN {
 }
 
 impl FEN {
+    pub fn start_position() -> Self {
+        Self::new(START_POSITION_FEN)
+    }
+
     /// Sometimes you just want to specify the position without all the metadata, this
     /// assumes you are describing a position with white-to-move, all castling rights, no en
     /// passant square.
     #[instrument]
     pub fn with_default_metadata(fen: &str) -> Self {
         let fenprime = format!("{} {}", fen, PositionMetadata::default());
-        let position = Self::compile(&fenprime);
+        let position = Position::new(&fenprime);
 
         Self {
             original_fen: fenprime,
@@ -66,7 +64,7 @@ impl FEN {
 
         let mut parts = fen.split_whitespace();
         let position_str = parts.next().unwrap();
-        let position = Self::compile(position_str);
+        let position = Position::new(position_str);
 
         metadata.parse(&mut parts);
 
@@ -103,55 +101,16 @@ impl FEN {
     }
 
     #[instrument]
-    pub fn setup<C>(&self) -> C where C : Chess {
-        let mut board = C::default();
-        for alteration in &self.position {
-            board.alter_mut(*alteration);
+    pub fn setup<A>(&self) -> A where A : Alter + Default {
+        let mut board = A::default();
+        for alteration in self.position.clone().into_iter() {
+            board.alter_mut(alteration);
         }
         board
     }
 
-    #[instrument]
-    fn compile(fen: &str) -> Vec<Alteration> {
-        let mut alterations = Vec::new();
-        let mut cursor = Square::by_rank_and_file();
-        cursor.downward();
-        for c in fen.chars() {
-            if cursor.is_done() { break; }
-
-            match c {
-                '1'..='8' => {
-                    let skip = c.to_digit(10).unwrap() as usize;
-                    for _ in 0..skip { cursor.next(); }
-                }
-                '/' => {
-                    continue;
-                }
-                _ => {
-                    let color = if c.is_uppercase() { Color::WHITE } else { Color::BLACK };
-                    let piece = match c.to_ascii_lowercase() {
-                        'p' => Piece::Pawn,
-                        'n' => Piece::Knight,
-                        'b' => Piece::Bishop,
-                        'r' => Piece::Rook,
-                        'q' => Piece::Queen,
-                        'k' => Piece::King,
-                        _ => {
-                            continue;
-                        },
-                    };
-                    let occupant = Occupant::Occupied(piece, color);
-                    alterations.push(Alteration::Place { square: cursor.current_square(), occupant } );
-
-                    cursor.next();
-                }
-            }
-
-        }
-
-
-
-        return alterations;
+    pub fn compile(&self) -> Vec<Alteration> {
+        self.position.clone().into_iter().collect()
     }
 }
 
@@ -170,8 +129,8 @@ pub fn setup<A : Alter + Default>(fen: &FEN) -> A {
 }
 
 pub fn setup_mut<A : Alter>(fen: &FEN, board: &mut A) {
-    for alteration in &fen.position {
-        board.alter_mut(*alteration);
+    for alteration in fen.position.clone().into_iter() {
+        board.alter_mut(alteration);
     }
 }
 
