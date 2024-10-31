@@ -67,3 +67,15 @@ cloc *args:
 
 mutants:
     cargo mutants -- --profile=mutants --all-targets
+
+taghunt:
+    @just _taghunt "BUG"
+    @just _taghunt "FIXME"
+    @just _taghunt "HACK"
+    @just _taghunt "NOTE"
+    @just _taghunt "TODO"
+
+
+_taghunt TAG:
+    @echo "{{TAG}}: $(rg {{TAG}} | wc -l)"
+
