@@ -7,7 +7,6 @@ use tracing::{debug, instrument};
 
 use ratatui::buffer::Buffer;
 
-use crate::ui::model::entry::Entry;
 use crate::board::simple::PieceBoard;
 use crate::board::interface::query;
 
@@ -20,18 +19,6 @@ pub struct FEN {
     fen: crate::notation::fen::FEN,
     style: Style,
     alignment: Alignment
-}
-
-impl From<&Entry> for FEN {
-    fn from(entry: &Entry) -> Self {
-        Self::new(query::to_fen(&entry.boardstate))
-    }
-}
-
-impl From<Entry> for FEN {
-    fn from(entry: Entry) -> Self {
-        Self::new(query::to_fen(&entry.boardstate))
-    }
 }
 
 impl From<&PieceBoard> for FEN {

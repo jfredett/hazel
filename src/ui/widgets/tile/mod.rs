@@ -28,7 +28,6 @@ const HEIGHT : u16 = 32;
 #[derive(Default)]
 pub struct Tile {
     /*
-    game_section: GameSection,
     query_line: Query,
     */
     engine_io_section: EngineIOSection,
@@ -39,9 +38,6 @@ pub struct Tile {
 impl Tile {
     pub fn new() -> Self {
         Self {
-            /*
-            game_section: GameSection::new(),
-            */
             engine_io_section: EngineIOSection::default(),
             state: PieceBoard::default(),
         }
@@ -80,14 +76,12 @@ impl Widget for &Tile {
 
         let game_section = GameSectionLayout::new(self.state);
         game_section.render(chunks[0], buf);
-        //Placeholder::of_size(chunks[0].width, chunks[0].height).render(chunks[0], buf);
         Placeholder::of_size(chunks[1].width, chunks[1].height).borders(Borders::LEFT | Borders::RIGHT).render(chunks[1], buf);
 
         self.engine_io_section.render(chunks[2], buf);
 
-        // self.game_section.render(chunks[0], buf, state);
         self.query_line().render(chunks[1], buf);
-        // self.engine_io_section.render(chunks[2], buf, state);
+        self.engine_io_section.render(chunks[2], buf);
     }
 }
 
