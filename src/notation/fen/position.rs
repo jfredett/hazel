@@ -1,5 +1,5 @@
 use crate::board::{Alteration, Query};
-use crate::constants::{EMPTY_POSITION_FEN, START_POSITION_FEN};
+use crate::constants::EMPTY_POSITION_FEN;
 use crate::types::{Color, Piece};
 use crate::notation::*;
 use crate::types::Occupant;
@@ -74,10 +74,6 @@ impl Position {
             position_string: fen.to_string(),
             position,
         }
-    }
-
-    pub fn start_position() -> Self {
-        Self::new(START_POSITION_FEN)
     }
 
     fn compile(fen: &str) -> Vec<Alteration> {

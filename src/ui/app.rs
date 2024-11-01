@@ -9,7 +9,6 @@ use tracing::{debug, instrument};
 
 use crate::board::PieceBoard;
 use crate::engine::uci::UCIMessage;
-use crate::engine::Engine;
 use crate::notation::fen::FEN;
 
 use super::widgets::tile::Tile;
@@ -37,7 +36,7 @@ impl Debug for Hazel {
 impl Hazel {
     #[instrument]
     pub fn new() -> Self {
-        let mut s = Self {
+        let s = Self {
             flags: HashMap::new(),
             mode: Mode::Command,
             tile: Tile::new(),

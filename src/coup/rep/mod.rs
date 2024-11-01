@@ -22,13 +22,12 @@
 use crate::board::interface::{Alteration, Query};
 use crate::notation::*;
 use crate::types::{Color, Piece, Occupant};
-use crate::board::query::display_board;
 use crate::constants::File;
 
 use serde::{Deserialize, Serialize};
 
 use tracing::instrument;
-use tracing::{debug, trace};
+use tracing::trace;
 
 #[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Serialize, Deserialize)]
 pub struct Move(pub(crate) u16);
