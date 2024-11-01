@@ -1,14 +1,6 @@
-use tracing::{instrument, debug};
-
-use crate::board::{alter::Alter, alteration::Alteration, query::{display_board , Query}};
+use crate::board::{alter::Alter, alteration::Alteration, query::Query};
 use crate::constants::START_POSITION_FEN;
-use crate::engine::Engine;
-use crate::notation::*;
-use crate::notation::uci::UCI;
-use crate::notation::fen::{self, FEN};
 use crate::types::Occupant;
-use crate::engine::uci::UCIMessage;
-use crate::game::interface::Chess;
 use crate::notation::*;
 use crate::notation::fen::*;
 
@@ -70,43 +62,6 @@ impl Alter for PieceBoard {
     }
 }
 
-impl Engine<UCIMessage> for PieceBoard {
-    fn exec_message(&mut self, message: &str) -> Vec<UCIMessage> {
-        self.exec(&UCIMessage::parse(message))
-    }
-
-    #[instrument]
-    fn exec(&mut self, message: &UCIMessage) -> Vec<UCIMessage> {
-        let ret = match message {
-            UCIMessage::UCI => vec![UCIMessage::ID("name".to_string(), "Hazel Pieceboard".to_string()), UCIMessage::UCIOk],
-            UCIMessage::IsReady => vec![UCIMessage::ReadyOk],
-            UCIMessage::UCINewGame => {
-                self.set_startpos();
-                vec![]
-            },
-            UCIMessage::Position(fen, moves) => {
-                if fen == "startpos" {
-                    self.set_startpos();
-                } else {
-                    self.set_fen(&FEN::new(fen));
-                }
-
-                debug!("Here");
-
-                for m in moves {
-                    let uci = UCI::try_from(m).unwrap_or_else(|_| panic!("Invalid Move: {}", &m));
-                    self.make_mut(uci.into());
-                }
-
-                vec![]
-            },
-            _ => vec![]
-        };
-        debug!("Done With Exec");
-        ret
-    }
-}
-
 #[cfg(test)]
 mod tests {
 
@@ -163,24 +118,6 @@ mod tests {
             // Note that it's a pawn being 'removed'.
             board.alter_mut(Alteration::remove(E1, Occupant::white_pawn()));
             assert_eq!(board.get(E1), Occupant::empty());
-        }
-    }
-
-    mod engine {
-        use tracing_test::traced_test;
-        use crate::board::interface::query;
-
-        use super::*;
-
-        #[traced_test]
-        #[test]
-        pub fn executes_position_correctly() {
-            let mut board = PieceBoard::default();
-            let moves = ["e2e4", "e7e5", "g1f3", "b8c6", "f1c4", "g8f6", "d2d3", "d7d6", "c1e3", "c8e6"];
-            let message = UCIMessage::Position("startpos".to_string(), moves.iter().map(|s| s.to_string()).collect());
-            board.exec(&message);
-            let fen = query::to_fen(&board);
-            assert_eq!(fen, FEN::with_default_metadata("r2qkb1r/ppp2ppp/2npbn2/4p3/2B1P3/3PBN2/PPP2PPP/RN1QK2R"));
         }
     }
 }

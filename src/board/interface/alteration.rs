@@ -1,11 +1,25 @@
+use std::fmt::Debug;
+
 use crate::types::Occupant;
 use crate::notation::*;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum Alteration {
     Place { square: Square, occupant: Occupant },
     Remove { square: Square, occupant: Occupant },
-    Done
+    Clear,
+    Tag(u32)
+}
+
+impl Debug for Alteration {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Place { square, occupant } => write!(f, "Place {} @ {}", occupant, square),
+            Self::Remove { square, occupant } => write!(f, "Remove {} @ {}", occupant, square),
+            Self::Clear => write!(f, "Clear"),
+            Self::Tag(tag) => write!(f, "Tag({})", tag)
+        }
+    }
 }
 
 impl Alteration {
@@ -17,8 +31,12 @@ impl Alteration {
         Self::Remove { square, occupant }
     }
 
-    pub fn done() -> Self {
-        Self::Done
+    pub fn tag(tag: impl Into<u32>) -> Self {
+        Self::Tag(tag.into())
+    }
+
+    pub fn clear() -> Self {
+        Self::Clear
     }
 
     pub fn inverse(&self) -> Self {
@@ -44,12 +62,6 @@ mod tests {
     fn remove() {
         let alteration = Alteration::remove(A1, Occupant::black_king());
         assert_eq!(alteration, Alteration::Remove { square: A1, occupant: Occupant::black_king() });
-    }
-
-    #[test]
-    fn done() {
-        let alteration = Alteration::done();
-        assert_eq!(alteration, Alteration::Done);
     }
 
     #[test]

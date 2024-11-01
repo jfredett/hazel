@@ -42,6 +42,7 @@ pub struct Move(pub(crate) u16);
 mod debug;
 mod move_type;
 
+pub mod rule;
 
 pub use move_type::*;
 
@@ -492,7 +493,7 @@ impl Move {
             _ => { unreachable!(); }
         };
 
-        alterations.push(Alteration::done());
+        alterations.push(Alteration::tag(contextprime as u8));
 
         return alterations;
     }
