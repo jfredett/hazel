@@ -42,9 +42,7 @@ pub struct Move(pub(crate) u16);
 mod debug;
 mod move_type;
 
-pub mod halfply;
 
-pub use halfply::HalfPly;
 pub use move_type::*;
 
 impl Move {
