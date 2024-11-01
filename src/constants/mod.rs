@@ -4,6 +4,7 @@
 pub mod file;
 pub mod masks;
 pub mod move_tables;
+pub mod game;
 
 pub mod test;
 
