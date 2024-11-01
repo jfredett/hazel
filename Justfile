@@ -74,8 +74,9 @@ taghunt:
     @just _taghunt "HACK"
     @just _taghunt "NOTE"
     @just _taghunt "TODO"
+    @just _taghunt "OQ"
 
 
 _taghunt TAG:
-    @echo "{{TAG}}: $(rg {{TAG}} | wc -l)"
+    @echo "{{TAG}}: $(rg {{TAG}} --glob \!Justfile | wc -l)"
 
