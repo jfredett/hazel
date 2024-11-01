@@ -31,7 +31,6 @@ pub mod brain;
 pub mod constants;
 pub mod coup;
 pub mod engine;
-pub mod game;
 pub mod notation;
 #[macro_use]
 pub mod types;
