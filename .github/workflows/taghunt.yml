@@ -1,0 +1,32 @@
+name: Taghunt
+
+on:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install just
+        uses: extractions/setup-just@v2
+
+      - name: Install ripgrep
+        run: sudo apt install -y ripgrep
+
+      - name: Tag Hunt
+        id: taghunt
+        run: |
+          set -x
+          cat <<EOF > $GITHUB_OUTPUT
+          stdout="$(just taghunt)"
+          EOF
+
+
+      - name: Add PR Comment
+        uses: mshick/add-pr-comment@v2.8.2
+        with:
+          message: |
+            "${{ steps.taghunt.outputs.stdout }}"

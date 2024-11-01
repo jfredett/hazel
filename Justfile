@@ -32,9 +32,6 @@ test *ARGS:
         return 0
     }
 
-
-
-
     if [[ -n "{{ARGS}}" ]]; then
         echo "Running tests with args: {{ARGS}}"
         just nextest {{ARGS}}
@@ -69,14 +66,13 @@ mutants:
     cargo mutants -- --profile=mutants --all-targets
 
 taghunt:
-    @just _taghunt "BUG"
-    @just _taghunt "FIXME"
-    @just _taghunt "HACK"
-    @just _taghunt "NOTE"
-    @just _taghunt "TODO"
-    @just _taghunt "OQ"
+    @just _taghunt "BUG" "FIXME" "HACK" "NOTE" "TODO" "OQ"
 
+_taghunt *TAGS:
+    #!/usr/bin/env bash
 
-_taghunt TAG:
-    @echo "{{TAG}}: $(rg {{TAG}} --glob \!Justfile | wc -l)"
+    for tag in {{TAGS}}; do
+        echo -n "$tag=$(rg $tag --glob \!Justfile | wc -l);"
+    done
+    echo
 
