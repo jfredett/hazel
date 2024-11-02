@@ -33,7 +33,6 @@
 
               packages = with pkgs; [
                 gnuplot
-                bugstalker.packages."x86_64-linux".default
                 perf-tools
                 cloc
                 linuxKernel.packages.linux_6_6.perf
