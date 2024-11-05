@@ -1,5 +1,7 @@
 # hazel
 
+![Hazel-Icon](https://github.com/user-attachments/assets/2b7818ed-e42a-4fee-bcbd-7e768eb67097)
+
 [![justforfunnoreally.dev badge](https://img.shields.io/badge/justforfunnoreally-dev-9ff)](https://justforfunnoreally.dev)
 
 [![codecov](https://codecov.io/github/jfredett/hazel/graph/badge.svg?token=ZHLLLZLAR5)](https://codecov.io/github/jfredett/hazel)
