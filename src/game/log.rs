@@ -183,6 +183,10 @@ impl<T, R> Log<T, R> where T: CompilesTo<R> + Clone, R : Clone {
         self.log.get_mut(position)
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.log.is_empty()
+    }
+
     pub fn len(&self) -> usize {
         self.log.len()
     }
