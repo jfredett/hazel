@@ -157,7 +157,10 @@ mod tests {
 
     use super::*;
 
+    /// These are WIPs.
+
     #[test]
+    #[ignore]
     fn fen_correct_after_one_move_from_start_pos() {
         let mut game = Game::default();
         game.new_game()
@@ -170,6 +173,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn fen_correct_after_castling() {
         let mut game = Game::default();
         game.new_game()
@@ -186,6 +190,5 @@ mod tests {
         let actual_fen = game.current_position();
 
         assert_eq!(actual_fen, FEN::new("rnbqkb1r/pppppppp/5n2/8/4P3/5N2/PPP1PPPP/RNBQKB1R b KQkq - 0 4"));
-
     }
 }

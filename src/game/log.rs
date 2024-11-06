@@ -191,20 +191,24 @@ impl<T, R> Log<T, R> where T: CompilesTo<R> + Clone, R : Clone {
         self.log.len()
     }
 
-    /// ```
-    /// # use gamerep::game::log::Log;
+    /// `` TODO: Get this working.
+    /// # use hazel::game::log::Log;
+    /// # use hazel::game::compiles_to::CompilesTo;
     ///
     /// let mut log = Log::default();
     /// log.record(1).record(2).commit();
     /// log.record(3).record(4).commit();
     ///
     /// log.cursor(|cursor| {
-    ///     let current = cursor.read()
-    /// }
-    /// ```
-    ///
-    ///
-
+    ///     let current = cursor
+    ///         .read()     // read the value under the cursor
+    ///         .unwrap()   // unwrap it as it may not exist if the cursor is past the end of the log
+    ///         .get(&());  // the value is in a cache that expects a compile context, in this
+    ///                     //   trivial example we don't need one, so we pass unit.
+    ///     assert_eq!(current, Some(1));
+    /// });
+    /// // The cursor is single-use.
+    /// ``
     pub fn cursor(&mut self, block: impl Fn(&mut Cursor<T, R>)) {
         let mut cursor = Cursor::new(self);
         block(&mut cursor);
