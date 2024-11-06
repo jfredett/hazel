@@ -2,17 +2,18 @@ use action::{chess::{ChessAction, EndGameState}, log::ActionLog};
 use compiles_to::CompilesTo;
 use crate::board::interface::*;
 
+use crate::types::log::Log;
+
 use crate::{board::{Alteration, PieceBoard}, coup::rep::Move, notation::fen::{PositionMetadata, FEN}};
 pub mod action;
 pub mod variation_builder;
 pub mod compiles_to;
-pub mod log;
 
-#[derive(Debug, Default, Clone, PartialEq)]
+#[derive(Default, Clone)]
 pub struct Game {
     // Active Data
     /// A record of every action in the game
-    action_log: ActionLog,
+    action_log: Log<ChessAction>,
     /// The board representation used to track gamestate.
     /// NOTE: This board should prioritize alteration-processing speed, since it is mostly for tooling
     /// around a single game tree, not move generation or anything like that.
@@ -31,18 +32,8 @@ impl Game {
     }
 
     fn record(&mut self, action: ChessAction) -> &mut Self {
-        let copy = self.clone();
-        let cache = self.action_log.record(action.clone());
-
-        let alters = action.compile(&copy);
-        for alter in &alters {
-            self.board.alter_mut(*alter);
-        }
-        cache.cache_alterations(alters);
-
         if let ChessAction::Make(mov) = action.clone() {
             self.metadata.update(&mov, &self.board);
-            cache.cache_metadata(self.metadata);
         }
 
         self
