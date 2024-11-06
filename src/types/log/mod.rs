@@ -1,5 +1,6 @@
 use transaction::Transaction;
-use write_head::Cursor;
+use write_head::WriteHead;
+use cursor::Cursor;
 
 pub mod cursor;
 pub mod transaction;
@@ -82,7 +83,11 @@ impl<T> Log<T> where T: Clone {
         self.write_head += 1;
     }
 
-    pub fn get(&mut self, position: usize) -> Option<&mut T> {
+    pub fn get(&self, position: usize) -> Option<&T> {
+        self.log.get(position)
+    }
+    
+    pub fn get_mut(&mut self, position: usize) -> Option<&mut T> {
         self.log.get_mut(position)
     }
 
@@ -94,27 +99,16 @@ impl<T> Log<T> where T: Clone {
         self.log.len()
     }
 
-    /// `` TODO: Get this working.
-    /// # use hazel::game::log::Log;
-    /// # use hazel::game::compiles_to::CompilesTo;
-    ///
-    /// let mut log = Log::default();
-    /// log.record(1).record(2).commit();
-    /// log.record(3).record(4).commit();
-    ///
-    /// log.cursor(|cursor| {
-    ///     let current = cursor
-    ///         .read()     // read the value under the cursor
-    ///         .unwrap()   // unwrap it as it may not exist if the cursor is past the end of the log
-    ///         .get(&());  // the value is in a cache that expects a compile context, in this
-    ///                     //   trivial example we don't need one, so we pass unit.
-    ///     assert_eq!(current, Some(1));
-    /// });
-    /// // The cursor is single-use.
-    /// ``
+    /// Cursor offers a readonly view of the current state of the log. The cursor object lives for
+    /// as long as the provided block.
     pub fn cursor(&mut self, block: impl Fn(&mut Cursor<T>)) {
         let mut cursor = Cursor::new(self);
         block(&mut cursor);
+    }
+
+    pub fn write_head(&mut self, block: impl Fn(&mut WriteHead<T>)) {
+        let mut write_head = WriteHead::new(self);
+        block(&mut write_head);
     }
 
     #[cfg(test)]

@@ -1,11 +1,15 @@
 use super::Log;
 
-pub struct Cursor<'a, T> where T: Clone {
+// Cursor should be a read-only version of this, which can then be used as a component of a replay
+// engine that can interpret a log of chessactions including choosing between variations, etc.
+
+
+pub struct WriteHead<'a, T> where T: Clone {
     log: &'a mut Log<T>,
     position: usize
 }
 
-impl<'a, T> Cursor<'a, T>  where T: Clone {
+impl<'a, T> WriteHead<'a, T>  where T: Clone {
     pub fn new(log: &'a mut Log<T>) -> Self {
         Self {
             log,
@@ -21,12 +25,11 @@ impl<'a, T> Cursor<'a, T>  where T: Clone {
     // FIXME: Should this be conditional?
     pub fn jump(&mut self, offset: isize) -> Option<&mut T> {
         let new_position = self.position as isize + offset;
-
         if new_position < 0 {
             self.position = 0;
             None
         } else {
-            if new_position as usize >= self.log.log.len() {
+            if new_position as usize >= self.log.len() {
                 self.position = self.log.len();
             } else {
                 self.position = new_position as usize;
@@ -61,7 +64,17 @@ impl<'a, T> Cursor<'a, T>  where T: Clone {
     }
 
     pub fn read(&mut self) -> Option<&mut T> {
-        self.log.get(self.position)
+        self.log.get_mut(self.position)
+    }
+
+    #[cfg(test)]
+    fn position(&self) -> usize {
+        self.position
+    }
+
+    #[cfg(test)]
+    fn log(&self) -> &Log<T> {
+        self.log
     }
 }
 
@@ -72,80 +85,82 @@ mod tests {
 
         use super::*;
 
+
+
         #[test]
-        fn cursor_seeks() {
+        fn write_head_seeks() {
             let mut log = Log::default();
 
             log.record(1).record(2).commit();
 
-            log.cursor(|cursor| {
-                assert_eq!(*cursor.seek(0).unwrap(), 1);
-                assert_eq!(*cursor.seek(1).unwrap(), 2);
-                assert_eq!(cursor.seek(2), None);
-                assert_eq!(cursor.seek(3), None);
+            log.write_head(|write_head| {
+                assert_eq!(*write_head.seek(0).unwrap(), 1);
+                assert_eq!(*write_head.seek(1).unwrap(), 2);
+                assert_eq!(write_head.seek(2), None);
+                assert_eq!(write_head.seek(3), None);
             });
 
             log.record(3).record(4).commit();
 
-            log.cursor(|cursor| {
-                assert_eq!(*cursor.seek(0).unwrap(), 1);
-                assert_eq!(*cursor.seek(1).unwrap(), 2);
-                assert_eq!(*cursor.seek(3).unwrap(), 4);
-                assert_eq!(*cursor.seek(2).unwrap(), 3);
-                assert_eq!(cursor.seek(4), None);
+            log.write_head(|write_head| {
+                assert_eq!(*write_head.seek(0).unwrap(), 1);
+                assert_eq!(*write_head.seek(1).unwrap(), 2);
+                assert_eq!(*write_head.seek(3).unwrap(), 4);
+                assert_eq!(*write_head.seek(2).unwrap(), 3);
+                assert_eq!(write_head.seek(4), None);
             });
         }
 
         #[test]
-        fn cursor_prev_and_next() {
+        fn write_head_prev_and_next() {
             let mut log = Log::default();
 
             log.record(1).record(2).commit();
 
-            log.cursor(|cursor| {
-                assert_eq!(*cursor.read().unwrap(), 1);
-                assert_eq!(*cursor.next().unwrap(), 2);
-                assert_eq!(cursor.next(), None);
-                assert_eq!(*cursor.prev().unwrap(), 2);
-                assert_eq!(*cursor.prev().unwrap(), 1);
-                assert_eq!(cursor.prev(), None);
+            log.write_head(|write_head| {
+                assert_eq!(*write_head.read().unwrap(), 1);
+                assert_eq!(*write_head.next().unwrap(), 2);
+                assert_eq!(write_head.next(), None);
+                assert_eq!(*write_head.prev().unwrap(), 2);
+                assert_eq!(*write_head.prev().unwrap(), 1);
+                assert_eq!(write_head.prev(), None);
             });
 
             log.record(3).record(4).commit();
 
-            log.cursor(|cursor| {
-                assert_eq!(*cursor.read().unwrap(), 1);
-                assert_eq!(*cursor.next().unwrap(), 2);
-                assert_eq!(*cursor.next().unwrap(), 3);
-                assert_eq!(*cursor.next().unwrap(), 4);
-                assert_eq!(cursor.next(), None);
-                assert_eq!(*cursor.prev().unwrap(), 4);
-                assert_eq!(*cursor.prev().unwrap(), 3);
-                assert_eq!(*cursor.prev().unwrap(), 2);
-                assert_eq!(*cursor.prev().unwrap(), 1);
-                assert_eq!(cursor.prev(), None);
+            log.write_head(|write_head| {
+                assert_eq!(*write_head.read().unwrap(), 1);
+                assert_eq!(*write_head.next().unwrap(), 2);
+                assert_eq!(*write_head.next().unwrap(), 3);
+                assert_eq!(*write_head.next().unwrap(), 4);
+                assert_eq!(write_head.next(), None);
+                assert_eq!(*write_head.prev().unwrap(), 4);
+                assert_eq!(*write_head.prev().unwrap(), 3);
+                assert_eq!(*write_head.prev().unwrap(), 2);
+                assert_eq!(*write_head.prev().unwrap(), 1);
+                assert_eq!(write_head.prev(), None);
             });
         }
 
 
         #[test]
-        fn cursor_jumps() {
+        fn write_head_jumps() {
             let mut log = Log::default();
 
             log.record(1).record(2).commit();
 
-            log.cursor(|cursor| {
-                assert_eq!(*cursor.seek(0).unwrap(), 1);
-                assert_eq!(*cursor.jump(1).unwrap(), 2);
-                assert_eq!(cursor.jump(1), None);
-                assert_eq!(*cursor.jump(-1).unwrap(), 2);
-                assert_eq!(*cursor.jump(-1).unwrap(), 1);
-                assert_eq!(cursor.jump(-1), None);
+            log.write_head(|write_head| {
+                assert_eq!(*write_head.seek(0).unwrap(), 1);
+                assert_eq!(*write_head.jump(1).unwrap(), 2);
+                assert_eq!(write_head.jump(1), None);
+                assert_eq!(*write_head.jump(-1).unwrap(), 2);
+                assert_eq!(*write_head.jump(-1).unwrap(), 1);
+                assert_eq!(write_head.jump(-1), None);
             });
 
             log.record(3).record(4).commit();
 
-            log.cursor(|cursor| {
+            log.write_head(|cursor| {
                 assert_eq!(*cursor.seek(0).unwrap(), 1);
                 assert_eq!(*cursor.jump(1).unwrap(), 2);
                 assert_eq!(*cursor.jump(1).unwrap(), 3);
