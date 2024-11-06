@@ -1,4 +1,4 @@
-#![feature(stmt_expr_attributes,assert_matches,const_trait_impl,const_for)]
+#![feature(stmt_expr_attributes,assert_matches,const_trait_impl,const_for,associated_type_defaults)]
 #![cfg_attr(test, allow(unused_imports))]
 // NOTE: These lints are disabled for the following reasons:
 //
@@ -29,6 +29,7 @@ pub use tracing_test;
 pub mod board;
 pub mod brain;
 pub mod constants;
+pub mod game;
 pub mod coup;
 pub mod engine;
 pub mod notation;
@@ -36,6 +37,7 @@ pub mod notation;
 pub mod types;
 pub mod ui;
 pub mod util;
+
 
 /// passes if the left is a subset of the right
 #[macro_export]
