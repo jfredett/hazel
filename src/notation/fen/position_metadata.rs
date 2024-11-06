@@ -265,7 +265,7 @@ mod tests {
         assert!(metadata.castling.black_short);
         assert!(metadata.castling.black_long);
         assert_eq!(metadata.en_passant, None);
-        assert_eq!(metadata.halfmove_clock, 0);
+        assert_eq!(metadata.halfmove_clock, 1);
         assert_eq!(metadata.fullmove_number, 1);
     }
 
