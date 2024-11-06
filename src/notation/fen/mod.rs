@@ -91,12 +91,12 @@ impl FEN {
     }
 
     #[instrument]
-    pub fn halfmove_clock(&self) -> usize {
+    pub fn halfmove_clock(&self) -> u8 {
         self.metadata.halfmove_clock
     }
 
     #[instrument]
-    pub fn fullmove_number(&self) -> usize {
+    pub fn fullmove_number(&self) -> u16 {
         self.metadata.fullmove_number
     }
 
@@ -111,6 +111,10 @@ impl FEN {
 
     pub fn compile(&self) -> Vec<Alteration> {
         self.position.clone().into_iter().collect()
+    }
+
+    pub fn metadata(&self) -> PositionMetadata {
+        self.metadata.clone()
     }
 }
 

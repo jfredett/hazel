@@ -11,3 +11,11 @@ pub trait Alter where Self: Sized {
         self
     }
 }
+
+// // TODO: Use this instead of the `compile` methods all over
+// pub trait IntoAlter {
+//     fn into_alter(self) -> Vec<Alteration>;
+// }
+//
+//
+// All Query are IntoAlter, except they're missing Metadata. This IntoAlter doesn't quite capture what I want it to mean, that it is a vector that ensures there is a metadata set.

@@ -31,6 +31,38 @@ impl Square {
         self.0 / 8
     }
 
+    pub const fn up(&self) -> Option<Self> {
+        if self.rank() == 7 {
+            None
+        } else {
+            Some(Self(self.0 + 8))
+        }
+    }
+
+    pub const fn down(&self) -> Option<Self> {
+        if self.rank() == 0 {
+            None
+        } else {
+            Some(Self(self.0 - 8))
+        }
+    }
+
+    pub const fn left(&self) -> Option<Self> {
+        if self.file() == 0 {
+            None
+        } else {
+            Some(Self(self.0 - 1))
+        }
+    }
+
+    pub const fn right(&self) -> Option<Self> {
+        if self.file() == 7 {
+            None
+        } else {
+            Some(Self(self.0 + 1))
+        }
+    }
+
     pub const fn backrank_for(&self, color: Color) -> bool {
         match color {
             Color::WHITE => self.rank() == 0,
@@ -74,5 +106,29 @@ mod tests {
         assert_eq!(H1.file(), 7);
 
         assert_eq!(H8.file(), 7);
+    }
+
+    #[test]
+    fn up_is_correct() {
+        assert_eq!(A1.up(), Some(A2));
+        assert_eq!(A8.up(), None);
+    }
+
+    #[test]
+    fn down_is_correct() {
+        assert_eq!(A1.down(), None);
+        assert_eq!(A8.down(), Some(A7));
+    }
+
+    #[test]
+    fn left_is_correct() {
+        assert_eq!(A1.left(), None);
+        assert_eq!(H1.left(), Some(G1));
+    }
+
+    #[test]
+    fn right_is_correct() {
+        assert_eq!(H1.right(), None);
+        assert_eq!(A1.right(), Some(B1));
     }
 }

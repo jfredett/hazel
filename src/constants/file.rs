@@ -14,12 +14,26 @@ pub enum File {
     H = 7,
 }
 
+impl From<u8> for File {
+    fn from(value: u8) -> Self {
+        File::from_index(value as usize)
+    }
+}
+
+impl From<File> for u8 {
+    fn from(file: File) -> Self {
+        file as u8
+    }
+}
+
+
+
 impl File {
     pub fn to_bitboard(self) -> Bitboard {
         FILE_MASKS[self as usize]
     }
 
-    pub fn from_index(index: usize) -> Self {
+    pub const fn from_index(index: usize) -> Self {
         match index & 0o07 {
             0 => File::A,
             1 => File::B,
@@ -33,8 +47,12 @@ impl File {
         }
     }
 
-    pub fn to_index(self) -> usize {
+    pub const fn to_index(self) -> usize {
         self as usize
+    }
+
+    pub const fn to_byte(self) -> u8 {
+        self as u8
     }
 
     pub fn to_pgn(self) -> &'static str {

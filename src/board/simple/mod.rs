@@ -6,8 +6,6 @@ use crate::notation::fen::*;
 
 use tracing::instrument;
 
-
-
 pub mod display_debug;
 pub mod from_into;
 
@@ -35,6 +33,12 @@ impl Query for PieceBoard {
     fn get(&self, square: impl Into<Square>) -> Occupant {
         let sq = square.into();
         self.board[sq.index()]
+    }
+}
+
+impl From<PieceBoard> for FEN {
+    fn from(board: PieceBoard) -> Self {
+        super::query::to_fen(&board)
     }
 }
 

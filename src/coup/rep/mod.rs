@@ -392,7 +392,7 @@ impl Move {
         let contextprime = self.disambiguate(context).unwrap();
 
 
-        let mut alterations = match contextprime {
+        let alterations = match contextprime {
             MoveType::QUIET => vec![
                 Alteration::remove(source, source_occupant),
                 Alteration::place(target, source_occupant),
@@ -411,13 +411,12 @@ impl Move {
                     Color::WHITE => F1,
                     Color::BLACK => F8,
                 };
-                return vec![
+                vec![
                     Alteration::remove(rook_source, Occupant::rook(color)),
                     Alteration::remove(source, source_occupant),
                     Alteration::place(target, source_occupant),
-                    Alteration::place(rook_target, Occupant::rook(color))
-                    // TODO: Track Metadata here? I'm really starting to think I should.
-                ];
+                    Alteration::place(rook_target, Occupant::rook(color)),
+                ]
             },
             MoveType::LONG_CASTLE => { 
                 let color = source_occupant.color().unwrap();
@@ -429,7 +428,7 @@ impl Move {
                     Color::WHITE => D1,
                     Color::BLACK => D8
                 };
-                return vec![
+                vec![
                     // remove the rook
                     Alteration::remove(rook_source, Occupant::rook(color)),
                     // remove the king
@@ -489,8 +488,6 @@ impl Move {
             MoveType::NULLMOVE => vec![],
             _ => { unreachable!(); }
         };
-
-        alterations.push(Alteration::tag(contextprime as u8));
 
         return alterations;
     }

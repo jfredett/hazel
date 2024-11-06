@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct CastleRights {
     pub white_short: bool,
     pub white_long: bool,
@@ -24,6 +24,37 @@ impl Display for CastleRights {
             rights.push('q');
         }
         write!(f, "{}", rights)
+    }
+}
+
+impl From<u32> for CastleRights {
+    fn from(castling: u32) -> Self {
+        CastleRights {
+            white_short: castling & 0b1000 != 0,
+            white_long: castling & 0b0100 != 0,
+            black_short: castling & 0b0010 != 0,
+            black_long: castling & 0b0001 != 0,
+        }
+    }
+}
+
+
+impl From<CastleRights> for u32 {
+    fn from(rights: CastleRights) -> u32 {
+        let mut castling = 0;
+        if rights.white_short {
+            castling |= 0b1000;
+        }
+        if rights.white_long {
+            castling |= 0b0100;
+        }
+        if rights.black_short {
+            castling |= 0b0010;
+        }
+        if rights.black_long {
+            castling |= 0b0001;
+        }
+        castling
     }
 }
 
