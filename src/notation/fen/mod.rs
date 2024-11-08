@@ -64,6 +64,10 @@ impl FEN {
         }
     }
 
+    pub fn set_metadata(&mut self, metadata: PositionMetadata) {
+        self.metadata = metadata;
+    }
+
     /// Expects a full FEN string with all metadata.
     #[instrument]
     pub fn new(fen: &str) -> Self {

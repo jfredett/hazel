@@ -1,10 +1,9 @@
-use action::{chess::{ChessAction, EndGameState}, log::ActionLog};
-use compiles_to::CompilesTo;
-use crate::board::interface::*;
+use action::{chess::{ChessAction, EndGameState}, game::GameAction};
+use tracing::{debug, instrument};
 
-use crate::types::log::Log;
+use crate::{board::Alter, types::log::Log};
 
-use crate::{board::{Alteration, PieceBoard}, coup::rep::Move, notation::fen::{PositionMetadata, FEN}};
+use crate::{board::PieceBoard, coup::rep::Move, notation::fen::{PositionMetadata, FEN}};
 pub mod action;
 pub mod variation_builder;
 pub mod compiles_to;
@@ -13,54 +12,41 @@ pub mod compiles_to;
 pub struct Game {
     // Active Data
     /// A record of every action in the game
-    action_log: Log<ChessAction>,
-    /// The board representation used to track gamestate.
-    /// NOTE: This board should prioritize alteration-processing speed, since it is mostly for tooling
-    /// around a single game tree, not move generation or anything like that.
-    board: PieceBoard,
-    /// The metadata describing the current gamestate
-    metadata: PositionMetadata,
+    chess_log: Log<ChessAction>,
 
     // Caches / Derived Data
-
 }
 
 impl Game {
     pub fn commit(&mut self) -> &mut Self {
-        todo!("run the cursor forward until all actions queued are applied. ActionLog needs to be an iterator for this I think.");
+        // update cached state?
+        self.chess_log.commit();
         self
     }
 
     fn record(&mut self, action: ChessAction) -> &mut Self {
-        if let ChessAction::Make(mov) = action.clone() {
-            self.metadata.update(&mov, &self.board);
-        }
-
+        self.chess_log.record(action);
         self
     }
 
 
     pub fn make(&mut self, mov: Move) -> &mut Self {
-        self.action_log.record(ChessAction::Make(mov));
+        self.record(ChessAction::Make(mov));
         self
     }
 
-    pub fn rewind(&mut self) -> &mut Self {
-        todo!();
-    }
-
     pub fn new_game(&mut self) -> &mut Self {
-        self.action_log.record(ChessAction::NewGame);
+        self.record(ChessAction::NewGame);
         self
     }
 
     pub fn end_game(&mut self, state: EndGameState) -> &mut Self {
-        self.action_log.record(ChessAction::EndGame(state));
+        self.record(ChessAction::EndGame(state));
         self
     }
 
     pub fn setup(&mut self, fen: FEN) -> &mut Self {
-        self.action_log.record(ChessAction::Setup(fen.clone()));
+        self.record(ChessAction::Setup(fen.clone()));
         self
     }
 
@@ -69,7 +55,42 @@ impl Game {
     }
 
     pub fn current_position(&self) -> FEN {
-        self.board.into()
+        self.chess_log.cursor(|cursor| {
+            let mut board = PieceBoard::default();
+            let mut metadata = PositionMetadata::default();
+            while let Some(action) = cursor.next() {
+                debug!("Processing action: {:?}", action);
+                match action {
+                    ChessAction::NewGame => {
+                        board = PieceBoard::default();
+                        metadata = PositionMetadata::default();
+                    },
+                    ChessAction::EndGame(_) => {
+                        todo!();
+                    },
+                    ChessAction::Variation(_) => {
+                        // This is a variation, so we don't need to do anything. Only reading the
+                        // mainline
+                    },
+                    ChessAction::Setup(fen) => {
+                        board.set_fen(fen);
+                    },
+                    ChessAction::Make(mov) => {
+                        metadata.update(mov, &board);
+                        for alter in mov.compile(&board) {
+                            board.alter_mut(alter);
+                        }
+                        debug!("After move metadata:\n{:?}", metadata);
+                    },
+                }
+            }
+
+            // Now board and metadata are caught up, so we just ask board to write it's fen
+            let mut ret = FEN::from(board);
+            ret.set_metadata(metadata);
+            debug!("Final FEN: {:?}", ret);
+            ret
+        })
     }
 
     // 2-NOV-2024
@@ -137,8 +158,9 @@ impl Game {
     // I'm going to start with the gameactions as methods, then wrap them in the GameAction enum
     // later.
     //
-
 }
+
+
 
 #[cfg(test)]
 mod tests {
@@ -151,20 +173,20 @@ mod tests {
     /// These are WIPs.
 
     #[test]
-    #[ignore]
     fn fen_correct_after_one_move_from_start_pos() {
         let mut game = Game::default();
         game.new_game()
             .setup(FEN::start_position())
-            .make(Move::new(D2, D4, MoveType::DOUBLE_PAWN));
+            .make(Move::new(D2, D4, MoveType::DOUBLE_PAWN))
+            .commit();
 
         let actual_fen = game.current_position();
 
-        assert_eq!(actual_fen, FEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 1"));
+        assert_eq!(actual_fen, FEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 2"));
     }
 
     #[test]
-    #[ignore]
+    #[tracing_test::traced_test]
     fn fen_correct_after_castling() {
         let mut game = Game::default();
         game.new_game()
@@ -176,10 +198,10 @@ mod tests {
             .make(Move::new(F1, E2, MoveType::QUIET))
             .make(Move::new(G8, F6, MoveType::QUIET))
             .make(Move::new(E1, G1, MoveType::SHORT_CASTLE))
-            .make(Move::new(E8, G8, MoveType::SHORT_CASTLE));
+            .commit();
 
         let actual_fen = game.current_position();
 
-        assert_eq!(actual_fen, FEN::new("rnbqkb1r/pppppppp/5n2/8/4P3/5N2/PPP1PPPP/RNBQKB1R b KQkq - 0 4"));
+        assert_eq!(actual_fen, FEN::new("r1bqkb1r/pppp1ppp/2n2n2/4p3/4P3/5N2/PPPPBPPP/RNBQ1RK1 b kq - 5 5"));
     }
 }

@@ -38,30 +38,23 @@ impl Debug for ChessAction {
     }
 }
 
-impl CompilesTo<Vec<Alteration>> for ChessAction {
-    type Context = Game;
+/*
+impl<Q : Query> CompilesTo<Vec<Alteration>> for ChessAction {
+    type Context = Q;
 
-    fn compile(&self, context: &Self::Context) -> Vec<Alteration> {
-        let board = &context.board;
-        let metadata = &context.metadata;
-
+    fn compile(&self, context: &Self::Context) -> Vec<Alteration> where Self::Context : Query {
         match self {
             ChessAction::NewGame => vec![Alteration::Clear],
             ChessAction::EndGame(_egs) => vec![
             ],
             ChessAction::Variation(_) => vec![
             ],
-            ChessAction::Setup(fen) => {
-                let mut inner_ret = vec![];
-
-                inner_ret.extend(fen.compile());
-                inner_ret.extend(Alteration::lit(&metadata.compile()));
-                inner_ret
-            },
-            ChessAction::Make(mov) => mov.compile(board),
+            ChessAction::Setup(fen) => fen.compile(),
+            ChessAction::Make(mov) => mov.compile(context),
         }
     }
 }
+*/
 
 #[cfg(test)]
 mod tests {
