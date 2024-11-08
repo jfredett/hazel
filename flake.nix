@@ -32,17 +32,18 @@
 
 
               packages = with pkgs; [
-                gnuplot
-                perf-tools
-                cloc
-                linuxKernel.packages.linux_6_6.perf
-                just
-                cargo-llvm-cov
-                cargo-nextest
-                cargo-mutants
-                stockfish
                 bacon
+                cargo-llvm-cov
+                cargo-mutants
+                cargo-nextest
+                cloc
+                gnuplot
+                imhex
+                just
+                linuxKernel.packages.linux_6_6.perf
                 mold
+                perf-tools
+                stockfish
               ];
             }];
           };
