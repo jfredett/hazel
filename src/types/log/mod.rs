@@ -86,7 +86,7 @@ impl<T> Log<T> where T: Clone {
     pub fn get(&self, position: usize) -> Option<&T> {
         self.log.get(position)
     }
-    
+
     pub fn get_mut(&mut self, position: usize) -> Option<&mut T> {
         self.log.get_mut(position)
     }

@@ -7,7 +7,7 @@ pub struct Cursor<'a, T> where T: Clone {
 }
 
 impl<'a, T> Cursor<'a, T>  where T: Clone {
-    pub fn new(log: &'a mut Log<T>) -> Self {
+    pub fn new(log: &'a Log<T>) -> Self {
         Self {
             log,
             position: 0
