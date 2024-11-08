@@ -44,9 +44,10 @@ quickcheck = "1.0.3"
 quickcheck_macros = "1.0.0"
 tracing-test = "0.2.5"
 
-[[bench]]
-name = "benchmarks"
-harness = true
+# Removing benchmarking temporarily
+#[[bench]]
+#name = "benchmarks"
+#harness = true
 
 [profile.bench]
 opt-level = 3
