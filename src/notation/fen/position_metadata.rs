@@ -1,7 +1,7 @@
 use std::fmt::Display;
 use std::str::SplitWhitespace;
 
-use tracing::{instrument, debug};
+use tracing::debug;
 
 use crate::board::Query;
 use crate::constants::File;

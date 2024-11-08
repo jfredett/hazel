@@ -19,7 +19,6 @@ use position::Position;
 
 #[derive(Clone)]
 pub struct FEN {
-    original_fen: String,
     position: Position,
     metadata: PositionMetadata
 }
@@ -54,12 +53,8 @@ impl FEN {
     /// passant square.
     #[instrument]
     pub fn with_default_metadata(fen: &str) -> Self {
-        let fenprime = format!("{} {}", fen, PositionMetadata::default());
-        let position = Position::new(fen);
-
         Self {
-            original_fen: fenprime,
-            position,
+            position: Position::new(fen),
             metadata: PositionMetadata::default(),
         }
     }
@@ -80,7 +75,6 @@ impl FEN {
         metadata.parse(&mut parts);
 
         Self {
-            original_fen: fen.to_string(),
             position,
             metadata
         }
@@ -159,7 +153,6 @@ mod tests {
     #[test]
     fn fen_startpos() {
         let fen = FEN::new(START_POSITION_FEN);
-        assert_eq!(fen.original_fen, START_POSITION_FEN);
         // We test the position part below in the #setup test
         assert_eq!(fen.side_to_move(), Color::WHITE);
         assert!(fen.castling().white_short);
@@ -174,7 +167,6 @@ mod tests {
     #[test]
     fn fen_kiwipete_position() {
         let fen = FEN::new(POS2_KIWIPETE_FEN);
-        assert_eq!(fen.original_fen, POS2_KIWIPETE_FEN);
         // We test the position part below in the #setup test
         assert_eq!(fen.side_to_move(), Color::WHITE);
         assert!(fen.castling().white_short);
@@ -225,8 +217,6 @@ mod tests {
     #[test]
     fn fen_empty_board() {
         let fen = FEN::new("8/8/8/8/8/8/8/8 w KQkq - 0 1");
-        assert_eq!(fen.original_fen, "8/8/8/8/8/8/8/8 w KQkq - 0 1");
-        // We test the position part below in the #setup test
         assert_eq!(fen.side_to_move(), Color::WHITE);
         assert!(fen.castling().white_short);
         assert!(fen.castling().white_long);
@@ -245,10 +235,10 @@ mod tests {
     }
 
     #[test]
-    fn fen_debug() {
+    fn fen_parses_ep_square() {
         let problem = FEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d2 0 2");
-
-        assert!(true);
+        // This round-trips the string into our structures and back out.
+        assert_eq!(format!("{:?}", problem), "rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d2 0 2");
     }
 
 }
