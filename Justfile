@@ -65,14 +65,14 @@ cloc *args:
 mutants:
     cargo mutants -- --profile=mutants --all-targets
 
+
 taghunt:
     @just _taghunt "BUG" "FIXME" "HACK" "NOTE" "TODO" "OQ"
 
 _taghunt *TAGS:
     #!/usr/bin/env bash
-
     for tag in {{TAGS}}; do
-        echo -n "$tag=$(rg $tag --glob \!Justfile | wc -l);"
+        echo -n "$tag=$(rg --glob \!Justfile $tag . | wc -l)<br/>"
     done
     echo
 
