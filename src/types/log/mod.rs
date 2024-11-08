@@ -101,9 +101,9 @@ impl<T> Log<T> where T: Clone {
 
     /// Cursor offers a readonly view of the current state of the log. The cursor object lives for
     /// as long as the provided block.
-    pub fn cursor(&mut self, block: impl Fn(&mut Cursor<T>)) {
+    pub fn cursor<A>(&self, block: impl Fn(&mut Cursor<T>) -> A) -> A {
         let mut cursor = Cursor::new(self);
-        block(&mut cursor);
+        block(&mut cursor)
     }
 
     pub fn write_head(&mut self, block: impl Fn(&mut WriteHead<T>)) {
