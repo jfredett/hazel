@@ -67,12 +67,18 @@ impl<'a, T> WriteHead<'a, T>  where T: Clone {
         self.log.get_mut(self.position)
     }
 
+    // FIXME: I think these are going to be necessary, but I haven't adapted the tests below to
+    // exercise the writer part of this thing since pulling it from cursor. Cursor and WriteHead
+    // themselves are probably some common underlying abstract class that differs only in
+    // mutability, but mutability generics aren't a thing so *shrug*
     #[cfg(test)]
+    #[allow(dead_code)]
     fn position(&self) -> usize {
         self.position
     }
 
     #[cfg(test)]
+    #[allow(dead_code)]
     fn log(&self) -> &Log<T> {
         self.log
     }

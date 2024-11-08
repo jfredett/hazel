@@ -78,6 +78,13 @@ impl<T> Log<T> where T: Clone {
         self
     }
 
+    pub fn commit_all(&mut self) -> &mut Self {
+        while !self.stack.is_empty() {
+            self.commit();
+        }
+        self
+    }
+
     fn write(&mut self, cache: T) {
         self.log.insert(self.write_head, cache);
         self.write_head += 1;

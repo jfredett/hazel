@@ -1,7 +1,6 @@
 use std::fmt::{Debug, Formatter};
-use crate::{board::{Alteration, Query}, coup::rep::Move, game::Game, notation::fen::{PositionMetadata, FEN}, types::Color};
 
-use crate::game::compiles_to::CompilesTo;
+use crate::{coup::rep::Move, notation::fen::FEN, types::Color};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Delim {
@@ -10,16 +9,21 @@ pub enum Delim {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum EndGameState {
+pub enum Reason {
+    /// Checkmate by the given color
     Winner(Color),
+    /// Draw for any reason
     Stalemate,
-    Aborted
+    /// Aborted for unspecified reason
+    Aborted,
+    /// Returned from an unfinished variation
+    Returned,
 }
 
 #[derive(Clone, PartialEq)]
 pub enum ChessAction {
     NewGame,
-    EndGame(EndGameState),
+    Halted(Reason),
     Variation(Delim),
     Setup(FEN),
     Make(Move),
@@ -29,7 +33,7 @@ impl Debug for ChessAction {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             ChessAction::NewGame => write!(f, "NewGame"),
-            ChessAction::EndGame(egs) => write!(f, "EndGame({:?})", egs),
+            ChessAction::Halted(egs) => write!(f, "EndGame({:?})", egs),
             ChessAction::Variation(Delim::Start) => write!(f, "Variation(Start)"),
             ChessAction::Variation(Delim::End) => write!(f, "Variation(End)"),
             ChessAction::Setup(fen) => write!(f, "Setup({})", fen),
