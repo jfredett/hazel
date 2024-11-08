@@ -20,7 +20,6 @@ extern crate quickcheck_macros;
 #[macro_use]
 extern crate lazy_static;
 
-extern crate either;
 extern crate rand;
 
 #[cfg(test)]

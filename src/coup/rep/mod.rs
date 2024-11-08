@@ -94,7 +94,6 @@ impl Move {
     /// # use hazel::notation::*;
     /// # use hazel::constants::*;
     /// # use hazel::types::Piece;
-    /// # use either::Either;
     /// // the move from d2 -> d4
     /// let m = Move::from_notation("d2", "d4", MoveType::DOUBLE_PAWN);
     ///
