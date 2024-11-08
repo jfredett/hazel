@@ -2,7 +2,7 @@ mod position_metadata;
 mod position;
 mod castle_rights;
 
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 
 use tracing::instrument;
 
@@ -17,16 +17,23 @@ pub use position_metadata::PositionMetadata;
 pub use castle_rights::CastleRights;
 use position::Position;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct FEN {
     original_fen: String,
     position: Position,
     metadata: PositionMetadata
 }
 
+impl Debug for FEN {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} {}", self.position, self.metadata)
+    }
+}
+
 impl PartialEq for FEN {
     fn eq(&self, other: &Self) -> bool {
-        self.original_fen == other.original_fen
+        self.position == other.position &&
+        self.metadata == other.metadata
     }
 }
 impl Eq for FEN {}
@@ -48,7 +55,7 @@ impl FEN {
     #[instrument]
     pub fn with_default_metadata(fen: &str) -> Self {
         let fenprime = format!("{} {}", fen, PositionMetadata::default());
-        let position = Position::new(&fenprime);
+        let position = Position::new(fen);
 
         Self {
             original_fen: fenprime,
@@ -120,9 +127,7 @@ impl FEN {
 
 impl Display for FEN {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}",
-            self.original_fen,
-        )
+        write!(f, "{} {}", self.position, self.metadata)
     }
 }
 
@@ -233,6 +238,13 @@ mod tests {
         let fen = FEN::new(START_POSITION_FEN);
         let expected = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
         assert_eq!(format!("{}", fen), expected);
+    }
+
+    #[test]
+    fn fen_debug() {
+        let problem = FEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d2 0 2");
+
+        assert!(true);
     }
 
 }

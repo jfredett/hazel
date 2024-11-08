@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 use crate::board::{Alteration, Query};
 use crate::constants::EMPTY_POSITION_FEN;
 use crate::types::{Color, Piece};
@@ -10,6 +12,12 @@ use crate::types::Occupant;
 pub(super) struct Position {
     position_string: String,
     position: Vec<Alteration>
+}
+
+impl Display for Position {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.position_string)
+    }
 }
 
 impl<C : Query> From<C> for Position {

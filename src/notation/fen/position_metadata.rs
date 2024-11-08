@@ -106,7 +106,13 @@ impl PositionMetadata {
 
         let en_passant = match en_passant {
             Some("-") => None,
-            Some(square) => Some(Square::new(square.parse().unwrap())),
+            Some(square) => { 
+                let sq = Square::try_from(square);
+                match sq {
+                    Ok(sq) => Some(sq),
+                    Err(_) => None,
+                }
+            },
             None => panic!("Invalid en passant square"),
         };
 
@@ -120,8 +126,14 @@ impl PositionMetadata {
     }
 
     pub fn update(&mut self, mov: &Move, board: &impl Query) {
+        // Clear the EP square, we'll re-set it if necessary later.
+        self.en_passant = None;
+
         if self.side_to_move == Color::WHITE {
             self.fullmove_number += 1;
+            self.side_to_move = Color::BLACK;
+        } else {
+            self.side_to_move = Color::WHITE;
         }
 
         let Occupant::Occupied(piece, color) = board.get(mov.source()) else { panic!("Move has no source piece"); };
@@ -306,5 +318,21 @@ mod tests {
         };
 
         assert_eq!(metadata.to_string(), "w KQkq - 0 1");
+    }
+
+    #[test]
+    fn parses_metadata_with_ep_square() {
+        let mut metadata = PositionMetadata::default();
+        let mut parts = "w KQkq e3 0 1".split_whitespace();
+        metadata.parse(&mut parts);
+
+        assert_eq!(metadata.side_to_move, Color::WHITE);
+        assert!(metadata.castling.white_short);
+        assert!(metadata.castling.white_long);
+        assert!(metadata.castling.black_short);
+        assert!(metadata.castling.black_long);
+        assert_eq!(metadata.en_passant, Some(E3));
+        assert_eq!(metadata.halfmove_clock, 0);
+        assert_eq!(metadata.fullmove_number, 1);
     }
 }
