@@ -62,8 +62,8 @@ miri-test:
 cloc *args:
   cloc --vcs=git --exclude-ext=.rc . {{args}}
 
-mutants:
-    cargo mutants -- --profile=mutants --all-targets
+mutants *ARGS:
+    cargo mutants -j 7 -E "Stockfish" -E "stockfish" -E "ui" --test-tool nextest -- --cargo-profile=mutants --all-targets {{ARGS}} -j 6
 
 
 taghunt:
