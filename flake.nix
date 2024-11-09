@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
     fenix.url = "github:nix-community/fenix";
     devenv.url = "github:cachix/devenv";
     bugstalker.url = "github:godzie44/BugStalker";
