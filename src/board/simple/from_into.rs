@@ -69,6 +69,15 @@ mod tests {
             assert_eq!(fen, fen2);
         }
 
+        #[test]
+        pub fn converts_from_borrowed_reference_correctly() {
+            let fen = FEN::new(START_POSITION_FEN);
+            let mut board = PieceBoard::default();
+            board.set_fen(&fen);
+            let fen2 = query::to_fen(&board);
+            assert_eq!(fen, fen2);
+        }
+
         /* For want of a FEN type and an Arbitrary instance 
         #[quickcheck]
         pub fn converts_fen_to_board_correctly_quickcheck(fen: FEN) -> bool {
