@@ -160,4 +160,13 @@ mod tests {
         assert_eq!(pos.position_string, "8/8/8/8/8/8/8/8");
     }
 
+    #[test]
+    fn compile_fen_compiles_to_expected_output() {
+        let fen = "p7/8/8/8/8/8/8/8";
+        let alters = Position::compile(fen);
+
+        assert_eq!(alters.len(), 1);
+        assert_eq!(alters[0], Alteration::place(A8, Occupant::black_pawn()));
+    }
+
 }

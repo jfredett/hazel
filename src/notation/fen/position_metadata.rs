@@ -291,7 +291,7 @@ mod tests {
     #[test]
     #[tracing_test::traced_test]
     fn ep_square_is_converts_to_u32_correctly() {
-        let mut metadata = PositionMetadata {
+        let metadata = PositionMetadata {
             en_passant: Some(G3),
             ..Default::default()
         };
