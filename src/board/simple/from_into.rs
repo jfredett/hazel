@@ -71,7 +71,7 @@ mod tests {
 
         #[test]
         pub fn converts_from_borrowed_reference_correctly() {
-            let fen = FEN::new(START_POSITION_FEN);
+            let fen = FEN::new(&START_POSITION_FEN);
             let mut board = PieceBoard::default();
             board.set_fen(&fen);
             let fen2 = query::to_fen(&board);

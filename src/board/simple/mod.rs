@@ -100,6 +100,16 @@ mod tests {
         use super::*;
 
         #[test]
+        pub fn alter_returns_new_board() {
+            let b1 = PieceBoard::default();
+            let b2 = b1.alter(Alteration::place(D5, Occupant::white_pawn()));
+
+            assert!(b1 != b2);
+            assert_eq!(b1.get(D5), Occupant::empty());
+            assert_eq!(b2.get(D5), Occupant::white_pawn());
+        }
+
+        #[test]
         pub fn alters_board_correctly() {
             let mut board = PieceBoard::default();
             assert_eq!(board.get(D5), Occupant::empty());

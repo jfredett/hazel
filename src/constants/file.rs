@@ -166,4 +166,11 @@ mod test {
         assert_eq!(File::from(6), File::G);
         assert_eq!(File::from(7), File::H);
     }
+
+
+    #[quickcheck]
+    fn from_u8_to_u8_roundtrips(file: File) -> bool {
+        let byte = u8::from(file);
+        File::from(byte) == file
+    }
 }

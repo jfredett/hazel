@@ -146,9 +146,58 @@ mod tests {
     use crate::board::simple::PieceBoard;
     use crate::constants::{POS2_KIWIPETE_FEN, START_POSITION_FEN};
     use crate::types::Color;
+    use crate::types::Occupant;
 
 
     use super::*;
+
+    #[test]
+    fn compile_is_correct_for_empty_pos() {
+        let fen = FEN::new(EMPTY_POSITION_FEN);
+        let alterations = fen.compile();
+        assert_eq!(alterations.len(), 0);
+    }
+
+    #[test]
+    fn compile_is_correct_for_start_pos() {
+        let fen = FEN::new(START_POSITION_FEN);
+        let alterations = fen.compile();
+        assert_eq!(alterations.len(), 32);
+        assert_eq!(alterations, vec![
+            Alteration::Place { square: A8, occupant: Occupant::black_rook() },
+            Alteration::Place { square: B8, occupant: Occupant::black_knight() },
+            Alteration::Place { square: C8, occupant: Occupant::black_bishop() },
+            Alteration::Place { square: D8, occupant: Occupant::black_queen() },
+            Alteration::Place { square: E8, occupant: Occupant::black_king() },
+            Alteration::Place { square: F8, occupant: Occupant::black_bishop() },
+            Alteration::Place { square: G8, occupant: Occupant::black_knight() },
+            Alteration::Place { square: H8, occupant: Occupant::black_rook() },
+            Alteration::Place { square: A7, occupant: Occupant::black_pawn() },
+            Alteration::Place { square: B7, occupant: Occupant::black_pawn() },
+            Alteration::Place { square: C7, occupant: Occupant::black_pawn() },
+            Alteration::Place { square: D7, occupant: Occupant::black_pawn() },
+            Alteration::Place { square: E7, occupant: Occupant::black_pawn() },
+            Alteration::Place { square: F7, occupant: Occupant::black_pawn() },
+            Alteration::Place { square: G7, occupant: Occupant::black_pawn() },
+            Alteration::Place { square: H7, occupant: Occupant::black_pawn() },
+            Alteration::Place { square: A2, occupant: Occupant::white_pawn() },
+            Alteration::Place { square: B2, occupant: Occupant::white_pawn() },
+            Alteration::Place { square: C2, occupant: Occupant::white_pawn() },
+            Alteration::Place { square: D2, occupant: Occupant::white_pawn() },
+            Alteration::Place { square: E2, occupant: Occupant::white_pawn() },
+            Alteration::Place { square: F2, occupant: Occupant::white_pawn() },
+            Alteration::Place { square: G2, occupant: Occupant::white_pawn() },
+            Alteration::Place { square: H2, occupant: Occupant::white_pawn() },
+            Alteration::Place { square: A1, occupant: Occupant::white_rook() },
+            Alteration::Place { square: B1, occupant: Occupant::white_knight() },
+            Alteration::Place { square: C1, occupant: Occupant::white_bishop() },
+            Alteration::Place { square: D1, occupant: Occupant::white_queen() },
+            Alteration::Place { square: E1, occupant: Occupant::white_king() },
+            Alteration::Place { square: F1, occupant: Occupant::white_bishop() },
+            Alteration::Place { square: G1, occupant: Occupant::white_knight() },
+            Alteration::Place { square: H1, occupant: Occupant::white_rook() },
+        ]);
+    }
 
     #[test]
     fn fen_startpos() {

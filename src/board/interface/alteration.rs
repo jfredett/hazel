@@ -63,6 +63,20 @@ mod tests {
     use super::*;
 
     #[test]
+    fn debug_display_is_correct() {
+        let alteration = Alteration::place(A1, Occupant::black_king());
+        assert_eq!(format!("{:?}", alteration), "Place k @ a1");
+
+        let alteration = Alteration::remove(A1, Occupant::black_king());
+        assert_eq!(format!("{:?}", alteration), "Remove k @ a1");
+    }
+
+    fn clear() {
+        let alteration = Alteration::clear();
+        assert_eq!(alteration, Alteration::Clear);
+    }
+
+    #[test]
     fn place() {
         let alteration = Alteration::place(A1, Occupant::black_king());
         assert_eq!(alteration, Alteration::Place { square: A1, occupant: Occupant::black_king() });

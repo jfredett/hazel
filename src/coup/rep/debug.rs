@@ -34,7 +34,14 @@ mod test {
     use super::*;
 
     #[test]
-    fn displays_as_intended() {
+    fn display_displays_as_intended() {
+        let m = Move::from_notation("d2", "d4", MoveType::QUIET);
+        let debug_out = format!("{}", m);
+        assert_eq!(debug_out, "d2 (11) -> d4 (27) (QUIET) [0o026660]");
+    }
+
+    #[test]
+    fn debug_displays_as_intended() {
         let m = Move::from_notation("d2", "d4", MoveType::QUIET);
         let debug_out = format!("{:?}", m);
         assert_eq!(debug_out, "d2 (11) -> d4 (27) (QUIET) [0o026660]");

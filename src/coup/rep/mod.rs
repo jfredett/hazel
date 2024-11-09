@@ -568,6 +568,32 @@ impl Move {
 mod test {
     use super::*;
 
+    mod creation {
+        use super::*;
+
+        #[test]
+        fn new_move() {
+            let m = Move::new(D2, D4, MoveType::QUIET);
+            assert_eq!(m.source(), D2);
+            assert_eq!(m.target(), D4);
+            assert!(!m.is_promotion());
+            assert!(m.move_metadata().is_quiet());
+        }
+
+        #[test]
+        fn empty_move() {
+            let m = Move::empty();
+            assert_eq!(m.0, 0);
+        }
+
+        #[test]
+        fn null_move() {
+            let m = Move::null();
+            assert!(m.is_null());
+        }
+
+    }
+
     mod from_notation {
         use super::*;
 
