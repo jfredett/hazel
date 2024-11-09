@@ -192,8 +192,6 @@ impl From<PositionMetadata> for u32 {
             Some(sq) => (1 << EP_FLAG_SHIFT) | ((sq.file() as u8) << EP_FILE_SHIFT),
         };
         
-
-
         b2 |= (data.halfmove_clock as u8) << HMC_SHIFT;
         b2 |= (data.side_to_move as u8) << STM_SHIFT;
 
@@ -260,6 +258,7 @@ mod tests {
     use super::*;
 
     use quickcheck::{Arbitrary, Gen};
+    use tracing::debug;
 
     impl Arbitrary for PositionMetadata {
         fn arbitrary(g: &mut Gen) -> Self {
@@ -289,8 +288,25 @@ mod tests {
         }
     }
 
-    #[quickcheck]
+    #[test]
     #[tracing_test::traced_test]
+    fn ep_square_is_converts_to_u32_correctly() {
+        let mut metadata = PositionMetadata {
+            en_passant: Some(G3),
+            ..Default::default()
+        };
+        let [mut b1, _, _, _] = u32::from(metadata).to_ne_bytes();
+
+        let mask = 0b00001111;
+
+        debug!("{:08b}", b1);
+        b1 &= mask;
+        debug!("{:08b}", b1);
+
+        assert_eq!(b1, 0b00001110);
+    }
+
+    #[quickcheck]
     fn roundtrips_correctly(metadata: PositionMetadata) -> bool {
         metadata == PositionMetadata::from(u32::from(metadata))
     }
