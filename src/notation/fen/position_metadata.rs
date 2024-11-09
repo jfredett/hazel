@@ -1,8 +1,6 @@
 use std::fmt::Display;
 use std::str::SplitWhitespace;
 
-use tracing::debug;
-
 use crate::board::Query;
 use crate::constants::File;
 use crate::coup::rep::Move;
@@ -81,7 +79,6 @@ impl PositionMetadata {
         let halfmove_clock = parts.next();
         let fullmove_number = parts.next();
 
-        debug!("Side to move: {:?}", side_to_move);
         let side_to_move = match side_to_move {
             Some("w") => Color::WHITE,
             Some("b") => Color::BLACK,
@@ -188,22 +185,17 @@ impl From<PositionMetadata> for u32 {
         let mut b1 : u8 = 0;
         let mut b2 : u8 = 0;
 
-        debug!("PMD -> u32");
         let from = u8::from(data.castling);
         b1 |= from << CASTLING_SHIFT;
-        debug!(" b1,b2 before EP       0b{:08b}_{:08b}", b1, b2);
         b1 |= match data.en_passant {
             None => 0,
             Some(sq) => (1 << EP_FLAG_SHIFT) | ((sq.file() as u8) << EP_FILE_SHIFT),
         };
-        debug!(" b1,b2 after EP        0b{:08b}_{:08b}", b1, b2);
         
 
 
         b2 |= (data.halfmove_clock as u8) << HMC_SHIFT;
-        debug!(" b1,b2 after HMC       0b{:08b}_{:08b}", b1, b2);
         b2 |= (data.side_to_move as u8) << STM_SHIFT;
-        debug!(" b1,b2 after STM       0b{:08b}_{:08b}", b1, b2);
 
 
         let [b3, b4] = data.fullmove_number.to_ne_bytes();
@@ -224,11 +216,6 @@ impl From<u32> for PositionMetadata {
         // b2 contains the halfmove clock (in the upper 6 bits) and the STM indicator in the second
         // lowest bit. the LSB is unused.
         // Shifts again to kill unused bits.
-        debug!("u32 -> PMD");
-        // debug!("Raw b2             0b{:08b}", b2);
-        // debug!("HMC Masked         0b{:08b}", b2 & HMC_MASK);
-        // debug!("shifted            0b{:08b}", (b2 & HMC_MASK) >> HMC_SHIFT);
-        // debug!("as u8              {:}", { (b2 & HMC_MASK) >> HMC_SHIFT });
         let halfmove_clock = (b2 & HMC_MASK) >> HMC_SHIFT;
         let side_to_move = Color::from((b2 & STM_MASK) >> STM_SHIFT);
 
@@ -236,7 +223,6 @@ impl From<u32> for PositionMetadata {
         // magic numbers are just shifting off the unused portions.
         let castling = CastleRights::from((b1 & CASTLING_MASK) >> CASTLING_SHIFT);
 
-        debug!(" Raw b1,b2             0b{:08b}_{:08b}", b1, b2);
         let en_passant = if (b1 & EP_FLAG_MASK) != 0 {
             let ep_file_data = (b1 & EP_FILE_MASK) >> EP_FILE_SHIFT;
             let ep_file = File::from_index(ep_file_data as usize);
@@ -250,7 +236,6 @@ impl From<u32> for PositionMetadata {
         } else {
             None
         };
-        debug!(" After EP              0b{:08b}_{:08b}", b1, b2);
 
 
         // b3 and b4 contain the fullmove number as a u16
@@ -307,46 +292,7 @@ mod tests {
     #[quickcheck]
     #[tracing_test::traced_test]
     fn roundtrips_correctly(metadata: PositionMetadata) -> bool {
-        if metadata == PositionMetadata::from(u32::from(metadata)) {
-            true
-        } else {
-            debug!("metadata in:  {}", metadata);
-            debug!("u32::from(m)    0b{:08b}_{:08b}", u32::from(metadata).to_ne_bytes()[0], u32::from(metadata).to_ne_bytes()[1]);
-            debug!("metadata out: {}", PositionMetadata::from(u32::from(metadata)));
-            debug!(
-                "metadata bytes: 0b{:08b}_{:08b}",
-                u32::from(PositionMetadata::from(u32::from(metadata))).to_ne_bytes()[0],
-                u32::from(PositionMetadata::from(u32::from(metadata))).to_ne_bytes()[1],
-            );
-            false
-        }
-    }
-
-    #[test]
-    #[ignore]
-    fn witness() {
-        let wit = PositionMetadata {
-            side_to_move: Color::WHITE,
-            castling: CastleRights {
-                white_short: true,
-                white_long: false,
-                black_short: false,
-                black_long: false
-            },
-            en_passant: None,
-            halfmove_clock: 93,
-            fullmove_number: 38176,
-        };
-
-        let u32_data = u32::from(wit);
-        let metadata2 = PositionMetadata::from(u32_data);
-
-        let u32_data_2 = u32::from(metadata2);
-
-        tracing::debug!("\n0x{u32_data:x}\n0x{u32_data_2:x}");
-        dbg!(metadata2);
-
-        assert_eq!(wit, metadata2);
+        metadata == PositionMetadata::from(u32::from(metadata))
     }
 
     // TODO: These should be quickcheck
