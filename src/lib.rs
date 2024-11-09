@@ -1,4 +1,8 @@
 #![feature(stmt_expr_attributes,assert_matches,const_trait_impl,const_for,associated_type_defaults)]
+// The Squares being consts means that sometimes when I use them as a reference, I trigger this
+// warning. I generally don't mind the temporary value being created, and in fact want it (see the
+// PositionMetadata to/from u32 impls for an example).
+#![allow(const_item_mutation)]
 #![cfg_attr(test, allow(unused_imports))]
 // NOTE: These lints are disabled for the following reasons:
 //

@@ -10,6 +10,7 @@ use crate::engine::driver::Driver;
 use crate::engine::uci::UCIMessage;
 use crate::engine::Engine;
 
+#[cfg_attr(test, mutants::skip)]
 pub fn run() -> io::Result<()> {
     run_with_io(io::stdin(), io::stdout())
 }

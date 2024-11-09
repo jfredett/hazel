@@ -126,6 +126,7 @@ impl Hazel {
 }
 
 #[cfg(test)]
+#[cfg_attr(test, mutants::skip)]
 mod tests {
     use std::process::Termination;
 

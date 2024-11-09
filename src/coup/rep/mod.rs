@@ -594,21 +594,46 @@ mod test {
     mod castling {
         use super::*;
 
-        #[test]
-        fn short_castle_parses_correctly() {
-            let m = Move::short_castle(Color::WHITE);
-            assert_eq!(m.source_idx(), 0o04);
-            assert_eq!(m.target_idx(), 0o06);
-            assert!(m.is_short_castle());
+        mod white {
+            use super::*;
+
+            #[test]
+            fn short_castle_parses_correctly() {
+                let m = Move::short_castle(Color::WHITE);
+                assert_eq!(m.source(), E1);
+                assert_eq!(m.target(), G1);
+                assert!(m.is_short_castle());
+            }
+
+            #[test]
+            fn long_castle_parses_correctly() {
+                let m = Move::long_castle(Color::WHITE);
+                assert_eq!(m.source(), E1);
+                assert_eq!(m.target(), C1);
+                assert!(m.is_long_castle());
+            }
         }
 
-        #[test]
-        fn long_castle_parses_correctly() {
-            let m = Move::long_castle(Color::WHITE);
-            assert_eq!(m.source_idx(), 0o04);
-            assert_eq!(m.target_idx(), 0o02);
-            assert!(m.is_long_castle());
+        mod black {
+            use super::*;
+
+            #[test]
+            fn short_castle_parses_correctly() {
+                let m = Move::short_castle(Color::BLACK);
+                assert_eq!(m.source(), E8);
+                assert_eq!(m.target(), G8);
+                assert!(m.is_short_castle());
+            }
+
+            #[test]
+            fn long_castle_parses_correctly() {
+                let m = Move::long_castle(Color::BLACK);
+                assert_eq!(m.source(), E8);
+                assert_eq!(m.target(), C8);
+                assert!(m.is_long_castle());
+            }
         }
+
     }
 
     mod proxy_methods {

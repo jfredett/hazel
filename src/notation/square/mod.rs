@@ -19,6 +19,16 @@ impl Square {
         Self(index)
     }
 
+    pub const fn set_rank(&mut self, rank: usize) -> Self {
+        self.0 = rank * 8 + self.file();
+        *self
+    }
+
+    pub const fn set_file(&mut self, file: usize) -> Self {
+        self.0 = self.rank() * 8 + file;
+        *self
+    }
+
     pub const fn index(&self) -> usize {
         self.0
     }
@@ -80,6 +90,14 @@ impl Square {
 mod tests {
     use super::*;
 
+    use quickcheck::{Arbitrary, Gen};
+
+    impl Arbitrary for Square {
+        fn arbitrary(g: &mut Gen) -> Self {
+            Square(usize::arbitrary(g) % 64)
+        }
+    }
+
     #[test]
     fn rank_is_correct() {
         assert_eq!(A1.rank(), 0);
@@ -130,5 +148,19 @@ mod tests {
     fn right_is_correct() {
         assert_eq!(H1.right(), None);
         assert_eq!(A1.right(), Some(B1));
+    }
+
+    #[test]
+    fn set_file_is_correct() {
+        let mut square = A1;
+        assert_eq!(square.set_file(7), H1);
+        assert_eq!(square.set_file(0), A1);
+    }
+
+    #[test]
+    fn set_rank_is_correct() {
+        let mut square = A1;
+        assert_eq!(square.set_rank(7), A8);
+        assert_eq!(square.set_rank(0), A1);
     }
 }

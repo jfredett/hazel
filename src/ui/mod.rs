@@ -17,6 +17,7 @@ mod widgets;
 use app::Hazel;
 
 /// Boilerplate to get the app started.
+#[cfg_attr(test, mutants::skip)]
 pub fn run() -> Result<(), Box<dyn Error>> {
     enable_raw_mode()?;
     // Reroute to stderr since we want to talk on stdout for UCI potentially
@@ -36,6 +37,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+#[cfg_attr(test, mutants::skip)]
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut Hazel) -> io::Result<bool> {
     loop {
         if app.check_flag("exit") { return Ok(true); }

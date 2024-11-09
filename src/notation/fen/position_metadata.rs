@@ -27,6 +27,7 @@ pub struct PositionMetadata {
     // CCCCEEEE HHHHHHSx FFFFFFFF FFFFFFFF
 }
 
+
 impl Default for PositionMetadata {
     fn default() -> Self {
         Self {
@@ -61,16 +62,16 @@ impl Display for PositionMetadata {
     }
 }
 
-const STM_MASK: u32 = 0b1;
-const STM_SHIFT: usize = 0;
-const CASTLING_MASK: u32 = 0b1111;
-const CASTLING_SHIFT: usize = 1;
-const EP_FLAG_MASK: u32 = 0b0001;
-const EP_FILE_MASK: u32 = 0b1110;
-const EP_SHIFT: usize = 5;
-const HMC_MASK: u32 = 0b111111;
-const HMC_SHIFT: usize = 9;
-const FMN_SHIFT: usize = 16;
+const CASTLING_MASK: u8  = 0b1111_0000;
+const CASTLING_SHIFT: u8 = 4;
+const EP_FLAG_MASK: u8   = 0b0000_1000;
+const EP_FLAG_SHIFT: u8  = 3;
+const EP_FILE_MASK: u8   = 0b0000_0111;
+const EP_FILE_SHIFT: u8  = 0;
+const STM_MASK: u8       = 0b0000_0010;
+const STM_SHIFT: u8      = 1;
+const HMC_MASK: u8       = 0b1111_1100;
+const HMC_SHIFT: u8      = 2;
 
 impl PositionMetadata {
     pub fn parse(&mut self, parts: &mut SplitWhitespace<'_>) {
@@ -136,6 +137,8 @@ impl PositionMetadata {
             self.side_to_move = Color::WHITE;
         }
 
+        // rely on the color of the piece being moved, rather than reasoning about the side-to-move
+        // or delaying it till the end.
         let Occupant::Occupied(piece, color) = board.get(mov.source()) else { panic!("Move has no source piece"); };
 
 
@@ -175,69 +178,92 @@ impl PositionMetadata {
             _ => {}
         }
     }
-
-
-
-    pub fn compile(&self) -> Vec<u8> {
-        u32::from(*self).to_ne_bytes().into()
-    }
 }
 
 impl From<PositionMetadata> for u32 {
     fn from(data: PositionMetadata) -> Self {
-        let mut ret : u32 = 0;
+        // Layout of the metadata:
+        // 00000000 00000000 00000000 00000000
+        // CCCCeEEE HHHHHHSx FFFFFFFF FFFFFFFF
+        let mut b1 : u8 = 0;
+        let mut b2 : u8 = 0;
 
-        ret |= (data.side_to_move as u32) << STM_SHIFT;
-        ret |= u32::from(data.castling) << CASTLING_SHIFT;
-        ret |= (data.halfmove_clock as u32) << HMC_SHIFT;
-        ret |= (data.fullmove_number as u32) << FMN_SHIFT;
+        debug!("PMD -> u32");
+        let from = u8::from(data.castling);
+        b1 |= from << CASTLING_SHIFT;
+        debug!(" b1,b2 before EP       0b{:08b}_{:08b}", b1, b2);
+        b1 |= match data.en_passant {
+            None => 0,
+            Some(sq) => (1 << EP_FLAG_SHIFT) | ((sq.file() as u8) << EP_FILE_SHIFT),
+        };
+        debug!(" b1,b2 after EP        0b{:08b}_{:08b}", b1, b2);
+        
 
-        match data.en_passant {
-            None => {} // no need to do anything
-            Some(sq) => {
-                let file = File::from_index(sq.file());
-                ret |= 1 << EP_SHIFT;
-                ret |= (file as u32) << (EP_SHIFT + 1);
-            }
-        }
 
-        ret
+        b2 |= (data.halfmove_clock as u8) << HMC_SHIFT;
+        debug!(" b1,b2 after HMC       0b{:08b}_{:08b}", b1, b2);
+        b2 |= (data.side_to_move as u8) << STM_SHIFT;
+        debug!(" b1,b2 after STM       0b{:08b}_{:08b}", b1, b2);
+
+
+        let [b3, b4] = data.fullmove_number.to_ne_bytes();
+
+        u32::from_ne_bytes([b1, b2, b3, b4])
     }
-
 }
 
 impl From<u32> for PositionMetadata {
     fn from(data: u32) -> Self {
-        let side_to_move = (data >> STM_SHIFT) & STM_MASK;
-        let castling = (data >> CASTLING_SHIFT) & CASTLING_MASK;
-        let ep_flag = (data >> EP_SHIFT) & EP_FLAG_MASK;
-        let ep_flag_bit = (data >> (EP_SHIFT + 1)) & EP_FILE_MASK;
-        let ep_file = File::from_index(ep_flag_bit as usize);
-        let hmc : u8 = ((data >> HMC_SHIFT) & HMC_MASK) as u8;
-        let fmn : u16 = (data >> FMN_SHIFT) as u16;
+        // Layout of the metadata:
+        // 00000000 00000000 00000000 00000000
+        // CCCCeEEE HHHHHHSx FFFFFFFF FFFFFFFF
+        let [b1, b2, b3, b4] = data.to_ne_bytes();
 
-        let side_to_move = match side_to_move {
-            0 => Color::WHITE,
-            1 => Color::BLACK,
-            _ => panic!("Invalid side to move"),
+        // It is convenient to work on the second byte first.
+
+        // b2 contains the halfmove clock (in the upper 6 bits) and the STM indicator in the second
+        // lowest bit. the LSB is unused.
+        // Shifts again to kill unused bits.
+        debug!("u32 -> PMD");
+        // debug!("Raw b2             0b{:08b}", b2);
+        // debug!("HMC Masked         0b{:08b}", b2 & HMC_MASK);
+        // debug!("shifted            0b{:08b}", (b2 & HMC_MASK) >> HMC_SHIFT);
+        // debug!("as u8              {:}", { (b2 & HMC_MASK) >> HMC_SHIFT });
+        let halfmove_clock = (b2 & HMC_MASK) >> HMC_SHIFT;
+        let side_to_move = Color::from((b2 & STM_MASK) >> STM_SHIFT);
+
+        // b1 contains the Castling Information and EP square:
+        // magic numbers are just shifting off the unused portions.
+        let castling = CastleRights::from((b1 & CASTLING_MASK) >> CASTLING_SHIFT);
+
+        debug!(" Raw b1,b2             0b{:08b}_{:08b}", b1, b2);
+        let en_passant = if (b1 & EP_FLAG_MASK) != 0 {
+            let ep_file_data = (b1 & EP_FILE_MASK) >> EP_FILE_SHIFT;
+            let ep_file = File::from_index(ep_file_data as usize);
+
+            Some(match side_to_move {
+                // color is the _side to move_, so the EP square would be on the opposite side if
+                // it exists
+                Color::WHITE => A6.set_file(ep_file as usize),
+                Color::BLACK => A3.set_file(ep_file as usize),
+            })
+        } else {
+            None
         };
+        debug!(" After EP              0b{:08b}_{:08b}", b1, b2);
 
-        let en_passant = (ep_flag != 0).then(|| Square::new(ep_file as usize));
 
-        let castling = CastleRights {
-            white_short: castling & 0b1000 != 0,
-            white_long: castling & 0b0100 != 0,
-            black_short: castling & 0b0010 != 0,
-            black_long: castling & 0b0001 != 0,
-        };
+        // b3 and b4 contain the fullmove number as a u16
+        let fullmove_number = u16::from_ne_bytes([b3, b4]);
 
+        assert_eq!(u32::from_ne_bytes([b1, b2, b3, b4]), data);
 
         Self {
             side_to_move,
             castling,
             en_passant,
-            halfmove_clock: hmc,
-            fullmove_number: fmn,
+            halfmove_clock,
+            fullmove_number,
         }
     }
 }
@@ -247,6 +273,81 @@ impl From<u32> for PositionMetadata {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use quickcheck::{Arbitrary, Gen};
+
+    impl Arbitrary for PositionMetadata {
+        fn arbitrary(g: &mut Gen) -> Self {
+            let should_ep = bool::arbitrary(g);
+            let color = Color::arbitrary(g);
+            let ep_square = if should_ep {
+                let file = File::arbitrary(g);
+                
+                let sq = if color == Color::WHITE {
+                    A6.set_file(file as usize)
+                } else {
+                    A3.set_file(file as usize)
+                };
+
+                Some(sq)
+            } else {
+                None
+            };
+
+            Self {
+                side_to_move: color,
+                castling: CastleRights::arbitrary(g),
+                en_passant: ep_square,
+                halfmove_clock: u8::arbitrary(g) % 64,
+                fullmove_number: u16::arbitrary(g),
+            }
+        }
+    }
+
+    #[quickcheck]
+    #[tracing_test::traced_test]
+    fn roundtrips_correctly(metadata: PositionMetadata) -> bool {
+        if metadata == PositionMetadata::from(u32::from(metadata)) {
+            true
+        } else {
+            debug!("metadata in:  {}", metadata);
+            debug!("u32::from(m)    0b{:08b}_{:08b}", u32::from(metadata).to_ne_bytes()[0], u32::from(metadata).to_ne_bytes()[1]);
+            debug!("metadata out: {}", PositionMetadata::from(u32::from(metadata)));
+            debug!(
+                "metadata bytes: 0b{:08b}_{:08b}",
+                u32::from(PositionMetadata::from(u32::from(metadata))).to_ne_bytes()[0],
+                u32::from(PositionMetadata::from(u32::from(metadata))).to_ne_bytes()[1],
+            );
+            false
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn witness() {
+        let wit = PositionMetadata {
+            side_to_move: Color::WHITE,
+            castling: CastleRights {
+                white_short: true,
+                white_long: false,
+                black_short: false,
+                black_long: false
+            },
+            en_passant: None,
+            halfmove_clock: 93,
+            fullmove_number: 38176,
+        };
+
+        let u32_data = u32::from(wit);
+        let metadata2 = PositionMetadata::from(u32_data);
+
+        let u32_data_2 = u32::from(metadata2);
+
+        tracing::debug!("\n0x{u32_data:x}\n0x{u32_data_2:x}");
+        dbg!(metadata2);
+
+        assert_eq!(wit, metadata2);
+    }
 
     // TODO: These should be quickcheck
     #[test]
@@ -333,6 +434,75 @@ mod tests {
         assert!(metadata.castling.black_long);
         assert_eq!(metadata.en_passant, Some(E3));
         assert_eq!(metadata.halfmove_clock, 0);
+        assert_eq!(metadata.fullmove_number, 1);
+    }
+
+    #[test]
+    fn test_default() {
+        let metadata = PositionMetadata::default();
+        assert_eq!(metadata.side_to_move, Color::WHITE);
+        assert_eq!(metadata.castling, CastleRights {
+            white_short: true,
+            white_long: true,
+            black_short: true,
+            black_long: true,
+        });
+        assert_eq!(metadata.en_passant, None);
+        assert_eq!(metadata.halfmove_clock, 0);
+        assert_eq!(metadata.fullmove_number, 1);
+    }
+
+    #[test]
+    fn test_parse() {
+        let mut metadata = PositionMetadata::default();
+        let mut parts = "w KQkq - 0 1".split_whitespace();
+        metadata.parse(&mut parts);
+
+        assert_eq!(metadata.side_to_move, Color::WHITE);
+        assert_eq!(metadata.castling, CastleRights {
+            white_short: true,
+            white_long: true,
+            black_short: true,
+            black_long: true,
+        });
+        assert_eq!(metadata.en_passant, None);
+        assert_eq!(metadata.halfmove_clock, 0);
+        assert_eq!(metadata.fullmove_number, 1);
+    }
+
+    #[test]
+    fn test_parse_2() {
+        let mut metadata = PositionMetadata::default();
+        let mut parts = "w kq - 1 1".split_whitespace();
+        metadata.parse(&mut parts);
+
+        assert_eq!(metadata.side_to_move, Color::WHITE);
+        assert_eq!(metadata.castling, CastleRights {
+            white_short: false,
+            white_long: false,
+            black_short: true,
+            black_long: true,
+        });
+        assert_eq!(metadata.en_passant, None);
+        assert_eq!(metadata.halfmove_clock, 1);
+        assert_eq!(metadata.fullmove_number, 1);
+    }
+
+    #[test]
+    fn test_parse_3() {
+        let mut metadata = PositionMetadata::default();
+        let mut parts = "w kq - 1 1".split_whitespace();
+        metadata.parse(&mut parts);
+
+        assert_eq!(metadata.side_to_move, Color::WHITE);
+        assert_eq!(metadata.castling, CastleRights {
+            white_short: false,
+            white_long: false,
+            black_short: true,
+            black_long: true,
+        });
+        assert_eq!(metadata.en_passant, None);
+        assert_eq!(metadata.halfmove_clock, 1);
         assert_eq!(metadata.fullmove_number, 1);
     }
 }

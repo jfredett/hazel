@@ -1,6 +1,7 @@
 use super::*;
 use std::convert::TryInto;
 
+#[cfg_attr(test, mutants::skip)]
 impl Bitboard {
     /// Executes a Parallel Extract using the given bitboard as a mask. Requires the BMI2 instruction set to be supported.
     #[cfg(target_feature = "bmi2")]
@@ -45,6 +46,7 @@ impl Bitboard {
 }
 
 #[cfg(test)]
+#[cfg_attr(test, mutants::skip)]
 mod tests {
     use super::*;
 
