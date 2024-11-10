@@ -170,17 +170,17 @@ impl Move {
             Piece::King => {
                 // Castling is a king move in UCI, so it's a king move as far as I'm concerned.
                 match self.source() {
-                    A5 => {
-                        if self.target() == A7 {
+                    E1 => {
+                        if self.target() == G1 {
                             return Some(MoveType::SHORT_CASTLE);
-                        } else if self.target() == A3 {
+                        } else if self.target() == C1 {
                             return Some(MoveType::LONG_CASTLE);
                         }
                     },
-                    H5 => {
-                        if self.target() == H7 {
+                    E8 => {
+                        if self.target() == G8 {
                             return Some(MoveType::SHORT_CASTLE);
-                        } else if self.target() == H3 {
+                        } else if self.target() == C8 {
                             return Some(MoveType::LONG_CASTLE);
                         }
                     },
@@ -661,6 +661,65 @@ mod test {
         }
 
     }
+
+    mod disambiguate {
+        use crate::board::{Alter, PieceBoard};
+
+        use super::*;
+
+        #[test]
+        fn quiet_move_disambiguates_correctly() {
+            let m = Move::from(D2, D3, MoveType::UCI_AMBIGUOUS);
+            let mut context = PieceBoard::default();
+            context.set_startpos();
+
+            assert_eq!(m.disambiguate(&context).unwrap(), MoveType::QUIET);
+        }
+
+        #[test]
+        fn capture_move_disambiguates_correctly() {
+            let m = Move::from(C3, D4, MoveType::UCI_AMBIGUOUS);
+            let mut context = PieceBoard::default();
+            context.alter_mut(Alteration::place(C3, Occupant::pawn(Color::WHITE)));
+            context.alter_mut(Alteration::place(D4, Occupant::pawn(Color::BLACK)));
+
+            assert_eq!(m.disambiguate(&context).unwrap(), MoveType::CAPTURE);
+        }
+
+        #[test]
+        fn double_pawn_move_disambiguates_correctly() {
+            let m = Move::from(D2, D4, MoveType::UCI_AMBIGUOUS);
+            let mut context = PieceBoard::default();
+            context.set_startpos();
+
+            assert_eq!(m.disambiguate(&context).unwrap(), MoveType::DOUBLE_PAWN);
+        }
+
+        #[test]
+        fn short_castle_disambiguates_correctly() {
+            let m = Move::from(E1, G1, MoveType::UCI_AMBIGUOUS);
+            let mut context = PieceBoard::default();
+            context.set_startpos();
+            context.alter_mut(Alteration::remove(F1, Occupant::bishop(Color::WHITE)));
+            context.alter_mut(Alteration::remove(G1, Occupant::knight(Color::WHITE)));
+
+            assert_eq!(m.disambiguate(&context).unwrap(), MoveType::SHORT_CASTLE);
+        }
+
+        #[test]
+        fn long_castle_disambiguates_correctly() {
+            let m = Move::from(E1, C1, MoveType::UCI_AMBIGUOUS);
+            let mut context = PieceBoard::default();
+            context.set_startpos();
+            context.alter_mut(Alteration::remove(B1, Occupant::knight(Color::WHITE)));
+            context.alter_mut(Alteration::remove(C1, Occupant::bishop(Color::WHITE)));
+
+            assert_eq!(m.disambiguate(&context).unwrap(), MoveType::LONG_CASTLE);
+        }
+
+
+    }
+
 
     mod proxy_methods {
         use super::*;
