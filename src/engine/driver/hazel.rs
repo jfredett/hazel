@@ -115,9 +115,14 @@ impl Engine<UCIMessage> for Driver {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tracing_test::traced_test;
     use crate::coup::rep::{Move, MoveType};
     use crate::notation::*;
+
+    impl Driver {
+        pub fn log(&self) -> Vec<ChessAction> {
+            self.game.log()
+        }
+    }
 
     use crate::{constants::{POS2_KIWIPETE_FEN, START_POSITION_FEN}, game::action::chess::ChessAction};
 
@@ -157,7 +162,6 @@ mod tests {
     }
 
     #[test]
-    #[tracing_test::traced_test]
     fn driver_sets_up_arbitrary_position() {
         let mut driver = Driver::new();
 
@@ -166,7 +170,6 @@ mod tests {
         assert_eq!(driver.game.log(), vec![
             ChessAction::Setup(FEN::new(POS2_KIWIPETE_FEN))
         ]);
-        debug!("Current position: {:?}", driver.game);
         assert_eq!(driver.game.current_position(), FEN::new(POS2_KIWIPETE_FEN));
     }
 

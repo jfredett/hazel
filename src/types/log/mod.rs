@@ -124,16 +124,6 @@ impl<T> Log<T> where T: Clone {
         let mut write_head = WriteHead::new(self);
         block(&mut write_head);
     }
-
-    #[cfg(test)]
-    fn log(&self) -> Vec<T> {
-        self.log.clone()
-    }
-
-    #[cfg(test)]
-    fn txn_state(&self) -> Vec<T> {
-        self.current_txn.content().clone()
-    }
 }
 
 impl<T> IntoIterator for Log<T> where T: Clone {
@@ -149,4 +139,13 @@ impl<T> IntoIterator for Log<T> where T: Clone {
 mod tests {
     use super::*;
 
+    impl<T> Log<T> where T : Clone {
+        pub fn log(&self) -> Vec<T> {
+            self.log.clone()
+        }
+
+        pub fn txn_state(&self) -> Vec<T> {
+            self.current_txn.content().clone()
+        }
+    }
 }

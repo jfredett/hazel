@@ -83,7 +83,6 @@ impl Variation {
             let mut board = PieceBoard::default();
             let mut metadata = PositionMetadata::default();
             while let Some(action) = cursor.next() {
-                debug!("Processing action: {:?}", action);
                 match action {
                     ChessAction::NewGame => {
                         board = PieceBoard::default();
@@ -132,6 +131,12 @@ mod tests {
     use crate::board::interface::*;
 
     use super::*;
+
+    impl Variation {
+        pub fn log(&self) -> Vec<ChessAction> {
+            self.log.log()
+        }
+    }
 
     #[test]
     fn fen_correct_after_one_move_from_start_pos() {

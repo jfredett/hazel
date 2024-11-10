@@ -86,7 +86,6 @@ impl<'a, T> Cursor<'a, T>  where T: Clone {
             Some(position) => self.log.get(position)
         }
     }
-    }
 }
 
 #[cfg(test)]

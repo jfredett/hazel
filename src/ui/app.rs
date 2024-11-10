@@ -5,10 +5,9 @@ use ratatui::crossterm::event::{Event, KeyCode};
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders};
 
-use tracing::{debug, instrument};
+use tracing::instrument;
 
 use crate::board::PieceBoard;
-use crate::engine::uci::UCIMessage;
 use crate::notation::fen::FEN;
 
 use super::widgets::tile::Tile;
@@ -42,16 +41,13 @@ impl Hazel {
             tile: Tile::new(),
         };
 
+        /*
         let startup_commands = vec![
             UCIMessage::UCI,
             UCIMessage::IsReady,
             UCIMessage::Position("startpos".to_string(), vec!["d2d4".to_string()]),
         ];
-
-
-        for command in startup_commands {
-            debug!("{}", &command);
-        }
+        */
 
         return s;
     }
@@ -134,9 +130,6 @@ mod tests {
 
     use super::*;
 
-    use tracing_test::traced_test;
-
-    #[traced_test]
     #[test]
     fn renders_as_expected() {
         let mut hazel = Hazel::new();

@@ -289,7 +289,6 @@ mod tests {
     }
 
     #[test]
-    #[tracing_test::traced_test]
     fn ep_square_is_converts_to_u32_correctly() {
         let metadata = PositionMetadata {
             en_passant: Some(G3),
@@ -299,9 +298,7 @@ mod tests {
 
         let mask = 0b00001111;
 
-        debug!("{:08b}", b1);
         b1 &= mask;
-        debug!("{:08b}", b1);
 
         assert_eq!(b1, 0b00001110);
     }

@@ -37,7 +37,6 @@ pub fn run_with_io<T: io::Read, U: io::Write>(input: T, mut output: U) -> io::Re
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tracing_test::traced_test;
 
     #[test]
     fn test_with_dummy_io() {
