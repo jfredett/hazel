@@ -1,0 +1,4 @@
+src/engine/uci/mod.rs:279:9: replace UCIMessage::is_complete -> bool with false
+src/engine/uci/mod.rs:145:9: replace <impl Display for UCIMessage>::fmt -> fmt::Result with Ok(Default::default())
+src/types/log/mod.rs:28:9: replace Log<T>::start -> Self with Default::default()
+src/types/log/cursor.rs:50:27: replace += with *= in Cursor<'a, T>::next

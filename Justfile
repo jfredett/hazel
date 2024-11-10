@@ -63,7 +63,8 @@ cloc *args:
   cloc --vcs=git --exclude-ext=.rc . {{args}}
 
 mutants *ARGS:
-    cargo mutants -t 90 -j 8 -E 'bitboard' -E "intrinsics" -E "Mask" -E "tokio" -E "Stockfish" -E "ui" -E "PEXTBoard" --test-tool nextest -- --cargo-profile=mutants --all-targets {{ARGS}} -j 4
+    # cargo mutants -t 90 -j 8 -E 'bitboard' -E "intrinsics" -E "Mask" -E "tokio" -E "Stockfish" -E "ui" -E "PEXTBoard" --test-tool nextest -- --cargo-profile=mutants --all-targets {{ARGS}} -j 4
+    cargo mutants -j 4 -E 'bitboard' -E "intrinsics" -E "Mask" -E "tokio" -E "Stockfish" -E "ui" -E "PEXTBoard" --test-tool nextest -- --cargo-profile=mutants --all-targets {{ARGS}} -j 4
 
 
 taghunt:
