@@ -1058,3 +1058,19 @@ game-legality-preserving moves between boardstates, a rule is associated with ev
 
 [2] I don't actually know if this is a proper category, so maybe it's just a Graph with some extra steps, but I like to
 think of it this way.
+
+# 10-NOV-2024
+
+## 1219 - gamerep
+
+I've got `Variation` (formerly  Game, Line, HalfPly and Ply... it's been through a few iterations) basically working.
+It can at least represent a simple variation, and while the API is going to need some finishwork, I think the design
+works and I should be able to flatten a PGN into it.
+
+I'm debating now between merging and tackling that in a separate PR, or just pushing through and getting it done. I
+think I might try to push through and see how painful it is. If it comes together quickly then I'll go for it, but
+otherwise I'll plan to merge and then tackle it in a separate PR.
+
+I have an existing 'no-variations' PGN example I can use, and I think I should probably have the test exist in the
+`tests/` subdir as it's more of an integration test than a unit test. I plan to use the `Shakmaty` PGN parser for now,
+but would like to build my own eventually.
