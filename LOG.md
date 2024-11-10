@@ -1074,3 +1074,23 @@ otherwise I'll plan to merge and then tackle it in a separate PR.
 I have an existing 'no-variations' PGN example I can use, and I think I should probably have the test exist in the
 `tests/` subdir as it's more of an integration test than a unit test. I plan to use the `Shakmaty` PGN parser for now,
 but would like to build my own eventually.
+
+## 1628 - gamerep
+
+I think I'm going to merge.
+
+I also think I'm going to write my own parser (probably with `nom`, maybe fully by hand).
+
+Here's why.
+
+1. The next step really is a big change in design, I'm going to be doing parser stuff, it's not going to be particularly
+   chess-y, and it *should* be pretty _simple_ believe it or not.
+2. The model I have and the model the pgn-reader/shakmaty use are very different. I *should* be able to directly read a
+   variation in a single pass, no visitors or whatever, just a single read to translate each move to the correct format.
+   The OTS dependencies expect a visitor-pattern approach because they (rightly) believe most people won't be doing weird
+   bytecode shit.
+3. Doing it myself means I can drop a couple dependencies, which is very cool.
+
+I'll probably use `nom`, but I may even try a simple RD parser myself, since the format is pretty simple. I will
+probably build a `PGN` object that holds all the metadata and the actual variation, which can then be produced by/handed
+off to the actual Engine.
