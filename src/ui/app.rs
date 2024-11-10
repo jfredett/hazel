@@ -5,11 +5,10 @@ use ratatui::crossterm::event::{Event, KeyCode};
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders};
 
-use tracing::{debug, instrument};
+use tracing::instrument;
 
-use crate::engine::uci::UCIMessage;
-use crate::ui::model::entry::{Entry, stockfish};
-use crate::engine::Engine;
+use crate::board::PieceBoard;
+use crate::notation::fen::FEN;
 
 use super::widgets::tile::Tile;
 
@@ -20,7 +19,6 @@ enum Mode {
 
 pub struct Hazel {
     flags: HashMap<String, bool>,
-    entry: Entry,
     // UI
     mode: Mode,
     tile: Tile,
@@ -37,24 +35,19 @@ impl Debug for Hazel {
 impl Hazel {
     #[instrument]
     pub fn new() -> Self {
-        let mut s = Self {
+        let s = Self {
             flags: HashMap::new(),
             mode: Mode::Command,
-            entry: stockfish(),
             tile: Tile::new(),
         };
 
+        /*
         let startup_commands = vec![
             UCIMessage::UCI,
             UCIMessage::IsReady,
             UCIMessage::Position("startpos".to_string(), vec!["d2d4".to_string()]),
         ];
-
-
-        for command in startup_commands {
-            debug!("{}", &command);
-            s.entry.exec(&command);
-        }
+        */
 
         return s;
     }
@@ -120,14 +113,16 @@ impl Hazel {
     }
 
 
-    #[instrument]
+    #[instrument(skip(self, frame))]
     pub fn render(&mut self, frame: &mut Frame) {
-        self.tile.set_state(self.entry.boardstate);
+        let p = PieceBoard::from(FEN::start_position());
+        self.tile.set_state(p);
         frame.render_widget(&self.tile, Rect::new(0,0,64,32));
     }
 }
 
 #[cfg(test)]
+#[cfg_attr(test, mutants::skip)]
 mod tests {
     use std::process::Termination;
 
@@ -135,9 +130,6 @@ mod tests {
 
     use super::*;
 
-    use tracing_test::traced_test;
-
-    #[traced_test]
     #[test]
     fn renders_as_expected() {
         let mut hazel = Hazel::new();
@@ -156,18 +148,18 @@ mod tests {
             "│    Placeholder   ││    Placeholder   │a6 b6 c6 d6 e6 f6 g6 h6 ",
             "│    Placeholder   ││    Placeholder   │                        ",
             "│    Placeholder   ││    Placeholder   │a5 b5 c5 d5 e5 f5 g5 h5 ",
-            "│    Placeholder   ││    Placeholder   │          P             ",
+            "│    Placeholder   ││    Placeholder   │                        ",
             "│    Placeholder   ││    Placeholder   │a4 b4 c4 d4 e4 f4 g4 h4 ",
             "│    Placeholder   ││    Placeholder   │                        ",
             "│    Placeholder   ││    Placeholder   │a3 b3 c3 d3 e3 f3 g3 h3 ",
-            "│    Placeholder   ││    Placeholder   │ P  P  P     P  P  P  P ",
+            "│    Placeholder   ││    Placeholder   │ P  P  P  P  P  P  P  P ",
             "│    Placeholder   ││    Placeholder   │a2 b2 c2 d2 e2 f2 g2 h2 ",
             "│    Placeholder   ││    Placeholder   │ R  N  B  Q  K  B  N  R ",
             "│    Placeholder   ││    Placeholder   │a1 b1 c1 d1 e1 f1 g1 h1 ",
             "│    Placeholder   ││    Placeholder   │       Placeholder      ",
             "│    Placeholder   ││    Placeholder   │       Placeholder      ",
             "└──────────────────┘└──────────────────┘       Placeholder      ",
-            "│  rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 1  │",
+            "│   rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1   │",
             "┌──────────────────────────────────────────────────────────────┐",
             "│                                                              │",
             "│                                                              │",
@@ -184,15 +176,15 @@ mod tests {
 
         let actual = t.backend().buffer().clone();
 
-        // NOTE: This is going to be turned off most of the time, except when I need a snapshot of the UI
-        // to cheat the test.
-        // assert_eq!(actual, expected);
+        //assert_eq!(actual, expected);
 
         // Ignore style differences for now, by... turning everything into a big list of chars
         // wrapped in &strs wrapped in my pain and suffering.
         let expected_content : Vec<String> = expected.content().iter().map(|x| x.symbol().to_string()).collect();
         let actual_content : Vec<String> = actual.content().iter().map(|x| x.symbol().to_string()).collect();
 
-        assert_eq!(actual_content.join(""), expected_content.join(""));
+        for (i, (expected_line, actual_line)) in expected_content.iter().zip(actual_content.iter()).enumerate() {
+            assert_eq!(expected_line, actual_line, "Line {} does not match", i);
+        }
     }
 }

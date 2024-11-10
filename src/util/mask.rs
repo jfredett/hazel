@@ -100,7 +100,6 @@ mod tests {
     use super::*;
 
     mod mask {
-        use tracing_test::traced_test;
 
         use super::*;
 

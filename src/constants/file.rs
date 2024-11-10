@@ -14,12 +14,26 @@ pub enum File {
     H = 7,
 }
 
+impl From<u8> for File {
+    fn from(value: u8) -> Self {
+        File::from_index(value as usize)
+    }
+}
+
+impl From<File> for u8 {
+    fn from(file: File) -> Self {
+        file as u8
+    }
+}
+
+
+
 impl File {
     pub fn to_bitboard(self) -> Bitboard {
         FILE_MASKS[self as usize]
     }
 
-    pub fn from_index(index: usize) -> Self {
+    pub const fn from_index(index: usize) -> Self {
         match index & 0o07 {
             0 => File::A,
             1 => File::B,
@@ -33,8 +47,12 @@ impl File {
         }
     }
 
-    pub fn to_index(self) -> usize {
+    pub const fn to_index(self) -> usize {
         self as usize
+    }
+
+    pub const fn to_byte(self) -> u8 {
+        self as u8
     }
 
     pub fn to_pgn(self) -> &'static str {
@@ -67,7 +85,15 @@ pub const NOT_H_FILE: u64 = 0x7f7f7f7f7f7f7f7f;
 
 #[cfg(test)]
 mod test {
+    use quickcheck::{Arbitrary, Gen};
+
     use super::*;
+
+    impl Arbitrary for File {
+        fn arbitrary(g: &mut Gen) -> File {
+            File::from_index(usize::arbitrary(g) % 8)
+        }
+    }
 
     #[test]
     fn to_bitboard() {
@@ -115,5 +141,36 @@ mod test {
         assert_eq!(File::F.to_pgn(), "f");
         assert_eq!(File::G.to_pgn(), "g");
         assert_eq!(File::H.to_pgn(), "h");
+    }
+
+    #[test]
+    fn to_u8() {
+        assert_eq!(u8::from(File::A), 0);
+        assert_eq!(u8::from(File::B), 1);
+        assert_eq!(u8::from(File::C), 2);
+        assert_eq!(u8::from(File::D), 3);
+        assert_eq!(u8::from(File::E), 4);
+        assert_eq!(u8::from(File::F), 5);
+        assert_eq!(u8::from(File::G), 6);
+        assert_eq!(u8::from(File::H), 7);
+    }
+
+    #[test]
+    fn from_u8() {
+        assert_eq!(File::from(0), File::A);
+        assert_eq!(File::from(1), File::B);
+        assert_eq!(File::from(2), File::C);
+        assert_eq!(File::from(3), File::D);
+        assert_eq!(File::from(4), File::E);
+        assert_eq!(File::from(5), File::F);
+        assert_eq!(File::from(6), File::G);
+        assert_eq!(File::from(7), File::H);
+    }
+
+
+    #[quickcheck]
+    fn from_u8_to_u8_roundtrips(file: File) -> bool {
+        let byte = u8::from(file);
+        File::from(byte) == file
     }
 }

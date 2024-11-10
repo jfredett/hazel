@@ -3,8 +3,6 @@ use crate::notation::square::*;
 use crate::coup::rep::{Move, MoveType};
 use crate::types::Piece;
 
-use super::MoveNotation;
-
 /// Represents a move in UCI format.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct UCI {
@@ -85,10 +83,6 @@ impl TryFrom<&str> for UCI {
         })
     }
 }
-
-impl MoveNotation for UCI {
-}
-
 
 #[cfg(test)]
 mod tests {

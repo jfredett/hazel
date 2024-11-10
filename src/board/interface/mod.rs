@@ -2,6 +2,7 @@
 pub mod alter;
 pub mod alteration;
 pub mod query;
+pub mod play;
 
 
 pub use alter::Alter;

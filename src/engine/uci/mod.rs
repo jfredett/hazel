@@ -292,8 +292,6 @@ impl UCIMessage {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tracing_test::traced_test;
-
 
     mod display {
         use super::*;

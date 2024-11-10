@@ -91,7 +91,7 @@ impl MoveType {
             0b1101 => MoveType::PROMOTION_CAPTURE_BISHOP,
             0b1110 => MoveType::PROMOTION_CAPTURE_ROOK,
             0b1111 => MoveType::PROMOTION_CAPTURE_QUEEN,
-            _ => unimplemented!(),
+            _ => unreachable!(),
         }
     }
 
@@ -143,6 +143,11 @@ impl MoveType {
         MoveType::LONG_CASTLE
     }
 
+    #[inline(always)]
+    pub fn null_move() -> MoveType {
+        MoveType::NULLMOVE
+    }
+
     pub fn promotion_piece(&self) -> Option<Piece> {
         // TODO: It may be faster to mask-and-cast the bits, they're arranged such that they correspond to the piece enum.
         // This is the KISS version
@@ -163,3 +168,128 @@ impl MoveType {
         self == MoveType::UCI_AMBIGUOUS
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    pub fn is_null_works() {
+        assert!(MoveType::null_move().is_null());
+        assert!(!MoveType::quiet().is_null());
+    }
+
+    #[test]
+    pub fn is_long_castle_works() {
+        assert!(MoveType::long_castle().is_long_castle());
+        assert!(!MoveType::short_castle().is_long_castle());
+    }
+
+    #[test]
+    pub fn is_short_castle_works() {
+        assert!(MoveType::short_castle().is_short_castle());
+        assert!(!MoveType::long_castle().is_short_castle());
+    }
+
+    #[test]
+    pub fn is_capture_works() {
+        assert!(MoveType::capture().is_capture());
+        assert!(!MoveType::quiet().is_capture());
+    }
+
+    #[test]
+    pub fn is_quiet_works() {
+        assert!(MoveType::quiet().is_quiet());
+        assert!(!MoveType::capture().is_quiet());
+    }
+
+    mod promotion_piece {
+        use super::*;
+
+        #[test]
+        pub fn promotion_piece_works() {
+            assert_eq!(MoveType::PROMOTION_KNIGHT.promotion_piece(), Some(Piece::Knight));
+            assert_eq!(MoveType::PROMOTION_BISHOP.promotion_piece(), Some(Piece::Bishop));
+            assert_eq!(MoveType::PROMOTION_ROOK.promotion_piece(), Some(Piece::Rook));
+            assert_eq!(MoveType::PROMOTION_QUEEN.promotion_piece(), Some(Piece::Queen));
+            assert_eq!(MoveType::PROMOTION_CAPTURE_KNIGHT.promotion_piece(), Some(Piece::Knight));
+            assert_eq!(MoveType::PROMOTION_CAPTURE_BISHOP.promotion_piece(), Some(Piece::Bishop));
+            assert_eq!(MoveType::PROMOTION_CAPTURE_ROOK.promotion_piece(), Some(Piece::Rook));
+            assert_eq!(MoveType::PROMOTION_CAPTURE_QUEEN.promotion_piece(), Some(Piece::Queen));
+        }
+
+        #[test]
+        pub fn promotion_piece_none() {
+            assert_eq!(MoveType::QUIET.promotion_piece(), None);
+            assert_eq!(MoveType::CAPTURE.promotion_piece(), None);
+            assert_eq!(MoveType::SHORT_CASTLE.promotion_piece(), None);
+            assert_eq!(MoveType::LONG_CASTLE.promotion_piece(), None);
+            assert_eq!(MoveType::NULLMOVE.promotion_piece(), None);
+            assert_eq!(MoveType::UCI_AMBIGUOUS.promotion_piece(), None);
+        }
+    }
+
+    mod uci {
+        use super::*;
+
+
+        #[test]
+        pub fn to_uci_works() {
+            assert_eq!(MoveType::PROMOTION_KNIGHT.to_uci(), "n");
+            assert_eq!(MoveType::PROMOTION_BISHOP.to_uci(), "b");
+            assert_eq!(MoveType::PROMOTION_ROOK.to_uci(), "r");
+            assert_eq!(MoveType::PROMOTION_QUEEN.to_uci(), "q");
+            assert_eq!(MoveType::PROMOTION_CAPTURE_KNIGHT.to_uci(), "n");
+            assert_eq!(MoveType::PROMOTION_CAPTURE_BISHOP.to_uci(), "b");
+            assert_eq!(MoveType::PROMOTION_CAPTURE_ROOK.to_uci(), "r");
+            assert_eq!(MoveType::PROMOTION_CAPTURE_QUEEN.to_uci(), "q");
+        }
+    }
+
+        #[test]
+        pub fn new_works() {
+            assert_eq!(MoveType::new(0b0000), MoveType::QUIET);
+            assert_eq!(MoveType::new(0b0001), MoveType::DOUBLE_PAWN);
+            assert_eq!(MoveType::new(0b0010), MoveType::SHORT_CASTLE);
+            assert_eq!(MoveType::new(0b0011), MoveType::LONG_CASTLE);
+            assert_eq!(MoveType::new(0b0100), MoveType::CAPTURE);
+            assert_eq!(MoveType::new(0b0101), MoveType::EP_CAPTURE);
+            assert_eq!(MoveType::new(0b0110), MoveType::NULLMOVE);
+            assert_eq!(MoveType::new(0b0111), MoveType::UCI_AMBIGUOUS);
+            assert_eq!(MoveType::new(0b1000), MoveType::PROMOTION_KNIGHT);
+            assert_eq!(MoveType::new(0b1001), MoveType::PROMOTION_BISHOP);
+            assert_eq!(MoveType::new(0b1010), MoveType::PROMOTION_ROOK);
+            assert_eq!(MoveType::new(0b1011), MoveType::PROMOTION_QUEEN);
+            assert_eq!(MoveType::new(0b1100), MoveType::PROMOTION_CAPTURE_KNIGHT);
+            assert_eq!(MoveType::new(0b1101), MoveType::PROMOTION_CAPTURE_BISHOP);
+            assert_eq!(MoveType::new(0b1110), MoveType::PROMOTION_CAPTURE_ROOK);
+            assert_eq!(MoveType::new(0b1111), MoveType::PROMOTION_CAPTURE_QUEEN);
+        }
+
+    mod decode {
+        use super::*;
+
+        #[test]
+        pub fn decode_works() {
+            assert_eq!(MoveType::QUIET.decode(), "QUIET");
+            assert_eq!(MoveType::DOUBLE_PAWN.decode(), "DOUBLE_PAWN");
+            assert_eq!(MoveType::SHORT_CASTLE.decode(), "SHORT_CASTLE");
+            assert_eq!(MoveType::LONG_CASTLE.decode(), "LONG_CASTLE");
+            assert_eq!(MoveType::CAPTURE.decode(), "CAPTURE");
+            assert_eq!(MoveType::EP_CAPTURE.decode(), "EP_CAPTURE");
+            assert_eq!(MoveType::NULLMOVE.decode(), "NULLMOVE");
+            assert_eq!(MoveType::UCI_AMBIGUOUS.decode(), "UCI_AMBIGUOUS");
+            assert_eq!(MoveType::PROMOTION_KNIGHT.decode(), "PROMOTION_KNIGHT");
+            assert_eq!(MoveType::PROMOTION_BISHOP.decode(), "PROMOTION_BISHOP");
+            assert_eq!(MoveType::PROMOTION_ROOK.decode(), "PROMOTION_ROOK");
+            assert_eq!(MoveType::PROMOTION_QUEEN.decode(), "PROMOTION_QUEEN");
+            assert_eq!(MoveType::PROMOTION_CAPTURE_KNIGHT.decode(), "PROMOTION_CAPTURE_KNIGHT");
+            assert_eq!(MoveType::PROMOTION_CAPTURE_BISHOP.decode(), "PROMOTION_CAPTURE_BISHOP");
+            assert_eq!(MoveType::PROMOTION_CAPTURE_ROOK.decode(), "PROMOTION_CAPTURE_ROOK");
+            assert_eq!(MoveType::PROMOTION_CAPTURE_QUEEN.decode(), "PROMOTION_CAPTURE_QUEEN");
+        }
+    }
+}
+

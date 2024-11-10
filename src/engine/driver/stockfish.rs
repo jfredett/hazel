@@ -69,7 +69,6 @@ impl Engine<UCIMessage> for Stockfish {
 
     #[instrument]
     fn exec(&mut self, message: &UCIMessage) -> Vec<UCIMessage> {
-        debug!("{}", message.to_string());
         let cmd_str = message.to_string();
 
         writeln!(self.stdin, "{}", cmd_str).expect("Failed to write to stockfish");
@@ -104,10 +103,8 @@ mod tests {
     use std::assert_matches::assert_matches;
 
     use super::*;
-    use tracing_test::traced_test;
     use crate::engine::uci::UCIMessage;
 
-    #[traced_test]
     #[test]
     fn stockfish_connects() {
         let mut stockfish = Stockfish::new();

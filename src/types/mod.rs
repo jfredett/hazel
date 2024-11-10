@@ -13,6 +13,10 @@ pub mod color;
 // Used for shifting bitboards around mostly
 pub mod direction;
 
+// A freely moving cursor-based log object for recording and replaying actions.
+pub mod log;
+
+
 pub use bitboard::Bitboard;
 pub use pextboard::PEXTBoard;
 pub use piece::Piece;

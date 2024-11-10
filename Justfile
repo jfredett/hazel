@@ -32,9 +32,6 @@ test *ARGS:
         return 0
     }
 
-
-
-
     if [[ -n "{{ARGS}}" ]]; then
         echo "Running tests with args: {{ARGS}}"
         just nextest {{ARGS}}
@@ -65,5 +62,18 @@ miri-test:
 cloc *args:
   cloc --vcs=git --exclude-ext=.rc . {{args}}
 
-mutants:
-    cargo mutants -- --profile=mutants --all-targets
+mutants *ARGS:
+    # cargo mutants -t 90 -j 8 -E 'bitboard' -E "intrinsics" -E "Mask" -E "tokio" -E "Stockfish" -E "ui" -E "PEXTBoard" --test-tool nextest -- --cargo-profile=mutants --all-targets {{ARGS}} -j 4
+    cargo mutants -j 4 -E 'bitboard' -E "intrinsics" -E "Mask" -E "tokio" -E "Stockfish" -E "ui" -E "PEXTBoard" --test-tool nextest -- --cargo-profile=mutants --all-targets {{ARGS}} -j 4
+
+
+taghunt:
+    @just _taghunt "BUG" "FIXME" "HACK" "NOTE" "TODO" "OQ"
+
+_taghunt *TAGS:
+    #!/usr/bin/env bash
+    for tag in {{TAGS}}; do
+        echo -n "$tag=$(rg --glob \!Justfile $tag . | wc -l)<br/>"
+    done
+    echo
+

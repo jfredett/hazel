@@ -1,0 +1,396 @@
+src/notation/fen/mod.rs:56:9: replace FEN::with_default_metadata -> Self with Default::default()
+src/notation/square/from_into.rs:5:27: replace + with - in <impl From for Square>::from
+src/util/charray.rs:91:49: replace - with / in Charray<H, W>::adjust_coordinates
+src/notation/fen/position_metadata.rs:131:34: replace += with -= in PositionMetadata::update
+src/types/direction.rs:23:33: replace + with * in Direction::index_shift
+src/types/color.rs:68:14: replace == with != in Color::is_white
+src/game/variation.rs:121:9: replace Variation::record -> &mut Self with Box::leak(Box::new(Default::default()))
+src/notation/fen/position_metadata.rs:142:29: replace || with && in PositionMetadata::update
+src/constants/file.rs:51:9: replace File::to_index -> usize with 0
+src/notation/fen/castle_rights.rs:46:44: replace != with == in <impl From for CastleRights>::from
+src/notation/square/mod.rs:23:23: replace * with + in Square::set_rank
+src/coup/rep/mod.rs:539:98: replace & with ^ in Move::is_double_pawn_push_for
+src/types/occupant.rs:70:9: replace <impl Display for Occupant>::fmt -> std::fmt::Result with Ok(Default::default())
+src/notation/fen/position_metadata.rs:192:28: replace << with >> in <impl From for u32>::from
+src/coup/rep/mod.rs:539:49: replace - with + in Move::is_double_pawn_push_for
+src/notation/fen/position_metadata.rs:222:47: replace & with | in <impl From for PositionMetadata>::from
+src/types/pextboard/mod.rs:57:27: replace & with ^ in slow_attacks
+src/coup/rep/move_type.rs:125:22: replace & with ^ in MoveType::is_en_passant
+src/game/variation.rs:59:9: replace Variation::setup -> &mut Self with Box::leak(Box::new(Default::default()))
+src/util/charray.rs:88:9: replace Charray<H, W>::adjust_coordinates -> (usize, usize) with (1, 1)
+src/constants/file.rs:59:9: replace File::to_pgn -> &'static str with ""
+src/types/log/mod.rs:90:25: replace += with -= in Log<T>::write
+src/coup/rep/mod.rs:550:43: replace == with != in Move::is_short_castling_move_for
+src/types/log/write_head.rs:49:9: replace WriteHead<'a, T>::next -> Option<&mut T> with None
+src/board/interface/alteration.rs:45:9: replace Alteration::lit -> Vec<Self> with vec![]
+src/notation/fen/position_metadata.rs:145:33: replace += with *= in PositionMetadata::update
+src/notation/fen/position_metadata.rs:131:34: replace += with *= in PositionMetadata::update
+src/notation/square/mod.rs:28:30: replace * with + in Square::set_file
+src/coup/rep/mod.rs:511:9: replace Move::is_capture -> bool with false
+src/notation/fen/position.rs:90:30: replace != with == in <impl From for Position>::from
+src/notation/fen/castle_rights.rs:47:44: replace != with == in <impl From for CastleRights>::from
+src/board/interface/query.rs:39:48: replace + with - in display_board
+src/coup/rep/move_type.rs:168:14: replace == with != in MoveType::is_ambiguous
+src/util/charray.rs:89:38: replace - with / in Charray<H, W>::adjust_coordinates
+src/notation/fen/position.rs:79:35: replace != with == in <impl From for Position>::from
+src/notation/fen/position_metadata.rs:217:34: replace & with | in <impl From for PositionMetadata>::from
+src/notation/square/mod.rs:45:9: replace Square::up -> Option<Self> with None
+src/types/direction.rs:30:34: replace + with * in Direction::index_shift
+src/types/direction.rs:29:33: replace - with / in Direction::index_shift
+src/coup/rep/mod.rs:318:37: replace >> with << in Move::target_idx
+src/types/log/write_head.rs:58:26: replace == with != in WriteHead<'a, T>::prev
+src/notation/fen/position_metadata.rs:218:44: replace & with ^ in <impl From for PositionMetadata>::from
+src/coup/rep/move_type.rs:104:14: replace == with != in MoveType::is_long_castle
+src/notation/fen/position_metadata.rs:210:9: replace <impl From for PositionMetadata>::from -> Self with Default::default()
+src/coup/rep/move_type.rs:112:9: replace MoveType::is_capture -> bool with true
+src/engine/uci/mod.rs:94:9: replace UCIOption::is_keyword -> bool with false
+src/util/charray.rs:89:45: replace - with + in Charray<H, W>::adjust_coordinates
+src/notation/square/iterator.rs:85:9: replace <impl From for RankFile>::from -> Self with Default::default()
+src/notation/square/mod.rs:37:16: replace % with + in Square::file
+src/coup/rep/mod.rs:511:9: replace Move::is_capture -> bool with true
+src/notation/fen/position_metadata.rs:48:9: replace <impl Display for PositionMetadata>::fmt -> std::fmt::Result with Ok(Default::default())
+src/util/charray.rs:38:9: replace Charray<H, W>::get -> u8 with 1
+src/notation/square/from_into.rs:5:23: replace * with / in <impl From for Square>::from
+src/notation/fen/mod.rs:28:9: replace <impl Debug for FEN>::fmt -> std::fmt::Result with Ok(Default::default())
+src/notation/fen/position_metadata.rs:224:33: replace & with | in <impl From for PositionMetadata>::from
+src/types/log/transaction.rs:27:9: replace Transaction<T>::commit -> Vec<T> with vec![]
+src/notation/uci.rs:57:43: replace > with < in <impl TryFrom for UCI>::try_from
+src/types/occupant.rs:21:9: delete ! in Occupant::is_occupied
+src/notation/fen/position.rs:79:25: replace == with != in <impl From for Position>::from
+src/types/direction.rs:26:34: replace - with + in Direction::index_shift
+src/notation/fen/mod.rs:35:23: replace == with != in <impl PartialEq for FEN>::eq
+src/notation/fen/castle_rights.rs:57:9: replace <impl From for u32>::from -> u32 with 0
+src/constants/file.rs:37:21: replace & with ^ in File::from_index
+src/coup/rep/mod.rs:292:18: replace & with ^ in Move::source_idx
+src/notation/fen/position_metadata.rs:195:12: replace |= with &= in <impl From for u32>::from
+src/types/color.rs:64:9: replace Color::is_black -> bool with true
+src/types/occupant.rs:21:9: replace Occupant::is_occupied -> bool with false
+src/notation/fen/position_metadata.rs:189:12: replace |= with &= in <impl From for u32>::from
+src/notation/square/from_into.rs:17:9: replace <impl From for usize>::from -> usize with 1
+src/notation/square/mod.rs:48:30: replace + with - in Square::up
+src/board/simple/mod.rs:48:9: replace <impl Alter for PieceBoard>::alter -> PieceBoard with Default::default()
+src/util/mod.rs:13:27: replace << with >> in select_subset
+src/types/color.rs:68:9: replace Color::is_white -> bool with false
+src/notation/fen/position_metadata.rs:218:56: replace >> with << in <impl From for PositionMetadata>::from
+src/coup/rep/mod.rs:292:9: replace Move::source_idx -> usize with 1
+src/notation/square/mod.rs:53:24: replace == with != in Square::down
+src/notation/fen/mod.rs:128:9: replace <impl Display for FEN>::fmt -> std::fmt::Result with Ok(Default::default())
+src/types/log/mod.rs:94:9: replace Log<T>::get -> Option<&T> with None
+src/board/interface/query.rs:54:26: replace != with == in to_fen
+src/notation/fen/castle_rights.rs:65:22: replace |= with &= in <impl From for u32>::from
+src/notation/fen/position.rs:88:42: replace += with *= in <impl From for Position>::from
+src/coup/rep/mod.rs:380:30: replace & with | in Move::move_metadata
+src/util/mod.rs:13:22: replace & with | in select_subset
+src/board/interface/query.rs:63:22: replace != with == in to_fen
+src/util/charray.rs:88:9: replace Charray<H, W>::adjust_coordinates -> (usize, usize) with (0, 0)
+src/coup/rep/mod.rs:529:9: replace Move::is_ambiguous -> bool with true
+src/notation/square/mod.rs:72:30: replace + with - in Square::right
+src/coup/rep/debug.rs:6:9: replace <impl Debug for Move>::fmt -> Result with Ok(Default::default())
+src/types/log/write_head.rs:52:27: replace += with -= in WriteHead<'a, T>::next
+src/util/charray.rs:92:39: replace - with / in Charray<H, W>::adjust_coordinates
+src/types/color.rs:64:9: replace Color::is_black -> bool with false
+src/types/log/cursor.rs:24:51: replace + with - in Cursor<'a, T>::jump
+src/board/interface/query.rs:34:5: replace display_board -> String with "xyzzy".into()
+src/coup/rep/mod.rs:126:9: replace Move::disambiguate -> Option<MoveType> with None
+src/board/interface/query.rs:34:5: replace display_board -> String with String::new()
+src/types/color.rs:64:14: replace == with != in Color::is_black
+src/notation/fen/position.rs:68:9: replace <impl Display for Position>::fmt -> std::fmt::Result with Ok(Default::default())
+src/notation/fen/position_metadata.rs:195:43: replace << with >> in <impl From for u32>::from
+src/board/simple/from_into.rs:19:9: replace PieceBoard::set_startpos with ()
+src/coup/rep/mod.rs:549:9: replace Move::is_short_castling_move_for -> bool with false
+src/types/piece.rs:25:9: replace Piece::to_fen -> char with Default::default()
+src/coup/rep/move_type.rs:112:22: replace & with | in MoveType::is_capture
+src/coup/rep/move_type.rs:112:44: replace != with == in MoveType::is_capture
+src/notation/square/mod.rs:37:16: replace % with / in Square::file
+src/util/charray.rs:91:42: replace - with / in Charray<H, W>::adjust_coordinates
+src/types/occupant.rs:21:9: replace Occupant::is_occupied -> bool with true
+src/notation/square/mod.rs:56:30: replace - with + in Square::down
+src/notation/square/mod.rs:48:30: replace + with * in Square::up
+src/notation/square/iterator.rs:13:20: replace += with -= in <impl Iterator for Square>::next
+src/board/interface/query.rs:39:23: replace + with * in display_board
+src/notation/square/mod.rs:69:24: replace == with != in Square::right
+src/util/charray.rs:92:46: replace - with + in Charray<H, W>::adjust_coordinates
+src/notation/fen/position_metadata.rs:145:33: replace += with -= in PositionMetadata::update
+src/types/direction.rs:22:9: replace Direction::index_shift -> usize with 1
+src/notation/fen/mod.rs:139:5: replace setup_mut with ()
+src/notation/fen/position.rs:126:9: replace <impl IntoIterator for Position>::into_iter -> Self::IntoIter with Default::default()
+src/types/log/cursor.rs:47:26: replace == with != in Cursor<'a, T>::next
+src/types/log/write_head.rs:27:9: replace WriteHead<'a, T>::jump -> Option<&mut T> with None
+src/util/charray.rs:88:9: replace Charray<H, W>::adjust_coordinates -> (usize, usize) with (0, 1)
+src/coup/rep/mod.rs:250:9: replace Move::is_null -> bool with false
+src/notation/square/mod.rs:33:9: replace Square::index -> usize with 0
+src/types/direction.rs:22:9: replace Direction::index_shift -> usize with 0
+src/notation/fen/castle_rights.rs:47:35: replace & with ^ in <impl From for CastleRights>::from
+src/notation/square/mod.rs:28:34: replace + with - in Square::set_file
+src/notation/fen/position.rs:80:26: replace != with == in <impl From for Position>::from
+src/notation/square/mod.rs:69:9: replace Square::right -> Option<Self> with None
+src/coup/rep/move_type.rs:108:9: replace MoveType::is_short_castle -> bool with true
+src/notation/square/from_into.rs:5:27: replace + with * in <impl From for Square>::from
+src/coup/rep/move_type.rs:125:9: replace MoveType::is_en_passant -> bool with false
+src/notation/fen/castle_rights.rs:13:9: replace <impl Display for CastleRights>::fmt -> std::fmt::Result with Ok(Default::default())
+src/notation/square/from_into.rs:68:26: replace + with * in <impl TryFrom for Square>::try_from
+src/notation/fen/mod.rs:34:23: replace == with != in <impl PartialEq for FEN>::eq
+src/board/interface/query.rs:62:21: replace == with != in to_fen
+src/types/direction.rs:29:33: replace - with + in Direction::index_shift
+src/notation/square/mod.rs:41:9: replace Square::rank -> usize with 0
+src/types/direction.rs:23:33: replace + with - in Direction::index_shift
+src/board/interface/query.rs:52:38: replace += with -= in to_fen
+src/engine/uci/mod.rs:98:9: replace UCIOption::set with ()
+src/notation/fen/position_metadata.rs:222:47: replace & with ^ in <impl From for PositionMetadata>::from
+src/types/log/mod.rs:90:25: replace += with *= in Log<T>::write
+src/coup/rep/mod.rs:318:18: replace & with ^ in Move::target_idx
+src/types/color.rs:34:9: replace <impl Display for Color>::fmt -> std::fmt::Result with Ok(Default::default())
+src/notation/square/iterator.rs:226:9: replace RankFile::upward -> &mut Self with Box::leak(Box::new(Default::default()))
+src/board/simple/display_debug.rs:16:9: replace <impl Display for PieceBoard>::fmt -> std::fmt::Result with Ok(Default::default())
+src/board/interface/query.rs:62:31: replace != with == in to_fen
+src/notation/square/mod.rs:41:9: replace Square::rank -> usize with 1
+src/types/pextboard/mod.rs:27:44: replace / with %
+src/notation/fen/castle_rights.rs:48:44: replace != with == in <impl From for CastleRights>::from
+src/coup/rep/mod.rs:292:9: replace Move::source_idx -> usize with 0
+src/notation/fen/castle_rights.rs:48:35: replace & with | in <impl From for CastleRights>::from
+src/board/simple/mod.rs:55:9: replace <impl Alter for PieceBoard>::alter_mut -> &mut Self with Box::leak(Box::new(Default::default()))
+src/notation/square/iterator.rs:180:9: replace RankFile::is_done -> bool with true
+src/notation/square/mod.rs:56:30: replace - with / in Square::down
+src/notation/fen/mod.rs:118:9: replace FEN::compile -> Vec<Alteration> with vec![]
+src/types/direction.rs:24:34: replace + with * in Direction::index_shift
+src/notation/fen/mod.rs:133:5: replace setup -> A with Default::default()
+src/coup/rep/move_type.rs:37:9: replace MoveType::decode -> &'static str with "xyzzy"
+src/engine/uci/mod.rs:63:9: replace <impl Display for UCIOption>::fmt -> fmt::Result with Ok(Default::default())
+src/notation/square/display_debug.rs:14:9: replace <impl Debug for Square>::fmt -> std::fmt::Result with Ok(Default::default())
+src/types/log/write_head.rs:21:9: replace WriteHead<'a, T>::seek -> Option<&mut T> with None
+src/notation/square/iterator.rs:27:9: replace Square::fenwise -> RankFile with Default::default()
+src/coup/rep/move_type.rs:125:39: replace != with == in MoveType::is_en_passant
+src/coup/rep/mod.rs:380:30: replace & with ^ in Move::move_metadata
+src/engine/uci/mod.rs:275:9: delete ! in UCIMessage::has_response
+src/util/charray.rs:69:9: replace Charray<H, W>::with_texture -> Self with Default::default()
+src/engine/uci/mod.rs:225:67: replace != with == in UCIMessage::parse
+src/coup/rep/mod.rs:318:18: replace & with | in Move::target_idx
+src/notation/square/mod.rs:23:27: replace + with * in Square::set_rank
+src/notation/fen/position_metadata.rs:196:41: replace << with >> in <impl From for u32>::from
+src/coup/rep/mod.rs:519:9: replace Move::is_long_castle -> bool with true
+src/types/occupant.rs:40:9: replace Occupant::piece -> Option<Piece> with None
+src/notation/square/from_into.rs:68:26: replace + with - in <impl TryFrom for Square>::try_from
+src/notation/square/mod.rs:72:30: replace + with * in Square::right
+src/notation/square/mod.rs:33:9: replace Square::index -> usize with 1
+src/board/simple/mod.rs:26:9: replace PieceBoard::set with ()
+src/notation/square/iterator.rs:66:9: replace <impl PartialEq for RankFile>::eq -> bool with false
+src/notation/square/iterator.rs:66:31: replace == with != in <impl PartialEq for RankFile>::eq
+src/types/direction.rs:25:33: replace + with - in Direction::index_shift
+src/engine/uci/mod.rs:224:68: replace != with == in UCIMessage::parse
+src/notation/fen/castle_rights.rs:49:35: replace & with ^ in <impl From for CastleRights>::from
+src/util/charray.rs:89:38: replace - with + in Charray<H, W>::adjust_coordinates
+src/notation/fen/castle_rights.rs:46:35: replace & with ^ in <impl From for CastleRights>::from
+src/types/direction.rs:26:34: replace - with / in Direction::index_shift
+src/notation/square/iterator.rs:210:9: replace RankFile::right_to_left -> &mut Self with Box::leak(Box::new(Default::default()))
+src/coup/rep/mod.rs:318:9: replace Move::target_idx -> usize with 0
+src/types/log/write_head.rs:61:27: replace -= with += in WriteHead<'a, T>::prev
+src/coup/rep/mod.rs:538:9: replace Move::is_double_pawn_push_for -> bool with false
+src/notation/square/from_into.rs:68:22: replace * with / in <impl TryFrom for Square>::try_from
+src/constants/file.rs:59:9: replace File::to_pgn -> &'static str with "xyzzy"
+src/coup/rep/move_type.rs:120:9: replace MoveType::is_promotion -> bool with true
+src/notation/square/iterator.rs:257:9: replace RankFile::start_on -> &mut Self with Box::leak(Box::new(Default::default()))
+src/coup/rep/move_type.rs:120:9: replace MoveType::is_promotion -> bool with false
+src/util/charray.rs:43:9: replace Charray<H, W>::set with ()
+src/types/log/mod.rs:98:9: replace Log<T>::get_mut -> Option<&mut T> with None
+src/notation/fen/position_metadata.rs:217:46: replace >> with << in <impl From for PositionMetadata>::from
+src/coup/rep/move_type.rs:120:22: replace & with ^ in MoveType::is_promotion
+src/notation/fen/position_metadata.rs:217:34: replace & with ^ in <impl From for PositionMetadata>::from
+src/types/occupant.rs:17:9: replace Occupant::is_empty -> bool with false
+src/game/variation.rs:43:9: replace Variation::make -> &mut Self with Box::leak(Box::new(Default::default()))
+src/types/log/cursor.rs:50:27: replace += with -= in Cursor<'a, T>::next
+src/types/log/cursor.rs:24:51: replace + with * in Cursor<'a, T>::jump
+src/board/interface/query.rs:39:37: replace * with + in display_board
+src/coup/rep/move_type.rs:58:9: replace MoveType::to_uci -> &'static str with ""
+src/types/piece.rs:31:19: replace & with | in <impl From for Piece>::from
+src/engine/uci/mod.rs:280:42: replace == with != in UCIMessage::is_complete
+src/notation/square/from_into.rs:5:23: replace * with + in <impl From for Square>::from
+src/notation/fen/position_metadata.rs:130:30: replace == with != in PositionMetadata::update
+src/coup/rep/move_type.rs:72:9: replace MoveType::is_null -> bool with false
+src/types/direction.rs:30:34: replace + with - in Direction::index_shift
+src/notation/fen/position_metadata.rs:190:12: replace |= with &= in <impl From for u32>::from
+src/notation/fen/position_metadata.rs:222:64: replace >> with << in <impl From for PositionMetadata>::from
+src/util/charray.rs:92:39: replace - with + in Charray<H, W>::adjust_coordinates
+src/coup/rep/move_type.rs:120:46: replace != with == in MoveType::is_promotion
+src/util/charray.rs:92:53: replace - with / in Charray<H, W>::adjust_coordinates
+src/notation/fen/position.rs:79:30: replace && with || in <impl From for Position>::from
+src/notation/fen/position_metadata.rs:218:44: replace & with | in <impl From for PositionMetadata>::from
+src/util/mod.rs:11:5: replace select_subset -> Vec<T> with vec![]
+src/engine/uci/mod.rs:228:45: replace == with != in UCIMessage::parse
+src/notation/fen/castle_rights.rs:47:35: replace & with | in <impl From for CastleRights>::from
+src/util/charray.rs:92:53: replace - with + in Charray<H, W>::adjust_coordinates
+src/notation/square/from_into.rs:68:22: replace * with + in <impl TryFrom for Square>::try_from
+src/types/log/write_head.rs:28:25: replace < with > in WriteHead<'a, T>::jump
+src/engine/uci/mod.rs:275:9: replace UCIMessage::has_response -> bool with false
+src/coup/rep/mod.rs:550:66: replace == with != in Move::is_short_castling_move_for
+src/types/log/mod.rs:106:9: replace Log<T>::len -> usize with 1
+src/engine/uci/mod.rs:94:9: replace UCIOption::is_keyword -> bool with true
+src/util/mod.rs:13:22: replace & with ^ in select_subset
+src/notation/fen/mod.rs:63:9: replace FEN::set_metadata with ()
+src/engine/uci/mod.rs:279:9: replace UCIMessage::is_complete -> bool with true
+src/notation/fen/castle_rights.rs:57:9: replace <impl From for u32>::from -> u32 with 1
+src/notation/square/mod.rs:64:30: replace - with + in Square::left
+src/notation/square/iterator.rs:273:35: replace + with * in RankFile::current_square
+src/coup/rep/mod.rs:385:9: replace Move::compile -> Vec<Alteration> with vec![]
+src/engine/driver/hazel.rs:39:9: replace <impl Engine for Driver>::exec -> Vec<UCIMessage> with vec![]
+src/notation/fen/position_metadata.rs:142:38: replace == with != in PositionMetadata::update
+src/notation/fen/castle_rights.rs:49:35: replace & with | in <impl From for CastleRights>::from
+src/notation/fen/position_metadata.rs:225:36: replace & with ^ in <impl From for PositionMetadata>::from
+src/board/simple/from_into.rs:24:9: replace PieceBoard::set_fen with ()
+src/types/log/cursor.rs:24:9: replace Cursor<'a, T>::jump -> Option<&T> with None
+src/types/pextboard/mod.rs:25:43: replace / with %
+src/types/log/write_head.rs:28:25: replace < with == in WriteHead<'a, T>::jump
+src/game/variation.rs:28:9: replace Variation::commit -> &mut Self with Box::leak(Box::new(Default::default()))
+src/notation/square/iterator.rs:54:9: replace <impl Debug for RankFile>::fmt -> std::fmt::Result with Ok(Default::default())
+src/types/piece.rs:31:19: replace & with ^ in <impl From for Piece>::from
+src/types/log/write_head.rs:49:26: replace == with != in WriteHead<'a, T>::next
+src/types/direction.rs:27:33: replace - with + in Direction::index_shift
+src/notation/square/mod.rs:64:30: replace - with / in Square::left
+src/coup/rep/mod.rs:292:18: replace & with | in Move::source_idx
+src/board/simple/mod.rs:41:9: replace <impl From for FEN>::from -> Self with Default::default()
+src/notation/fen/position_metadata.rs:128:9: replace PositionMetadata::update with ()
+src/notation/fen/position_metadata.rs:76:9: replace PositionMetadata::parse with ()
+src/types/color.rs:68:9: replace Color::is_white -> bool with true
+src/util/charray.rs:92:46: replace - with / in Charray<H, W>::adjust_coordinates
+src/notation/fen/castle_rights.rs:48:35: replace & with ^ in <impl From for CastleRights>::from
+src/notation/square/from_into.rs:37:24: replace != with == in <impl TryFrom for Square>::try_from
+src/types/log/write_head.rs:58:9: replace WriteHead<'a, T>::prev -> Option<&mut T> with None
+src/util/charray.rs:91:42: replace - with + in Charray<H, W>::adjust_coordinates
+src/util/charray.rs:38:9: replace Charray<H, W>::get -> u8 with 0
+src/types/log/cursor.rs:56:26: replace == with != in Cursor<'a, T>::prev
+src/coup/rep/debug.rs:28:9: replace <impl Display for Move>::fmt -> Result with Ok(Default::default())
+src/notation/fen/castle_rights.rs:32:9: replace <impl From for u8>::from -> u8 with 1
+src/game/variation.rs:49:9: replace Variation::new_game -> &mut Self with Box::leak(Box::new(Default::default()))
+src/types/occupant.rs:17:9: replace Occupant::is_empty -> bool with true
+src/types/log/cursor.rs:47:9: replace Cursor<'a, T>::next -> Option<&T> with None
+src/engine/uci/mod.rs:158:53: replace == with != in <impl Display for UCIMessage>::fmt
+src/notation/square/mod.rs:53:9: replace Square::down -> Option<Self> with None
+src/coup/rep/mod.rs:561:43: replace == with != in Move::is_long_castling_move_for
+src/types/log/mod.rs:60:9: replace Log<T>::commit -> &mut Self with Box::leak(Box::new(Default::default()))
+src/types/log/mod.rs:89:9: replace Log<T>::write with ()
+src/notation/uci.rs:57:28: replace || with && in <impl TryFrom for UCI>::try_from
+src/engine/uci/mod.rs:158:46: replace || with && in <impl Display for UCIMessage>::fmt
+src/board/interface/query.rs:39:37: replace * with / in display_board
+src/util/charray.rs:99:9: replace <impl Display for Charray<H, W>>::fmt -> std::fmt::Result with Ok(Default::default())
+src/coup/rep/move_type.rs:120:22: replace & with | in MoveType::is_promotion
+src/types/log/cursor.rs:65:9: replace Cursor<'a, T>::read -> Option<&T> with None
+src/util/charray.rs:92:60: replace - with + in Charray<H, W>::adjust_coordinates
+src/coup/rep/mod.rs:126:12: delete ! in Move::disambiguate
+src/coup/rep/move_type.rs:58:9: replace MoveType::to_uci -> &'static str with "xyzzy"
+src/notation/square/iterator.rs:273:31: replace * with / in RankFile::current_square
+src/notation/square/mod.rs:41:16: replace / with % in Square::rank
+src/notation/fen/castle_rights.rs:49:44: replace != with == in <impl From for CastleRights>::from
+src/notation/fen/castle_rights.rs:46:35: replace & with | in <impl From for CastleRights>::from
+src/notation/square/mod.rs:23:23: replace * with / in Square::set_rank
+src/notation/fen/mod.rs:34:9: replace <impl PartialEq for FEN>::eq -> bool with false
+src/types/log/mod.rs:49:9: replace Log<T>::begin -> &mut Self with Box::leak(Box::new(Default::default()))
+src/types/color.rs:50:9: replace Color::pawn_rank -> Bitboard with Default::default()
+src/notation/fen/position_metadata.rs:196:12: replace |= with &= in <impl From for u32>::from
+src/notation/uci.rs:57:24: replace < with > in <impl TryFrom for UCI>::try_from
+src/notation/fen/position.rs:109:30: replace == with != in <impl PartialEq for Position>::eq
+src/coup/rep/mod.rs:515:9: replace Move::is_short_castle -> bool with true
+src/notation/fen/position.rs:109:9: replace <impl PartialEq for Position>::eq -> bool with false
+src/notation/fen/castle_rights.rs:68:22: replace |= with &= in <impl From for u32>::from
+src/notation/square/mod.rs:37:9: replace Square::file -> usize with 1
+src/types/direction.rs:24:34: replace + with - in Direction::index_shift
+src/board/interface/query.rs:39:23: replace + with - in display_board
+src/notation/square/mod.rs:61:24: replace == with != in Square::left
+src/coup/rep/mod.rs:318:9: replace Move::target_idx -> usize with 1
+src/coup/rep/mod.rs:539:49: replace - with / in Move::is_double_pawn_push_for
+src/notation/square/iterator.rs:194:9: replace RankFile::left_to_right -> &mut Self with Box::leak(Box::new(Default::default()))
+src/notation/square/display_debug.rs:8:9: replace <impl Display for Square>::fmt -> std::fmt::Result with Ok(Default::default())
+src/board/simple/display_debug.rs:9:9: replace <impl Debug for PieceBoard>::fmt -> std::fmt::Result with Ok(Default::default())
+src/board/interface/query.rs:62:26: replace && with || in to_fen
+src/types/log/transaction.rs:23:9: replace Transaction<T>::record with ()
+src/notation/fen/castle_rights.rs:59:22: replace |= with &= in <impl From for u32>::from
+src/notation/square/iterator.rs:11:25: replace < with == in <impl Iterator for Square>::next
+src/coup/rep/mod.rs:348:9: replace Move::is_promotion -> bool with true
+src/notation/square/iterator.rs:242:9: replace RankFile::downward -> &mut Self with Box::leak(Box::new(Default::default()))
+src/util/mod.rs:13:33: replace > with == in select_subset
+src/notation/uci.rs:57:24: replace < with == in <impl TryFrom for UCI>::try_from
+src/types/log/write_head.rs:52:27: replace += with *= in WriteHead<'a, T>::next
+src/board/simple/from_into.rs:6:9: replace <impl From for PieceBoard>::from -> Self with Default::default()
+src/types/color.rs:57:9: replace Color::promotion_rank -> Bitboard with Default::default()
+src/util/mod.rs:13:33: replace > with < in select_subset
+src/board/simple/mod.rs:34:9: replace <impl Query for PieceBoard>::get -> Occupant with Default::default()
+src/board/interface/alteration.rs:21:9: replace <impl Debug for Alteration>::fmt -> std::fmt::Result with Ok(Default::default())
+src/notation/fen/position.rs:100:18: replace != with == in <impl From for Position>::from
+src/coup/rep/move_type.rs:37:9: replace MoveType::decode -> &'static str with ""
+src/board/interface/query.rs:39:48: replace + with * in display_board
+src/types/log/cursor.rs:59:27: replace -= with /= in Cursor<'a, T>::prev
+src/coup/rep/move_type.rs:168:9: replace MoveType::is_ambiguous -> bool with true
+src/notation/square/iterator.rs:11:25: replace < with > in <impl Iterator for Square>::next
+src/notation/square/from_into.rs:84:18: replace < with > in <impl TryFrom for Square>::try_from
+src/notation/square/iterator.rs:13:20: replace += with *= in <impl Iterator for Square>::next
+src/board/interface/query.rs:52:38: replace += with *= in to_fen
+src/coup/rep/mod.rs:292:37: replace >> with << in Move::source_idx
+src/types/log/cursor.rs:59:27: replace -= with += in Cursor<'a, T>::prev
+src/notation/fen/position_metadata.rs:224:33: replace & with ^ in <impl From for PositionMetadata>::from
+src/util/charray.rs:91:49: replace - with + in Charray<H, W>::adjust_coordinates
+src/notation/square/mod.rs:41:16: replace / with * in Square::rank
+src/notation/fen/position_metadata.rs:224:49: replace != with == in <impl From for PositionMetadata>::from
+src/coup/rep/move_type.rs:104:9: replace MoveType::is_long_castle -> bool with false
+src/game/variation.rs:82:9: replace Variation::current_position -> FEN with Default::default()
+src/notation/fen/mod.rs:48:9: replace FEN::start_position -> Self with Default::default()
+src/coup/rep/move_type.rs:112:22: replace & with ^ in MoveType::is_capture
+src/types/log/write_head.rs:67:9: replace WriteHead<'a, T>::read -> Option<&mut T> with None
+src/notation/fen/position_metadata.rs:189:20: replace << with >> in <impl From for u32>::from
+src/constants/file.rs:25:9: replace <impl From for u8>::from -> Self with Default::default()
+src/coup/rep/move_type.rs:72:14: replace == with != in MoveType::is_null
+src/util/charray.rs:92:60: replace - with / in Charray<H, W>::adjust_coordinates
+src/notation/square/mod.rs:45:24: replace == with != in Square::up
+src/types/log/write_head.rs:61:27: replace -= with /= in WriteHead<'a, T>::prev
+src/coup/rep/mod.rs:348:9: replace Move::is_promotion -> bool with false
+src/coup/rep/move_type.rs:112:9: replace MoveType::is_capture -> bool with false
+src/notation/square/iterator.rs:273:31: replace * with + in RankFile::current_square
+src/types/log/cursor.rs:26:25: replace < with == in Cursor<'a, T>::jump
+src/types/direction.rs:27:33: replace - with / in Direction::index_shift
+src/notation/fen/castle_rights.rs:62:22: replace |= with &= in <impl From for u32>::from
+src/types/occupant.rs:33:9: replace Occupant::color -> Option<Color> with None
+src/notation/square/from_into.rs:17:9: replace <impl From for usize>::from -> usize with 0
+src/coup/rep/mod.rs:560:9: replace Move::is_long_castling_move_for -> bool with false
+src/notation/fen/position.rs:74:9: replace <impl From for Position>::from -> Self with Default::default()
+src/notation/uci.rs:70:32: replace == with != in <impl TryFrom for UCI>::try_from
+src/types/log/cursor.rs:18:9: replace Cursor<'a, T>::seek -> Option<&T> with None
+src/notation/fen/position_metadata.rs:192:46: replace | with & in <impl From for u32>::from
+src/types/log/write_head.rs:27:51: replace + with - in WriteHead<'a, T>::jump
+src/notation/square/from_into.rs:84:18: replace < with == in <impl TryFrom for Square>::try_from
+src/notation/uci.rs:57:43: replace > with == in <impl TryFrom for UCI>::try_from
+src/coup/rep/move_type.rs:72:9: replace MoveType::is_null -> bool with true
+src/board/interface/query.rs:46:5: replace to_fen -> FEN with Default::default()
+src/engine/uci/mod.rs:158:24: replace == with != in <impl Display for UCIMessage>::fmt
+src/coup/rep/move_type.rs:154:9: replace MoveType::promotion_piece -> Option<Piece> with None
+src/types/log/mod.rs:106:9: replace Log<T>::len -> usize with 0
+src/coup/rep/mod.rs:539:69: replace == with != in Move::is_double_pawn_push_for
+src/types/direction.rs:28:34: replace - with / in Direction::index_shift
+src/notation/fen/mod.rs:100:9: replace FEN::halfmove_clock -> u8 with 1
+src/coup/rep/move_type.rs:108:14: replace == with != in MoveType::is_short_castle
+src/types/log/mod.rs:55:9: replace Log<T>::record -> &mut Self with Box::leak(Box::new(Default::default()))
+src/notation/square/mod.rs:37:9: replace Square::file -> usize with 0
+src/constants/file.rs:51:9: replace File::to_index -> usize with 1
+src/coup/rep/mod.rs:524:9: replace Move::is_en_passant -> bool with false
+src/coup/rep/move_type.rs:108:9: replace MoveType::is_short_castle -> bool with false
+src/notation/fen/position_metadata.rs:225:36: replace & with | in <impl From for PositionMetadata>::from
+src/types/log/cursor.rs:26:25: replace < with > in Cursor<'a, T>::jump
+src/coup/rep/move_type.rs:104:9: replace MoveType::is_long_castle -> bool with true
+src/notation/square/mod.rs:61:9: replace Square::left -> Option<Self> with None
+src/notation/square/mod.rs:28:34: replace + with * in Square::set_file
+src/notation/fen/position.rs:88:42: replace += with -= in <impl From for Position>::from
+src/notation/square/iterator.rs:273:35: replace + with - in RankFile::current_square
+src/notation/fen/castle_rights.rs:32:9: replace <impl From for u8>::from -> u8 with 0
+src/types/direction.rs:25:33: replace + with * in Direction::index_shift
+src/notation/fen/position_metadata.rs:185:9: replace <impl From for u32>::from -> Self with Default::default()
+src/coup/rep/mod.rs:539:98: replace & with | in Move::is_double_pawn_push_for
+src/coup/rep/mod.rs:539:105: replace == with != in Move::is_double_pawn_push_for
+src/coup/rep/mod.rs:561:66: replace == with != in Move::is_long_castling_move_for
+src/types/log/write_head.rs:27:51: replace + with * in WriteHead<'a, T>::jump
+src/notation/fen/mod.rs:105:9: replace FEN::fullmove_number -> u16 with 0
+src/coup/rep/mod.rs:515:9: replace Move::is_short_castle -> bool with false
+src/coup/rep/mod.rs:519:9: replace Move::is_long_castle -> bool with false
+src/constants/file.rs:37:21: replace & with | in File::from_index
+src/notation/square/iterator.rs:11:9: replace <impl Iterator for Square>::next -> Option<Square> with None
+src/types/log/cursor.rs:56:9: replace Cursor<'a, T>::prev -> Option<&T> with None
+src/util/charray.rs:89:45: replace - with / in Charray<H, W>::adjust_coordinates
+src/types/direction.rs:28:34: replace - with + in Direction::index_shift
+src/util/charray.rs:88:9: replace Charray<H, W>::adjust_coordinates -> (usize, usize) with (1, 0)
+src/notation/fen/mod.rs:110:9: replace FEN::setup -> A with Default::default()
+src/notation/fen/position.rs:26:9: replace Position::compile -> Vec<Alteration> with vec![]

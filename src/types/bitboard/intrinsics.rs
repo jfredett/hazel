@@ -8,7 +8,6 @@ impl Bitboard {
         unsafe { core::arch::x86_64::_pext_u64(self.0, mask.0) }
     }
 
-    #[cfg_attr(test, mutants::skip)] // This is a panic instead of failing back to slower methods, I am lazy.
     #[cfg(not(target_feature = "bmi2"))]
     pub fn pext(&self, _mask: Bitboard) -> u64 {
         // TODO: Write CPU-REQUIREMENTS
@@ -36,7 +35,6 @@ impl Bitboard {
         }
     }
 
-    #[cfg_attr(test, mutants::skip)] // This is a panic instead of failing back to slower methods, I am lazy.
     #[cfg(not(target_feature = "bmi1"))]
     pub fn first_index(&self) -> usize {
         // TODO: Write CPU-REQUIREMENTS

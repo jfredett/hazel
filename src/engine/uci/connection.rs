@@ -10,6 +10,7 @@ use crate::engine::driver::Driver;
 use crate::engine::uci::UCIMessage;
 use crate::engine::Engine;
 
+#[cfg_attr(test, mutants::skip)]
 pub fn run() -> io::Result<()> {
     run_with_io(io::stdin(), io::stdout())
 }
@@ -36,7 +37,6 @@ pub fn run_with_io<T: io::Read, U: io::Write>(input: T, mut output: U) -> io::Re
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tracing_test::traced_test;
 
     #[test]
     fn test_with_dummy_io() {

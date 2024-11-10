@@ -1,0 +1,118 @@
+src/board/simple/from_into.rs:12:9: replace <impl From for PieceBoard>::from -> Self with Default::default()
+src/constants/file.rs:55:9: replace File::to_byte -> u8 with 0
+src/constants/file.rs:55:9: replace File::to_byte -> u8 with 1
+# src/coup/rep/mod.rs:134:25: delete ! in Move::disambiguate
+# src/coup/rep/mod.rs:142:56: replace - with + in Move::disambiguate
+# src/coup/rep/mod.rs:142:56: replace - with / in Move::disambiguate
+# src/coup/rep/mod.rs:144:32: replace == with != in Move::disambiguate
+# src/coup/rep/mod.rs:148:39: replace == with != in Move::disambiguate
+# src/coup/rep/mod.rs:152:24: delete ! in Move::disambiguate
+# src/coup/rep/mod.rs:174:42: replace == with != in Move::disambiguate
+# src/coup/rep/mod.rs:176:49: replace == with != in Move::disambiguate
+# src/coup/rep/mod.rs:181:42: replace == with != in Move::disambiguate
+# src/coup/rep/mod.rs:183:49: replace == with != in Move::disambiguate
+# src/coup/rep/mod.rs:202:9: replace Move::to_pgn -> String with "xyzzy".into()
+# src/coup/rep/mod.rs:202:9: replace Move::to_pgn -> String with String::new()
+# src/coup/rep/mod.rs:250:9: replace Move::is_null -> bool with true
+# src/coup/rep/mod.rs:497:9: replace Move::to_uci -> String with "xyzzy".into()
+# src/coup/rep/mod.rs:497:9: replace Move::to_uci -> String with String::new()
+# src/coup/rep/mod.rs:524:9: replace Move::is_en_passant -> bool with true
+# src/coup/rep/mod.rs:529:9: replace Move::is_ambiguous -> bool with false
+# src/coup/rep/mod.rs:538:9: replace Move::is_double_pawn_push_for -> bool with true
+# src/coup/rep/mod.rs:539:77: replace && with || in Move::is_double_pawn_push_for
+# src/coup/rep/mod.rs:540:105: replace == with != in Move::is_double_pawn_push_for
+# src/coup/rep/mod.rs:540:49: replace - with + in Move::is_double_pawn_push_for
+# src/coup/rep/mod.rs:540:49: replace - with / in Move::is_double_pawn_push_for
+# src/coup/rep/mod.rs:540:69: replace == with != in Move::is_double_pawn_push_for
+# src/coup/rep/mod.rs:540:77: replace && with || in Move::is_double_pawn_push_for
+# src/coup/rep/mod.rs:540:98: replace & with ^ in Move::is_double_pawn_push_for
+# src/coup/rep/mod.rs:540:98: replace & with | in Move::is_double_pawn_push_for
+# src/coup/rep/mod.rs:549:9: replace Move::is_short_castling_move_for -> bool with true
+# src/coup/rep/mod.rs:550:49: replace && with || in Move::is_short_castling_move_for
+# src/coup/rep/mod.rs:551:43: replace == with != in Move::is_short_castling_move_for
+# src/coup/rep/mod.rs:551:49: replace && with || in Move::is_short_castling_move_for
+# src/coup/rep/mod.rs:551:66: replace == with != in Move::is_short_castling_move_for
+# src/coup/rep/mod.rs:560:9: replace Move::is_long_castling_move_for -> bool with true
+# src/coup/rep/mod.rs:561:49: replace && with || in Move::is_long_castling_move_for
+# src/coup/rep/mod.rs:562:43: replace == with != in Move::is_long_castling_move_for
+# src/coup/rep/mod.rs:562:49: replace && with || in Move::is_long_castling_move_for
+# src/coup/rep/mod.rs:562:66: replace == with != in Move::is_long_castling_move_for
+src/coup/rep/move_type.rs:125:22: replace & with | in MoveType::is_en_passant
+src/coup/rep/move_type.rs:125:9: replace MoveType::is_en_passant -> bool with true
+src/coup/rep/move_type.rs:168:9: replace MoveType::is_ambiguous -> bool with false
+src/engine/driver/hazel.rs:35:9: replace <impl Engine for Driver>::exec_message -> Vec<UCIMessage> with vec![]
+src/engine/uci/connection.rs:21:5: replace run_with_io -> io::Result<()> with Ok(())
+src/engine/uci/mod.rs:275:9: replace UCIMessage::has_response -> bool with true
+src/engine/uci/mod.rs:281:46: replace == with != in UCIMessage::is_complete
+src/game/action/chess.rs:34:9: replace <impl Debug for ChessAction>::fmt -> std::fmt::Result with Ok(Default::default())
+src/game/variation.rs:36:9: replace Variation::commit_all -> &mut Self with Box::leak(Box::new(Default::default()))
+src/game/variation.rs:54:9: replace Variation::halt -> &mut Self with Box::leak(Box::new(Default::default()))
+src/game/variation.rs:64:9: replace Variation::variation -> &mut Self with Box::leak(Box::new(Default::default()))
+src/notation/fen/castle_rights.rs:59:22: replace |= with ^= in <impl From for u32>::from
+src/notation/fen/castle_rights.rs:62:22: replace |= with ^= in <impl From for u32>::from
+src/notation/fen/castle_rights.rs:65:22: replace |= with ^= in <impl From for u32>::from
+src/notation/fen/castle_rights.rs:68:22: replace |= with ^= in <impl From for u32>::from
+src/notation/fen/mod.rs:100:9: replace FEN::halfmove_clock -> u8 with 0
+src/notation/fen/mod.rs:105:9: replace FEN::fullmove_number -> u16 with 1
+src/notation/fen/mod.rs:122:9: replace FEN::metadata -> PositionMetadata with Default::default()
+src/notation/fen/mod.rs:34:41: replace && with || in <impl PartialEq for FEN>::eq
+src/notation/fen/mod.rs:34:9: replace <impl PartialEq for FEN>::eq -> bool with true
+src/notation/fen/mod.rs:95:9: replace FEN::en_passant -> Option<Square> with None
+src/notation/fen/position.rs:109:9: replace <impl PartialEq for Position>::eq -> bool with true
+src/notation/fen/position_metadata.rs:162:35: replace == with != in PositionMetadata::update
+src/notation/fen/position_metadata.rs:163:35: replace == with != in PositionMetadata::update
+src/notation/fen/position_metadata.rs:164:35: replace == with != in PositionMetadata::update
+src/notation/fen/position_metadata.rs:165:35: replace == with != in PositionMetadata::update
+src/notation/fen/position_metadata.rs:189:12: replace |= with ^= in <impl From for u32>::from
+src/notation/fen/position_metadata.rs:190:12: replace |= with ^= in <impl From for u32>::from
+src/notation/fen/position_metadata.rs:192:46: replace | with ^ in <impl From for u32>::from
+src/notation/fen/position_metadata.rs:192:67: replace << with >> in <impl From for u32>::from
+src/notation/fen/position_metadata.rs:195:12: replace |= with ^= in <impl From for u32>::from
+src/notation/fen/position_metadata.rs:196:12: replace |= with ^= in <impl From for u32>::from
+src/notation/fen/position_metadata.rs:225:52: replace >> with << in <impl From for PositionMetadata>::from
+src/notation/square/from_into.rs:11:32: replace * with + in <impl From for Square>::from
+src/notation/square/from_into.rs:11:32: replace * with / in <impl From for Square>::from
+src/notation/square/from_into.rs:11:36: replace + with * in <impl From for Square>::from
+src/notation/square/from_into.rs:11:36: replace + with - in <impl From for Square>::from
+src/notation/square/from_into.rs:23:9: replace <impl From for usize>::from -> usize with 0
+src/notation/square/from_into.rs:23:9: replace <impl From for usize>::from -> usize with 1
+src/notation/square/iterator.rs:180:9: replace RankFile::is_done -> bool with false
+src/notation/square/iterator.rs:23:9: replace Square::by_rank_and_file -> RankFile with Default::default()
+src/notation/square/iterator.rs:60:31: replace == with != in <impl PartialEq for &mut RankFile>::eq
+src/notation/square/iterator.rs:60:9: replace <impl PartialEq for &mut RankFile>::eq -> bool with false
+src/notation/square/iterator.rs:60:9: replace <impl PartialEq for &mut RankFile>::eq -> bool with true
+src/notation/square/iterator.rs:66:9: replace <impl PartialEq for RankFile>::eq -> bool with true
+src/notation/square/mod.rs:23:27: replace + with - in Square::set_rank
+src/notation/square/mod.rs:28:30: replace * with / in Square::set_file
+src/notation/square/mod.rs:77:9: replace Square::backrank_for -> bool with false
+src/notation/square/mod.rs:77:9: replace Square::backrank_for -> bool with true
+src/notation/square/mod.rs:78:41: replace == with != in Square::backrank_for
+src/notation/square/mod.rs:79:41: replace == with != in Square::backrank_for
+src/notation/square/mod.rs:84:21: replace == with != in Square::backrank
+src/notation/square/mod.rs:84:26: replace || with && in Square::backrank
+src/notation/square/mod.rs:84:41: replace == with != in Square::backrank
+src/notation/square/mod.rs:84:9: replace Square::backrank -> bool with false
+src/notation/square/mod.rs:84:9: replace Square::backrank -> bool with true
+src/types/color.rs:28:9: replace <impl From for u8>::from -> Self with Default::default()
+src/types/log/mod.rs:102:9: replace Log<T>::is_empty -> bool with false
+src/types/log/mod.rs:102:9: replace Log<T>::is_empty -> bool with true
+src/types/log/mod.rs:117:9: replace Log<T>::write_head with ()
+src/types/log/mod.rs:137:9: replace <impl IntoIterator for Log<T>>::into_iter -> Self::IntoIter with Default::default()
+src/types/log/mod.rs:37:21: replace < with == in Log<T>::seek
+src/types/log/mod.rs:37:21: replace < with > in Log<T>::seek
+src/types/log/mod.rs:37:9: replace Log<T>::seek with ()
+src/types/log/mod.rs:82:15: delete ! in Log<T>::commit_all
+src/types/log/mod.rs:82:9: replace Log<T>::commit_all -> &mut Self with Box::leak(Box::new(Default::default()))
+src/types/log/transaction.rs:19:9: replace Transaction<T>::is_finished -> bool with false
+src/types/log/transaction.rs:19:9: replace Transaction<T>::is_finished -> bool with true
+src/types/pextboard/mod.rs:25:43: replace / with *
+src/types/pextboard/mod.rs:27:44: replace / with *
+src/types/pextboard/mod.rs:47:5: replace slow_attacks -> Bitboard with Default::default()
+src/types/pextboard/mod.rs:57:16: delete ! in slow_attacks
+src/types/pextboard/mod.rs:57:27: replace & with | in slow_attacks
+src/types/pextboard/mod.rs:67:5: replace slow_bishop_attacks -> Bitboard with Default::default()
+src/types/pextboard/mod.rs:75:5: replace slow_rook_attacks -> Bitboard with Default::default()
+src/types/pextboard/mod.rs:83:5: replace attacks_for -> Bitboard with Default::default()
+src/types/pextboard/mod.rs:88:50: replace | with & in attacks_for
+src/types/pextboard/mod.rs:88:50: replace | with ^ in attacks_for
+src/util/charray.rs:48:9: replace Charray<H, W>::set_origin with ()

@@ -22,13 +22,12 @@
 use crate::board::interface::{Alteration, Query};
 use crate::notation::*;
 use crate::types::{Color, Piece, Occupant};
-use crate::board::query::display_board;
 use crate::constants::File;
 
 use serde::{Deserialize, Serialize};
 
 use tracing::instrument;
-use tracing::{debug, trace};
+use tracing::trace;
 
 #[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Serialize, Deserialize)]
 pub struct Move(pub(crate) u16);
@@ -42,9 +41,6 @@ pub struct Move(pub(crate) u16);
 mod debug;
 mod move_type;
 
-pub mod halfply;
-
-pub use halfply::HalfPly;
 pub use move_type::*;
 
 impl Move {
@@ -63,7 +59,7 @@ impl Move {
     /// assert!(!m.is_promotion());
     /// assert!(m.move_metadata().is_quiet());
     /// ```
-    pub fn new<S>(source: S, target: S, metadata: MoveType) -> Move where S : SquareNotation {
+    pub fn new(source: impl Into<Square>, target: impl Into<Square>, metadata: MoveType) -> Move {
         let s : Square = source.into();
         let t : Square = target.into();
 
@@ -72,7 +68,7 @@ impl Move {
                              |   metadata as u16 )
     }
 
-    pub fn from<S>(source: S, target: S, metadata: MoveType) -> Move where S : SquareNotation {
+    pub fn from(source: impl Into<Square>, target: impl Into<Square>, metadata: MoveType) -> Move {
         trace!("Deprecated use of Move::from, use Move::new instead");
         Move::new(
             source,
@@ -98,7 +94,6 @@ impl Move {
     /// # use hazel::notation::*;
     /// # use hazel::constants::*;
     /// # use hazel::types::Piece;
-    /// # use either::Either;
     /// // the move from d2 -> d4
     /// let m = Move::from_notation("d2", "d4", MoveType::DOUBLE_PAWN);
     ///
@@ -133,16 +128,12 @@ impl Move {
         let source = context.get(self.source());
         let target = context.get(self.target());
 
-        debug!("DISPLAY:\n{}\nSource: should be {},  is {:?}", display_board(context), self.source(), source);
-
         // If the source square is empty, we can't disambiguate
         if source.is_empty() { return None; }
 
         let capturing = !target.is_empty(); // If there is a piece on the target square, then we're capturing
 
         match source.piece().unwrap() {
-            // FIXME: ideally this'd look at the square notation and not the raw index, but that's
-            // a bigger refactor than is appropriate right now
             Piece::Pawn => {
                 // we might still be capturing en passant, we can check to see if we're moving
                 // diagonally. This can be done by checking the difference between the source
@@ -176,30 +167,27 @@ impl Move {
                     return Some(MoveType::QUIET);
                 }
             },
-            // FIXME: ideally this'd look at the square notation and not the raw index, but that's
-            // a bigger refactor than is appropriate right now
             Piece::King => {
                 // Castling is a king move in UCI, so it's a king move as far as I'm concerned.
-                match self.source_idx() {
-                    0o04 => {
-                        if self.target_idx() == 0o06 {
+                match self.source() {
+                    E1 => {
+                        if self.target() == G1 {
                             return Some(MoveType::SHORT_CASTLE);
-                        } else if self.target_idx() == 0o02 {
+                        } else if self.target() == C1 {
                             return Some(MoveType::LONG_CASTLE);
                         }
                     },
-                    0o74 => {
-                        if self.target_idx() == 0o76 {
+                    E8 => {
+                        if self.target() == G8 {
                             return Some(MoveType::SHORT_CASTLE);
-                        } else if self.target_idx() == 0o72 {
+                        } else if self.target() == C8 {
                             return Some(MoveType::LONG_CASTLE);
                         }
                     },
                     _ => { },
                 }
             },
-            _ => {
-            },
+            _ => { },
         };
         // Otherwise, moves are just captures or quiet, simple as.
         if capturing {
@@ -265,13 +253,13 @@ impl Move {
     pub fn long_castle(color: Color) -> Move {
         match color {
             Color::WHITE => Move::from(
-                Square::try_from("e1").unwrap(),
-                Square::try_from("c1").unwrap(),
+                E1,
+                C1,
                 MoveType::LONG_CASTLE,
             ),
             Color::BLACK => Move::from(
-                Square::try_from("e8").unwrap(),
-                Square::try_from("c8").unwrap(),
+                E8,
+                C8,
                 MoveType::LONG_CASTLE,
             ),
         }
@@ -280,13 +268,13 @@ impl Move {
     pub fn short_castle(color: Color) -> Move {
         match color {
             Color::WHITE => Move::from(
-                Square::try_from("e1").unwrap(),
-                Square::try_from("g1").unwrap(),
+                E1,
+                G1,
                 MoveType::SHORT_CASTLE,
             ),
             Color::BLACK => Move::from(
-                Square::try_from("e8").unwrap(),
-                Square::try_from("g8").unwrap(),
+                E8,
+                G8,
                 MoveType::SHORT_CASTLE,
             ),
         }
@@ -324,7 +312,7 @@ impl Move {
     ///
     /// let m = Move::from(D2, D4, MoveType::DOUBLE_PAWN);
     ///
-    /// assert_eq!(m.target_idx(), D4.into());
+    /// assert_eq!(m.target_idx(), usize::from(D4));
     /// ```
     pub fn target_idx(&self) -> usize {
         ((self.0 & TARGET_IDX_MASK) >> TARGET_IDX_SHIFT).into()
@@ -400,38 +388,34 @@ impl Move {
         let source_occupant = context.get(source);
         let target_occupant = context.get(target);
 
-        let contextprime = self.disambiguate(context);
+        let contextprime = self.disambiguate(context).unwrap();
 
 
-        let mut alterations = match contextprime.unwrap() {
+        let alterations = match contextprime {
             MoveType::QUIET => vec![
+                Alteration::remove(source, source_occupant),
                 Alteration::place(target, source_occupant),
-                Alteration::remove(source, source_occupant)
             ],
             MoveType::DOUBLE_PAWN => vec![
+                Alteration::remove(source, source_occupant),
                 Alteration::place(target, source_occupant),
-                Alteration::remove(source, source_occupant)
             ],
             MoveType::SHORT_CASTLE => {
                 let color = source_occupant.color().unwrap();
                 let rook_source = match color {
-                    Color::WHITE => Square::try_from("h1"),
-                    Color::BLACK => Square::try_from("h8"),
-                }.unwrap();
+                    Color::WHITE => H1,
+                    Color::BLACK => H8,
+                };
                 let rook_target = match color {
-                    Color::WHITE => Square::try_from("f1"),
-                    Color::BLACK => Square::try_from("f8"),
-                }.unwrap();
-                return vec![
-                    // remove the rook
+                    Color::WHITE => F1,
+                    Color::BLACK => F8,
+                };
+                vec![
                     Alteration::remove(rook_source, Occupant::rook(color)),
-                    // remove the king
                     Alteration::remove(source, source_occupant),
-                    // place the king
                     Alteration::place(target, source_occupant),
-                    // place the rook
-                    Alteration::place(rook_target, Occupant::rook(color))
-                ];
+                    Alteration::place(rook_target, Occupant::rook(color)),
+                ]
             },
             MoveType::LONG_CASTLE => { 
                 let color = source_occupant.color().unwrap();
@@ -443,7 +427,7 @@ impl Move {
                     Color::WHITE => D1,
                     Color::BLACK => D8
                 };
-                return vec![
+                vec![
                     // remove the rook
                     Alteration::remove(rook_source, Occupant::rook(color)),
                     // remove the king
@@ -465,25 +449,44 @@ impl Move {
                 Alteration::place(target, source_occupant),
             ],
             MoveType::PROMOTION_KNIGHT => vec![
+                Alteration::remove(source, source_occupant),
+                Alteration::place(target, Occupant::knight(source_occupant.color().unwrap())),
             ],
             MoveType::PROMOTION_BISHOP => vec![
+                Alteration::remove(source, source_occupant),
+                Alteration::place(target, Occupant::bishop(source_occupant.color().unwrap())),
             ],
             MoveType::PROMOTION_ROOK => vec![
+                Alteration::remove(source, source_occupant),
+                Alteration::place(target, Occupant::rook(source_occupant.color().unwrap())),
             ],
             MoveType::PROMOTION_QUEEN => vec![
+                Alteration::remove(source, source_occupant),
+                Alteration::place(target, Occupant::queen(source_occupant.color().unwrap())),
             ],
             MoveType::PROMOTION_CAPTURE_KNIGHT => vec![
+                Alteration::remove(source, source_occupant),
+                Alteration::remove(target, target_occupant),
+                Alteration::place(target, Occupant::knight(source_occupant.color().unwrap())),
             ],
             MoveType::PROMOTION_CAPTURE_BISHOP => vec![
+                Alteration::remove(source, source_occupant),
+                Alteration::remove(target, target_occupant),
+                Alteration::place(target, Occupant::bishop(source_occupant.color().unwrap())),
             ],
             MoveType::PROMOTION_CAPTURE_ROOK => vec![
+                Alteration::remove(source, source_occupant),
+                Alteration::remove(target, target_occupant),
+                Alteration::place(target, Occupant::rook(source_occupant.color().unwrap())),
             ],
             MoveType::PROMOTION_CAPTURE_QUEEN => vec![
+                Alteration::remove(source, source_occupant),
+                Alteration::remove(target, target_occupant),
+                Alteration::place(target, Occupant::queen(source_occupant.color().unwrap())),
             ],
-            _ => todo!()
+            MoveType::NULLMOVE => vec![],
+            _ => { unreachable!(); }
         };
-
-        alterations.push(Alteration::done());
 
         return alterations;
     }
@@ -565,6 +568,33 @@ impl Move {
 mod test {
     use super::*;
 
+    mod creation {
+        use super::*;
+
+        #[test]
+        fn new_move() {
+            let m = Move::new(D2, D4, MoveType::DOUBLE_PAWN);
+            assert_eq!(m.source(), D2);
+            assert_eq!(m.target(), D4);
+            assert!(!m.is_promotion());
+            assert!(!m.is_null());
+            assert!(m.is_double_pawn_push_for(Color::WHITE));
+        }
+
+        #[test]
+        fn empty_move() {
+            let m = Move::empty();
+            assert_eq!(m.0, 0);
+        }
+
+        #[test]
+        fn null_move() {
+            let m = Move::null();
+            assert!(m.is_null());
+        }
+
+    }
+
     mod from_notation {
         use super::*;
 
@@ -591,20 +621,224 @@ mod test {
     mod castling {
         use super::*;
 
+        mod white {
+            use super::*;
+
+            #[test]
+            fn short_castle_parses_correctly() {
+                let m = Move::short_castle(Color::WHITE);
+                assert_eq!(m.source(), E1);
+                assert_eq!(m.target(), G1);
+                assert!(m.is_short_castle());
+            }
+
+            #[test]
+            fn long_castle_parses_correctly() {
+                let m = Move::long_castle(Color::WHITE);
+                assert_eq!(m.source(), E1);
+                assert_eq!(m.target(), C1);
+                assert!(m.is_long_castle());
+            }
+        }
+
+        mod black {
+            use super::*;
+
+            #[test]
+            fn short_castle_parses_correctly() {
+                let m = Move::short_castle(Color::BLACK);
+                assert_eq!(m.source(), E8);
+                assert_eq!(m.target(), G8);
+                assert!(m.is_short_castle());
+            }
+
+            #[test]
+            fn long_castle_parses_correctly() {
+                let m = Move::long_castle(Color::BLACK);
+                assert_eq!(m.source(), E8);
+                assert_eq!(m.target(), C8);
+                assert!(m.is_long_castle());
+            }
+        }
+    }
+
+    mod disambiguate {
+        use crate::board::{Alter, PieceBoard};
+
+        use super::*;
+
         #[test]
-        fn short_castle_parses_correctly() {
-            let m = Move::short_castle(Color::WHITE);
-            assert_eq!(m.source_idx(), 0o04);
-            assert_eq!(m.target_idx(), 0o06);
-            assert!(m.is_short_castle());
+        fn quiet_move_disambiguates_correctly() {
+            let m = Move::from(D2, D3, MoveType::UCI_AMBIGUOUS);
+            let mut context = PieceBoard::default();
+            context.set_startpos();
+
+            assert_eq!(m.disambiguate(&context).unwrap(), MoveType::QUIET);
         }
 
         #[test]
-        fn long_castle_parses_correctly() {
-            let m = Move::long_castle(Color::WHITE);
-            assert_eq!(m.source_idx(), 0o04);
-            assert_eq!(m.target_idx(), 0o02);
-            assert!(m.is_long_castle());
+        fn capture_move_disambiguates_correctly() {
+            let m = Move::from(C3, D4, MoveType::UCI_AMBIGUOUS);
+            let mut context = PieceBoard::default();
+            context.alter_mut(Alteration::place(C3, Occupant::pawn(Color::WHITE)));
+            context.alter_mut(Alteration::place(D4, Occupant::pawn(Color::BLACK)));
+
+            assert_eq!(m.disambiguate(&context).unwrap(), MoveType::CAPTURE);
+        }
+
+        #[test]
+        fn double_pawn_move_disambiguates_correctly() {
+            let m = Move::from(D2, D4, MoveType::UCI_AMBIGUOUS);
+            let mut context = PieceBoard::default();
+            context.set_startpos();
+
+            assert_eq!(m.disambiguate(&context).unwrap(), MoveType::DOUBLE_PAWN);
+        }
+
+        #[test]
+        fn short_castle_disambiguates_correctly() {
+            let m = Move::from(E1, G1, MoveType::UCI_AMBIGUOUS);
+            let mut context = PieceBoard::default();
+            context.set_startpos();
+            context.alter_mut(Alteration::remove(F1, Occupant::bishop(Color::WHITE)));
+            context.alter_mut(Alteration::remove(G1, Occupant::knight(Color::WHITE)));
+
+            assert_eq!(m.disambiguate(&context).unwrap(), MoveType::SHORT_CASTLE);
+        }
+
+        #[test]
+        fn long_castle_disambiguates_correctly() {
+            let m = Move::from(E1, C1, MoveType::UCI_AMBIGUOUS);
+            let mut context = PieceBoard::default();
+            context.set_startpos();
+            context.alter_mut(Alteration::remove(B1, Occupant::knight(Color::WHITE)));
+            context.alter_mut(Alteration::remove(C1, Occupant::bishop(Color::WHITE)));
+
+            assert_eq!(m.disambiguate(&context).unwrap(), MoveType::LONG_CASTLE);
+        }
+    }
+
+    mod to_star {
+        use crate::board::{Alter, PieceBoard};
+
+        use super::*;
+
+        mod pgn {
+            use super::*;
+
+            #[test]
+            fn to_pgn_quiet_move() {
+                let m = Move::from(D2, D3, MoveType::QUIET);
+                let mut context = PieceBoard::default();
+                context.set_startpos();
+
+                assert_eq!(m.to_pgn(&context), "d3");
+            }
+
+            #[test]
+            fn to_pgn_capture_move() {
+                let m = Move::from(D4, E5, MoveType::CAPTURE);
+                let mut context = PieceBoard::default();
+                context.alter_mut(Alteration::place(D4, Occupant::white_pawn()));
+                context.alter_mut(Alteration::place(E5, Occupant::black_pawn()));
+
+                assert_eq!(m.to_pgn(&context), "dxe5");
+            }
+
+            #[test]
+            fn to_pgn_double_pawn_move() {
+                let m = Move::from(D2, D4, MoveType::DOUBLE_PAWN);
+                let mut context = PieceBoard::default();
+                context.set_startpos();
+
+                assert_eq!(m.to_pgn(&context), "d4");
+            }
+
+            #[test]
+            fn to_pgn_short_castle() {
+                let m = Move::short_castle(Color::WHITE);
+                let mut context = PieceBoard::default();
+                // NOTE: Context does not mean it checks to see if the move is legal, in this position
+                // white cannot castle, eppur si muove.
+                context.set_startpos();
+
+                assert_eq!(m.to_pgn(&context), "O-O");
+            }
+
+            #[test]
+            fn to_pgn_long_castle() {
+                let m = Move::long_castle(Color::WHITE);
+                let mut context = PieceBoard::default();
+                // NOTE: same caveat as short castling.
+                context.set_startpos();
+
+                assert_eq!(m.to_pgn(&context), "O-O-O");
+            }
+
+            #[test]
+            fn to_pgn_promotion_move() {
+                let m = Move::from(D7, D8, MoveType::PROMOTION_QUEEN);
+                let mut context = PieceBoard::default();
+                context.alter_mut(Alteration::place(D7, Occupant::white_pawn()));
+
+                assert_eq!(m.to_pgn(&context), "d8=Q");
+            }
+
+            #[test]
+            fn to_pgn_capture_promotion_move() {
+                let m = Move::from(C7, D8, MoveType::PROMOTION_CAPTURE_QUEEN);
+                let mut context = PieceBoard::default();
+                context.alter_mut(Alteration::place(C7, Occupant::white_pawn()));
+                context.alter_mut(Alteration::place(D8, Occupant::black_pawn()));
+
+                assert_eq!(m.to_pgn(&context), "cxd8=Q");
+            }
+        }
+
+        mod uci {
+            use super::*;
+
+            #[test]
+            fn to_uci_quiet_move() {
+                let m = Move::from(D2, D3, MoveType::QUIET);
+                assert_eq!(m.to_uci(), "d2d3");
+            }
+
+            #[test]
+            fn to_uci_capture_move() {
+                let m = Move::from(D4, E5, MoveType::CAPTURE);
+                assert_eq!(m.to_uci(), "d4e5");
+            }
+
+            #[test]
+            fn to_uci_double_pawn_move() {
+                let m = Move::from(D2, D4, MoveType::DOUBLE_PAWN);
+                assert_eq!(m.to_uci(), "d2d4");
+            }
+
+            #[test]
+            fn to_uci_short_castle() {
+                let m = Move::short_castle(Color::WHITE);
+                assert_eq!(m.to_uci(), "e1g1");
+            }
+
+            #[test]
+            fn to_uci_long_castle() {
+                let m = Move::long_castle(Color::WHITE);
+                assert_eq!(m.to_uci(), "e1c1");
+            }
+
+            #[test]
+            fn to_uci_promotion_move() {
+                let m = Move::from(D7, D8, MoveType::PROMOTION_QUEEN);
+                assert_eq!(m.to_uci(), "d7d8q");
+            }
+
+            #[test]
+            fn to_uci_capture_promotion_move() {
+                let m = Move::from(C7, D8, MoveType::PROMOTION_CAPTURE_QUEEN);
+                assert_eq!(m.to_uci(), "c7d8q");
+            }
         }
     }
 

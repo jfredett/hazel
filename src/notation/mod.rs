@@ -1,4 +1,3 @@
-
 // Square Notations
 pub mod square; // Represent a Square as an index with 0 at a1 and 63 at h8
 // pub mod bitsquare; // Represent a Square as a bitboard with 1 at a1 and 2^63 at h8
@@ -13,9 +12,5 @@ pub mod uci; // Canonical Move Notation, Universal Chess Interface uses 'Long Al
 // Board Notations
 pub mod fen;
 
-// Traits
-pub mod interface;
-
 // Re-exports
 pub use square::*;
-pub use interface::*;

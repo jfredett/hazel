@@ -1,4 +1,8 @@
-#![feature(stmt_expr_attributes,assert_matches,const_trait_impl,const_for)]
+#![feature(stmt_expr_attributes,assert_matches,const_trait_impl,const_for,associated_type_defaults)]
+// The Squares being consts means that sometimes when I use them as a reference, I trigger this
+// warning. I generally don't mind the temporary value being created, and in fact want it (see the
+// PositionMetadata to/from u32 impls for an example).
+#![allow(const_item_mutation)]
 #![cfg_attr(test, allow(unused_imports))]
 // NOTE: These lints are disabled for the following reasons:
 //
@@ -20,7 +24,6 @@ extern crate quickcheck_macros;
 #[macro_use]
 extern crate lazy_static;
 
-extern crate either;
 extern crate rand;
 
 #[cfg(test)]
@@ -29,14 +32,15 @@ pub use tracing_test;
 pub mod board;
 pub mod brain;
 pub mod constants;
+pub mod game;
 pub mod coup;
 pub mod engine;
-pub mod game;
 pub mod notation;
 #[macro_use]
 pub mod types;
 pub mod ui;
 pub mod util;
+
 
 /// passes if the left is a subset of the right
 #[macro_export]

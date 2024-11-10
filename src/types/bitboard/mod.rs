@@ -110,8 +110,8 @@ impl Bitboard {
     /// assert!(b.is_set(A1));
     /// ```
     #[inline]
-    pub fn set<S : SquareNotation>(&mut self, square: S) {
-        self.0 |= 1 << square.index();
+    pub fn set(&mut self, square: impl Into<Square>) {
+        self.0 |= 1 << square.into().index();
     }
 
     /// Return a vector containing all the indices which are set
@@ -145,8 +145,8 @@ impl Bitboard {
     /// b.unset(A1);
     /// assert!(!b.is_set(A1));
     /// ```
-    pub fn unset<S : SquareNotation>(&mut self, square: S) {
-        self.0 &= !(1 << square.index());
+    pub fn unset(&mut self, square: impl Into<Square>) {
+        self.0 &= !(1 << square.into().index());
     }
 
     /// Logically 'moves' a piece from the 'from' square to the 'to' square
@@ -166,8 +166,8 @@ impl Bitboard {
     /// b.flip(A1);
     /// assert!(!b.is_set(A1));
     /// ```
-    pub fn flip<S : SquareNotation>(&mut self, square: S) {
-        self.0 ^= 1 << square.index();
+    pub fn flip(&mut self, square: impl Into<Square>) {
+        self.0 ^= 1 << square.into().index();
     }
 
     /// True if the given bit is set
@@ -181,8 +181,8 @@ impl Bitboard {
     /// assert!(!b.is_set(A1));
     /// ```
     #[inline]
-    pub fn is_set<S : SquareNotation>(&self, square: S) -> bool {
-        self.0 & (1 << square.index()) != 0
+    pub fn is_set(&self, square: impl Into<Square>) -> bool {
+        self.0 & (1 << square.into().index()) != 0
     }
 
     /// Count the number of set squares

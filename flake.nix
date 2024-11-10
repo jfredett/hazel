@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
     fenix.url = "github:nix-community/fenix";
     devenv.url = "github:cachix/devenv";
     bugstalker.url = "github:godzie44/BugStalker";
@@ -32,18 +32,18 @@
 
 
               packages = with pkgs; [
-                gnuplot
-                bugstalker.packages."x86_64-linux".default
-                perf-tools
-                cloc
-                linuxKernel.packages.linux_6_6.perf
-                just
-                cargo-llvm-cov
-                cargo-nextest
-                cargo-mutants
-                stockfish
                 bacon
+                cargo-llvm-cov
+                cargo-mutants
+                cargo-nextest
+                cloc
+                gnuplot
+                imhex
+                just
+                linuxKernel.packages.linux_6_6.perf
                 mold
+                perf-tools
+                stockfish
               ];
             }];
           };

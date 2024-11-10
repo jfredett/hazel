@@ -180,8 +180,6 @@ impl Move {
 
 #[cfg(test)]
 mod tests {
-    use tracing_test::traced_test;
-
     use super::*;
     use crate::{assert_is_subset, bitboard::Bitboard, constants::*, movement::MoveType};
 

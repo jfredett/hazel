@@ -95,6 +95,7 @@ impl From<Square> for RankFile {
 impl Iterator for RankFile {
     type Item = Square;
 
+    #[cfg_attr(test, mutants::skip)]
     fn next(&mut self) -> Option<Square> {
         if self.done { return None; }
 
@@ -277,6 +278,8 @@ impl RankFile {
 mod tests {
     use super::*;
 
+
+
     mod iterator {
         use super::*;
 
@@ -308,6 +311,13 @@ mod tests {
 
         mod rankfile {
             use super::*;
+
+            #[quickcheck]
+            fn from_square(s: usize) -> bool {
+                let square = Square::new(s % 64);
+                let rankfile = RankFile::from(square);
+                rankfile == square
+            }
 
             mod touches_all_squares {
                 use super::*;

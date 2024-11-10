@@ -13,6 +13,22 @@ pub enum Color {
     BLACK = 1,
 }
 
+impl From<u8> for Color {
+    fn from(value: u8) -> Self {
+        match value {
+            0 => Color::WHITE,
+            1 => Color::BLACK,
+            _ => panic!("Invalid color index"),
+        }
+    }
+}
+
+impl From<Color> for u8 {
+    fn from(color: Color) -> Self {
+        color as u8
+    }
+}
+
 impl Display for Color {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -70,7 +86,19 @@ impl Not for Color {
 
 #[cfg(test)]
 mod tests {
+    use quickcheck::{Arbitrary, Gen};
+
     use super::*;
+
+    impl Arbitrary for Color {
+        fn arbitrary(g: &mut Gen) -> Self {
+            if bool::arbitrary(g) {
+                Color::WHITE
+            } else {
+                Color::BLACK
+            }
+        }
+    }
 
     #[test]
     fn is_white() {

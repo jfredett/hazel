@@ -971,3 +971,126 @@ Somewhere in there I also want to make more progress on the UI.
 My plan is to have two worktrees, `UI` and whatever thing I''m working on at the time. As I implement stuff, I can keep
 chipping at the UI as I go.
 
+# 31-OCT-2024
+
+## 2007 - gamerep
+
+Spooky season is 'pon us, and I have deleted a bunch of code. I've been working on the `Game` representation, and I
+think I have the design down (almost)
+
+The main problem, it seems, is metadata. In order to know, for instance, who is allowed to castle, I need to know if any
+one of a number of events has occured over the course of the game up to this point. This can be calculated each time I
+need it, and it is admittedly not the most expensive thing in the world, but it gets tricky when I need to know the
+metadata state in a particular variation of a particular position and it can very rapidly get hairy.
+
+The `Alter` system works really nicely for this, I have an `Alteration` struct that has much simpler primitive
+operations to the board, so I though, "Can I extend this language?" and the answer is "Actually I should just build
+another language."
+
+So now I have `ChessRule`, which includes the higher level actions that 'compile' to this lower level 'alteration',
+I've also added a couple alterations variants. `Clear` simply instructs the implementor to reset the state of the board
+to nothing, and `Tag` allows a 4 byte 'tag' in the output that is otherwise ignored. These allow me to easily generate a
+single stream of Alterations that can:
+
+1. Describe the change to the boardstate over time
+2. Represent arbitrary trees of games
+3. Be easily 'compressed' to a 'compact' form (distinct from, but equivalent too, FEN) for any single boardstate
+
+Since `Alteration`s are reversible (mod Clear, more in a sec), I can easily scroll forward and backward within the space
+of a single 'clear' call, and if I need to rewind to before that, I just rewind back to the previous clear and rerun.
+
+This leaves the existing `Alteration` stuff more or less unchanged, and allows me to use this new higher level language
+to describe a chess game as a stream of `ChessRule`s, which can track higher level details. The Game Representation is
+just a vector of `ChessRule` that gets `Move`s `#make`d on it, and when the move is made, the representation can also
+add any number of metadata variants too, these then get 'compiled' in the current context and added to the vector of
+`Alteration`s that then represent the game. The metadata gets added as `Tag` variants in the GameRep.
+
+All this still requires a bunch of work and testing, in particular getting the `Tag` parts right is proving a little
+tricky. I initially thought of sticking a [u8] slice in the tag, and I still, tbh, want to do that, but it ends up
+touching a bunch of the system with lifetime annotations and that seems really lousy.
+
+Current plan is just to power through till I get something that can represent a PGN and get that wired up to the UI,
+maybe with some kind of insight from PGN -> ChessRule -> Alteration
+
+A practical effect of this is also that many things currently implementing `Engine` really shouldn't, since they can't
+track metadata, which makes a _ton_ of sense in retrospect. I kept trying to figure out how to reconcile why it felt so
+weird that any board rep was a kind of 'engine', but in this model, they're not, they're just `Query + Alter`,
+make and unmake are really part of another trait, `Play`, which is different than something which can be merely
+'altered'; it implies an understanding and ability to track metadata for the given game. In my case, there is only one,
+but I have a `Play` trait which specifies a particular included type, `Rule`, which takes the equivalent of the
+`Alteration` struct (in this case, ChessRule) and has an `apply` and `unwind` method (and _mut variants) to apply and
+... unwind the given 'Rule'[1] and track the metadata internal to the structure, the trait doesn't care about the
+content or how that metadata is stored, just that it is.
+
+Movegen can then take a state as compiled to `Alterations`, then start creating whatever moves it likes as `ChessRule`
+variants piled on top, the `ChessRule` includes the idea of a `Variation` which is a delimited sequence of moves
+branching off from the previous. These can be nested to create arbitrary structures. Seeking to a particular variation
+involves simply unwinding from the variation backward until you find a `Clear`, and then reading back the result.
+
+Now we get back to engines, Engines take UCI commands, `Play`able objects take `ChessRules` (or whatever other variant),
+our system says every UCI command should translate to some set of `ChessRules` that can then be compiled to
+`Alteration`s and applied to some `Alter + Query` object to represent the game. This allows a single representation
+which can easily be tracked through, the resulting state can be 'compressed' to a `Clear`, a series of`Place`
+operations, and then a set of `Tag`s to define the metadata, and this representation is easy to turn into any other
+board representation you like. So if you want to use SIMDified bitboards, you just need to tell it how to process the
+`Alteration` stream, and once it is in your domain, how you use that representation is your business. Once you want to
+send results back, compile them to `Alteration` or `ChessRule`s (or even a mixed stream of them) and send them back.
+
+I think this'll work well for my purpose, but I do expect I'm adding some amount of overhead compared to a direct
+implementation. Fortunately, I should be able to test that later if I like by directly interpreting the `ChessRule`
+without the `Alteration` layer, and that will give me some sense of how much overhead I'm adding by the extra jump.
+
+[1] Here I'm doing a classic math thing of taking a word with a well known and well-understood meaning and using it in a
+way which _almost_ fits that meaning but stretches it just a little past comfort. In normal terms, a 'rule' is an
+assertion toward obedience. You have a rule that says "Thou shalt X", and you better be X-ing or else you're breaking
+the rule.
+
+However, rules can also be 'applied', as in, "Use L'Hopital's Rule to solve this limit". In this case, the rule is an
+algorithm or technique or manipulation.
+
+Rules can also be 'observed', as in "The rule of law", where the rule is a principle or standard that is generally
+understood to be 'the way things work' and is used to guide behavior, though not strictly enforce obedience to some
+particular interpretation.
+
+In `Hazel`, a rule is simple 'An operation that can be applied to a gamestate'. It's a little bit of all three, but
+really it's closest analog is an 'Arrow' between objects. In the "Category"[2] of all Chess games, where arrows are
+game-legality-preserving moves between boardstates, a rule is associated with every one of those arrows.
+
+[2] I don't actually know if this is a proper category, so maybe it's just a Graph with some extra steps, but I like to
+think of it this way.
+
+# 10-NOV-2024
+
+## 1219 - gamerep
+
+I've got `Variation` (formerly  Game, Line, HalfPly and Ply... it's been through a few iterations) basically working.
+It can at least represent a simple variation, and while the API is going to need some finishwork, I think the design
+works and I should be able to flatten a PGN into it.
+
+I'm debating now between merging and tackling that in a separate PR, or just pushing through and getting it done. I
+think I might try to push through and see how painful it is. If it comes together quickly then I'll go for it, but
+otherwise I'll plan to merge and then tackle it in a separate PR.
+
+I have an existing 'no-variations' PGN example I can use, and I think I should probably have the test exist in the
+`tests/` subdir as it's more of an integration test than a unit test. I plan to use the `Shakmaty` PGN parser for now,
+but would like to build my own eventually.
+
+## 1628 - gamerep
+
+I think I'm going to merge.
+
+I also think I'm going to write my own parser (probably with `nom`, maybe fully by hand).
+
+Here's why.
+
+1. The next step really is a big change in design, I'm going to be doing parser stuff, it's not going to be particularly
+   chess-y, and it *should* be pretty _simple_ believe it or not.
+2. The model I have and the model the pgn-reader/shakmaty use are very different. I *should* be able to directly read a
+   variation in a single pass, no visitors or whatever, just a single read to translate each move to the correct format.
+   The OTS dependencies expect a visitor-pattern approach because they (rightly) believe most people won't be doing weird
+   bytecode shit.
+3. Doing it myself means I can drop a couple dependencies, which is very cool.
+
+I'll probably use `nom`, but I may even try a simple RD parser myself, since the format is pretty simple. I will
+probably build a `PGN` object that holds all the metadata and the actual variation, which can then be produced by/handed
+off to the actual Engine.
