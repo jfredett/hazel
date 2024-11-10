@@ -5,7 +5,7 @@
 // some basic parsing of the UCI Messages to Hazel types, but otherwise be pretty 'dumb'
 use tracing::*;
 
-use crate::engine::uci::UCIMessage;
+use crate::{engine::uci::UCIMessage, game::variation::Variation, notation::{fen::FEN, uci::UCI}};
 
 pub use crate::engine::Engine;
 
@@ -14,14 +14,14 @@ pub use crate::engine::Engine;
 #[derive(Default)]
 pub struct Driver {
     debug: bool,
-    game: Option<()>
+    game: Variation
 }
 
 impl Driver {
     pub fn new() -> Driver {
         Driver {
             debug: false,
-            game: None
+            game: Variation::new()
         }
     }
 }
@@ -38,7 +38,9 @@ impl Engine<UCIMessage> for Driver {
     fn exec(&mut self, message: &UCIMessage) -> Vec<UCIMessage> {
         info!("Executing UCI instruction: {:?}", &message);
 
-        match message {
+        self.game.commit();
+
+        let ret = match message {
             // GUI -> Engine
             UCIMessage::IsReady => {
                 vec![UCIMessage::ReadyOk]
@@ -57,10 +59,17 @@ impl Engine<UCIMessage> for Driver {
                 vec![]
             }
             UCIMessage::UCINewGame => {
-                self.game = None;
+                self.game.new_game();
                 vec![]
             }
-            UCIMessage::Position(_fen, _moves) => {
+            UCIMessage::Position(fen, moves) => {
+
+                self.game.setup(FEN::new(fen));
+
+                for m_str in moves {
+                    let m = UCI::try_from(m_str).expect("Invalid UCI Move");
+                    self.game.make(m.into());
+                }
                 vec![]
             }
             UCIMessage::Go(_) => {
@@ -94,7 +103,11 @@ impl Engine<UCIMessage> for Driver {
                 error!("Unexpected message: {:?}", message);
                 panic!("Unexpected message");
             }
-        }
+        };
+
+        self.game.commit();
+
+        ret
     }
 }
 
@@ -103,8 +116,10 @@ impl Engine<UCIMessage> for Driver {
 mod tests {
     use super::*;
     use tracing_test::traced_test;
+    use crate::coup::rep::{Move, MoveType};
+    use crate::notation::*;
 
-    use crate::constants::{START_POSITION_FEN, POS2_KIWIPETE_FEN};
+    use crate::{constants::{POS2_KIWIPETE_FEN, START_POSITION_FEN}, game::action::chess::ChessAction};
 
     #[test]
     fn driver_parses_isready() {
@@ -130,34 +145,43 @@ mod tests {
         assert!(driver.debug)
     }
 
-    #[ignore]// WIP as I refactor board rep
     #[test]
     fn driver_sets_up_start_position() {
         let mut driver = Driver::new();
         let response = driver.exec_message("position startpos moves");
         assert_eq!(response, vec![]);
-        assert!(driver.game.is_some());
-        // assert!(driver.game.unwrap().to_fen() == START_POSITION_FEN);
+        assert_eq!(driver.game.log(), vec![
+            ChessAction::Setup(FEN::start_position())
+        ]);
+        assert_eq!(driver.game.current_position(), FEN::new(START_POSITION_FEN));
     }
 
-    #[ignore]// WIP as I refactor board rep
     #[test]
+    #[tracing_test::traced_test]
     fn driver_sets_up_arbitrary_position() {
         let mut driver = Driver::new();
 
         let response = driver.exec_message(&format!("position fen {} moves", POS2_KIWIPETE_FEN));
         assert_eq!(response, vec![]);
-        assert!(driver.game.is_some());
-        // assert!(driver.game.unwrap().to_fen() == POS2_KIWIPETE_FEN);
+        assert_eq!(driver.game.log(), vec![
+            ChessAction::Setup(FEN::new(POS2_KIWIPETE_FEN))
+        ]);
+        debug!("Current position: {:?}", driver.game);
+        assert_eq!(driver.game.current_position(), FEN::new(POS2_KIWIPETE_FEN));
     }
 
-    #[ignore] // WIP as I refactor board rep
     #[test]
     fn driver_plays_moves_specified_by_position() {
         let mut driver = Driver::new();
         let response = driver.exec_message(&format!("position fen {} moves e2e4 e7e5", START_POSITION_FEN));
         assert_eq!(response, vec![]);
-        assert!(driver.game.is_some());
-        // assert_eq!(driver.game.unwrap().to_fen(), "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2");
+        assert_eq!(driver.game.log(), vec![
+            ChessAction::Setup(FEN::new(START_POSITION_FEN)),
+            ChessAction::Make(Move::new(E2, E4, MoveType::UCI_AMBIGUOUS)),
+            ChessAction::Make(Move::new(E7, E5, MoveType::UCI_AMBIGUOUS))
+        ]);
+        assert_eq!(driver.game.current_position(), FEN::new("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2"));
     }
 }
+
+

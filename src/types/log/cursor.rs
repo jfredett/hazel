@@ -3,34 +3,37 @@ use super::Log;
 
 pub struct Cursor<'a, T> where T: Clone {
     log: &'a Log<T>,
-    position: usize
+    position: Option<usize>
 }
 
 impl<'a, T> Cursor<'a, T>  where T: Clone {
     pub fn new(log: &'a Log<T>) -> Self {
         Self {
             log,
-            position: 0
+            position: None
         }
     }
 
     pub fn seek(&mut self, position: usize) -> Option<&T> {
-        self.position = position;
+        self.position = Some(position);
         self.read()
     }
 
-    // FIXME: Should this be conditional?
     pub fn jump(&mut self, offset: isize) -> Option<&T> {
-        let new_position = self.position as isize + offset;
+        // FIXME: I think this should probably not be None, but I don't know what the convenient
+        // API should be, so for now this is what it is.
+        if self.position.is_none() { return None }
+
+        let new_position = self.position.unwrap() as isize + offset;
 
         if new_position < 0 {
-            self.position = 0;
+            self.position = Some(0);
             None
         } else {
             if new_position as usize >= self.log.log.len() {
-                self.position = self.log.len();
+                self.position = Some(self.log.len());
             } else {
-                self.position = new_position as usize;
+                self.position = Some(new_position as usize);
             }
             self.read()
         }
@@ -44,25 +47,45 @@ impl<'a, T> Cursor<'a, T>  where T: Clone {
     /// It looks bad because it is bad. Don't be like me, be brave.
     #[allow(clippy::should_implement_trait)]
     pub fn next(&mut self) -> Option<&T> {
-        if self.position == self.log.len() {
-            None
-        } else {
-            self.position += 1;
-            self.read()
+        match self.position {
+            None => {
+                self.position = Some(0);
+                self.read()
+            }
+            Some(position) => {
+                if position == self.log.len() {
+                    None
+                } else {
+                    self.position = Some(position + 1);
+                    self.read()
+                }
+            }
         }
     }
 
     pub fn prev(&mut self) -> Option<&T> {
-        if self.position == 0 {
-            None
-        } else {
-            self.position -= 1;
-            self.read()
+        match self.position {
+            None => {
+                self.position = Some(self.log.len() - 1);
+                self.read()
+            }
+            Some(position) => {
+                if position == 0 {
+                    None
+                } else {
+                    self.position = Some(position - 1);
+                    self.read()
+                }
+            }
         }
     }
 
     pub fn read(&mut self) -> Option<&T> {
-        self.log.get(self.position)
+        match self.position {
+            None => None,
+            Some(position) => self.log.get(position)
+        }
+    }
     }
 }
 
@@ -104,7 +127,7 @@ mod tests {
             log.record(1).record(2).commit();
 
             log.cursor(|cursor| {
-                assert_eq!(*cursor.read().unwrap(), 1);
+                assert_eq!(*cursor.next().unwrap(), 1);
                 assert_eq!(*cursor.next().unwrap(), 2);
                 assert_eq!(cursor.next(), None);
                 assert_eq!(*cursor.prev().unwrap(), 2);
@@ -115,7 +138,7 @@ mod tests {
             log.record(3).record(4).commit();
 
             log.cursor(|cursor| {
-                assert_eq!(*cursor.read().unwrap(), 1);
+                assert_eq!(*cursor.next().unwrap(), 1);
                 assert_eq!(*cursor.next().unwrap(), 2);
                 assert_eq!(*cursor.next().unwrap(), 3);
                 assert_eq!(*cursor.next().unwrap(), 4);

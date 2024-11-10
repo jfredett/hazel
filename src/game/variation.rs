@@ -1,4 +1,3 @@
-use tracing::debug;
 
 use crate::{board::Alter, types::log::Log};
 
@@ -105,7 +104,6 @@ impl Variation {
                         for alter in mov.compile(&board) {
                             board.alter_mut(alter);
                         }
-                        debug!("After move metadata:\n{:?}", metadata);
                     },
                 }
             }
@@ -113,7 +111,6 @@ impl Variation {
             // Now board and metadata are caught up, so we just ask board to write it's fen
             let mut ret = FEN::from(board);
             ret.set_metadata(metadata);
-            debug!("Final FEN: {:?}", ret);
             ret
         })
     }
