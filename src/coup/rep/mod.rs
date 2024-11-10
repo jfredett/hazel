@@ -573,11 +573,12 @@ mod test {
 
         #[test]
         fn new_move() {
-            let m = Move::new(D2, D4, MoveType::QUIET);
+            let m = Move::new(D2, D4, MoveType::DOUBLE_PAWN);
             assert_eq!(m.source(), D2);
             assert_eq!(m.target(), D4);
             assert!(!m.is_promotion());
-            assert!(m.move_metadata().is_quiet());
+            assert!(!m.is_null());
+            assert!(m.is_double_pawn_push_for(Color::WHITE));
         }
 
         #[test]
@@ -659,7 +660,6 @@ mod test {
                 assert!(m.is_long_castle());
             }
         }
-
     }
 
     mod disambiguate {
@@ -716,10 +716,131 @@ mod test {
 
             assert_eq!(m.disambiguate(&context).unwrap(), MoveType::LONG_CASTLE);
         }
-
-
     }
 
+    mod to_star {
+        use crate::board::{Alter, PieceBoard};
+
+        use super::*;
+
+        mod pgn {
+            use super::*;
+
+            #[test]
+            fn to_pgn_quiet_move() {
+                let m = Move::from(D2, D3, MoveType::QUIET);
+                let mut context = PieceBoard::default();
+                context.set_startpos();
+
+                assert_eq!(m.to_pgn(&context), "d3");
+            }
+
+            #[test]
+            fn to_pgn_capture_move() {
+                let m = Move::from(D4, E5, MoveType::CAPTURE);
+                let mut context = PieceBoard::default();
+                context.alter_mut(Alteration::place(D4, Occupant::white_pawn()));
+                context.alter_mut(Alteration::place(E5, Occupant::black_pawn()));
+
+                assert_eq!(m.to_pgn(&context), "dxe5");
+            }
+
+            #[test]
+            fn to_pgn_double_pawn_move() {
+                let m = Move::from(D2, D4, MoveType::DOUBLE_PAWN);
+                let mut context = PieceBoard::default();
+                context.set_startpos();
+
+                assert_eq!(m.to_pgn(&context), "d4");
+            }
+
+            #[test]
+            fn to_pgn_short_castle() {
+                let m = Move::short_castle(Color::WHITE);
+                let mut context = PieceBoard::default();
+                // NOTE: Context does not mean it checks to see if the move is legal, in this position
+                // white cannot castle, eppur si muove.
+                context.set_startpos();
+
+                assert_eq!(m.to_pgn(&context), "O-O");
+            }
+
+            #[test]
+            fn to_pgn_long_castle() {
+                let m = Move::long_castle(Color::WHITE);
+                let mut context = PieceBoard::default();
+                // NOTE: same caveat as short castling.
+                context.set_startpos();
+
+                assert_eq!(m.to_pgn(&context), "O-O-O");
+            }
+
+            #[test]
+            fn to_pgn_promotion_move() {
+                let m = Move::from(D7, D8, MoveType::PROMOTION_QUEEN);
+                let mut context = PieceBoard::default();
+                context.alter_mut(Alteration::place(D7, Occupant::white_pawn()));
+
+                assert_eq!(m.to_pgn(&context), "d8=Q");
+            }
+
+            #[test]
+            fn to_pgn_capture_promotion_move() {
+                let m = Move::from(C7, D8, MoveType::PROMOTION_CAPTURE_QUEEN);
+                let mut context = PieceBoard::default();
+                context.alter_mut(Alteration::place(C7, Occupant::white_pawn()));
+                context.alter_mut(Alteration::place(D8, Occupant::black_pawn()));
+
+                assert_eq!(m.to_pgn(&context), "cxd8=Q");
+            }
+        }
+
+        mod uci {
+            use super::*;
+
+            #[test]
+            fn to_uci_quiet_move() {
+                let m = Move::from(D2, D3, MoveType::QUIET);
+                assert_eq!(m.to_uci(), "d2d3");
+            }
+
+            #[test]
+            fn to_uci_capture_move() {
+                let m = Move::from(D4, E5, MoveType::CAPTURE);
+                assert_eq!(m.to_uci(), "d4e5");
+            }
+
+            #[test]
+            fn to_uci_double_pawn_move() {
+                let m = Move::from(D2, D4, MoveType::DOUBLE_PAWN);
+                assert_eq!(m.to_uci(), "d2d4");
+            }
+
+            #[test]
+            fn to_uci_short_castle() {
+                let m = Move::short_castle(Color::WHITE);
+                assert_eq!(m.to_uci(), "e1g1");
+            }
+
+            #[test]
+            fn to_uci_long_castle() {
+                let m = Move::long_castle(Color::WHITE);
+                assert_eq!(m.to_uci(), "e1c1");
+            }
+
+            #[test]
+            fn to_uci_promotion_move() {
+                let m = Move::from(D7, D8, MoveType::PROMOTION_QUEEN);
+                assert_eq!(m.to_uci(), "d7d8q");
+            }
+
+            #[test]
+            fn to_uci_capture_promotion_move() {
+                let m = Move::from(C7, D8, MoveType::PROMOTION_CAPTURE_QUEEN);
+                assert_eq!(m.to_uci(), "c7d8q");
+            }
+        }
+    }
 
     mod proxy_methods {
         use super::*;
