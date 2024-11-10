@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use transaction::Transaction;
 use write_head::WriteHead;
 use cursor::Cursor;
@@ -15,6 +16,12 @@ pub struct Log<T> where T: Clone {
     stack: Vec<Transaction<T>>,
 
     write_head: usize
+}
+
+impl<T> Debug for Log<T> where T: Debug + Clone {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Log: {:?}", self.log)
+    }
 }
 
 impl<T> Default for Log<T> where T: Clone {
