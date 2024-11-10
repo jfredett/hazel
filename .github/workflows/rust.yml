@@ -19,7 +19,7 @@ jobs:
       run: cargo build
 
     - name: Install just
-      uses: extractions/setup-just@v2
+      uses: extractions/setup-just@dd310ad5a97d8e7b41793f8ef055398d51ad4de6
 
     - name: Install Nextest
       uses: baptiste0928/cargo-install@v3

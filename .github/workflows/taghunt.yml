@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install just
-        uses: extractions/setup-just@v2
+        uses: extractions/setup-just@dd310ad5a97d8e7b41793f8ef055398d51ad4de6
 
       - name: Install ripgrep
         run: sudo apt install -y ripgrep
@@ -25,7 +25,7 @@ jobs:
 
 
       - name: Add PR Comment
-        uses: mshick/add-pr-comment@v2.8.2
+        uses: mshick/add-pr-comment@b8f338c590a895d50bcbfa6c5859251edc8952fc
         with:
           message: |
             ${{ steps.taghunt.outputs.stdout }}
