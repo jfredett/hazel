@@ -71,6 +71,7 @@ mod tests {
         assert_eq!(format!("{:?}", alteration), "Remove k @ a1");
     }
 
+    #[test]
     fn clear() {
         let alteration = Alteration::clear();
         assert_eq!(alteration, Alteration::Clear);
