@@ -266,6 +266,5 @@ mod tests {
 
 
         assert_eq!(line, FEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 2"));
-
     }
 }
