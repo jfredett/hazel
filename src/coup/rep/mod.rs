@@ -68,7 +68,7 @@ impl Move {
                              |   metadata as u16 )
     }
 
-    pub fn from(source: impl Into<Square>, target: impl Into<Square>, metadata: MoveType) -> Move {
+    fn from(source: impl Into<Square>, target: impl Into<Square>, metadata: MoveType) -> Move {
         trace!("Deprecated use of Move::from, use Move::new instead");
         Move::new(
             source,

@@ -11,7 +11,7 @@ pub use iterator::*;
 
 
 /// Represents a single square by it's index rooted at a1 = 0, h8 = 63
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
 pub struct Square(usize);
 
 impl Square {

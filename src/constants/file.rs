@@ -26,6 +26,21 @@ impl From<File> for u8 {
     }
 }
 
+impl From<char> for File {
+    fn from(value: char) -> Self {
+        match value {
+            'a' => File::A,
+            'b' => File::B,
+            'c' => File::C,
+            'd' => File::D,
+            'e' => File::E,
+            'f' => File::F,
+            'g' => File::G,
+            'h' => File::H,
+            _ => panic!("Invalid file character"),
+        }
+    }
+}
 
 
 impl File {
