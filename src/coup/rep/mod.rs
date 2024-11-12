@@ -53,7 +53,7 @@ impl Move {
     /// # use hazel::coup::rep::*;
     /// # use hazel::notation::*;
     /// // the move from d2 -> d4
-    /// let m = Move::from(D2, D4, MoveType::QUIET);
+    /// let m = Move::new(D2, D4, MoveType::QUIET);
     /// assert_eq!(m.source(), D2);
     /// assert_eq!(m.target(), D4);
     /// assert!(!m.is_promotion());
@@ -68,19 +68,10 @@ impl Move {
                              |   metadata as u16 )
     }
 
-    fn from(source: impl Into<Square>, target: impl Into<Square>, metadata: MoveType) -> Move {
-        trace!("Deprecated use of Move::from, use Move::new instead");
-        Move::new(
-            source,
-            target,
-            metadata
-        )
-    }
-
     pub fn null() -> Move {
         // We only care about the metadata bits for a null move. So the source/target are just
         // whatever is convenient.
-        Move::from(A1, A1, MoveType::NULLMOVE)
+        Move::new(A1, A1, MoveType::NULLMOVE)
     }
 
     /// Creates a move from the given source and target squares (given in notation), and
@@ -108,7 +99,7 @@ impl Move {
     /// assert_eq!(pm.promotion_piece(), Piece::Queen);
     /// ```
     pub fn from_notation(source: &str, target: &str, metadata: MoveType) -> Move {
-        Move::from(
+        Move::new(
             Square::try_from(source).unwrap(),
             Square::try_from(target).unwrap(),
             metadata,
@@ -252,12 +243,12 @@ impl Move {
 
     pub fn long_castle(color: Color) -> Move {
         match color {
-            Color::WHITE => Move::from(
+            Color::WHITE => Move::new(
                 E1,
                 C1,
                 MoveType::LONG_CASTLE,
             ),
-            Color::BLACK => Move::from(
+            Color::BLACK => Move::new(
                 E8,
                 C8,
                 MoveType::LONG_CASTLE,
@@ -267,12 +258,12 @@ impl Move {
 
     pub fn short_castle(color: Color) -> Move {
         match color {
-            Color::WHITE => Move::from(
+            Color::WHITE => Move::new(
                 E1,
                 G1,
                 MoveType::SHORT_CASTLE,
             ),
-            Color::BLACK => Move::from(
+            Color::BLACK => Move::new(
                 E8,
                 G8,
                 MoveType::SHORT_CASTLE,
@@ -285,7 +276,7 @@ impl Move {
     /// # use hazel::notation::*;
     /// // the move from d2 -> d4
     ///
-    /// let m = Move::from(D2, D4, MoveType::DOUBLE_PAWN);
+    /// let m = Move::new(D2, D4, MoveType::DOUBLE_PAWN);
     /// assert_eq!(m.source(), D2);
     /// ```
     pub fn source_idx(&self) -> usize {
@@ -297,7 +288,7 @@ impl Move {
     /// # use hazel::notation::*;
     /// // the move from d2 -> d4
     ///
-    /// let m = Move::from(D2, D4, MoveType::DOUBLE_PAWN);
+    /// let m = Move::new(D2, D4, MoveType::DOUBLE_PAWN);
     /// assert_eq!(m.source(), D2);
     pub fn source(&self) -> Square {
         self.source_idx().try_into().unwrap()
@@ -310,7 +301,7 @@ impl Move {
     ///
     /// // the move from d2 -> d4
     ///
-    /// let m = Move::from(D2, D4, MoveType::DOUBLE_PAWN);
+    /// let m = Move::new(D2, D4, MoveType::DOUBLE_PAWN);
     ///
     /// assert_eq!(m.target_idx(), usize::from(D4));
     /// ```
@@ -325,7 +316,7 @@ impl Move {
     ///
     /// // the move from d2 -> d4
     ///
-    /// let m = Move::from(D2, D4, MoveType::DOUBLE_PAWN);
+    /// let m = Move::new(D2, D4, MoveType::DOUBLE_PAWN);
     ///
     /// assert_eq!(m.target(), D4);
     /// ```
@@ -339,8 +330,8 @@ impl Move {
     /// # use hazel::notation::*;
     ///
     /// // the move from d2 -> d4
-    /// let m1 = Move::from(D2, D4, MoveType::DOUBLE_PAWN);
-    /// let m2 = Move::from(D7, D8, MoveType::PROMOTION_QUEEN);
+    /// let m1 = Move::new(D2, D4, MoveType::DOUBLE_PAWN);
+    /// let m2 = Move::new(D7, D8, MoveType::PROMOTION_QUEEN);
     /// assert!(!m1.is_promotion());
     /// assert!(m2.is_promotion());
     /// ```
@@ -358,8 +349,8 @@ impl Move {
     /// # use hazel::notation::*;
     /// # use hazel::types::Piece;
     /// // the move from d2 -> d4
-    /// let m1 = Move::from(D2, D4, MoveType::DOUBLE_PAWN);
-    /// let m2 = Move::from(D7, D8, MoveType::PROMOTION_QUEEN);
+    /// let m1 = Move::new(D2, D4, MoveType::DOUBLE_PAWN);
+    /// let m2 = Move::new(D7, D8, MoveType::PROMOTION_QUEEN);
     /// // assert!(m1.promotion_piece()); DON'T DO THIS! It's not a promotion so this is misinterpreting the union type.
     /// assert_eq!(m2.promotion_piece(), Piece::Queen);
     /// ```
@@ -373,7 +364,7 @@ impl Move {
     /// # use hazel::coup::rep::*;
     /// # use hazel::notation::*;
     /// // the move from d2 -> d4
-    /// let m1 = Move::from(D2, D4, MoveType::QUIET);
+    /// let m1 = Move::new(D2, D4, MoveType::QUIET);
     /// assert!(m1.move_metadata().is_quiet());
     /// ```
     pub fn move_metadata(&self) -> MoveType {
@@ -669,7 +660,7 @@ mod test {
 
         #[test]
         fn quiet_move_disambiguates_correctly() {
-            let m = Move::from(D2, D3, MoveType::UCI_AMBIGUOUS);
+            let m = Move::new(D2, D3, MoveType::UCI_AMBIGUOUS);
             let mut context = PieceBoard::default();
             context.set_startpos();
 
@@ -678,7 +669,7 @@ mod test {
 
         #[test]
         fn capture_move_disambiguates_correctly() {
-            let m = Move::from(C3, D4, MoveType::UCI_AMBIGUOUS);
+            let m = Move::new(C3, D4, MoveType::UCI_AMBIGUOUS);
             let mut context = PieceBoard::default();
             context.alter_mut(Alteration::place(C3, Occupant::pawn(Color::WHITE)));
             context.alter_mut(Alteration::place(D4, Occupant::pawn(Color::BLACK)));
@@ -688,7 +679,7 @@ mod test {
 
         #[test]
         fn double_pawn_move_disambiguates_correctly() {
-            let m = Move::from(D2, D4, MoveType::UCI_AMBIGUOUS);
+            let m = Move::new(D2, D4, MoveType::UCI_AMBIGUOUS);
             let mut context = PieceBoard::default();
             context.set_startpos();
 
@@ -697,7 +688,7 @@ mod test {
 
         #[test]
         fn short_castle_disambiguates_correctly() {
-            let m = Move::from(E1, G1, MoveType::UCI_AMBIGUOUS);
+            let m = Move::new(E1, G1, MoveType::UCI_AMBIGUOUS);
             let mut context = PieceBoard::default();
             context.set_startpos();
             context.alter_mut(Alteration::remove(F1, Occupant::bishop(Color::WHITE)));
@@ -708,7 +699,7 @@ mod test {
 
         #[test]
         fn long_castle_disambiguates_correctly() {
-            let m = Move::from(E1, C1, MoveType::UCI_AMBIGUOUS);
+            let m = Move::new(E1, C1, MoveType::UCI_AMBIGUOUS);
             let mut context = PieceBoard::default();
             context.set_startpos();
             context.alter_mut(Alteration::remove(B1, Occupant::knight(Color::WHITE)));
@@ -728,7 +719,7 @@ mod test {
 
             #[test]
             fn to_pgn_quiet_move() {
-                let m = Move::from(D2, D3, MoveType::QUIET);
+                let m = Move::new(D2, D3, MoveType::QUIET);
                 let mut context = PieceBoard::default();
                 context.set_startpos();
 
@@ -737,7 +728,7 @@ mod test {
 
             #[test]
             fn to_pgn_capture_move() {
-                let m = Move::from(D4, E5, MoveType::CAPTURE);
+                let m = Move::new(D4, E5, MoveType::CAPTURE);
                 let mut context = PieceBoard::default();
                 context.alter_mut(Alteration::place(D4, Occupant::white_pawn()));
                 context.alter_mut(Alteration::place(E5, Occupant::black_pawn()));
@@ -747,7 +738,7 @@ mod test {
 
             #[test]
             fn to_pgn_double_pawn_move() {
-                let m = Move::from(D2, D4, MoveType::DOUBLE_PAWN);
+                let m = Move::new(D2, D4, MoveType::DOUBLE_PAWN);
                 let mut context = PieceBoard::default();
                 context.set_startpos();
 
@@ -777,7 +768,7 @@ mod test {
 
             #[test]
             fn to_pgn_promotion_move() {
-                let m = Move::from(D7, D8, MoveType::PROMOTION_QUEEN);
+                let m = Move::new(D7, D8, MoveType::PROMOTION_QUEEN);
                 let mut context = PieceBoard::default();
                 context.alter_mut(Alteration::place(D7, Occupant::white_pawn()));
 
@@ -786,7 +777,7 @@ mod test {
 
             #[test]
             fn to_pgn_capture_promotion_move() {
-                let m = Move::from(C7, D8, MoveType::PROMOTION_CAPTURE_QUEEN);
+                let m = Move::new(C7, D8, MoveType::PROMOTION_CAPTURE_QUEEN);
                 let mut context = PieceBoard::default();
                 context.alter_mut(Alteration::place(C7, Occupant::white_pawn()));
                 context.alter_mut(Alteration::place(D8, Occupant::black_pawn()));
@@ -800,19 +791,19 @@ mod test {
 
             #[test]
             fn to_uci_quiet_move() {
-                let m = Move::from(D2, D3, MoveType::QUIET);
+                let m = Move::new(D2, D3, MoveType::QUIET);
                 assert_eq!(m.to_uci(), "d2d3");
             }
 
             #[test]
             fn to_uci_capture_move() {
-                let m = Move::from(D4, E5, MoveType::CAPTURE);
+                let m = Move::new(D4, E5, MoveType::CAPTURE);
                 assert_eq!(m.to_uci(), "d4e5");
             }
 
             #[test]
             fn to_uci_double_pawn_move() {
-                let m = Move::from(D2, D4, MoveType::DOUBLE_PAWN);
+                let m = Move::new(D2, D4, MoveType::DOUBLE_PAWN);
                 assert_eq!(m.to_uci(), "d2d4");
             }
 
@@ -830,13 +821,13 @@ mod test {
 
             #[test]
             fn to_uci_promotion_move() {
-                let m = Move::from(D7, D8, MoveType::PROMOTION_QUEEN);
+                let m = Move::new(D7, D8, MoveType::PROMOTION_QUEEN);
                 assert_eq!(m.to_uci(), "d7d8q");
             }
 
             #[test]
             fn to_uci_capture_promotion_move() {
-                let m = Move::from(C7, D8, MoveType::PROMOTION_CAPTURE_QUEEN);
+                let m = Move::new(C7, D8, MoveType::PROMOTION_CAPTURE_QUEEN);
                 assert_eq!(m.to_uci(), "c7d8q");
             }
         }
@@ -847,7 +838,7 @@ mod test {
 
         #[test]
         fn is_capture() {
-            let m = Move::from(D2, D4, MoveType::CAPTURE);
+            let m = Move::new(D2, D4, MoveType::CAPTURE);
             assert!(m.is_capture());
         }
 
@@ -865,13 +856,13 @@ mod test {
 
         #[test]
         fn is_en_passant() {
-            let m = Move::from(D6, E7, MoveType::EP_CAPTURE);
+            let m = Move::new(D6, E7, MoveType::EP_CAPTURE);
             assert!(m.is_en_passant());
         }
 
         #[test]
         fn is_double_pawn_push_for() {
-            let m = Move::from(D2, D4, MoveType::DOUBLE_PAWN);
+            let m = Move::new(D2, D4, MoveType::DOUBLE_PAWN);
             assert!(m.is_double_pawn_push_for(Color::WHITE));
         }
 
