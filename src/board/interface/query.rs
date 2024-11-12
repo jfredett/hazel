@@ -9,6 +9,14 @@ use crate::{
 /// h8.
 pub trait Query {
     fn get(&self, square: impl Into<Square>) -> Occupant;
+
+    fn is_empty(&self, square: impl Into<Square>) -> bool {
+        self.get(square).is_empty()
+    }
+
+    fn is_occupied(&self, square: impl Into<Square>) -> bool {
+        self.get(square).is_occupied()
+    }
 }
 
 lazy_static! {
@@ -124,4 +132,23 @@ mod tests {
 
         assert_eq!(format!("{}", actual), expected);
     }
+
+    #[test]
+    fn is_empty() {
+        let mut p = PieceBoard::default();
+        p.set_startpos();
+
+        assert!(p.is_empty(A3));
+        assert!(!p.is_empty(A2));
+    }
+
+    #[test]
+    fn is_occupied() {
+        let mut p = PieceBoard::default();
+        p.set_startpos();
+
+        assert!(!p.is_occupied(A3));
+        assert!(p.is_occupied(A2));
+    }
 }
+
