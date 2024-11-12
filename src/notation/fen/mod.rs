@@ -8,9 +8,12 @@ use tracing::instrument;
 
 use crate::board::Alter;
 use crate::board::Alteration;
+use crate::board::PieceBoard;
+use crate::board::Query;
 use crate::constants::{EMPTY_POSITION_FEN, START_POSITION_FEN};
 use crate::types::Color;
 use crate::notation::*;
+use crate::types::Occupant;
 
 
 pub use position_metadata::PositionMetadata;
@@ -36,6 +39,17 @@ impl PartialEq for FEN {
     }
 }
 impl Eq for FEN {}
+
+
+impl Query for FEN {
+    fn get(&self, s: impl Into<Square>) -> Occupant {
+        // TODO: This can be done directly from the string representation of the FEN, but this is
+        // two lines of mindless code and I am lazy.
+        let pb = PieceBoard::from(self);
+        pb.get(s)
+    }
+
+}
 
 impl Default for FEN {
     fn default() -> Self {
