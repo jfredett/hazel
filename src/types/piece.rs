@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+use crate::notation::Square;
 use crate::types::Color;
 use crate::types::color::COLOR_COUNT;
 
@@ -23,6 +24,10 @@ impl Piece {
 
     pub fn to_fen(&self, color: Color) -> char {
         ASCII_PIECE_CHARS[color as usize][*self as usize]
+    }
+
+    pub fn movements_at(&self, square: impl Into<Square>, color: Color) -> impl Iterator<Item=Square> {
+        square.into().moves_for(self, &color)
     }
 }
 
