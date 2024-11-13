@@ -81,6 +81,13 @@ pub const UNICODE_PIECE_CHARS: [[char; 6]; 2] = [
 #[cfg(test)]
 mod test {
     use super::*;
+    use quickcheck::{Arbitrary, Gen};
+
+    impl Arbitrary for Piece {
+        fn arbitrary(g: &mut Gen) -> Self {
+            PIECES[usize::arbitrary(g) % PIECE_COUNT]
+        }
+    }
 
     mod from {
         use super::*;
