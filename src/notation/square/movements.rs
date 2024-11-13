@@ -2,39 +2,6 @@ use crate::types::Piece;
 
 use super::*;
 
-/// # Composing translations
-///
-/// translate!(source, up, up, port) => match self.up() {
-///     Some(x) => translate!(x, up, port)
-///     None => None
-/// }
-macro_rules! translate {
-    ($source:expr,  $first:ident) => {
-        $source.$first()
-    };
-    ($source:expr, $first:ident, $($rest:ident),+) => {
-        match $source.$first() {
-            Some(x) => translate!(x, $($rest),+),
-            None => None
-        }
-    };
-}
-
-/// relative_translate!(source, color, forward, right, forward)
-macro_rules! relative_translate {
-    ($source:expr, $color:expr, $first:ident) => {
-        $source.$first($color)
-    };
-    ($source:expr, $color:expr, $first:ident, $($rest:ident),+) => {
-        match $source.$first($color) {
-            Some(x) => relative_translate!(x, $color, $($rest),+),
-            None => None
-        }
-    };
-}
-
-
-
 impl Square {
     /// # Absolute Movements
     /// These movements always move from the perspective of the White player, but aren't tied to
@@ -413,6 +380,9 @@ impl Square {
 mod tests {
     use quickcheck::{Arbitrary, Gen};
 
+    use crate::types::Bitboard;
+    use crate::types::pextboard;
+
     use super::*;
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -562,8 +532,39 @@ mod tests {
     }
 
     #[quickcheck]
-    fn interior_square_tours(square: NonEdgeSquare, color: Color) -> bool {
+    fn interior_relative_square_tours_ortho(square: NonEdgeSquare, color: Color) -> bool {
         let square = square.0;
         square.forward(&color).and_then(|x| x.right(&color)).and_then(|x| x.backward(&color)).and_then(|x| x.left(&color)).unwrap() == square
     }
+
+    #[quickcheck]
+    #[ignore]
+    fn interior_relative_square_tours_obliques(square: NonEdgeSquare, color: Color) -> bool {
+        // I need an even_more_ interior square for this to work, since the obliques cover a 3x3
+        // box, not a 2x2 box.
+        let square = square.0;
+        square.left_oblique(&color).and_then(|x| x.right_oblique(&color)).and_then(|x| x.right_rear_oblique(&color)).and_then(|x| x.left_rear_oblique(&color)).unwrap() == square
+    }
+
+
+    #[quickcheck]
+    fn bitboard_moves_match_square_moves(piece: Piece, color: Color, sq: Square) -> bool {
+        // Ignore Pawns, Kings, and Knights for now, so we can use the pextboard stuff
+        if piece == Piece::Pawn { return true; }
+        if piece == Piece::King { return true; }
+        if piece == Piece::Knight { return true; }
+
+        let square = sq.0;
+
+        // this is a bitboard set with all the moves for a given piece
+        let bbmoves = pextboard::attacks_for(piece, square as usize, Bitboard::empty());
+
+        sq.moves_for(&piece, &Color::WHITE).all(|x| bbmoves.is_set(x))
+    }
+
+
+
+
+
+
 }
