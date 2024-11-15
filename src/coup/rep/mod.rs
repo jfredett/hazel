@@ -26,8 +26,7 @@ use crate::constants::File;
 
 use serde::{Deserialize, Serialize};
 
-use tracing::instrument;
-use tracing::trace;
+use tracing::{debug, instrument};
 
 #[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Serialize, Deserialize)]
 pub struct Move(pub(crate) u16);
@@ -146,6 +145,9 @@ impl Move {
                         return Some(MoveType::EP_CAPTURE);
                     } else if self.target().backrank() {
                         // If we are moving to the backrank, and we are capturing, we must be capture-promoting
+                        // BUG: This doesn't let you promote to anything other than a queen, and
+                        // in fact it is known that some positions promotion to a non-queen is the
+                        // only way to avoid a stalemate, so this is a bug.
                         return Some(MoveType::PROMOTION_CAPTURE_QUEEN);
                     } else {
                         // Otherwise, we are just capturing as normal

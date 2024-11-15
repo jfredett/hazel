@@ -1,3 +1,5 @@
+use crate::constants::File;
+
 use super::*;
 
 impl From<(usize, usize)> for Square {
@@ -15,6 +17,12 @@ impl From<(u16, u16)> for Square {
 impl From<Square> for usize {
     fn from(square: Square) -> usize {
         square.0
+    }
+}
+
+impl From<(usize, File)> for Square {
+    fn from((rank, file): (usize, File)) -> Self {
+        Self(rank * 8 + usize::from(file))
     }
 }
 
