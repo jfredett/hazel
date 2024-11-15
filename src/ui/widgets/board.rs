@@ -94,7 +94,7 @@ impl Widget for &Board<'_> {
             let buf_file : u16 = 14 - 2*s.rank() as u16;
             let buf_rank : u16 = 3*s.file() as u16 + 1;
 
-            let cell = buf.get_mut(area.x + buf_rank, area.y + buf_file);
+            let cell = buf.cell_mut((area.x + buf_rank, area.y + buf_file)).unwrap();
             let occ = self.state.get(s);
 
             match occ {
@@ -124,11 +124,11 @@ impl Widget for &Board<'_> {
 
             // while we're here, I want to do write column/row information on the bottom bit of
             // the board in a nearly invisible color.
-            let col_mark = buf.get_mut(area.x + buf_rank - 1, area.y + buf_file + 1);
+            let col_mark = buf.cell_mut((area.x + buf_rank - 1, area.y + buf_file + 1)).unwrap();
             col_mark.set_char((b'a' + s.file() as u8) as char);
             col_mark.fg = MARK_COLOR;
 
-            let row_mark = buf.get_mut(area.x + buf_rank, area.y + buf_file + 1);
+            let row_mark = buf.cell_mut((area.x + buf_rank, area.y + buf_file + 1)).unwrap();
             // note this sign flip, counting up from 'a' above, down from '8' here.
             row_mark.set_char((b'1' + s.rank() as u8) as char);
             row_mark.fg = MARK_COLOR;
