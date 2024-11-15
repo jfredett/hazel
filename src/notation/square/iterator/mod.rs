@@ -32,14 +32,81 @@ impl Square {
         *RankFile::default().downward().left_to_right()
     }
 
-    pub fn along_rank(rank: usize) -> RankFile {
-        *RankFile::default().downward().left_to_right().start_on(Square::new(rank * 8))
+    pub fn along_rank(rank: usize) -> RankIterator {
+        RankIterator {
+            rank,
+            file: None,
+            direction: FileDirection::LeftToRight,
+        }
     }
 
-    pub fn along_file(file: File) -> RankFile {
-        *RankFile::default().downward().left_to_right().start_on(Square::new(file.to_index()))
+    pub fn along_file(file: File) -> FileIterator {
+        FileIterator {
+            rank: None,
+            file,
+            direction: RankDirection::Upward,
+        }
     }
 }
+
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+/// Fix a rank, proceed in the given file-direction
+pub struct RankIterator {
+    rank: usize,
+    file: Option<File>,
+    direction: FileDirection,
+}
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+/// Fix a file, proceed in the given rank-direction
+pub struct FileIterator {
+    rank: Option<usize>,
+    file: File,
+    direction: RankDirection,
+}
+
+impl Iterator for RankIterator {
+    type Item = Square;
+
+    fn next(&mut self) -> Option<Square> {
+        match self.direction {
+            FileDirection::LeftToRight => {
+                if self.file.is_none() { self.file = Some(File::A); }
+                else if self.file == Some(File::H) { return None; }
+                else { self.file = self.file.unwrap().next(); }
+            }
+            FileDirection::RightToLeft => {
+                if self.file.is_none() { self.file = Some(File::H); }
+                else if self.file == Some(File::A) { return None; }
+                else { self.file = self.file.unwrap().prev(); }
+            }
+        }
+        Some(Square::from((self.rank, self.file.unwrap())))
+    }
+}
+
+impl Iterator for FileIterator {
+    type Item = Square;
+
+    fn next(&mut self) -> Option<Square> {
+        match self.direction {
+            RankDirection::Upward => {
+                if self.rank.is_none() { self.rank = Some(0); }
+                else if self.rank == Some(7) { return None; }
+                else if let Some(r) = self.rank.as_mut() { *r += 1; }
+            }
+            RankDirection::Downward => {
+                if self.rank.is_none() { self.rank = Some(8); }
+                else if self.rank == Some(0) { return None; }
+                else if let Some(r) = self.rank.as_mut() { *r -= 1; }
+            }
+        }
+        Some(Square::from((self.rank.unwrap(), self.file)))
+    }
+}
+
+
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 enum RankDirection {
@@ -132,6 +199,42 @@ mod tests {
                 assert_eq!(format!("{:?}", a), "h8 (63) (Downward, RightToLeft)");
             }
 
+        }
+    }
+
+    mod rank_iterator {
+        use super::*;
+
+        #[test]
+        fn rank_iterator() {
+            let mut iter = Square::along_rank(2);
+            assert_eq!(iter.next(), Some(A3));
+            assert_eq!(iter.next(), Some(B3));
+            assert_eq!(iter.next(), Some(C3));
+            assert_eq!(iter.next(), Some(D3));
+            assert_eq!(iter.next(), Some(E3));
+            assert_eq!(iter.next(), Some(F3));
+            assert_eq!(iter.next(), Some(G3));
+            assert_eq!(iter.next(), Some(H3));
+            assert_eq!(iter.next(), None);
+        }
+    }
+
+    mod file_iterator {
+        use super::*;
+
+        #[test]
+        fn file_iterator() {
+            let mut iter = Square::along_file(File::D);
+            assert_eq!(iter.next(), Some(D1));
+            assert_eq!(iter.next(), Some(D2));
+            assert_eq!(iter.next(), Some(D3));
+            assert_eq!(iter.next(), Some(D4));
+            assert_eq!(iter.next(), Some(D5));
+            assert_eq!(iter.next(), Some(D6));
+            assert_eq!(iter.next(), Some(D7));
+            assert_eq!(iter.next(), Some(D8));
+            assert_eq!(iter.next(), None);
         }
     }
 }
