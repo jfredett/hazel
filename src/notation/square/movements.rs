@@ -282,7 +282,10 @@ impl Square {
     /// rustc 1.84.0-nightly (b91a3a056 2024-11-07)
     /// I don't think it's rust, it's almost certainly me, but just in case this typechecks
     /// differently in the future I'll know I wasn't crazy.
-    pub fn unmoves_for(&self, piece: &Piece, color: &Color) -> IntoIter<Self> {
+    /// HACK: As if it weren't bad enough, the boolean parameter really makes me think some of this
+    /// should be refactored into a 'smarter' move type that can handle all the disambiguation
+    /// internally.
+    pub fn unmoves_for(&self, is_capture: bool, piece: &Piece, color: &Color) -> IntoIter<Self> {
         if piece != &Piece::Pawn {
             // The only interesing case is the pawn.
             return self.moves_for(piece, color).collect::<Vec<_>>().into_iter();
@@ -306,8 +309,11 @@ impl Square {
             }
             ret.push(sq);
         }
-        if let Some(sq) = self.left_rear_oblique(color) { ret.push(sq); }
-        if let Some(sq) = self.right_rear_oblique(color) { ret.push(sq); }
+
+        if is_capture {
+            if let Some(sq) = self.left_rear_oblique(color) { ret.push(sq); }
+            if let Some(sq) = self.right_rear_oblique(color) { ret.push(sq); }
+        }
 
         ret.into_iter()
     }
