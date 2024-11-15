@@ -1,3 +1,5 @@
+use std::vec::IntoIter;
+
 use crate::types::Piece;
 
 use super::*;
@@ -271,7 +273,46 @@ impl Square {
     /// Piece Moves
     /// TODO: I'm pretty sure this could be const.
 
+    /// Return all the ways a piece of the given color _could have arrived_ on this square. e.g.,
+    /// the White Pawn Unmove of D4 is C3, D2, D3, and E3. (The squares from which a white pawn
+    /// could arrive on the square).
+    /// BUG : 14-Nov-2024 2336
+    /// ??? I truly don't understand why this type is different than the moves_for. I am hesitant
+    /// to say this is Rust's fault, but I can't see why this should infer two different types. 
+    /// rustc 1.84.0-nightly (b91a3a056 2024-11-07)
+    /// I don't think it's rust, it's almost certainly me, but just in case this typechecks
+    /// differently in the future I'll know I wasn't crazy.
+    pub fn unmoves_for(&self, piece: &Piece, color: &Color) -> IntoIter<Self> {
+        if piece != &Piece::Pawn {
+            // The only interesing case is the pawn.
+            return self.moves_for(piece, color).collect::<Vec<_>>().into_iter();
+        }
 
+        let mut ret = vec![];
+
+        // HACK: I think this should be a method, probably on Color, but the name is taken for a
+        // bitboard function that does the same thing. I don't want to break the generator as I'll
+        // need to take it apart soon, so for now I'll tolerate a hack here.
+        let pawn_rank = match color {
+            Color::WHITE => 1,
+            Color::BLACK => 6,
+        };
+
+        if let Some(sq) = self.backward(color) {
+            if let Some(double_push_sq) = sq.backward(color) {
+                if double_push_sq.rank() == pawn_rank {
+                    ret.push(double_push_sq);
+                }
+            }
+            ret.push(sq);
+        }
+        if let Some(sq) = self.left_rear_oblique(color) { ret.push(sq); }
+        if let Some(sq) = self.right_rear_oblique(color) { ret.push(sq); }
+
+        ret.into_iter()
+    }
+
+    /// Return all the moves that the Piece of the given Color could make.
     pub fn moves_for(&self, piece: &Piece, color: &Color) -> impl Iterator<Item=Self> {
         let mut ret = vec![];
         match piece {
