@@ -48,9 +48,9 @@ impl Variation {
     }
 
 
-    pub fn parse<'a>(input: &'a str) -> IResult<&'a str, Variation> {
+    pub fn parse(input: &str) -> IResult<&str, Variation> {
         let mut v = Variation::new();
-        v.parse_into(input);
+        let _ = v.parse_into(input);
         Ok((input, v.clone()))
     }
 }

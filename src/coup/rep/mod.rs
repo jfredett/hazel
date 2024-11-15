@@ -26,7 +26,7 @@ use crate::constants::File;
 
 use serde::{Deserialize, Serialize};
 
-use tracing::{debug, instrument};
+use tracing::instrument;
 
 #[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Serialize, Deserialize)]
 pub struct Move(pub(crate) u16);

@@ -1,8 +1,8 @@
 
-use nom::{character::complete::char, combinator::opt, sequence::tuple, IResult};
+use nom::{character::complete::char, combinator::opt, IResult};
 use tracing::{debug, instrument};
 
-use crate::{board::Query, coup::rep::{Move, MoveType}, types::{Color, Occupant, Piece}};
+use crate::{board::Query, coup::rep::{Move, MoveType}, types::{Occupant, Piece}};
 
 use super::{fen::FEN, Square};
 
@@ -128,7 +128,7 @@ impl SAN {
             }
         }
 
-        /// BUG: issue for pawn pushes is that we're using the disambiguator twice
+        // BUG: issue for pawn pushes is that we're using the disambiguator twice
         let m = match self.disambiguator {
             Some(disambiguator) => {
                 match disambiguator {
