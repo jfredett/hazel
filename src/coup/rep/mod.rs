@@ -67,6 +67,10 @@ impl Move {
                              |   metadata as u16 )
     }
 
+    pub fn set_metadata(&mut self, metadata: MoveType) {
+        self.0 = (self.0 & !METADATA_MASK) | (metadata as u16);
+    }
+
     pub fn null() -> Move {
         // We only care about the metadata bits for a null move. So the source/target are just
         // whatever is convenient.
