@@ -267,17 +267,17 @@ mod tests {
 
     macro_rules! assert_parses {
         ($input:expr, $expected:expr, $fen:expr, $moves:expr) => {
-        let mut context = Variation::default();
-        debug!("Setting context to FEN: {}", $fen);
-        context.setup(FEN::new($fen)).commit();
-        for m in $moves.iter().map(|m| UCI::try_from(*m).unwrap()) {
-        debug!("Making move: {:?}", m);
-        context.make(m.into());
-        }
-        debug!("Parsing: {}", $input);
-        let (_, san) = SAN::parse($input, context.current_position()).unwrap();
-        assert_eq!(Move::try_from(san).unwrap(), $expected);
-    };
+            let mut context = Variation::default();
+            debug!("Setting context to FEN: {}", $fen);
+            context.setup(FEN::new($fen)).commit();
+            for m in $moves.iter().map(|m| UCI::try_from(*m).unwrap()) {
+                debug!("Making move: {:?}", m);
+                context.make(m.into());
+            }
+            debug!("Parsing: {}", $input);
+            let (_, san) = SAN::parse($input, context.current_position()).unwrap();
+            assert_eq!(Move::try_from(san).unwrap(), $expected);
+        };
         ($input:expr, $expected:expr, $fen:expr) => {
             assert_parses!($input, $expected, $fen, Vec::<&str>::new());
         };

@@ -11,20 +11,20 @@ pub enum Occupant {
 impl From<u8> for Occupant {
     fn from(value: u8) -> Self {
         match value {
-            0 => Occupant::Empty,
-            1 => Occupant::Occupied(Piece::Pawn, Color::WHITE),
-            2 => Occupant::Occupied(Piece::Knight, Color::WHITE),
-            3 => Occupant::Occupied(Piece::Bishop, Color::WHITE),
-            4 => Occupant::Occupied(Piece::Rook, Color::WHITE),
-            5 => Occupant::Occupied(Piece::Queen, Color::WHITE),
-            6 => Occupant::Occupied(Piece::King, Color::WHITE),
-            7 => Occupant::Occupied(Piece::Pawn, Color::BLACK),
-            8 => Occupant::Occupied(Piece::Knight, Color::BLACK),
-            9 => Occupant::Occupied(Piece::Bishop, Color::BLACK),
+            0  => Occupant::Empty,
+            1  => Occupant::Occupied(Piece::Pawn, Color::WHITE),
+            2  => Occupant::Occupied(Piece::Knight, Color::WHITE),
+            3  => Occupant::Occupied(Piece::Bishop, Color::WHITE),
+            4  => Occupant::Occupied(Piece::Rook, Color::WHITE),
+            5  => Occupant::Occupied(Piece::Queen, Color::WHITE),
+            6  => Occupant::Occupied(Piece::King, Color::WHITE),
+            7  => Occupant::Occupied(Piece::Pawn, Color::BLACK),
+            8  => Occupant::Occupied(Piece::Knight, Color::BLACK),
+            9  => Occupant::Occupied(Piece::Bishop, Color::BLACK),
             10 => Occupant::Occupied(Piece::Rook, Color::BLACK),
             11 => Occupant::Occupied(Piece::Queen, Color::BLACK),
             12 => Occupant::Occupied(Piece::King, Color::BLACK),
-            _ => panic!("Invalid occupant value")
+            _  => panic!("Invalid occupant value")
         }
     }
 }
@@ -32,20 +32,19 @@ impl From<u8> for Occupant {
 impl From<Occupant> for u8 {
     fn from(occupant: Occupant) -> Self {
         match occupant {
-            Occupant::Empty => 0,
-            Occupant::Occupied(Piece::Pawn, Color::WHITE) => 1,
+            Occupant::Empty                                 => 0,
+            Occupant::Occupied(Piece::Pawn, Color::WHITE)   => 1,
             Occupant::Occupied(Piece::Knight, Color::WHITE) => 2,
             Occupant::Occupied(Piece::Bishop, Color::WHITE) => 3,
-            Occupant::Occupied(Piece::Rook, Color::WHITE) => 4,
-            Occupant::Occupied(Piece::Queen, Color::WHITE) => 5,
-            Occupant::Occupied(Piece::King, Color::WHITE) => 6,
-            Occupant::Occupied(Piece::Pawn, Color::BLACK) => 7,
+            Occupant::Occupied(Piece::Rook, Color::WHITE)   => 4,
+            Occupant::Occupied(Piece::Queen, Color::WHITE)  => 5,
+            Occupant::Occupied(Piece::King, Color::WHITE)   => 6,
+            Occupant::Occupied(Piece::Pawn, Color::BLACK)   => 7,
             Occupant::Occupied(Piece::Knight, Color::BLACK) => 8,
             Occupant::Occupied(Piece::Bishop, Color::BLACK) => 9,
-            Occupant::Occupied(Piece::Rook, Color::BLACK) => 10,
-            Occupant::Occupied(Piece::Queen, Color::BLACK) => 11,
-            Occupant::Occupied(Piece::King, Color::BLACK) => 12,
-            _ => panic!("Invalid occupant value")
+            Occupant::Occupied(Piece::Rook, Color::BLACK)   => 10,
+            Occupant::Occupied(Piece::Queen, Color::BLACK)  => 11,
+            Occupant::Occupied(Piece::King, Color::BLACK)   => 12,
         }
     }
 }
@@ -118,7 +117,16 @@ impl Display for Occupant {
 
 #[cfg(test)]
 mod tests {
+    use quickcheck::{Arbitrary, Gen};
+
     use super::*;
+
+    impl Arbitrary for Occupant {
+        fn arbitrary(g: &mut Gen) -> Self {
+            let value = u8::arbitrary(g) % 13;
+            value.into()
+        }
+    }
 
     #[test]
     fn occupant_display() {

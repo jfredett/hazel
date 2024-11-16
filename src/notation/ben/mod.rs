@@ -16,7 +16,9 @@
 use super::{fen::{PositionMetadata, FEN}, Square};
 use crate::{board::{Alter, Alteration, PieceBoard, Query}, types::{Color, Occupant}};
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+mod from_into;
+
+#[derive(Debug, Default, PartialEq, Clone, Copy)]
 pub struct BEN {
     position: [u8; 32],
     metadata: PositionMetadata
@@ -58,9 +60,9 @@ impl Alter for BEN {
                 let sq : usize = square.index();
                 let byte_index = sq / 2;
                 if sq % 2 == 0 {
-                    self.position[byte_index] = self.position[byte_index] & 0b00001111;
+                    self.position[byte_index] &= 0b00001111;
                 } else {
-                    self.position[byte_index] = self.position[byte_index] & 0b11110000;
+                    self.position[byte_index] &= 0b11110000;
                 }
             },
             Alteration::Clear => { self.position = [0; 32]; },
@@ -107,50 +109,75 @@ impl BEN {
 
 }
 
-impl From<FEN> for BEN {
-    fn from(fen: FEN) -> Self {
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::notation::*;
+    use crate::notation::fen::PositionMetadata;
+    use crate::notation::fen::CastleRights;
+    use crate::types::Piece;
+
+    #[quickcheck]
+    fn alter_mut(square: Square, occupant: Occupant) {
         let mut ben = BEN::new();
-        let mut idx = 0;
-        let mut squares = Square::by_rank_and_file();
 
-        while !squares.is_done() {
-            let lower_square = squares.next().unwrap();
-            let upper_square = squares.next().unwrap();
+        assert!(ben.get(square) == Occupant::Empty);
+        ben.alter_mut(Alteration::place(square, occupant));
+        assert!(ben.get(square) == occupant);
+        ben.alter_mut(Alteration::remove(square, occupant));
+        assert!(ben.get(square) == Occupant::Empty);
+    }
 
-            let lower_occupant : u8 = fen.get(lower_square).into();
-            let upper_occupant : u8 = fen.get(upper_square).into();
+    #[test]
+    fn alter() {
+        let ben = BEN::new();
+        let ben = ben.alter(Alteration::Place { square: A1, occupant: Occupant::white_pawn() });
+        let ben = ben.alter(Alteration::Place { square: H8, occupant: Occupant::black_king() });
+        let ben = ben.alter(Alteration::Place { square: H1, occupant: Occupant::white_queen() });
+        let ben = ben.alter(Alteration::Place { square: A8, occupant: Occupant::black_knight() });
 
-            ben.position[idx] = (lower_occupant << 4) | upper_occupant;
-            idx += 1;
-        }
+        assert_eq!(ben.get(A1), Occupant::white_pawn());
+        assert_eq!(ben.get(H8), Occupant::black_king());
+        assert_eq!(ben.get(H1), Occupant::white_queen());
+        assert_eq!(ben.get(A8), Occupant::black_knight());
 
-        ben.metadata = fen.metadata();
+        let ben = ben.alter(Alteration::Remove { square: A1, occupant: Occupant::white_pawn() });
+        let ben = ben.alter(Alteration::Remove { square: H8, occupant: Occupant::black_king() });
+        let ben = ben.alter(Alteration::Remove { square: H1, occupant: Occupant::white_queen() });
+        let ben = ben.alter(Alteration::Remove { square: A8, occupant: Occupant::black_knight() });
 
-        ben
+        assert_eq!(ben.get(A1), Occupant::Empty);
+        assert_eq!(ben.get(H8), Occupant::Empty);
+        assert_eq!(ben.get(H1), Occupant::Empty);
+        assert_eq!(ben.get(A8), Occupant::Empty);
+    }
+
+    // #[quickcheck]
+    // fn get_mut(sq: Square, piece: Piece, color: Color) {
+    //     let mut ben = BEN::new();
+    //     let ben_sq = ben.get_mut(sq);
+    //     ben_sq = Occupant::white_pawn().into();
+    //     assert_eq!(ben.get(sq), Occupant::white_pawn().into());
+    // }
+
+
+    #[test]
+    fn metadata() {
+        let mut ben = BEN::new();
+        assert_eq!(ben.metadata(), PositionMetadata::default());
+
+        let metadata = PositionMetadata {
+            side_to_move: Color::BLACK,
+            castling: CastleRights::default(),
+            en_passant: Some(A1),
+            halfmove_clock: 0,
+            fullmove_number: 1
+        };
+
+        ben.set_metadata(metadata);
+        assert_eq!(ben.metadata(), metadata);
     }
 }
 
-impl From<BEN> for FEN {
-    fn from(ben: BEN) -> Self {
-        let mut pb = PieceBoard::default();
-        let mut idx = 0;
-        let mut squares = Square::by_rank_and_file();
 
-        while !squares.is_done() {
-            let lower_square = squares.next().unwrap();
-            let upper_square = squares.next().unwrap();
-
-            let lower_occupant = ben.position[idx] >> 4;
-            let upper_occupant = ben.position[idx] & 0b00001111;
-
-            pb.alter_mut(Alteration::place(lower_square, lower_occupant.into()));
-            pb.alter_mut(Alteration::place(upper_square, upper_occupant.into()));
-
-            idx += 1;
-        }
-
-        let mut fen : FEN = pb.into();
-        fen.set_metadata(ben.metadata);
-        fen
-    }
-}
