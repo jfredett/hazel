@@ -4,14 +4,14 @@ use tracing::{debug, instrument};
 
 use crate::{board::Query, coup::rep::{Move, MoveType}, types::{Occupant, Piece}};
 
-use super::{fen::FEN, Square};
+use super::{ben::BEN, Square};
 
 
 mod disambiguator;
 
 use disambiguator::Disambiguator;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SAN {
     source_piece: Option<Piece>,
     captured_piece: Option<Piece>,
@@ -21,7 +21,7 @@ pub struct SAN {
     target_sq: Option<Square>,
     ambiguous_sq: Option<Square>,
     promotion: Option<Piece>,
-    context: FEN,
+    context: BEN,
 }
 
 impl SAN {
@@ -29,7 +29,7 @@ impl SAN {
         self.source_sq.is_none() || self.ambiguous_sq.is_some()
     }
 
-    pub fn new(fen: impl Into<FEN>) -> Self {
+    pub fn new(fen: impl Into<BEN>) -> Self {
         SAN {
             source_piece: None,
             captured_piece: None,
@@ -48,7 +48,7 @@ impl SAN {
         Piece::parse(input)
     }
 
-    pub fn parse(input: &str, context: impl Into<FEN>) -> IResult<&str, Self> {
+    pub fn parse(input: &str, context: impl Into<BEN>) -> IResult<&str, Self> {
         let (input, piece) = opt(Piece::parse)(input)?;
         // We either have a disambiguator or this is the target square
         let (input, disambiguator) = opt(Disambiguator::parse)(input)?;
