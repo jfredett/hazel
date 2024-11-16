@@ -10,6 +10,7 @@ pub mod san; // Standard Algebraic Notation
 
 // Board Notations
 pub mod fen;
+pub mod ben;
 
 // Game Notations
 pub mod pgn;

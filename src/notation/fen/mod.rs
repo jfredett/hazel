@@ -48,7 +48,24 @@ impl Query for FEN {
         let pb = PieceBoard::from(self);
         pb.get(s)
     }
+}
 
+// This is a little cursed, but it is handy to be able to alter any board representation, and this
+// is a board representation. Maybe it should live under coup::rep? :D
+impl Alter for FEN {
+    fn alter(&self, alteration: Alteration) -> Self {
+        let mut new = self.clone();
+        new.alter_mut(alteration);
+        new
+    }
+
+    // HACK: This doesn't do metadata, it probably should.
+    fn alter_mut(&mut self, alteration: Alteration) -> &mut Self {
+        let mut pb = PieceBoard::from(self.clone());
+        pb.alter_mut(alteration);
+        self.position = pb.into();
+        self
+    }
 }
 
 impl Default for FEN {
