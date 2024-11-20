@@ -6,6 +6,8 @@
 
 [![codecov](https://codecov.io/github/jfredett/hazel/graph/badge.svg?token=ZHLLLZLAR5)](https://codecov.io/github/jfredett/hazel)
 
+[![tokei](https://tokei.rs/b1/github/jfredett/hazel?category=code)
+
 `hazel` is a little chess engine in Rust from scratch by me. It's a work in progress,
 and I doubt it'll ever be particularly good, but I rather like it and you're welcome to
 read it and use it if you like.
