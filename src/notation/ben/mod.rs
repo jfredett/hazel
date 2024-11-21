@@ -15,10 +15,11 @@
 
 use super::{fen::{PositionMetadata, FEN}, Square};
 use crate::{board::{Alter, Alteration, PieceBoard, Query}, types::{Color, Occupant}};
+use std::fmt::{Debug, Formatter};
 
 mod from_into;
 
-#[derive(Debug, Default, PartialEq, Clone, Copy)]
+#[derive(Default, PartialEq, Clone, Copy)]
 pub struct BEN {
     position: [u8; 32],
     metadata: PositionMetadata
@@ -70,6 +71,16 @@ impl Alter for BEN {
         }
 
         self
+    }
+}
+
+impl Debug for BEN {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut s = String::from("0x");
+        for byte in self.position.iter() {
+            s.push_str(&format!("{:02x}", byte));
+        }
+        write!(f, "{}", s)
     }
 }
 

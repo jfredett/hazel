@@ -1,9 +1,7 @@
 use std::fmt::Display;
 use std::str::SplitWhitespace;
 
-use tracing::debug;
-
-use crate::board::{query, Query};
+use crate::board::Query;
 use crate::constants::File;
 use crate::coup::rep::Move;
 use crate::notation::fen::castle_rights::CastleRights;

@@ -1,3 +1,4 @@
+#![allow(dead_code, unused_imports)]
 
 use nom::{branch::alt, bytes::complete::tag, character::complete::char, combinator::opt, IResult};
 use tracing::{debug, instrument};
@@ -36,27 +37,17 @@ pub enum CastleMove {
 
 impl CastleMove {
     pub fn is_short(&self) -> bool {
-        match self {
-            CastleMove::Short => true,
-            _ => false
-        }
+        matches!(self, CastleMove::Short)
     }
 
     pub fn is_long(&self) -> bool {
-        match self {
-            CastleMove::Long => true,
-            _ => false
-        }
+        matches!(self, CastleMove::Long)
     }
 }
 
 impl SAN {
     pub fn is_ambiguous(&self) -> bool {
-        if !self.is_castle() && (self.source_sq.is_none() || self.ambiguous_sq.is_some()) {
-            return true;
-        } else {
-            return false;
-        }
+        !self.is_castle() && (self.source_sq.is_none() || self.ambiguous_sq.is_some())
     }
 
     pub fn is_castle(&self) -> bool {
@@ -244,11 +235,8 @@ impl SAN {
                         // have to construct. PGN is such a stupid format.
                         let mut blocks = Bitboard::empty();
                         for sq in Square::by_rank_and_file() {
-                            match self.context.get(sq) {
-                                Occupant::Occupied(piece, color) => {
-                                    blocks.set(sq);
-                                },
-                                _ => {}
+                            if let Occupant::Occupied(..) = self.context.get(sq) {
+                                blocks.set(sq);
                             }
                         }
 
