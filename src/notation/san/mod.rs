@@ -1,8 +1,10 @@
 
-use nom::{character::complete::char, combinator::opt, IResult};
+use nom::{branch::alt, bytes::complete::tag, character::complete::char, combinator::opt, IResult};
 use tracing::{debug, instrument};
 
-use crate::{board::Query, coup::rep::{Move, MoveType}, types::{Occupant, Piece}};
+use crate::{board::Query, coup::rep::{Move, MoveType}, types::{Bitboard, Color, Occupant, Piece}};
+use crate::types::pextboard;
+use crate::notation::*;
 
 use super::{ben::BEN, Square};
 
@@ -21,12 +23,44 @@ pub struct SAN {
     target_sq: Option<Square>,
     ambiguous_sq: Option<Square>,
     promotion: Option<Piece>,
+    castle_short: bool,
+    castle_long: bool,
     context: BEN,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CastleMove {
+    Short,
+    Long
+}
+
+impl CastleMove {
+    pub fn is_short(&self) -> bool {
+        match self {
+            CastleMove::Short => true,
+            _ => false
+        }
+    }
+
+    pub fn is_long(&self) -> bool {
+        match self {
+            CastleMove::Long => true,
+            _ => false
+        }
+    }
 }
 
 impl SAN {
     pub fn is_ambiguous(&self) -> bool {
-        self.source_sq.is_none() || self.ambiguous_sq.is_some()
+        if !self.is_castle() && (self.source_sq.is_none() || self.ambiguous_sq.is_some()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    pub fn is_castle(&self) -> bool {
+        self.castle_short || self.castle_long
     }
 
     pub fn new(fen: impl Into<BEN>) -> Self {
@@ -39,6 +73,8 @@ impl SAN {
             target_sq: None,
             ambiguous_sq: None,
             promotion: None,
+            castle_short: false,
+            castle_long: false,
             context: fen.into(),
         }
     }
@@ -48,7 +84,40 @@ impl SAN {
         Piece::parse(input)
     }
 
+    pub fn castle(input: &str) -> IResult<&str, CastleMove> {
+        // order matters.
+        let (input, long) = opt(alt((tag("O-O-O"), tag("0-0-0"), tag("o-o-o"))))(input)?;
+        let (input, short) = opt(alt((tag("O-O"), tag("0-0"), tag("o-o"))))(input)?;
+
+        let ret = if short.is_some() {
+            CastleMove::Short
+        } else if long.is_some() {
+            CastleMove::Long
+        } else {
+            return Err(nom::Err::Error(nom::error::Error::new(input, nom::error::ErrorKind::Tag)));
+        };
+        Ok((input, ret))
+    }
+
     pub fn parse(input: &str, context: impl Into<BEN>) -> IResult<&str, Self> {
+        let (input, castling_move) = opt(Self::castle)(input)?;
+        if let Some(m) = castling_move {
+            return Ok((input, SAN {
+                source_piece: None,
+                captured_piece: None,
+                disambiguator: None,
+                capturing: false,
+                source_sq: None,
+                target_sq: None,
+                ambiguous_sq: None,
+                promotion: None,
+                castle_short: m.is_short(),
+                castle_long: m.is_long(),
+                context: context.into(),
+            }));
+        }
+
+
         let (input, piece) = opt(Piece::parse)(input)?;
         // We either have a disambiguator or this is the target square
         let (input, disambiguator) = opt(Disambiguator::parse)(input)?;
@@ -69,6 +138,8 @@ impl SAN {
             source_sq: None,
             target_sq: None,
             ambiguous_sq,
+            castle_short: false,
+            castle_long: false,
             promotion,
             context: context.into(),
         };
@@ -79,7 +150,6 @@ impl SAN {
 
     /// Disambiguate the _source square_ and _only_ the source square. This rest of disambiguation
     /// is
-    #[instrument]
     fn disambiguate(&mut self) -> Result<(), SANConversionError> {
         // <Piece><Disambiguator><x?><AmbiguousSq><Promotion?>
         // We Know Piece, if we're capturing, if we're promoting, and what the disambiguator and
@@ -101,6 +171,11 @@ impl SAN {
         //   false   | None          | None         => Not Possible   | Err: "Q", invalid, missing target
         //
         // If the disambiguator is ever a non-square, then it must not be the target.
+        if self.castle_short || self.castle_long {
+            // these moves are already not ambiguous.
+            return Ok(());
+        }
+
         self.target_sq = Some(if !self.capturing && self.ambiguous_sq.is_none() {
             let sq = self.disambiguator.unwrap().square();
             // We have consumed this, so we need to set it to None
@@ -121,9 +196,7 @@ impl SAN {
 
         let mut possible_source_squares = vec![];
         for sq in self.target_sq.unwrap().unmoves_for(self.capturing, &self.source_piece.unwrap(), &self.context.side_to_move()) {
-            debug!("Checking square: {:?}", sq);
             if self.context.get(sq) == source_occupant {
-                debug!("Found possible source square: {:?}", sq);
                 possible_source_squares.push(sq);
             }
         }
@@ -151,15 +224,35 @@ impl SAN {
             },
             None => {
                 // just search everything, the move claims it is unambiguous.
-                debug!("Possible source squares: {:?}", possible_source_squares);
                 match possible_source_squares.len() {
                     0 => {
                         return Err(SANConversionError::NoPossibleSourceSquares);
                     }
                     1 => possible_source_squares[0],
                     _ => {
-                        // We have multiple possible source squares, so we need to disambiguate.
-                        return Err(SANConversionError::IsAmbiguous("Multiple possible source squares"));
+                        // TODO: Disambiguate blocked slider situations.
+
+                        // Take each move and try to slide the piece to the target square, if it
+                        // can, it is the correct move.
+                        //
+                        // Pawns and Knights need not apply (would always require a disambiguator),
+                        // Kings can never be ambiguous with multiple source moves, since there is
+                        // only ever one of them on the board.
+                        //
+                        // I'm going to use the bitboard API for this because I have `pextboards`
+                        // do the calculation already, but it does need a blocker bitboard we'll
+                        // have to construct. PGN is such a stupid format.
+                        let mut blocks = Bitboard::empty();
+                        for sq in Square::by_rank_and_file() {
+                            match self.context.get(sq) {
+                                Occupant::Occupied(piece, color) => {
+                                    blocks.set(sq);
+                                },
+                                _ => {}
+                            }
+                        }
+
+                        self.slide_attacks(&possible_source_squares, blocks)?
                     }
                 }
             }
@@ -183,6 +276,23 @@ impl SAN {
 
         Ok(())
     }
+
+    fn slide_attacks(&self, possible_source_squares: &[Square], blocks: Bitboard) -> Result<Square, SANConversionError> {
+        match self.source_piece.unwrap() {
+            Piece::Rook | Piece::Bishop | Piece::Queen => {
+                for source_sq in possible_source_squares {
+                    let attacks = pextboard::attacks_for(self.source_piece.unwrap(), source_sq.into(), blocks);
+                    if attacks.is_set(self.target_sq.unwrap()) {
+                        return Ok(*source_sq);
+                    }
+                }
+                Err(SANConversionError::IsAmbiguous("All source squares are blocked"))
+            },
+            _ => {
+                Err(SANConversionError::IsAmbiguous("Multiple possible source squares"))
+            }
+        }
+    }
 }
 
 #[derive(Debug, Default)]
@@ -195,6 +305,9 @@ pub enum SANConversionError {
     IsAmbiguous(&'static str),
     NoPossibleSourceSquares,
     Unreachable,
+    /// This is a catch-all for errors that don't fit into the other categories. They should be
+    /// factored out when possible.
+    NewError(&'static str),
 }
 
 impl TryFrom<SAN> for Move {
@@ -205,8 +318,25 @@ impl TryFrom<SAN> for Move {
     // LAN-style which is much easier to convert since the source_sq is already there.
     fn try_from(san: SAN) -> Result<Move, SANConversionError> {
         if san.is_ambiguous() {
+            debug!("SAN is ambiguous: {:?}", san);
             return Err(SANConversionError::IsAmbiguous("SAN is ambiguous"));
         }
+
+        // TODO: Make the naming consistent
+        if san.castle_short {
+            match san.context.side_to_move() {
+                Color::WHITE => { return Ok(Move::new(E1, G1, MoveType::SHORT_CASTLE)); },
+                Color::BLACK => { return Ok(Move::new(E8, G8, MoveType::SHORT_CASTLE)); },
+            }
+        }
+
+        if san.castle_long {
+            match san.context.side_to_move() {
+                Color::WHITE => { return Ok(Move::new(E1, C1, MoveType::LONG_CASTLE)); },
+                Color::BLACK => { return Ok(Move::new(E8, C8, MoveType::LONG_CASTLE)); },
+            }
+        }
+
         let mut mov = Move::new(san.source_sq.unwrap(), san.target_sq.unwrap(), MoveType::UCI_AMBIGUOUS);
 
         let metadata = mov.disambiguate(&san.context).unwrap();
@@ -267,17 +397,14 @@ mod tests {
 
     macro_rules! assert_parses {
         ($input:expr, $expected:expr, $fen:expr, $moves:expr) => {
-            let mut context = Variation::default();
-            debug!("Setting context to FEN: {}", $fen);
-            context.setup(FEN::new($fen)).commit();
-            for m in $moves.iter().map(|m| UCI::try_from(*m).unwrap()) {
-                debug!("Making move: {:?}", m);
-                context.make(m.into());
-            }
-            debug!("Parsing: {}", $input);
-            let (_, san) = SAN::parse($input, context.current_position()).unwrap();
-            assert_eq!(Move::try_from(san).unwrap(), $expected);
-        };
+        let mut context = Variation::default();
+        context.setup(FEN::new($fen)).commit();
+        for m in $moves.iter().map(|m| UCI::try_from(*m).unwrap()) {
+        context.make(m.into());
+        }
+        let (_, san) = SAN::parse($input, context.current_position()).unwrap();
+        assert_eq!(Move::try_from(san).unwrap(), $expected);
+    };
         ($input:expr, $expected:expr, $fen:expr) => {
             assert_parses!($input, $expected, $fen, Vec::<&str>::new());
         };
@@ -379,6 +506,20 @@ mod tests {
         #[test]
         fn parses_pawn_push_and_promotion() {
             assert_parses!("e8=N", Move::new(E7, E8, MoveType::PROMOTION_KNIGHT), "8/4P3/8/8/8/8/8/8 w - - 0 1");
+        }
+    }
+
+    mod castles {
+        use super::*;
+
+        #[test]
+        fn parses_short_castle() {
+            assert_parses!("O-O", Move::new(E1, G1, MoveType::SHORT_CASTLE));
+        }
+
+        #[test]
+        fn parses_long_castle() {
+            assert_parses!("O-O-O", Move::new(E1, C1, MoveType::LONG_CASTLE));
         }
     }
 }

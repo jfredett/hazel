@@ -1152,3 +1152,108 @@ commands to subcomponents as it pleases. So the UI's implementation of `Alter` m
 state, while the Engine might instead be grabbing many alter's at once and applying them in batches somehow.
 
 
+
+# 19-NOV-2024
+
+## 2313 - pgn
+
+I'm frustrated by the fact that PGN requires, essentially, an entire movegen system to parse. I'm going to hack in
+something in the 'good enough' category so I can flesh out the Variation stuff and then probably put it down and go to
+work on the MoveGen. I have an idea for it that I think will work well with the design I'm aiming for. In a surprise to
+no one, it's copying the `Alter` system. I'm going to use the old movegen as a guide, and focus on building a system
+that can implement a rich language for querying a boardstate. I can then use this to build a movegen system that is
+abstract with respect to boardstate _and_ can abstractly describe different movegen calculation strategies that can then
+be run against multiple backend boards.
+
+An implementor would then have to implement some minimal set of operations, which all others must be expressed in terms
+of, and then I can build different backend representations designed to make some operations faster.
+
+Ultimately this will build up to a general language that can describe how to arrive at specific boardstates, and how to
+do analysis downstream.
+
+You'd have a script that describes some algorithm to tell the engine how to proceed from it's current position, what to
+evaluate (e.g., maybe "find the top 100 lines from this position for white at depth `n` and then calculate the relative
+power of the black bishop in each lines and report the distribution as a graph"), and then hazel would haul off and do
+the work.
+
+Each little language is really a part of this bigger language that ultimately 'compiles' to some glue language.
+
+I was hoping to get `pgns` more fully and comfortably supported, but I don't think that's going to be possible right
+now. I might still work on the Variation -> PGN (at least the mainline) so I can display it in the UI, but I'll have to
+think about how much I want to keep writing parser/printer code.
+
+# 20-NOV-2024
+
+## 1141 - pgn
+
+Having thought about it more overnight, I think my plan is thus:
+
+1. Get the existing PGN parser to the closest thing to a working state as I can. Hack as needed
+2. Merge
+3. Extract and unify this 'minilanguage' thing I have going on into it's own abstraction (preparing for eventual parser
+   writing for the Witchlang)
+4. Build a better MoveGen system based on the enum-based approach
+
+Ultimately Hazel (the engine bit) is going to have a `WitchLang`, which compiles to `WitchASM`, which is an Enum-y
+language like what I have now. WitchLang will be a small scripting language that can be used to create more complex
+queries that can then be optimized, similar to how a database query-plans.
+
+Hazel (the engine) will be a small VM with some tools to alter it's scale, what represnetations are active, etc. It will
+produce a stream of instructions to configure itself and solve any presented chess problem.
+
+This will also allow for more asynchronous processing, e.g., the movegen can request a bunch of calculations, but the
+engine can batch and cache these things, reach into existing cache, etc -- behind the scenes.
+
+5. Get `perft` working for a few positions, matching stockfish
+
+This milestone will be the big 'I've got a system working' moment; since from here it's just a matter of adding eval and
+pruning tools to the results of the movegen. Ideally I'll be able to express some basic evaluation functions in the
+WitchLang and then start looking to extend it to NNUE and the like. Ideally it's something like:
+
+```
+Engine Tune:
+    Set parameters here
+Search <Some FEN>
+    Depth <some plycount>
+    Prune With:
+        Some subprogram
+    Filter Final:
+        Some subprogram
+    Group By:
+        Some subprogram
+# etc
+```
+
+This gets compiled down to a series of `WitchASM` instructions that can be run on the engine, and then ideally the
+language can express self-retuning as it iterates, etc. Ideally all the chess-related logic ends up in this language and
+we then attack the problem like a compiler problem, optimizing to intermediate reps and building an engine that can
+solve the given script optimally.
+
+I think this will make for something very flexible, since most of the chess logic will live in the language and not the
+engine itself. I suspect I may see some overhead, but I'm hoping the translation layers should mitigate some of that,
+since the final set of instructions that the thing needs to execute should be somewhat smaller. Translating further down
+to bytecode (and perhaps SIMD bytecode, since most of these operations should be parallelish) should be doable and
+hopefully keep the speed sufficient to justify the flexibility on offer.
+
+For Eval, I'm planning to build a bunch of different eval functions, but I'm particularly interested in NNUE and messing
+around with different architectures using the NNUE concept. More SIMD in my future.
+
+Ideally I'd like to get to the point where I have a suite of integration tests that:
+
+1. Use WitchLang to load a PGN, do evaluation to it, and report statistics about the results.
+2. Use WitchLang to perft from multiple different positions and compare statically to stockfish
+3. Use WitchLang to generate a random position by playing random moves, then dynamically compare perft results with
+   stockfish to the maximum depth achievable in a reasonable time.
+
+Those three tests should fully exercise any movegen code I'm using; especially if I can set the number of PGNs pretty
+high.
+
+## 2136 - pgn
+
+I ticked off #1 of the above and got past the ambiguity with sliding pieces. I even got to use some of the old bitboard
+implementation.
+
+I need to do some work to get variations parsing and the like, but I think the move generation is probably 'good enough'
+that I shouldn't run into an ambiguity problem again.
+
+I'm not tempting the gods, _you're_ tempting the gods!
