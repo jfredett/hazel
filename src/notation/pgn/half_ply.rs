@@ -19,7 +19,6 @@ pub struct HalfPly {
 impl HalfPly {
 
     pub fn parse<'a>(input: &'a str, color: Color, context: BEN) -> IResult<&'a str, Self> {
-        // We don't actually care about the ply number.
         let (input, _) = multispace0(input)?;
         let (input, san) = SAN::parse(input, context)?;
         let (input, annotations) = many0(one_of(PGN_ANNOTATIONS))(input)?;

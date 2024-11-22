@@ -3,7 +3,7 @@ use nom::IResult;
 
 use super::*;
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct TagPairs(Vec<TagPair>);
 
 impl TagPairs {
@@ -25,7 +25,7 @@ impl TagPairs {
     }
 }
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct TagPair {
     name: String,
     value: String,
@@ -43,7 +43,7 @@ impl TagPair {
             char('"'),
         )(input)?;
         let (input, _) = char(']')(input)?;
-        let (input, _) = many0(newline)(input)?;
+        let (input, _) = newline(input)?;
 
         Ok((input, TagPair { name: name.to_string(), value: value.to_string() }))
     }

@@ -1,16 +1,19 @@
-use nom::{branch::alt, bytes::complete::tag, character::complete::{multispace0, multispace1, one_of}, combinator::opt, multi::many1, sequence::delimited, IResult};
+use nom::{branch::alt, bytes::complete::tag, character::complete::{char, multispace0, multispace1, newline, one_of}, combinator::opt, multi::many1, sequence::delimited, IResult};
 use tracing::debug;
 
 use crate::{board::Alter, coup::rep::Move, notation::{ben::BEN, san::SANConversionError}, types::Color};
 
-use super::HalfPly;
+use super::{HalfPly, TagPair};
 
 #[derive(Debug, Clone)]
 pub struct Ply {
+    starts_variation: Option<Color>,
+    ends_variation: Option<Color>,
     number: usize,
     white: HalfPly,
     black: Option<HalfPly>,
 }
+
 
 
 impl Ply {
@@ -18,7 +21,23 @@ impl Ply {
     ///
     /// XX. YY ZZ
     ///
-    /// This returns a result of ("YY ZZ", XX as usize)
+    /// or starting a white variation:
+    ///
+    /// (XX. YY ZZ
+    ///
+    /// or starting a black variation:
+    ///
+    /// (XX... ZZ
+    ///
+    /// and also to close a white variation:
+    ///
+    /// XX. YY)
+    ///
+    /// and to close a black variation:
+    ///
+    /// XX. YY ZZ)
+    ///
+    /// This returns a HalfPly with all the relevant data in it.
     ///
     /// Note that it consumes _all available whitespace_ after the ply number, and optionally will
     /// read the period after the ply number if it is present.
@@ -39,10 +58,17 @@ impl Ply {
         self.black.as_ref()
     }
 
-    pub fn parse(input: &str, context: impl Into<BEN>) -> IResult<&str, Ply> {
+    pub fn parse_variation(input: &str, context: impl Into<BEN>) -> IResult<&str, Ply> {
+        let (input, ply_number) = Self::ply_number(input)?;
+        // if we see a open paren, we know we are starting a variation
+
+        // TODO: Cover the (X. WM BM  case
+        // TODO: Cover the (X... BM  case
+        todo!()
+    }
+
+    pub fn parse_mainline(input: &str, context: impl Into<BEN>) -> IResult<&str, Ply> {
         let mut ctx : BEN = context.into();
-        // TODO: Cover the (X. WM BM) case
-        // TODO: Cover the (X... BM) case
         let (input, number) = Self::ply_number(input)?;
         let (input, white) = HalfPly::parse(input, Color::WHITE, ctx)?;
 
@@ -75,9 +101,27 @@ impl Ply {
         debug!("Next Ply Contents: {:?}", (number, white.clone(), black.clone()));
 
         Ok((input, Ply {
+            starts_variation: None,
+            ends_variation: None,
             number,
             white,
             black,
         }))
+    }
+
+    pub fn parse(input: &str, context: impl Into<BEN>) -> IResult<&str, Ply> {
+        let ctx = context.into();
+        let parse_var = |inp| Self::parse_variation(inp, ctx);
+        let parse_main = |inp| Self::parse_mainline(inp, ctx);
+        let (input, ply) = alt((
+            parse_var,
+            parse_main
+        ))(input)?;
+
+
+
+
+        todo!();
+
     }
 }
