@@ -35,7 +35,6 @@ todo!();
 
 use crate::{notation::{ben::BEN, san::SAN}, types::Color};
 
-const PGN_ANNOTATIONS: &str = "!?+-.#";
 
 impl Default for PGN {
     fn default() -> Self {

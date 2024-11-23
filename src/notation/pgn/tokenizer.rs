@@ -1,4 +1,4 @@
-use nom::{branch::alt, bytes::complete::tag, character::complete::{char, multispace0, newline, one_of}, combinator::opt, multi::many1, sequence::delimited, IResult};
+use nom::{branch::alt, bytes::complete::tag, character::complete::{char, alpha1, multispace0, newline, one_of}, combinator::opt, multi::many1, sequence::delimited, IResult};
 use tracing::debug;
 
 use super::TagPair;
@@ -10,10 +10,15 @@ pub enum PGNToken {
     TagPair(TagPair),
     Turn(usize), // covers both white-starts and black-starts turns.
     Coup(String),
+    Annotation(String),
+    Comment(String),
     VariationStart,
     VariationEnd,
     Halt
 }
+
+const SAN_MOVE_CHARS: &str = "abcdefghRNBQKx12345678";
+const PGN_ANNOTATIONS: &str = "!?+-.#";
 
 impl PGNToken {
 
@@ -35,10 +40,45 @@ impl PGNToken {
         Ok((input, PGNToken::Turn(number)))
     }
 
+    pub fn long_castle(input: &str) -> IResult<&str, Vec<char>> {
+        let (input, _) = alt((
+            tag("O-O-O"), tag("o-o-o"), tag("0-0-0")
+        ))(input)?;
+        Ok((input, "O-O-O".chars().collect()))
+    }
+
+    pub fn short_castle(input: &str) -> IResult<&str, Vec<char>> {
+        let (input, _) = alt((
+            tag("O-O"), tag("o-o"), tag("0-0")
+        ))(input)?;
+        Ok((input, "O-O".chars().collect()))
+    }
+
     pub fn coup(input: &str) -> IResult<&str, PGNToken> {
-        let (input, san_chars) = delimited(multispace0, many1(one_of("abcdefghRNBQKxoO123456780-+#!?")), multispace0)(input)?;
+
+        let (input, san_chars) = delimited(
+            multispace0,
+            alt((
+                Self::long_castle, // long castle
+                Self::short_castle, // short castle
+                many1(one_of(SAN_MOVE_CHARS))
+            )),
+            multispace0
+        )(input)?;
         let san : String = san_chars.iter().collect();
         Ok((input, PGNToken::Coup(san)))
+    }
+
+    pub fn annotation(input: &str) -> IResult<&str, PGNToken> {
+        let (input, annotation_chars) = delimited(multispace0, many1(one_of(PGN_ANNOTATIONS)), multispace0)(input)?;
+        let annotation : String = annotation_chars.iter().collect();
+        Ok((input, PGNToken::Annotation(annotation)))
+    }
+
+    pub fn comment(input: &str) -> IResult<&str, PGNToken> {
+        let (input, comment_chars) = delimited(char('{'), alpha1, char('}'))(input)?;
+        let comment : String = comment_chars.chars().collect();
+        Ok((input, PGNToken::Comment(comment)))
     }
 
     pub fn variation_start(input: &str) -> IResult<&str, PGNToken> {
@@ -77,27 +117,38 @@ impl PGNToken {
         Ok((input, PGNToken::TagPair(tag_pair)))
     }
 
-    pub fn tokenize(input: &str) -> IResult<&str, Vec<PGNToken>> {
-        let mut tokens = Vec::new();
-        tokens.push(PGNToken::GameStart);
-
-        debug!("Processing 1: {}", input);
+    pub fn tag_pair_section(input: &str) -> IResult<&str, Vec<PGNToken>> {
         let (input, tag_pairs) = many1(Self::tag_pair)(input)?;
-        tokens.extend(tag_pairs);
-        debug!("Processing 2: {}", input);
+        Ok((input, tag_pairs))
+    }
 
-        let (input, _) = newline(input)?;
-        debug!("Processing 3: {}", input);
-
-        let (input, toks) = many1(alt((
+    pub fn variation_section(input: &str) -> IResult<&str, Vec<PGNToken>> {
+        let (input, tokens) = many1(alt((
             // Order matters
             PGNToken::variation_start,
             PGNToken::variation_end,
             PGNToken::turn,
             PGNToken::halt,
             PGNToken::coup,
+            PGNToken::annotation,
+            PGNToken::comment,
         )))(input)?;
+        Ok((input, tokens))
+    }
 
+    pub fn tokenize(input: &str) -> IResult<&str, Vec<PGNToken>> {
+        let mut tokens = Vec::new();
+        tokens.push(PGNToken::GameStart);
+
+        debug!("Processing 1: {}", input);
+        let (input, tag_pairs) = Self::tag_pair_section(input)?;
+        tokens.extend(tag_pairs);
+        debug!("Processing 2: {}", input);
+
+        let (input, _) = newline(input)?;
+        debug!("Processing 3: {}", input);
+
+        let (input, toks) = Self::variation_section(input)?;
         tokens.extend(toks);
 
         if input.is_empty() {
@@ -124,22 +175,19 @@ mod tests {
         use super::*;
 
         mod tokenize {
+
             use super::*;
-
             #[test]
-            #[tracing_test::traced_test]
-            fn imports_from_pgn_with_no_variations_and_halts() {
-                let (input, tokens) = PGNToken::tokenize_file("tests/fixtures/no-variations-and-halts.pgn").unwrap();
-
+            fn imports_from_pgn_with_no_variations_and_halt() {
+                let (input, tokens) = PGNToken::tokenize_file("tests/fixtures/no-variations-and-no-halt.pgn").unwrap();
                 let expected = [
                     PGNToken::GameStart,
-                    PGNToken::TagPair(TagPair { name: "Event".to_string(), value: "No Variations, Includes Halt".to_string() }),
+                    PGNToken::TagPair(TagPair { name: "Event".to_string(), value: "No Variations, No Halt".to_string() }),
                     PGNToken::TagPair(TagPair { name: "White".to_string(), value: "white".to_string() }),
                     PGNToken::TagPair(TagPair { name: "Black".to_string(), value: "black".to_string() }),
                     PGNToken::TagPair(TagPair { name: "Result".to_string(), value: "0-1".to_string() }),
                     PGNToken::TagPair(TagPair { name: "CurrentPosition".to_string(), value: "3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - -".to_string() }),
                     PGNToken::TagPair(TagPair { name: "TimeControl".to_string(), value: "900+10".to_string() }),
-                    PGNToken::TagPair(TagPair { name: "Termination".to_string(), value: "black won on time".to_string() }),
                     PGNToken::Turn(1), PGNToken::Coup("e4".to_string()), PGNToken::Coup("c6".to_string()),
                     PGNToken::Turn(2), PGNToken::Coup("d4".to_string()), PGNToken::Coup("d5".to_string()),
                     PGNToken::Turn(3), PGNToken::Coup("exd5".to_string()), PGNToken::Coup("cxd5".to_string()),
@@ -165,70 +213,184 @@ mod tests {
                     PGNToken::Turn(23), PGNToken::Coup("Kf1".to_string()), PGNToken::Coup("Bxe5".to_string()),
                     PGNToken::Turn(24), PGNToken::Coup("Qg6".to_string()), PGNToken::Coup("Nf4".to_string()),
                     PGNToken::Turn(25), PGNToken::Coup("Bxf4".to_string()), PGNToken::Coup("Qd4".to_string()),
-                    PGNToken::Turn(26), PGNToken::Coup("Qxe6+".to_string()), PGNToken::Coup("Rf7".to_string()),
-                    PGNToken::Turn(27), PGNToken::Coup("Bxe5".to_string()), PGNToken::Coup("Qxd3+".to_string()),
-                    PGNToken::Turn(28), PGNToken::Coup("Re2".to_string()), PGNToken::Coup("Bxg2+".to_string()),
+                    PGNToken::Turn(26), PGNToken::Coup("Qxe6".to_string()), PGNToken::Annotation("+".to_string()), PGNToken::Coup("Rf7".to_string()),
+                    PGNToken::Turn(27), PGNToken::Coup("Bxe5".to_string()), PGNToken::Coup("Qxd3".to_string()), PGNToken::Annotation("+".to_string()),
+                    PGNToken::Turn(28), PGNToken::Coup("Re2".to_string()), PGNToken::Coup("Bxg2".to_string()), PGNToken::Annotation("+".to_string()),
                     PGNToken::Turn(29), PGNToken::Coup("Ke1".to_string()), PGNToken::Coup("Rd8".to_string()),
-                    PGNToken::Halt,
                     PGNToken::GameEnd
                 ];
 
+                similar_asserts::assert_eq!(input, "");
+
+                for i in 0..tokens.len() {
+                    assert_eq!(tokens[i], expected[i]);
+                }
+
+
+                similar_asserts::assert_eq!(tokens, expected);
+
+            }
+
+            #[test]
+            #[tracing_test::traced_test]
+            fn imports_from_pgn_with_variations_and_no_halt() {
+                let (input, tokens) = PGNToken::tokenize_file("tests/fixtures/with-variations-no-halt.pgn").unwrap();
+                let expected = [
+                    PGNToken::GameStart,
+                    PGNToken::TagPair(TagPair { name: "Event".to_string(), value: "With Variations".to_string() }),
+                    PGNToken::TagPair(TagPair { name: "White".to_string(), value: "white".to_string() }),
+                    PGNToken::TagPair(TagPair { name: "Black".to_string(), value: "black".to_string() }),
+                    PGNToken::TagPair(TagPair { name: "Result".to_string(), value: "0-1".to_string() }),
+                    PGNToken::TagPair(TagPair { name: "TimeControl".to_string(), value: "900+10".to_string() }),
+                    PGNToken::Turn(1), PGNToken::Coup("d4".to_string()), PGNToken::Coup("d5".to_string()),
+                    PGNToken::Turn(2), PGNToken::Coup("Bf4".to_string()), PGNToken::Coup("c6".to_string()),
+                    PGNToken::Turn(3), PGNToken::Coup("Nf3".to_string()), PGNToken::Coup("Nf6".to_string()),
+                    PGNToken::Turn(4), PGNToken::Coup("e3".to_string()), PGNToken::Coup("Nh5".to_string()),
+                    PGNToken::VariationStart, // BVO
+                    PGNToken::Turn(4), PGNToken::Coup("Bf5".to_string()),
+                    PGNToken::Turn(5), PGNToken::Coup("c4".to_string()), PGNToken::Coup("a5".to_string()),
+                    PGNToken::Turn(6), PGNToken::Coup("Nc3".to_string()), PGNToken::Coup("e6".to_string()),
+                    PGNToken::VariationEnd,
+                    PGNToken::Turn(5), PGNToken::Coup("Be5".to_string()), PGNToken::Coup("f6".to_string()),
+                    PGNToken::Turn(6), PGNToken::Coup("Bxb8".to_string()),
+                    PGNToken::VariationStart, // WVO
+                    PGNToken::Turn(6), PGNToken::Coup("Bg3".to_string()), PGNToken::Coup("Nxg3".to_string()),
+                    PGNToken::Turn(7), PGNToken::Coup("hxg3".to_string()),
+                    PGNToken::VariationEnd,
+                    PGNToken::Turn(6), PGNToken::Coup("Rxb8".to_string().to_string()),
+                    PGNToken::Turn(7), PGNToken::Coup("c4".to_string()), PGNToken::Coup("g6".to_string()),
+                    PGNToken::GameEnd
+                ];
                 assert_eq!(input, "");
                 assert_eq!(tokens, expected);
             }
-        }
-
-        mod turn {
-            use super::*;
 
             #[test]
-            #[tracing_test::traced_test]
-            fn parses_turn() {
-                let (input, token) = PGNToken::turn("1. ").unwrap();
+            fn imports_from_pgn_with_variations_and_halt() {
+                let (input, tokens) = PGNToken::tokenize_file("tests/fixtures/with-variations-halts.pgn").unwrap();
+                let expected = [
+                    PGNToken::GameStart,
+                    PGNToken::TagPair(TagPair { name: "Event".to_string(), value: "With Variations".to_string() }),
+                    PGNToken::TagPair(TagPair { name: "White".to_string(), value: "white".to_string() }),
+                    PGNToken::TagPair(TagPair { name: "Black".to_string(), value: "black".to_string() }),
+                    PGNToken::TagPair(TagPair { name: "Result".to_string(), value: "0-1".to_string() }),
+                    PGNToken::TagPair(TagPair { name: "TimeControl".to_string(), value: "900+10".to_string() }),
+                    PGNToken::Turn(1), PGNToken::Coup("d4".to_string()), PGNToken::Coup("d5".to_string()),
+                    PGNToken::Turn(2), PGNToken::Coup("Bf4".to_string()), PGNToken::Coup("c6".to_string()),
+                    PGNToken::Turn(3), PGNToken::Coup("Nf3".to_string()), PGNToken::Coup("Nf6".to_string()),
+                    PGNToken::Turn(4), PGNToken::Coup("e3".to_string()), PGNToken::Coup("Nh5".to_string()),
+                    PGNToken::VariationStart, // BVO
+                    PGNToken::Turn(4), PGNToken::Coup("Bf5".to_string()),
+                    PGNToken::Turn(5), PGNToken::Coup("c4".to_string()), PGNToken::Coup("a5".to_string()),
+                    PGNToken::Turn(6), PGNToken::Coup("Nc3".to_string()), PGNToken::Coup("e6".to_string()),
+                    PGNToken::VariationEnd,
+                    PGNToken::Turn(5), PGNToken::Coup("Be5".to_string()), PGNToken::Coup("f6".to_string()),
+                    PGNToken::Turn(6), PGNToken::Coup("Bxb8".to_string()),
+                    PGNToken::VariationStart, // WVO
+                    PGNToken::Turn(6), PGNToken::Coup("Bg3".to_string()), PGNToken::Coup("Nxg3".to_string()),
+                    PGNToken::Turn(7), PGNToken::Coup("hxg3".to_string()),
+                    PGNToken::VariationEnd,
+                    PGNToken::Turn(6), PGNToken::Coup("Rxb8".to_string().to_string()),
+                    PGNToken::Turn(7), PGNToken::Coup("c4".to_string()), PGNToken::Coup("g6".to_string()),
+                    PGNToken::Halt,
+                    PGNToken::GameEnd
+                ];
                 assert_eq!(input, "");
-                assert_eq!(token, PGNToken::Turn(1));
-
-                let (input, token) = PGNToken::turn("1... ").unwrap();
-                assert_eq!(input, "");
-                assert_eq!(token, PGNToken::Turn(1));
+                assert_eq!(tokens, expected);
             }
-        }
-
-        mod halt {
-            use super::*;
 
             #[test]
-            #[tracing_test::traced_test]
-            fn parses_halt() {
-                let (input, token) = PGNToken::halt("1-0 ").unwrap();
+            fn imports_from_pgn_with_nested_variations_and_no_halt() {
+                let (input, tokens) = PGNToken::tokenize_file("tests/fixtures/with-nested-variations-no-halt.pgn").unwrap();
+                let expected = [
+                    PGNToken::GameStart,
+                    PGNToken::TagPair(TagPair { name: "Event".to_string(), value: "Nested Variations".to_string() }),
+                    PGNToken::TagPair(TagPair { name: "White".to_string(), value: "white".to_string() }),
+                    PGNToken::TagPair(TagPair { name: "Black".to_string(), value: "black".to_string() }),
+                    PGNToken::TagPair(TagPair { name: "Result".to_string(), value: "0-1".to_string() }),
+                    PGNToken::TagPair(TagPair { name: "TimeControl".to_string(), value: "900+10".to_string() }),
+                    PGNToken::Turn(1), PGNToken::Coup("d4".to_string()), PGNToken::Coup("d5".to_string()),
+                    PGNToken::Turn(2), PGNToken::Coup("Bf4".to_string()), PGNToken::Coup("c6".to_string()),
+                    PGNToken::Turn(3), PGNToken::Coup("Nf3".to_string()), PGNToken::Coup("Nf6".to_string()),
+                    PGNToken::Turn(4), PGNToken::Coup("e3".to_string()), PGNToken::Coup("Nh5".to_string()),
+                    PGNToken::VariationStart, // BVO
+                    PGNToken::Turn(4), PGNToken::Coup("Bf5".to_string()),
+                    PGNToken::Turn(5), PGNToken::Coup("c4".to_string()), PGNToken::Coup("a5".to_string()),
+                    PGNToken::VariationStart, // BVO
+                    PGNToken::Turn(5), PGNToken::Coup("e6".to_string()),
+                    PGNToken::Turn(6), PGNToken::Coup("Qb3".to_string()), PGNToken::Coup("b6".to_string()),
+                    PGNToken::Turn(7), PGNToken::Coup("Nc3".to_string()),
+                    PGNToken::VariationEnd,
+                    PGNToken::Turn(6), PGNToken::Coup("Nc3".to_string()), PGNToken::Coup("e6".to_string()),
+                    PGNToken::VariationEnd,
+                    PGNToken::Turn(5), PGNToken::Coup("Be5".to_string()), PGNToken::Coup("f6".to_string()),
+                    PGNToken::Turn(6), PGNToken::Coup("Bxb8".to_string()),
+                    PGNToken::VariationStart, // WVO
+                    PGNToken::Turn(6), PGNToken::Coup("Bg3".to_string()), PGNToken::Coup("Nxg3".to_string()),
+                    PGNToken::Turn(7), PGNToken::Coup("hxg3".to_string()),
+                    PGNToken::VariationEnd,
+                    PGNToken::Turn(6), PGNToken::Coup("Rxb8".to_string().to_string()),
+                    PGNToken::Turn(7), PGNToken::Coup("c4".to_string()), PGNToken::Coup("g6".to_string()),
+                    PGNToken::GameEnd
+                ];
                 assert_eq!(input, "");
-                assert_eq!(token, PGNToken::Halt);
+                similar_asserts::assert_eq!(tokens, expected);
+            }
 
-                let (input, token) = PGNToken::halt("0-1 ").unwrap();
+            #[test]
+            fn imports_from_pgn_with_nested_variations_and_halt() {
+                let (input, tokens) = PGNToken::tokenize_file("tests/fixtures/with-nested-variations-halts.pgn").unwrap();
+                let expected = [
+                    PGNToken::GameStart,
+                    PGNToken::TagPair(TagPair { name: "Event".to_string(), value: "Nested Variations".to_string() }),
+                    PGNToken::TagPair(TagPair { name: "White".to_string(), value: "white".to_string() }),
+                    PGNToken::TagPair(TagPair { name: "Black".to_string(), value: "black".to_string() }),
+                    PGNToken::TagPair(TagPair { name: "Result".to_string(), value: "0-1".to_string() }),
+                    PGNToken::TagPair(TagPair { name: "TimeControl".to_string(), value: "900+10".to_string() }),
+                    PGNToken::Turn(1), PGNToken::Coup("d4".to_string()), PGNToken::Coup("d5".to_string()),
+                    PGNToken::Turn(2), PGNToken::Coup("Bf4".to_string()), PGNToken::Coup("c6".to_string()),
+                    PGNToken::Turn(3), PGNToken::Coup("Nf3".to_string()), PGNToken::Coup("Nf6".to_string()),
+                    PGNToken::Turn(4), PGNToken::Coup("e3".to_string()), PGNToken::Coup("Nh5".to_string()),
+                    PGNToken::VariationStart, // BVO
+                    PGNToken::Turn(4), PGNToken::Coup("Bf5".to_string()),
+                    PGNToken::Turn(5), PGNToken::Coup("c4".to_string()), PGNToken::Coup("a5".to_string()),
+                    PGNToken::VariationStart, // BVO
+                    PGNToken::Turn(5), PGNToken::Coup("e6".to_string()),
+                    PGNToken::Turn(6), PGNToken::Coup("Qb3".to_string()), PGNToken::Coup("b6".to_string()),
+                    PGNToken::Turn(7), PGNToken::Coup("Nc3".to_string()),
+                    PGNToken::VariationEnd,
+                    PGNToken::Turn(6), PGNToken::Coup("Nc3".to_string()), PGNToken::Coup("e6".to_string()),
+                    PGNToken::VariationEnd,
+                    PGNToken::Turn(5), PGNToken::Coup("Be5".to_string()), PGNToken::Coup("f6".to_string()),
+                    PGNToken::Turn(6), PGNToken::Coup("Bxb8".to_string()),
+                    PGNToken::VariationStart, // WVO
+                    PGNToken::Turn(6), PGNToken::Coup("Bg3".to_string()), PGNToken::Coup("Nxg3".to_string()),
+                    PGNToken::Turn(7), PGNToken::Coup("hxg3".to_string()),
+                    PGNToken::VariationEnd,
+                    PGNToken::Turn(6), PGNToken::Coup("Rxb8".to_string().to_string()),
+                    PGNToken::Turn(7), PGNToken::Coup("c4".to_string()), PGNToken::Coup("g6".to_string()),
+                    PGNToken::Halt,
+                    PGNToken::GameEnd
+                ];
                 assert_eq!(input, "");
-                assert_eq!(token, PGNToken::Halt);
-
-                let (input, token) = PGNToken::halt("1/2-1/2 ").unwrap();
-                assert_eq!(input, "");
-                assert_eq!(token, PGNToken::Halt);
-
-                let (input, token) = PGNToken::halt("* ").unwrap();
-                assert_eq!(input, "");
-                assert_eq!(token, PGNToken::Halt);
+                similar_asserts::assert_eq!(tokens, expected);
             }
         }
 
         #[test]
-        fn imports_from_pgn_with_no_variations_and_halt() {
-            let (input, tokens) = PGNToken::tokenize_file("tests/fixtures/no-variations-and-no-halt.pgn").unwrap();
+        #[tracing_test::traced_test]
+        fn imports_from_pgn_with_no_variations_and_halts() {
+            let (input, tokens) = PGNToken::tokenize_file("tests/fixtures/no-variations-and-halts.pgn").unwrap();
+
             let expected = [
                 PGNToken::GameStart,
-                PGNToken::TagPair(TagPair { name: "Event".to_string(), value: "No Variations, No Halt".to_string() }),
+                PGNToken::TagPair(TagPair { name: "Event".to_string(), value: "No Variations, Includes Halt".to_string() }),
                 PGNToken::TagPair(TagPair { name: "White".to_string(), value: "white".to_string() }),
                 PGNToken::TagPair(TagPair { name: "Black".to_string(), value: "black".to_string() }),
                 PGNToken::TagPair(TagPair { name: "Result".to_string(), value: "0-1".to_string() }),
                 PGNToken::TagPair(TagPair { name: "CurrentPosition".to_string(), value: "3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - -".to_string() }),
                 PGNToken::TagPair(TagPair { name: "TimeControl".to_string(), value: "900+10".to_string() }),
+                PGNToken::TagPair(TagPair { name: "Termination".to_string(), value: "black won on time".to_string() }),
                 PGNToken::Turn(1), PGNToken::Coup("e4".to_string()), PGNToken::Coup("c6".to_string()),
                 PGNToken::Turn(2), PGNToken::Coup("d4".to_string()), PGNToken::Coup("d5".to_string()),
                 PGNToken::Turn(3), PGNToken::Coup("exd5".to_string()), PGNToken::Coup("cxd5".to_string()),
@@ -254,160 +416,104 @@ mod tests {
                 PGNToken::Turn(23), PGNToken::Coup("Kf1".to_string()), PGNToken::Coup("Bxe5".to_string()),
                 PGNToken::Turn(24), PGNToken::Coup("Qg6".to_string()), PGNToken::Coup("Nf4".to_string()),
                 PGNToken::Turn(25), PGNToken::Coup("Bxf4".to_string()), PGNToken::Coup("Qd4".to_string()),
-                PGNToken::Turn(26), PGNToken::Coup("Qxe6+".to_string()), PGNToken::Coup("Rf7".to_string()),
-                PGNToken::Turn(27), PGNToken::Coup("Bxe5".to_string()), PGNToken::Coup("Qxd3+".to_string()),
-                PGNToken::Turn(28), PGNToken::Coup("Re2".to_string()), PGNToken::Coup("Bxg2+".to_string()),
+                PGNToken::Turn(26), PGNToken::Coup("Qxe6".to_string()), PGNToken::Annotation("+".to_string()), PGNToken::Coup("Rf7".to_string()),
+                PGNToken::Turn(27), PGNToken::Coup("Bxe5".to_string()), PGNToken::Coup("Qxd3".to_string()), PGNToken::Annotation("+".to_string()),
+                PGNToken::Turn(28), PGNToken::Coup("Re2".to_string()), PGNToken::Coup("Bxg2".to_string()), PGNToken::Annotation("+".to_string()),
                 PGNToken::Turn(29), PGNToken::Coup("Ke1".to_string()), PGNToken::Coup("Rd8".to_string()),
-                PGNToken::GameEnd
-            ];
-
-            assert_eq!(input, "");
-            assert_eq!(tokens, expected);
-        }
-
-        #[test]
-        #[tracing_test::traced_test]
-        fn imports_from_pgn_with_variations_and_no_halt() {
-            let (input, tokens) = PGNToken::tokenize_file("tests/fixtures/with-variations-no-halt.pgn").unwrap();
-            let expected = [
-                PGNToken::GameStart,
-                PGNToken::TagPair(TagPair { name: "Event".to_string(), value: "With Variations".to_string() }),
-                PGNToken::TagPair(TagPair { name: "White".to_string(), value: "white".to_string() }),
-                PGNToken::TagPair(TagPair { name: "Black".to_string(), value: "black".to_string() }),
-                PGNToken::TagPair(TagPair { name: "Result".to_string(), value: "0-1".to_string() }),
-                PGNToken::TagPair(TagPair { name: "TimeControl".to_string(), value: "900+10".to_string() }),
-                PGNToken::Turn(1), PGNToken::Coup("d4".to_string()), PGNToken::Coup("d5".to_string()),
-                PGNToken::Turn(2), PGNToken::Coup("Bf4".to_string()), PGNToken::Coup("c6".to_string()),
-                PGNToken::Turn(3), PGNToken::Coup("Nf3".to_string()), PGNToken::Coup("Nf6".to_string()),
-                PGNToken::Turn(4), PGNToken::Coup("e3".to_string()), PGNToken::Coup("Nh5".to_string()),
-                PGNToken::VariationStart, // BVO
-                    PGNToken::Turn(4), PGNToken::Coup("Bf5".to_string()),
-                    PGNToken::Turn(5), PGNToken::Coup("c4".to_string()), PGNToken::Coup("a5".to_string()),
-                    PGNToken::Turn(6), PGNToken::Coup("Nc3".to_string()), PGNToken::Coup("e6".to_string()),
-                PGNToken::VariationEnd,
-                PGNToken::Turn(5), PGNToken::Coup("Be5".to_string()), PGNToken::Coup("f6".to_string()),
-                PGNToken::Turn(6), PGNToken::Coup("Bxb8".to_string()),
-                PGNToken::VariationStart, // WVO
-                    PGNToken::Turn(6), PGNToken::Coup("Bg3".to_string()), PGNToken::Coup("Nxg3".to_string()),
-                    PGNToken::Turn(7), PGNToken::Coup("hxg3".to_string()),
-                PGNToken::VariationEnd,
-                PGNToken::Turn(6), PGNToken::Coup("Rxb8".to_string().to_string()),
-                PGNToken::Turn(7), PGNToken::Coup("c4".to_string()), PGNToken::Coup("g6".to_string()),
-                PGNToken::GameEnd
-            ];
-            assert_eq!(input, "");
-            assert_eq!(tokens, expected);
-        }
-
-        #[test]
-        fn imports_from_pgn_with_variations_and_halt() {
-            let (input, tokens) = PGNToken::tokenize_file("tests/fixtures/with-variations-halts.pgn").unwrap();
-            let expected = [
-                PGNToken::GameStart,
-                PGNToken::TagPair(TagPair { name: "Event".to_string(), value: "With Variations".to_string() }),
-                PGNToken::TagPair(TagPair { name: "White".to_string(), value: "white".to_string() }),
-                PGNToken::TagPair(TagPair { name: "Black".to_string(), value: "black".to_string() }),
-                PGNToken::TagPair(TagPair { name: "Result".to_string(), value: "0-1".to_string() }),
-                PGNToken::TagPair(TagPair { name: "TimeControl".to_string(), value: "900+10".to_string() }),
-                PGNToken::Turn(1), PGNToken::Coup("d4".to_string()), PGNToken::Coup("d5".to_string()),
-                PGNToken::Turn(2), PGNToken::Coup("Bf4".to_string()), PGNToken::Coup("c6".to_string()),
-                PGNToken::Turn(3), PGNToken::Coup("Nf3".to_string()), PGNToken::Coup("Nf6".to_string()),
-                PGNToken::Turn(4), PGNToken::Coup("e3".to_string()), PGNToken::Coup("Nh5".to_string()),
-                PGNToken::VariationStart, // BVO
-                    PGNToken::Turn(4), PGNToken::Coup("Bf5".to_string()),
-                    PGNToken::Turn(5), PGNToken::Coup("c4".to_string()), PGNToken::Coup("a5".to_string()),
-                    PGNToken::Turn(6), PGNToken::Coup("Nc3".to_string()), PGNToken::Coup("e6".to_string()),
-                PGNToken::VariationEnd,
-                PGNToken::Turn(5), PGNToken::Coup("Be5".to_string()), PGNToken::Coup("f6".to_string()),
-                PGNToken::Turn(6), PGNToken::Coup("Bxb8".to_string()),
-                PGNToken::VariationStart, // WVO
-                    PGNToken::Turn(6), PGNToken::Coup("Bg3".to_string()), PGNToken::Coup("Nxg3".to_string()),
-                    PGNToken::Turn(7), PGNToken::Coup("hxg3".to_string()),
-                PGNToken::VariationEnd,
-                PGNToken::Turn(6), PGNToken::Coup("Rxb8".to_string().to_string()),
-                PGNToken::Turn(7), PGNToken::Coup("c4".to_string()), PGNToken::Coup("g6".to_string()),
                 PGNToken::Halt,
                 PGNToken::GameEnd
             ];
-            assert_eq!(input, "");
-            assert_eq!(tokens, expected);
-        }
 
-        #[test]
-        fn imports_from_pgn_with_nested_variations_and_no_halt() {
-            let (input, tokens) = PGNToken::tokenize_file("tests/fixtures/with-nested-variations-no-halt.pgn").unwrap();
-            let expected = [
-                PGNToken::GameStart,
-                PGNToken::TagPair(TagPair { name: "Event".to_string(), value: "Nested Variations".to_string() }),
-                PGNToken::TagPair(TagPair { name: "White".to_string(), value: "white".to_string() }),
-                PGNToken::TagPair(TagPair { name: "Black".to_string(), value: "black".to_string() }),
-                PGNToken::TagPair(TagPair { name: "Result".to_string(), value: "0-1".to_string() }),
-                PGNToken::TagPair(TagPair { name: "TimeControl".to_string(), value: "900+10".to_string() }),
-                PGNToken::Turn(1), PGNToken::Coup("d4".to_string()), PGNToken::Coup("d5".to_string()),
-                PGNToken::Turn(2), PGNToken::Coup("Bf4".to_string()), PGNToken::Coup("c6".to_string()),
-                PGNToken::Turn(3), PGNToken::Coup("Nf3".to_string()), PGNToken::Coup("Nf6".to_string()),
-                PGNToken::Turn(4), PGNToken::Coup("e3".to_string()), PGNToken::Coup("Nh5".to_string()),
-                PGNToken::VariationStart, // BVO
-                    PGNToken::Turn(4), PGNToken::Coup("Bf5".to_string()),
-                    PGNToken::Turn(5), PGNToken::Coup("c4".to_string()), PGNToken::Coup("a5".to_string()),
-                    PGNToken::VariationStart, // BVO
-                        PGNToken::Turn(5), PGNToken::Coup("e6".to_string()),
-                        PGNToken::Turn(6), PGNToken::Coup("Qb3".to_string()), PGNToken::Coup("b6".to_string()),
-                        PGNToken::Turn(7), PGNToken::Coup("Nc3".to_string()),
-                    PGNToken::VariationEnd,
-                    PGNToken::Turn(6), PGNToken::Coup("Nc3".to_string()), PGNToken::Coup("e6".to_string()),
-                PGNToken::VariationEnd,
-                PGNToken::Turn(5), PGNToken::Coup("Be5".to_string()), PGNToken::Coup("f6".to_string()),
-                PGNToken::Turn(6), PGNToken::Coup("Bxb8".to_string()),
-                PGNToken::VariationStart, // WVO
-                    PGNToken::Turn(6), PGNToken::Coup("Bg3".to_string()), PGNToken::Coup("Nxg3".to_string()),
-                    PGNToken::Turn(7), PGNToken::Coup("hxg3".to_string()),
-                PGNToken::VariationEnd,
-                PGNToken::Turn(6), PGNToken::Coup("Rxb8".to_string().to_string()),
-                PGNToken::Turn(7), PGNToken::Coup("c4".to_string()), PGNToken::Coup("g6".to_string()),
-                PGNToken::GameEnd
-            ];
-            assert_eq!(input, "");
-            similar_asserts::assert_eq!(tokens, expected);
-        }
-
-        #[test]
-        fn imports_from_pgn_with_nested_variations_and_halt() {
-            let (input, tokens) = PGNToken::tokenize_file("tests/fixtures/with-nested-variations-halts.pgn").unwrap();
-            let expected = [
-                PGNToken::GameStart,
-                PGNToken::TagPair(TagPair { name: "Event".to_string(), value: "Nested Variations".to_string() }),
-                PGNToken::TagPair(TagPair { name: "White".to_string(), value: "white".to_string() }),
-                PGNToken::TagPair(TagPair { name: "Black".to_string(), value: "black".to_string() }),
-                PGNToken::TagPair(TagPair { name: "Result".to_string(), value: "0-1".to_string() }),
-                PGNToken::TagPair(TagPair { name: "TimeControl".to_string(), value: "900+10".to_string() }),
-                PGNToken::Turn(1), PGNToken::Coup("d4".to_string()), PGNToken::Coup("d5".to_string()),
-                PGNToken::Turn(2), PGNToken::Coup("Bf4".to_string()), PGNToken::Coup("c6".to_string()),
-                PGNToken::Turn(3), PGNToken::Coup("Nf3".to_string()), PGNToken::Coup("Nf6".to_string()),
-                PGNToken::Turn(4), PGNToken::Coup("e3".to_string()), PGNToken::Coup("Nh5".to_string()),
-                PGNToken::VariationStart, // BVO
-                    PGNToken::Turn(4), PGNToken::Coup("Bf5".to_string()),
-                    PGNToken::Turn(5), PGNToken::Coup("c4".to_string()), PGNToken::Coup("a5".to_string()),
-                    PGNToken::VariationStart, // BVO
-                        PGNToken::Turn(5), PGNToken::Coup("e6".to_string()),
-                        PGNToken::Turn(6), PGNToken::Coup("Qb3".to_string()), PGNToken::Coup("b6".to_string()),
-                        PGNToken::Turn(7), PGNToken::Coup("Nc3".to_string()),
-                    PGNToken::VariationEnd,
-                    PGNToken::Turn(6), PGNToken::Coup("Nc3".to_string()), PGNToken::Coup("e6".to_string()),
-                PGNToken::VariationEnd,
-                PGNToken::Turn(5), PGNToken::Coup("Be5".to_string()), PGNToken::Coup("f6".to_string()),
-                PGNToken::Turn(6), PGNToken::Coup("Bxb8".to_string()),
-                PGNToken::VariationStart, // WVO
-                    PGNToken::Turn(6), PGNToken::Coup("Bg3".to_string()), PGNToken::Coup("Nxg3".to_string()),
-                    PGNToken::Turn(7), PGNToken::Coup("hxg3".to_string()),
-                PGNToken::VariationEnd,
-                PGNToken::Turn(6), PGNToken::Coup("Rxb8".to_string().to_string()),
-                PGNToken::Turn(7), PGNToken::Coup("c4".to_string()), PGNToken::Coup("g6".to_string()),
-                PGNToken::Halt,
-                PGNToken::GameEnd
-            ];
-            assert_eq!(input, "");
+            similar_asserts::assert_eq!(input, "");
             similar_asserts::assert_eq!(tokens, expected);
         }
     }
+
+    mod turn {
+        use super::*;
+
+        #[test]
+        #[tracing_test::traced_test]
+        fn parses_turn() {
+            let (input, token) = PGNToken::turn("1. ").unwrap();
+            assert_eq!(input, "");
+            assert_eq!(token, PGNToken::Turn(1));
+
+            let (input, token) = PGNToken::turn("1... ").unwrap();
+            assert_eq!(input, "");
+            assert_eq!(token, PGNToken::Turn(1));
+        }
+    }
+
+    mod coup {
+        use super::*;
+
+        #[test]
+        fn tokenizes_annotated_move_correctly() {
+            let m = "1. Qxe6+ ";
+            let (input, tokens) = PGNToken::variation_section(m).unwrap();
+
+            let expected = [
+                PGNToken::Turn(1),
+                PGNToken::Coup("Qxe6".to_string()),
+                PGNToken::Annotation("+".to_string())
+            ];
+
+            assert_eq!(input, "");
+            similar_asserts::assert_eq!(tokens, expected);
+
+        }
+    }
+
+    mod annotation {
+        use super::*;
+
+        #[test]
+        fn parses_annotation() {
+            let (input, token) = PGNToken::annotation("! ").unwrap();
+            assert_eq!(input, "");
+            assert_eq!(token, PGNToken::Annotation("!".to_string()));
+
+            let (input, token) = PGNToken::annotation("? ").unwrap();
+            assert_eq!(input, "");
+            assert_eq!(token, PGNToken::Annotation("?".to_string()));
+
+            let (input, token) = PGNToken::annotation("+ ").unwrap();
+            assert_eq!(input, "");
+            assert_eq!(token, PGNToken::Annotation("+".to_string()));
+
+            let (input, token) = PGNToken::annotation("- ").unwrap();
+            assert_eq!(input, "");
+            assert_eq!(token, PGNToken::Annotation("-".to_string()));
+
+            let (input, token) = PGNToken::annotation(". ").unwrap();
+            assert_eq!(input, "");
+            assert_eq!(token, PGNToken::Annotation(".".to_string()));
+        }
+    }
+
+    mod halt {
+        use super::*;
+
+        #[test]
+        #[tracing_test::traced_test]
+        fn parses_halt() {
+            let (input, token) = PGNToken::halt("1-0 ").unwrap();
+            assert_eq!(input, "");
+            assert_eq!(token, PGNToken::Halt);
+
+            let (input, token) = PGNToken::halt("0-1 ").unwrap();
+            assert_eq!(input, "");
+            assert_eq!(token, PGNToken::Halt);
+
+            let (input, token) = PGNToken::halt("1/2-1/2 ").unwrap();
+            assert_eq!(input, "");
+            assert_eq!(token, PGNToken::Halt);
+
+            let (input, token) = PGNToken::halt("* ").unwrap();
+            assert_eq!(input, "");
+            assert_eq!(token, PGNToken::Halt);
+        }
+    }
+
 }

@@ -1283,3 +1283,8 @@ bits of the borrow checker I've largely avoided.
 
 Sounds like a problem for future me though.
 
+## 1116 - pgn
+
+Finished the annotations and comments from above.
+
+
