@@ -1257,3 +1257,29 @@ I need to do some work to get variations parsing and the like, but I think the m
 that I shouldn't run into an ambiguity problem again.
 
 I'm not tempting the gods, _you're_ tempting the gods!
+
+# 23-NOV-2024
+
+## 0048 - pgn
+
+I added a fixme to mark where I left off, but I've managed a lot of progress on this parser. I switched to a different
+approach that essentially focused on tokenizing the PGN to a much more convenient representation that was easy to shove
+into the Variation structure. I'm only missing a few things:
+
+1. Annotations need to be tokenized so they can be ignored correctly.
+2. Comments similar
+3. Better Section marking, I'm just marking start/end of file, the naming is bad, etc.
+4. The current_position calculation for Variation needs to be modified/replaced to be able to calculate the position at
+   the tip of the log.
+
+I think those things get me enough to parse PGNs. It should also be possible to reverse this and generate a sequence of
+tokens from a variation, which would make it very useful for comparing game trees and the like later on, also handy for
+the UI.
+
+I'm currently ignoring the turn marker, but embedding that in the variation could be a pretty handy way to track
+different positions within the tree. I want to look into having a sort of 'detached' cursor that could be used to have
+multiple referents to a single Variation, I think this will be helpful in lots of ways but it starts to venture into
+bits of the borrow checker I've largely avoided.
+
+Sounds like a problem for future me though.
+
