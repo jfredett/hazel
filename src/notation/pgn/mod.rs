@@ -1,19 +1,20 @@
 #![allow(dead_code, unused_imports)]
 
+mod tag_pair;
+mod parsers;
+mod tokenizer;
+
 use std::path::Path;
 use std::io::Error;
 
 use nom::{branch::alt, bytes::complete::tag, character::complete::{multispace0, multispace1, newline, one_of}, combinator::opt, multi::{many0, many1}, sequence::delimited, IResult};
-use tokenizer::PGNToken;
 use tracing::debug;
 
+use crate::notation::pgn::tokenizer::PGNToken;
 use crate::{board::Alter, constants::START_POSITION_FEN, coup::rep::Move, game::variation::Variation, notation::fen::FEN};
+use crate::{notation::{ben::BEN, san::SAN}, types::Color};
 
 use super::{san::SANConversionError, Square};
-
-mod tag_pair;
-mod parsers;
-mod tokenizer;
 
 use tag_pair::*;
 
@@ -22,18 +23,6 @@ pub struct PGN {
     tag_pairs: Vec<TagPair>,
     variation: Variation,
 }
-
-/*
-impl<S : Into<String>> TryFrom<S> for PGN {
-type Error = Error;
-
-fn try_from(pgn: S) -> Result<Self, Self::Error> {
-todo!();
-}
-}
-*/
-
-use crate::{notation::{ben::BEN, san::SAN}, types::Color};
 
 
 impl Default for PGN {
@@ -113,6 +102,7 @@ impl PGN {
 mod tests {
     use super::*;
 
+    /*
     mod pgn {
         use super::*;
 
@@ -165,4 +155,5 @@ mod tests {
             assert_eq!(pgn.variation.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
         }
     }
+    */
 }

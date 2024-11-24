@@ -1287,4 +1287,18 @@ Sounds like a problem for future me though.
 
 Finished the annotations and comments from above.
 
+## 2309 - pgn
 
+I need to work a lot on how I navigate around the log.
+
+There is a case, I think, for a specialized cursor that acts as a state machine over the log, that is where the game
+tracking lives, a single log can have multiple cursors, which can be constantly growing and being pruned as the engine
+works. It tweaks my design a little, but I think that's the next natural place to put effort. I think the parser is
+properly handling PGNs now, so it's really 'done' and should be merged, the conversion to a variation is what's broken,
+but it's separate from the 'current_position' problem that I think this will solve.
+
+I also want to consider embedding the number of moves contained in a variation as part of the variation itself. This
+would have to be done in a second pass after tokenization, but it would make the skip-ahead logic much easier.
+
+I'm going to split this work into a new branch, then kill mutants until I can merge `pgn`. The tests for the actual
+`pgn` class will be lacking, but I think I'll just have to make it up elsewhere.
