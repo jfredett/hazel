@@ -2,7 +2,7 @@ use crate::constants::File;
 
 use super::*;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub(super) enum Disambiguator {
     File(File),
     Rank(usize),

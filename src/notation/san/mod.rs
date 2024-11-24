@@ -383,6 +383,26 @@ mod tests {
 
     use super::*;
 
+
+    #[test]
+    fn new_works() {
+        let fen = FEN::new(START_POSITION_FEN);
+        let ben = BEN::from(fen);
+        let san = SAN::new(ben);
+        assert_eq!(san.context, ben);
+        assert_eq!(san.source_piece, None);
+        assert_eq!(san.captured_piece, None);
+        assert_eq!(san.disambiguator, None);
+        assert!(!san.capturing);
+        assert_eq!(san.source_sq, None);
+        assert_eq!(san.target_sq, None);
+        assert_eq!(san.ambiguous_sq, None);
+        assert_eq!(san.promotion, None);
+        assert!(!san.castle_short);
+        assert!(!san.castle_long);
+        assert!(san.is_ambiguous());
+    }
+
     macro_rules! assert_parses {
         ($input:expr, $expected:expr, $fen:expr, $moves:expr) => {
         let mut context = Variation::default();
@@ -494,6 +514,19 @@ mod tests {
         #[test]
         fn parses_pawn_push_and_promotion() {
             assert_parses!("e8=N", Move::new(E7, E8, MoveType::PROMOTION_KNIGHT), "8/4P3/8/8/8/8/8/8 w - - 0 1");
+        }
+    }
+
+    mod slide_attacks {
+        use super::*;
+
+        #[test]
+        fn parses_slide_attack() {
+            // set up an ambiguous scenario that requires a slide attack to be calculated for each
+            // of the possible sliding attackers
+            assert_parses!("Qd1", Move::new(A1, D1, MoveType::QUIET), "4k3/8/8/8/8/8/8/Q3P1QK w - - 0 1");
+            assert_parses!("Rd1", Move::new(A1, D1, MoveType::QUIET), "4k3/8/8/8/8/8/8/R3P1RK w - - 0 1");
+            assert_parses!("Bd4", Move::new(A1, D4, MoveType::QUIET), "4k3/8/5B2/4P3/8/8/8/B6K w - - 0 1");
         }
     }
 
