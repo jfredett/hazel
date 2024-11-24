@@ -182,6 +182,28 @@ mod tests {
 
     use super::*;
 
+    mod alter {
+        use super::*;
+
+        #[test]
+        fn alter_is_correct_for_empty_pos() {
+            let fen = FEN::default();
+            let altered = fen.alter(Alteration::Place { square: A1, occupant: Occupant::white_rook() });
+            assert_eq!(altered, FEN::new("8/8/8/8/8/8/8/R7 w KQkq - 0 1"));
+        }
+
+        #[test]
+        fn remove_works() {
+            let fen = FEN::new("8/8/8/8/8/8/8/R7 w KQkq - 0 1");
+            let altered = fen.alter(Alteration::Remove { square: A1, occupant: Occupant::white_rook() });
+            assert_eq!(altered, FEN::default());
+        }
+
+
+    }
+
+
+
     #[test]
     fn compile_is_correct_for_empty_pos() {
         let fen = FEN::new(EMPTY_POSITION_FEN);
