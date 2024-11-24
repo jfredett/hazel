@@ -436,6 +436,8 @@ mod tests {
     struct NonEdgeSquare(Square);
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     struct EdgeSquare(Square);
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    struct InteriorSquare(Square);
 
     const EDGE_SQUARES: [Square; 28] = [
         A1, A2 ,A3, A4, A5, A6, A7, A8,
@@ -450,6 +452,15 @@ mod tests {
             let file = usize::arbitrary(g) % 6;
             let index = (1 + rank) * 8 + (1 + file);
             NonEdgeSquare(Square(index))
+        }
+    }
+
+    impl Arbitrary for InteriorSquare {
+        fn arbitrary(g: &mut Gen) -> Self {
+            let rank = usize::arbitrary(g) % 4;
+            let file = usize::arbitrary(g) % 4;
+            let index = (2 + rank) * 8 + (2 + file);
+            InteriorSquare(Square(index))
         }
     }
 
@@ -585,14 +596,20 @@ mod tests {
     }
 
     #[quickcheck]
-    #[ignore]
-    fn interior_relative_square_tours_obliques(square: NonEdgeSquare, color: Color) -> bool {
+    fn interior_relative_square_tours_obliques(square: InteriorSquare, color: Color) -> bool {
         // I need an even_more_ interior square for this to work, since the obliques cover a 3x3
         // box, not a 2x2 box.
         let square = square.0;
         square.left_oblique(&color).and_then(|x| x.right_oblique(&color)).and_then(|x| x.right_rear_oblique(&color)).and_then(|x| x.left_rear_oblique(&color)).unwrap() == square
     }
 
+    #[quickcheck]
+    fn interior_relative_square_tours_absolute(square: InteriorSquare) -> bool {
+        // I need an even_more_ interior square for this to work, since the obliques cover a 3x3
+        // box, not a 2x2 box.
+        let square = square.0;
+        square.port_bow().and_then(|x| x.starboard_bow()).and_then(|x| x.starboard_quarter()).and_then(|x| x.port_quarter()).unwrap() == square
+    }
 
     #[quickcheck]
     fn bitboard_moves_match_square_moves(piece: Piece, color: Color, sq: Square) -> bool {
@@ -608,10 +625,4 @@ mod tests {
 
         sq.moves_for(&piece, &color).all(|x| bbmoves.is_set(x))
     }
-
-
-
-
-
-
 }
