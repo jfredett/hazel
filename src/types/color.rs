@@ -46,6 +46,7 @@ impl Color {
         }
     }
 
+    /// DEPRECATED: 
     pub fn pawn_rank(self) -> Bitboard {
         match self {
             Color::WHITE => *RANK_2,

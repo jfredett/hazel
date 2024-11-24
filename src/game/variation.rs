@@ -58,6 +58,20 @@ impl Variation {
         self
     }
 
+    // NOTE: I'm not in love with these methods. I would prefer to have some psuedo-atomic way to
+    // do this in the PGN::parse side of things, but a pleasant way is not obvious and this better
+    // matches the tokenization, so I'm going with it.
+    pub(crate) fn start_variation(&mut self) -> &mut Self {
+        self.record(ChessAction::Variation(Delim::Start));
+        self
+    }
+
+    // NOTE: see #start_variation
+    pub(crate) fn end_variation(&mut self) -> &mut Self {
+        self.record(ChessAction::Variation(Delim::End));
+        self
+    }
+
     pub fn variation(&mut self, block: impl Fn(&mut Variation)) -> &mut Self {
         self.log.begin();
 
@@ -78,6 +92,19 @@ impl Variation {
         self
     }
 
+    // FIXME: This is the current broken thing, I need to encode the assumptions wrt a variation
+    // and to correctly calculate the current position. I know the correct search algoithm
+    // abstractly, it's something like:
+    //
+    // "Identify a location in the log to which you want to seek, then starting from the GameStart,
+    // proceed applying moves until you reach a varaition, look ahead and see if your location is
+    // inside the variation space (don't worry about contents, jsut position), if it is, traverse
+    // into the variation and continue, if not, ignore everything in the variation and continue to
+    // the next mainline move. This process is recursive.
+    //
+    // This will ensure during parsing PGNs that the correct context is maintained, since we always
+    // want to calculate the shortest path to the variation at the tip of the log during that
+    // process.
     pub fn current_position(&self) -> FEN {
         self.log.cursor(|cursor| {
             let mut board = PieceBoard::default();
@@ -266,6 +293,5 @@ mod tests {
 
 
         assert_eq!(line, FEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 2"));
-
     }
 }

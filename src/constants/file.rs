@@ -26,6 +26,44 @@ impl From<File> for u8 {
     }
 }
 
+impl From<File> for usize {
+    fn from(file: File) -> Self {
+        file as usize
+    }
+}
+
+impl From<char> for File {
+    fn from(value: char) -> Self {
+        match value {
+            'a' => File::A,
+            'b' => File::B,
+            'c' => File::C,
+            'd' => File::D,
+            'e' => File::E,
+            'f' => File::F,
+            'g' => File::G,
+            'h' => File::H,
+            _ => panic!("Invalid file character"),
+        }
+    }
+}
+
+impl Iterator for File {
+    type Item = File;
+
+    fn next(&mut self) -> Option<File> {
+        match self {
+            File::A => Some(File::B),
+            File::B => Some(File::C),
+            File::C => Some(File::D),
+            File::D => Some(File::E),
+            File::E => Some(File::F),
+            File::F => Some(File::G),
+            File::G => Some(File::H),
+            File::H => None,
+        }
+    }
+}
 
 
 impl File {
@@ -53,6 +91,23 @@ impl File {
 
     pub const fn to_byte(self) -> u8 {
         self as u8
+    }
+
+    pub fn prev(&mut self) -> Option<Self> {
+        if self == &File::A {
+            return None;
+        }
+
+        Some(match self {
+            File::B => File::A,
+            File::C => File::B,
+            File::D => File::C,
+            File::E => File::D,
+            File::F => File::E,
+            File::G => File::F,
+            File::H => File::G,
+            _ => unreachable!()
+        })
     }
 
     pub fn to_pgn(self) -> &'static str {
@@ -170,7 +225,16 @@ mod test {
 
     #[quickcheck]
     fn from_u8_to_u8_roundtrips(file: File) -> bool {
-        let byte = u8::from(file);
+        let byte = file.to_byte();
         File::from(byte) == file
+    }
+
+    #[quickcheck]
+    fn next_prev_roundtrips(file: File) -> bool {
+        // an artifact of the test means that we'll try to go off the board first.
+        if file == File::H { return true; }
+        let mut file = file;
+        file.next().and_then(|mut f| f.prev()) == Some(file)
+
     }
 }

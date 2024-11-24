@@ -8,9 +8,12 @@ use tracing::instrument;
 
 use crate::board::Alter;
 use crate::board::Alteration;
+use crate::board::PieceBoard;
+use crate::board::Query;
 use crate::constants::{EMPTY_POSITION_FEN, START_POSITION_FEN};
 use crate::types::Color;
 use crate::notation::*;
+use crate::types::Occupant;
 
 
 pub use position_metadata::PositionMetadata;
@@ -36,6 +39,34 @@ impl PartialEq for FEN {
     }
 }
 impl Eq for FEN {}
+
+
+impl Query for FEN {
+    fn get(&self, s: impl Into<Square>) -> Occupant {
+        // TODO: This can be done directly from the string representation of the FEN, but this is
+        // two lines of mindless code and I am lazy.
+        let pb = PieceBoard::from(self);
+        pb.get(s)
+    }
+}
+
+// This is a little cursed, but it is handy to be able to alter any board representation, and this
+// is a board representation. Maybe it should live under coup::rep? :D
+impl Alter for FEN {
+    fn alter(&self, alteration: Alteration) -> Self {
+        let mut new = self.clone();
+        new.alter_mut(alteration);
+        new
+    }
+
+    // HACK: This doesn't do metadata, it probably should.
+    fn alter_mut(&mut self, alteration: Alteration) -> &mut Self {
+        let mut pb = PieceBoard::from(self.clone());
+        pb.alter_mut(alteration);
+        self.position = pb.into();
+        self
+    }
+}
 
 impl Default for FEN {
     fn default() -> Self {
@@ -150,6 +181,28 @@ mod tests {
 
 
     use super::*;
+
+    mod alter {
+        use super::*;
+
+        #[test]
+        fn alter_is_correct_for_empty_pos() {
+            let fen = FEN::default();
+            let altered = fen.alter(Alteration::Place { square: A1, occupant: Occupant::white_rook() });
+            assert_eq!(altered, FEN::new("8/8/8/8/8/8/8/R7 w KQkq - 0 1"));
+        }
+
+        #[test]
+        fn remove_works() {
+            let fen = FEN::new("8/8/8/8/8/8/8/R7 w KQkq - 0 1");
+            let altered = fen.alter(Alteration::Remove { square: A1, occupant: Occupant::white_rook() });
+            assert_eq!(altered, FEN::default());
+        }
+
+
+    }
+
+
 
     #[test]
     fn compile_is_correct_for_empty_pos() {

@@ -43,4 +43,4 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
         files: .lcov
-        fail_ci_if_error: true
+        fail_ci_if_error: false

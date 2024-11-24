@@ -1094,3 +1094,211 @@ Here's why.
 I'll probably use `nom`, but I may even try a simple RD parser myself, since the format is pretty simple. I will
 probably build a `PGN` object that holds all the metadata and the actual variation, which can then be produced by/handed
 off to the actual Engine.
+
+# 15-NOV-2024 - pgn
+
+## 2157
+
+I'm writing the parser, it's going alright. I'm finding myself in want of a lot of QoL stuff so I'm splitting between them.
+
+In particular, not being able to have a cheap, copy-able board representation like FEN was killing me, so I started
+working on BEN, which is a relatively compact binary-encoded FEN equivalent. Insodoing I added `Alter` to `FEN` so it
+technically counts as a whole Board Representation now. This led me to realize I've been using `PieceBoard` pretty
+liberally as a way to make FEN alter-able, and I've unwittingly bound it quite tightly to a particular board
+representation internally. It occured to me it would be pretty cheap to abstract this to a type alias that only claims
+it's traits and no particular internal representation. So in principle something like:
+
+```rust
+type Board : impl Alter + Default + Query + Clone + Into<FEN> = PieceBoard;
+```
+
+Then I can use `Board` everywhere, and if I want to switch to a different representation, I can just change the type to
+anything that implements the traits. Later I can add additional traits like:
+
+```rust
+type MoveGenOptimizedBoard : impl Alter + Default + Query + Clone + Into<FEN> = Bitboard;
+type UIOptimized : impl Alter + Default + Query + Clone + Into<FEN> = CharBoard;
+```
+
+I suspect I'll want to introduce some kind of granularity here, I'm not sure the best way to do it, but I want to rely
+on no specific board representation interally, but rather on a set of traits that can be implemented by any board
+representation.
+
+I'm premature in my optimization, but I can see that there will be a point where board representation becomes an
+optimization path and I want to approach that in a structured way.
+
+I suppose figuring out how to extract the generic `Board` type is the first step. 
+
+## 2038 - pgn
+
+I'm thinking a bit more about `Alteration` and what I should encode there. I think ultimately I do want to try to
+encode the entire gamestate in the `Alteration` stream, which means encoding some sense of metadata, as well as game
+events, and so on.
+
+Each board representation implementation is going to be good at "something", it may be optimized for efficient movegen,
+or for easy evaluation, etc. I think each `Alter` type should advertise which subset of the commands it implements.
+During 'compilation', the 'compiler' will check this list and try, where possible, to provide implementations of
+whatever keywords are missing. So for instance, if a BoardRep doesn't implement the 'Clear' command, the compiler will
+replace it with 64 'Remove' tags, assuming it implements 'remove'.
+
+As I build up the engine's abilities, I can add new commands, and so long as I can implement them in terms of the older
+commands, I should be able to use the new command with any older board representation still, even if a bit slower. This
+matters for the UI and non-engine-y parts of Hazel. Since the UI is a big part of how I plan to develop Hazel, I want to
+build the UI to also read along the Log of ChessActions, which ultimately become a list of alterations.
+
+Different consumers of that log stream can maintain a `Cursor` into the log and then ideally rewind/fastforward to any
+state in the log. The composed object will implement `Alter` as the sum of it's internal implementations, and dispatch
+commands to subcomponents as it pleases. So the UI's implementation of `Alter` might update it's UI oriented internal
+state, while the Engine might instead be grabbing many alter's at once and applying them in batches somehow.
+
+
+
+# 19-NOV-2024
+
+## 2313 - pgn
+
+I'm frustrated by the fact that PGN requires, essentially, an entire movegen system to parse. I'm going to hack in
+something in the 'good enough' category so I can flesh out the Variation stuff and then probably put it down and go to
+work on the MoveGen. I have an idea for it that I think will work well with the design I'm aiming for. In a surprise to
+no one, it's copying the `Alter` system. I'm going to use the old movegen as a guide, and focus on building a system
+that can implement a rich language for querying a boardstate. I can then use this to build a movegen system that is
+abstract with respect to boardstate _and_ can abstractly describe different movegen calculation strategies that can then
+be run against multiple backend boards.
+
+An implementor would then have to implement some minimal set of operations, which all others must be expressed in terms
+of, and then I can build different backend representations designed to make some operations faster.
+
+Ultimately this will build up to a general language that can describe how to arrive at specific boardstates, and how to
+do analysis downstream.
+
+You'd have a script that describes some algorithm to tell the engine how to proceed from it's current position, what to
+evaluate (e.g., maybe "find the top 100 lines from this position for white at depth `n` and then calculate the relative
+power of the black bishop in each lines and report the distribution as a graph"), and then hazel would haul off and do
+the work.
+
+Each little language is really a part of this bigger language that ultimately 'compiles' to some glue language.
+
+I was hoping to get `pgns` more fully and comfortably supported, but I don't think that's going to be possible right
+now. I might still work on the Variation -> PGN (at least the mainline) so I can display it in the UI, but I'll have to
+think about how much I want to keep writing parser/printer code.
+
+# 20-NOV-2024
+
+## 1141 - pgn
+
+Having thought about it more overnight, I think my plan is thus:
+
+1. Get the existing PGN parser to the closest thing to a working state as I can. Hack as needed
+2. Merge
+3. Extract and unify this 'minilanguage' thing I have going on into it's own abstraction (preparing for eventual parser
+   writing for the Witchlang)
+4. Build a better MoveGen system based on the enum-based approach
+
+Ultimately Hazel (the engine bit) is going to have a `WitchLang`, which compiles to `WitchASM`, which is an Enum-y
+language like what I have now. WitchLang will be a small scripting language that can be used to create more complex
+queries that can then be optimized, similar to how a database query-plans.
+
+Hazel (the engine) will be a small VM with some tools to alter it's scale, what represnetations are active, etc. It will
+produce a stream of instructions to configure itself and solve any presented chess problem.
+
+This will also allow for more asynchronous processing, e.g., the movegen can request a bunch of calculations, but the
+engine can batch and cache these things, reach into existing cache, etc -- behind the scenes.
+
+5. Get `perft` working for a few positions, matching stockfish
+
+This milestone will be the big 'I've got a system working' moment; since from here it's just a matter of adding eval and
+pruning tools to the results of the movegen. Ideally I'll be able to express some basic evaluation functions in the
+WitchLang and then start looking to extend it to NNUE and the like. Ideally it's something like:
+
+```
+Engine Tune:
+    Set parameters here
+Search <Some FEN>
+    Depth <some plycount>
+    Prune With:
+        Some subprogram
+    Filter Final:
+        Some subprogram
+    Group By:
+        Some subprogram
+# etc
+```
+
+This gets compiled down to a series of `WitchASM` instructions that can be run on the engine, and then ideally the
+language can express self-retuning as it iterates, etc. Ideally all the chess-related logic ends up in this language and
+we then attack the problem like a compiler problem, optimizing to intermediate reps and building an engine that can
+solve the given script optimally.
+
+I think this will make for something very flexible, since most of the chess logic will live in the language and not the
+engine itself. I suspect I may see some overhead, but I'm hoping the translation layers should mitigate some of that,
+since the final set of instructions that the thing needs to execute should be somewhat smaller. Translating further down
+to bytecode (and perhaps SIMD bytecode, since most of these operations should be parallelish) should be doable and
+hopefully keep the speed sufficient to justify the flexibility on offer.
+
+For Eval, I'm planning to build a bunch of different eval functions, but I'm particularly interested in NNUE and messing
+around with different architectures using the NNUE concept. More SIMD in my future.
+
+Ideally I'd like to get to the point where I have a suite of integration tests that:
+
+1. Use WitchLang to load a PGN, do evaluation to it, and report statistics about the results.
+2. Use WitchLang to perft from multiple different positions and compare statically to stockfish
+3. Use WitchLang to generate a random position by playing random moves, then dynamically compare perft results with
+   stockfish to the maximum depth achievable in a reasonable time.
+
+Those three tests should fully exercise any movegen code I'm using; especially if I can set the number of PGNs pretty
+high.
+
+## 2136 - pgn
+
+I ticked off #1 of the above and got past the ambiguity with sliding pieces. I even got to use some of the old bitboard
+implementation.
+
+I need to do some work to get variations parsing and the like, but I think the move generation is probably 'good enough'
+that I shouldn't run into an ambiguity problem again.
+
+I'm not tempting the gods, _you're_ tempting the gods!
+
+# 23-NOV-2024
+
+## 0048 - pgn
+
+I added a fixme to mark where I left off, but I've managed a lot of progress on this parser. I switched to a different
+approach that essentially focused on tokenizing the PGN to a much more convenient representation that was easy to shove
+into the Variation structure. I'm only missing a few things:
+
+1. Annotations need to be tokenized so they can be ignored correctly.
+2. Comments similar
+3. Better Section marking, I'm just marking start/end of file, the naming is bad, etc.
+4. The current_position calculation for Variation needs to be modified/replaced to be able to calculate the position at
+   the tip of the log.
+
+I think those things get me enough to parse PGNs. It should also be possible to reverse this and generate a sequence of
+tokens from a variation, which would make it very useful for comparing game trees and the like later on, also handy for
+the UI.
+
+I'm currently ignoring the turn marker, but embedding that in the variation could be a pretty handy way to track
+different positions within the tree. I want to look into having a sort of 'detached' cursor that could be used to have
+multiple referents to a single Variation, I think this will be helpful in lots of ways but it starts to venture into
+bits of the borrow checker I've largely avoided.
+
+Sounds like a problem for future me though.
+
+## 1116 - pgn
+
+Finished the annotations and comments from above.
+
+## 2309 - pgn
+
+I need to work a lot on how I navigate around the log.
+
+There is a case, I think, for a specialized cursor that acts as a state machine over the log, that is where the game
+tracking lives, a single log can have multiple cursors, which can be constantly growing and being pruned as the engine
+works. It tweaks my design a little, but I think that's the next natural place to put effort. I think the parser is
+properly handling PGNs now, so it's really 'done' and should be merged, the conversion to a variation is what's broken,
+but it's separate from the 'current_position' problem that I think this will solve.
+
+I also want to consider embedding the number of moves contained in a variation as part of the variation itself. This
+would have to be done in a second pass after tokenization, but it would make the skip-ahead logic much easier.
+
+I'm going to split this work into a new branch, then kill mutants until I can merge `pgn`. The tests for the actual
+`pgn` class will be lacking, but I think I'll just have to make it up elsewhere.

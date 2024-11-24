@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+use crate::notation::Square;
 use crate::types::Color;
 use crate::types::color::COLOR_COUNT;
 
@@ -23,6 +24,10 @@ impl Piece {
 
     pub fn to_fen(&self, color: Color) -> char {
         ASCII_PIECE_CHARS[color as usize][*self as usize]
+    }
+
+    pub fn movements_at(&self, square: impl Into<Square>, color: Color) -> impl Iterator<Item=Square> {
+        square.into().moves_for(self, &color)
     }
 }
 
@@ -76,6 +81,33 @@ pub const UNICODE_PIECE_CHARS: [[char; 6]; 2] = [
 #[cfg(test)]
 mod test {
     use super::*;
+    use quickcheck::{Arbitrary, Gen};
+    use crate::notation::*;
+
+    impl Arbitrary for Piece {
+        fn arbitrary(g: &mut Gen) -> Self {
+            PIECES[usize::arbitrary(g) % PIECE_COUNT]
+        }
+    }
+
+    #[test]
+    fn last_piece() {
+        assert_eq!(Piece::last_piece(), Piece::Pawn);
+    }
+
+    #[quickcheck]
+    fn movements_at(color: bool) {
+        let color = if color { Color::WHITE } else { Color::BLACK };
+        similar_asserts::assert_eq!(Piece::Knight.movements_at(A1, color).collect::<Vec<_>>(), vec![B3, C2]);
+        similar_asserts::assert_eq!(Piece::Bishop.movements_at(A1, color).collect::<Vec<_>>(), vec![B2, C3, D4, E5, F6, G7, H8]);
+        similar_asserts::assert_eq!(Piece::Rook.movements_at(A1, color).collect::<Vec<_>>(), vec![A2, A3, A4, A5, A6, A7, A8, B1, C1, D1, E1, F1, G1, H1]);
+        similar_asserts::assert_eq!(Piece::Queen.movements_at(A1,color).collect::<Vec<_>>(), vec![A2, A3, A4, A5, A6, A7, A8, B1, C1, D1, E1, F1, G1, H1, B2, C3, D4, E5, F6, G7, H8]);
+        similar_asserts::assert_eq!(Piece::King.movements_at(A1, color).collect::<Vec<_>>(), vec![A2, B1, B2]);
+        similar_asserts::assert_eq!(Piece::Pawn.movements_at(D2, Color::WHITE).collect::<Vec<_>>(), vec![D3, D4, E3, C3]);
+        similar_asserts::assert_eq!(Piece::Pawn.movements_at(D7, Color::BLACK).collect::<Vec<_>>(), vec![D6, D5, E6, C6]);
+        similar_asserts::assert_eq!(Piece::Pawn.movements_at(D4, Color::WHITE).collect::<Vec<_>>(), vec![D5, D6, E5, C5]);
+        similar_asserts::assert_eq!(Piece::Pawn.movements_at(D5, Color::BLACK).collect::<Vec<_>>(), vec![D4, D3, E4, C4]);
+    }
 
     mod from {
         use super::*;

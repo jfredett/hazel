@@ -4,6 +4,7 @@ mod constants;
 mod display_debug;
 mod iterator;
 mod from_into;
+mod movements;
 
 
 pub use constants::*;
@@ -11,7 +12,7 @@ pub use iterator::*;
 
 
 /// Represents a single square by it's index rooted at a1 = 0, h8 = 63
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
 pub struct Square(usize);
 
 impl Square {
@@ -39,38 +40,6 @@ impl Square {
 
     pub const fn rank(&self) -> usize {
         self.0 / 8
-    }
-
-    pub const fn up(&self) -> Option<Self> {
-        if self.rank() == 7 {
-            None
-        } else {
-            Some(Self(self.0 + 8))
-        }
-    }
-
-    pub const fn down(&self) -> Option<Self> {
-        if self.rank() == 0 {
-            None
-        } else {
-            Some(Self(self.0 - 8))
-        }
-    }
-
-    pub const fn left(&self) -> Option<Self> {
-        if self.file() == 0 {
-            None
-        } else {
-            Some(Self(self.0 - 1))
-        }
-    }
-
-    pub const fn right(&self) -> Option<Self> {
-        if self.file() == 7 {
-            None
-        } else {
-            Some(Self(self.0 + 1))
-        }
     }
 
     pub const fn backrank_for(&self, color: Color) -> bool {
@@ -126,41 +95,4 @@ mod tests {
         assert_eq!(H8.file(), 7);
     }
 
-    #[test]
-    fn up_is_correct() {
-        assert_eq!(A1.up(), Some(A2));
-        assert_eq!(A8.up(), None);
-    }
-
-    #[test]
-    fn down_is_correct() {
-        assert_eq!(A1.down(), None);
-        assert_eq!(A8.down(), Some(A7));
-    }
-
-    #[test]
-    fn left_is_correct() {
-        assert_eq!(A1.left(), None);
-        assert_eq!(H1.left(), Some(G1));
-    }
-
-    #[test]
-    fn right_is_correct() {
-        assert_eq!(H1.right(), None);
-        assert_eq!(A1.right(), Some(B1));
-    }
-
-    #[test]
-    fn set_file_is_correct() {
-        let mut square = A1;
-        assert_eq!(square.set_file(7), H1);
-        assert_eq!(square.set_file(0), A1);
-    }
-
-    #[test]
-    fn set_rank_is_correct() {
-        let mut square = A1;
-        assert_eq!(square.set_rank(7), A8);
-        assert_eq!(square.set_rank(0), A1);
-    }
 }
