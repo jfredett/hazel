@@ -318,7 +318,7 @@ impl Square {
         ret.into_iter()
     }
 
-    /// Return all the moves that the Piece of the given Color could make.
+    /// Return all the moves that the Piece of the given Color could make. Legal or otherwise.
     pub fn moves_for(&self, piece: &Piece, color: &Color) -> impl Iterator<Item=Self> {
         let mut ret = vec![];
         match piece {
@@ -329,7 +329,7 @@ impl Square {
                 };
                 for (dx, dy) in &[(0, 1), (0, 2), (1, 1), (-1, 1)] {
                     let x = self.file() as isize + dx;
-                    let y = sign * self.rank() as isize + dy;
+                    let y = self.rank() as isize + (sign * dy);
                     if (0..8).contains(&x) && (0..8).contains(&y) {
                         ret.push(Square((y * 8 + x) as usize));
                     }
@@ -432,6 +432,8 @@ mod tests {
 
     use super::*;
 
+    // TODO: These should all be in Square and shared for everything to use.
+
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     struct NonEdgeSquare(Square);
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -471,6 +473,20 @@ mod tests {
 
             EdgeSquare(EDGE_SQUARES[edge_idx])
         }
+    }
+
+    #[test]
+    fn pawn_moves_as_white() {
+        let square = D4;
+        let moves = square.pawn_moves_for(&Color::WHITE).collect::<Vec<_>>();
+        assert_eq!(moves, vec![D5, D6, E5, C5]);
+    }
+
+    #[test]
+    fn pawn_moves_as_black() {
+        let square = D4;
+        let moves = square.pawn_moves_for(&Color::BLACK).collect::<Vec<_>>();
+        assert_eq!(moves, vec![D3, D2, E3, C3]);
     }
 
     #[quickcheck]
