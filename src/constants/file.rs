@@ -225,7 +225,16 @@ mod test {
 
     #[quickcheck]
     fn from_u8_to_u8_roundtrips(file: File) -> bool {
-        let byte = u8::from(file);
+        let byte = file.to_byte();
         File::from(byte) == file
+    }
+
+    #[quickcheck]
+    fn next_prev_roundtrips(file: File) -> bool {
+        // an artifact of the test means that we'll try to go off the board first.
+        if file == File::H { return true; }
+        let mut file = file;
+        file.next().and_then(|mut f| f.prev()) == Some(file)
+
     }
 }
