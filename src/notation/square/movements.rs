@@ -440,6 +440,15 @@ mod tests {
     struct EdgeSquare(Square);
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     struct InteriorSquare(Square);
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    struct StartRow<const T: Color>(Square);
+
+    impl Arbitrary for StartRow<{ Color::BLACK }> {
+        fn arbitrary(g: &mut Gen) -> Self {
+            let file = usize::arbitrary(g) % 8;
+            StartRow(Square::from((7, file)))
+        }
+    }
 
     const EDGE_SQUARES: [Square; 28] = [
         A1, A2 ,A3, A4, A5, A6, A7, A8,

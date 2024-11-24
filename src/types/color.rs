@@ -1,5 +1,6 @@
 use std::fmt::Display;
 use std::ops::Not;
+use std::marker::ConstParamTy;
 
 use crate::types::Bitboard;
 use crate::types::Direction;
@@ -7,7 +8,7 @@ use crate::constants::{RANK_1, RANK_2, RANK_7, RANK_8};
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Hash, PartialEq, Eq, Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Hash, PartialEq, Eq, Clone, Copy, Debug, Serialize, Deserialize, ConstParamTy)]
 pub enum Color {
     WHITE = 0,
     BLACK = 1,
