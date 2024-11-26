@@ -1,4 +1,3 @@
-
 use crate::{board::Alter, types::log::Log};
 
 use crate::{board::PieceBoard, coup::rep::Move, notation::fen::{PositionMetadata, FEN}};
