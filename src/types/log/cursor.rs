@@ -1,6 +1,7 @@
 use super::Log;
 
 
+#[derive(Debug, Clone)]
 pub struct Cursor<'a, T> where T: Clone {
     log: &'a Log<T>,
     position: Option<usize>

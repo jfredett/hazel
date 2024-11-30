@@ -1,7 +1,15 @@
+// TODO: This should be extracted to the toplevel. It's not really notation-specific, it's
+// game-specific. src/game should maybe have a structure like:
+//
+// src/game/chess/<existing stuff>
+// src/game/nim/<nim stuff>
+// src/game/<other-abstract-game>/impl
+//
+// etc
 use std::fmt::Display;
 use std::str::SplitWhitespace;
 
-use crate::board::Query;
+use crate::interface::Query;
 use crate::constants::File;
 use crate::coup::rep::Move;
 use crate::notation::fen::castle_rights::CastleRights;

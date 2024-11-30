@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter};
 
-use crate::board::{Alteration, Query};
+use crate::interface::{Alteration, Query};
 use crate::constants::EMPTY_POSITION_FEN;
 use crate::types::{Color, Piece};
 use crate::notation::*;

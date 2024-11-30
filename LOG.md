@@ -1302,3 +1302,68 @@ would have to be done in a second pass after tokenization, but it would make the
 
 I'm going to split this work into a new branch, then kill mutants until I can merge `pgn`. The tests for the actual
 `pgn` class will be lacking, but I think I'll just have to make it up elsewhere.
+
+# 26-NOV-2024
+
+## 1252 - familiars
+
+Continuing from previous entry, I'm starting to solidify the design of the playing-end of this thing.
+
+I have this setup:
+
+```
+
+Log is a way to store a sequence of anything, in our case ChessActions
+
+Chess Action supports a notion of 'Variation'
+
+The Log lays out it's contents as single, seekable stream, similar to the File API.
+
+Log can produce a Cursor or WriteHead (mutable cursor) on itself, which can be used to navigate the log.
+
+A Familiar takes a Cursor and calculates some useful values, in particular the current board state and current metadata
+information.
+
+Familiars are generic, they only care that the type they work over implements `Play`, which itself is a trait that is
+generic over the Rule and Metadata types that govern whatever abstract game they define.
+
+A Familiar can be specialized to a specific representation type to allow for faster/more efficient calculation, it might
+be responsible for caching important results, etc. Most directly, it's responsible for calculating the current board
+and metadata state.
+
+```
+
+The final engine will essentially be a Log, a bunch of Familiars that can be created/destroyed as needed, and insodoing
+I can have multiple representations that can all benefit from intraconversion. Familiars should have a 'Set Position
+with cached state' option which allows one familiar to transfer it's state to another; so that a Familiar optimized for
+fast scanning can then feed one that's designed for fast querying, etc.
+
+This also means new representations can be easily compared apples-to-apples with exisitng representations.
+
+# 30-NOV-2024
+
+## 1049 - familiars
+
+I'm thinking about some reorg. Part of the process of building `Familiar` has made it clear that what I have is quite
+capable of representing pretty generically any kind of abstract perfect information game, and I'd like to preserve that
+property and make it more explicit in the organization. I'm thinking of these changes:
+
+1. [x] Move `src/game/` tree to have a `src/game/<name of abstract game>/<contents here>` structure, so I can represent
+   other games.
+2. Extract the `PositionMetadata` struct to this new location for the `chess` subdirectory.
+3. [x] Move `board/interface` to the top level.
+4. [x] Move `compiles_to` to the interface section, though presently it's unused and may remain there, I may leave this on a
+   twig and remove it from the trunk, haven't decided yet.
+
+`Hazel` can then have (ideally) a relatively abstract idea of what a game is, and can hopefully lead to some reuse with
+some of the scaffolding (e.g., whatever alpha-beta/minimax/mcts/nnue bullshit I come up with) with other games. I'm
+thinking primarily for fairychess, but also even something like `nim` for testing purposes could be handy. `nim` is an
+extremely simple game, so it's possibly valuable for debugging and testing purposes, remains to be seen.
+
+All of this should also provide a nice place to put a `Game` structure that can then implement `Play`, this should be
+generic with respect to board representation and metadata representation, but canonically should use the
+`PositionMetadata` struct for metadata, and any `Query + Alter` capable rep.
+
+## 1114 - familiars
+
+As of now, all but #2 is done, tests are passing, so time for a big commit.

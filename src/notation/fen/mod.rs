@@ -6,11 +6,7 @@ use std::fmt::{Debug, Display};
 
 use tracing::instrument;
 
-use crate::board::Alter;
-use crate::board::Alteration;
-use crate::board::PieceBoard;
-use crate::board::Query;
-use crate::constants::{EMPTY_POSITION_FEN, START_POSITION_FEN};
+use crate::{board::PieceBoard, constants::{EMPTY_POSITION_FEN, START_POSITION_FEN}, interface::{Alter, Alteration, Query}};
 use crate::types::Color;
 use crate::notation::*;
 use crate::types::Occupant;
