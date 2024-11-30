@@ -33,7 +33,7 @@ mod tests {
     mod fen {
         use super::*;
 
-        use crate::board::interface::query;
+        use crate::interface::query;
         use crate::constants::{EMPTY_POSITION_FEN, START_POSITION_FEN};
 
         #[test]

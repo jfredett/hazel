@@ -1,4 +1,4 @@
-use crate::{board::Alter, types::log::Log};
+use crate::{interface::Alter, types::log::Log};
 
 use crate::{board::PieceBoard, coup::rep::Move, notation::fen::{PositionMetadata, FEN}};
 
@@ -140,6 +140,16 @@ impl Variation {
         })
     }
 
+    /*
+    pub(crate) fn get_cursor(&self) -> Log<ChessAction>::Cursor {
+        self.log.cursor()
+    }
+
+    pub(crate) fn get_writehead(&mut self) -> Log<ChessAction>::WriteHead {
+        self.log.writehead()
+    }
+    */
+
     fn record(&mut self, action: ChessAction) -> &mut Self {
         if self.halted { return self; }
 
@@ -154,7 +164,7 @@ impl Variation {
 mod tests {
     use crate::notation::*;
     use crate::{coup::rep::MoveType, types::Occupant};
-    use crate::board::interface::*;
+    use crate::*;
 
     use super::*;
 

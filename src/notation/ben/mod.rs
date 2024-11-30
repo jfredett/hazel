@@ -14,7 +14,7 @@
 //! because I've seen it before, I don't know, but I'm very likely not a genius.
 
 use super::{fen::{PositionMetadata, FEN}, Square};
-use crate::{board::{Alter, Alteration, PieceBoard, Query}, types::{Color, Occupant}};
+use crate::{Alter, Alteration, Query, types::{Color, Occupant}};
 use std::fmt::{Debug, Formatter};
 
 mod from_into;
