@@ -12,7 +12,7 @@ use std::str::SplitWhitespace;
 use crate::interface::Query;
 use crate::constants::File;
 use crate::coup::rep::Move;
-use crate::notation::fen::castle_rights::CastleRights;
+use crate::game::chess::castle_rights::CastleRights;
 use crate::notation::*;
 use crate::types::{Color, Occupant, Piece};
 
@@ -199,10 +199,9 @@ impl From<PositionMetadata> for u32 {
             None => 0,
             Some(sq) => (1 << EP_FLAG_SHIFT) | ((sq.file() as u8) << EP_FILE_SHIFT),
         };
-        
+
         b2 |= (data.halfmove_clock as u8) << HMC_SHIFT;
         b2 |= (data.side_to_move as u8) << STM_SHIFT;
-
 
         let [b3, b4] = data.fullmove_number.to_ne_bytes();
 

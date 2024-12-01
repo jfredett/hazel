@@ -23,9 +23,6 @@
 
 use crate::{interface::play::Play, types::log::cursor::Cursor};
 
-use super::action::chess::ChessAction;
-
-
 #[derive(Debug, Clone)]
 pub struct Familiar<'a, T> where T : Play + Default {
     cursor: Cursor<'a, T::Rule>,
@@ -39,7 +36,7 @@ impl<'a, T> Familiar<'a, T> where T : Play + Default {
 
     pub fn advance(&mut self) {
         if let Some(action) = self.cursor.next() {
-            self.rep.apply_mut(&action);
+            self.rep.apply_mut(action);
         }
     }
 
@@ -55,6 +52,29 @@ impl<'a, T> Familiar<'a, T> where T : Play + Default {
 
     pub fn metadata(&self) -> T::Metadata {
         self.rep.metadata().clone()
+    }
+}
+
+impl Play for () {
+    type Rule = ();
+    type Metadata = ();
+
+    fn apply(&self, _action: &()) -> () {
+        () // do nothing
+    }
+
+    fn unwind(&self, _action: &()) -> () {
+        () // do nothing
+    }
+
+    fn metadata(&self) -> () {
+        ()
+    }
+}
+
+impl<'a> Familiar<'a, ()> {
+    pub fn testing() {
+        println!("Hello, World!");
     }
 }
 
