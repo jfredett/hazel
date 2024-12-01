@@ -1,7 +1,4 @@
-mod position_metadata;
 mod position;
-mod castle_rights;
-
 use std::fmt::{Debug, Display};
 
 use tracing::instrument;
@@ -11,9 +8,9 @@ use crate::types::Color;
 use crate::notation::*;
 use crate::types::Occupant;
 
+pub use crate::game::chess::{castle_rights::CastleRights, position_metadata::PositionMetadata};
 
-pub use position_metadata::PositionMetadata;
-pub use castle_rights::CastleRights;
+
 use position::Position;
 
 #[derive(Clone)]
@@ -56,6 +53,11 @@ impl Alter for FEN {
     }
 
     // HACK: This doesn't do metadata, it probably should.
+    // -- 1-DEC-2024 - 0007
+    // Actually, I think this is fine, an alteration is necessarily absent metadata, the metadata
+    // side of this should be handled by a _play_ implementation, the fact that FEN generally
+    // bundles that metadata component in means in principle it can _`Play`_ chess, but that's not
+    // the same as Alter.
     fn alter_mut(&mut self, alteration: Alteration) -> &mut Self {
         let mut pb = PieceBoard::from(self.clone());
         pb.alter_mut(alteration);
