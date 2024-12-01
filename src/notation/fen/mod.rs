@@ -52,12 +52,6 @@ impl Alter for FEN {
         new
     }
 
-    // HACK: This doesn't do metadata, it probably should.
-    // -- 1-DEC-2024 - 0007
-    // Actually, I think this is fine, an alteration is necessarily absent metadata, the metadata
-    // side of this should be handled by a _play_ implementation, the fact that FEN generally
-    // bundles that metadata component in means in principle it can _`Play`_ chess, but that's not
-    // the same as Alter.
     fn alter_mut(&mut self, alteration: Alteration) -> &mut Self {
         let mut pb = PieceBoard::from(self.clone());
         pb.alter_mut(alteration);
