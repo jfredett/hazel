@@ -1367,3 +1367,14 @@ generic with respect to board representation and metadata representation, but ca
 ## 1114 - familiars
 
 As of now, all but #2 is done, tests are passing, so time for a big commit.
+
+## 2321 - familiars
+
+I'm working on the last move from above, and I'm thinking of some further tweaks I want to consider.
+
+In particular, I think I'm going to want to build an 'Index'/'Cache' system for `Log`. Eventually I want to be able to
+refer to different parts of the log by different criteria. For instance, I might want to search the log for a specific
+turn's position in a specific variation, I need to find the place in the log where that is, and I may want to cache that
+position for later use, so I'm starting to think of what that might look like. In particular I suspect something like
+the `familiar` system would be used to maintain that index and cache. Ultimately this sort of works as a file format for
+a database, and `hazel` acts as an interface to that database.
