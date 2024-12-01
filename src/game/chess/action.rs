@@ -20,9 +20,9 @@ pub enum Reason {
     Returned,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Default, PartialEq)]
 pub enum ChessAction {
-    NewGame,
+    #[default] NewGame,
     Halted(Reason),
     Variation(Delim),
     Setup(FEN),
@@ -65,3 +65,4 @@ mod tests {
     use super::*;
 
 }
+

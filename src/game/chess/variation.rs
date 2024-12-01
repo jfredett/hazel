@@ -2,7 +2,7 @@ use crate::{interface::Alter, types::log::Log};
 
 use crate::{board::PieceBoard, coup::rep::Move, notation::fen::{PositionMetadata, FEN}};
 
-use super::action::chess::{ChessAction, Delim, Reason};
+use super::action::{ChessAction, Delim, Reason};
 
 #[derive(Debug, Default, Clone)]
 pub struct Variation {

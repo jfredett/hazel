@@ -124,7 +124,7 @@ mod tests {
         }
     }
 
-    use crate::{constants::{POS2_KIWIPETE_FEN, START_POSITION_FEN}, game::action::chess::ChessAction};
+    use crate::{constants::{POS2_KIWIPETE_FEN, START_POSITION_FEN}, game::action::ChessAction};
 
     #[test]
     fn driver_parses_isready() {
