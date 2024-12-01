@@ -124,15 +124,14 @@ pub fn to_fen(board: &impl Query) -> FEN {
 
     for s in Square::by_rank_and_file().downward() {
         let occ = board.get(s);
-        match occ {
-            Occupant::Empty => empty += 1,
-            _ => {
-                if empty != 0 {
-                    f.push_str(&empty.to_string());
-                    empty = 0;
-                }
-                f.push_str(&occ.to_string());
+        if let Occupant::Empty = occ {
+            empty += 1
+        } else {
+            if empty != 0 {
+                f.push_str(&empty.to_string());
+                empty = 0;
             }
+            f.push_str(&occ.to_string());
         }
 
         if s.file() == 7 && s != A8 {
