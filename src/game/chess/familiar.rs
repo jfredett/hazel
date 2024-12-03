@@ -40,11 +40,13 @@ impl<'a, T> Familiar<'a, T> where T : Play + Default {
         }
     }
 
+    /*
     pub fn rewind(&mut self) {
         if let Some(action) = self.cursor.prev() {
             self.rep.unwind_mut(action);
         }
     }
+    */
 
     pub fn rep(&self) -> &T {
         &self.rep
@@ -54,30 +56,6 @@ impl<'a, T> Familiar<'a, T> where T : Play + Default {
         self.rep.metadata().clone()
     }
 }
-
-impl Play for () {
-    type Rule = ();
-    type Metadata = ();
-
-    fn apply(&self, _action: &()) -> () {
-        () // do nothing
-    }
-
-    fn unwind(&self, _action: &()) -> () {
-        () // do nothing
-    }
-
-    fn metadata(&self) -> () {
-        ()
-    }
-}
-
-impl<'a> Familiar<'a, ()> {
-    pub fn testing() {
-        println!("Hello, World!");
-    }
-}
-
 
 #[cfg(test)]
 mod tests {

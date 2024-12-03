@@ -9,11 +9,13 @@
 use std::fmt::Display;
 use std::str::SplitWhitespace;
 
+use tracing::debug;
+
 use crate::interface::Query;
 use crate::constants::File;
 use crate::coup::rep::Move;
 use crate::game::chess::castle_rights::CastleRights;
-use crate::notation::*;
+use crate::{notation::*, query};
 use crate::types::{Color, Occupant, Piece};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -144,6 +146,10 @@ impl PositionMetadata {
 
         // rely on the color of the piece being moved, rather than reasoning about the side-to-move
         // or delaying it till the end.
+        debug!("Move: {:?}", mov);
+        debug!("Board: {:?}", query::display_board(board));
+        debug!("Piece at source: {:?}", board.get(mov.source()));
+
         let Occupant::Occupied(piece, color) = board.get(mov.source()) else { panic!("Move has no source piece"); };
 
 
