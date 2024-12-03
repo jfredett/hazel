@@ -3,7 +3,6 @@ pub trait Play where Self: Clone {
     type Metadata: Clone;
 
     fn apply(&self, rule: &Self::Rule) -> Self;
-    fn unwind(&self, rule: &Self::Rule) -> Self;
 
     fn metadata(&self) -> Self::Metadata;
 
@@ -11,11 +10,15 @@ pub trait Play where Self: Clone {
         *self = self.apply(rule);
         self
     }
-    fn unwind_mut(&mut self, rule: &Self::Rule) -> &mut Self {
-        *self = self.unwind(rule);
+}
+
+pub trait Unplay where Self: Clone + Play {
+    fn unapply(&self, rule: &Self::Rule) -> Self;
+
+    fn unapply_mut(&mut self, rule: &Self::Rule) -> &mut Self {
+        *self = self.unapply(rule);
         self
     }
-
 }
 
 
