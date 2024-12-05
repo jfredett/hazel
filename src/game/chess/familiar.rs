@@ -59,12 +59,30 @@ impl<'a, T> Familiar<'a, T> where T : Play + Default {
 
 #[cfg(test)]
 mod tests {
+
+    use crate::{board::PieceBoard, constants::START_POSITION_FEN, coup::rep::{Move, MoveType}, game::{chess::PositionMetadata, variation::Variation, ChessGame}, notation::{fen::FEN, *}};
+
     use super::*;
 
     #[test]
     fn familiar_works_with_pieceboard_to_capture_gamestate() {
+        let mut log = Variation::new();
+        log.new_game()
+           .setup(FEN::new(START_POSITION_FEN))
+           .make(Move::new(D2, D4, MoveType::DOUBLE_PAWN))
+           .make(Move::new(D7, D5, MoveType::DOUBLE_PAWN))
+           .commit();
 
+        let cursor = log.get_cursor();
+        let mut familiar : Familiar<ChessGame<PieceBoard>> = Familiar::new(cursor);
 
+        familiar.advance();
+        familiar.advance();
+        familiar.advance();
+        familiar.advance();
+
+        assert_eq!(familiar.rep().rep, FEN::new("rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2").into());
+        assert_eq!(familiar.metadata().fullmove_number, 2);
     }
 
 }

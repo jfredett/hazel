@@ -33,7 +33,6 @@ impl PartialEq for FEN {
 }
 impl Eq for FEN {}
 
-
 impl Query for FEN {
     fn get(&self, s: impl Into<Square>) -> Occupant {
         // TODO: This can be done directly from the string representation of the FEN, but this is
@@ -79,6 +78,16 @@ impl FEN {
         Self {
             position: Position::new(fen),
             metadata: PositionMetadata::default(),
+        }
+    }
+
+    //FIXME: Probably this isn't the right level of visibility, and it's only needed for tests, but
+    //Position is a private struct so maybe it's fine. I don't know.
+    #[cfg(test)]
+    pub(crate) fn with_metadata(position: impl Into<Position>, metadata: PositionMetadata) -> Self {
+        Self {
+            position: position.into(),
+            metadata
         }
     }
 

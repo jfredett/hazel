@@ -55,7 +55,7 @@ impl<T> Play for ChessGame<T> where T: Alter + Query + Default + Clone {
                     self.rep.alter_mut(a);
                 }
             }
-            _ => todo!(),
+            _ => {}
         }
         self
     }
@@ -85,17 +85,10 @@ mod tests {
             .apply_mut(&ChessAction::Setup(FEN::new(START_POSITION_FEN)))
             .apply_mut(&ChessAction::Make(Move::new(D2, D4, MoveType::DOUBLE_PAWN)));
 
-        let mut expected_metadata = PositionMetadata::default();
+        let expected_fen = FEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 2");
+        let actual_fen = FEN::with_metadata(game.rep, game.metadata);
 
-        // TODO: Better API
-        expected_metadata.halfmove_clock = 0;
-        expected_metadata.fullmove_number = 2;
-        expected_metadata.en_passant = Some(D3);
-        expected_metadata.side_to_move = Color::BLACK;
-
-        assert_eq!(game.metadata(), expected_metadata);
-        assert_eq!(game.rep.get(D4), Occupant::white_pawn());
-        assert_eq!(game.rep.get(D2), Occupant::empty());
+        similar_asserts::assert_eq!(actual_fen, expected_fen);
     }
 }
 
