@@ -23,9 +23,7 @@ impl<'a, T> Cursor<'a, T>  where T: Clone {
     pub fn jump(&mut self, offset: isize) -> Option<&T> {
         // FIXME: I think this should probably not be None, but I don't know what the convenient
         // API should be, so for now this is what it is.
-        if self.position.is_none() { return None }
-
-        let new_position = self.position.unwrap() as isize + offset;
+        let new_position = self.position? as isize + offset;
 
         if new_position < 0 {
             self.position = Some(0);

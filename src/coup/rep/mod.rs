@@ -208,7 +208,7 @@ impl Move {
             return "O-O-O".to_string();
         }
 
-        let mut result = String::new();
+        let mut result = String::default();
 
         let occ = context.get(self.source());
 

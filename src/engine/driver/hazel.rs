@@ -21,7 +21,7 @@ impl Driver {
     pub fn new() -> Driver {
         Driver {
             debug: false,
-            game: Variation::new()
+            game: Variation::default()
         }
     }
 }
@@ -128,7 +128,7 @@ mod tests {
 
     #[test]
     fn driver_parses_isready() {
-        let mut driver = Driver::new();
+        let mut driver = Driver::default();
         let response = driver.exec(&UCIMessage::IsReady);
         assert_eq!(response, vec![UCIMessage::ReadyOk]);
         // this but with a vec![] instead of Some
@@ -136,14 +136,14 @@ mod tests {
 
     #[test]
     fn driver_parses_uci() {
-        let mut driver = Driver::new();
+        let mut driver = Driver::default();
         let response = driver.exec(&UCIMessage::UCI);
         assert_eq!(response, vec![UCIMessage::ID("Hazel".to_string(), "0.1".to_string())]);
     }
 
     #[test]
     fn driver_parses_debug() {
-        let mut driver = Driver::new();
+        let mut driver = Driver::default();
         assert!(!driver.debug);
         let response = driver.exec(&UCIMessage::Debug(true));
         assert_eq!(response, vec![]);
@@ -152,7 +152,7 @@ mod tests {
 
     #[test]
     fn driver_sets_up_start_position() {
-        let mut driver = Driver::new();
+        let mut driver = Driver::default();
         let response = driver.exec_message("position startpos moves");
         assert_eq!(response, vec![]);
         assert_eq!(driver.game.log(), vec![
@@ -163,7 +163,7 @@ mod tests {
 
     #[test]
     fn driver_sets_up_arbitrary_position() {
-        let mut driver = Driver::new();
+        let mut driver = Driver::default();
 
         let response = driver.exec_message(&format!("position fen {} moves", POS2_KIWIPETE_FEN));
         assert_eq!(response, vec![]);
@@ -175,7 +175,7 @@ mod tests {
 
     #[test]
     fn driver_plays_moves_specified_by_position() {
-        let mut driver = Driver::new();
+        let mut driver = Driver::default();
         let response = driver.exec_message(&format!("position fen {} moves e2e4 e7e5", START_POSITION_FEN));
         assert_eq!(response, vec![]);
         assert_eq!(driver.game.log(), vec![

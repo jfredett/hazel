@@ -119,7 +119,7 @@ pub fn display_board(board: &impl Query) -> String {
 }
 
 pub fn to_fen(board: &impl Query) -> FEN {
-    let mut f = String::new();
+    let mut f = String::default();
     let mut empty = 0;
 
     for s in Square::by_rank_and_file().downward() {

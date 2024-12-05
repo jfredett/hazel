@@ -75,7 +75,7 @@ impl Variation {
     pub fn variation(&mut self, block: impl Fn(&mut Variation)) -> &mut Self {
         self.log.begin();
 
-        let mut variation = Variation::new();
+        let mut variation = Variation::default();
 
         block(&mut variation);
 
