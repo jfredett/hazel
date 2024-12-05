@@ -44,12 +44,12 @@ impl Variation {
     }
 
     pub fn new_game(&mut self) -> &mut Self {
-        self.record(ChessAction::NewGame);
+        self.record(ChessAction::Setup(FEN::start_position()));
         self
     }
 
     pub fn halt(&mut self, state: Reason) -> &mut Self {
-        self.record(ChessAction::Halted(state));
+        self.record(ChessAction::Halt(state));
         self
     }
 
@@ -111,11 +111,7 @@ impl Variation {
             let mut metadata = PositionMetadata::default();
             while let Some(action) = cursor.next() {
                 match action {
-                    ChessAction::NewGame => {
-                        board = PieceBoard::default();
-                        metadata = PositionMetadata::default();
-                    },
-                    ChessAction::Halted(_) => {
+                    ChessAction::Halt(_) => {
                         todo!();
                     },
                     ChessAction::Variation(_) => {
@@ -268,12 +264,8 @@ mod tests {
             let mut metadata = PositionMetadata::default();
             while let Some(action) = cursor.next() {
                 match action {
-                    ChessAction::NewGame => {
-                        board = PieceBoard::default();
-                        metadata = PositionMetadata::default();
-                    },
-                    ChessAction::Halted(_) => {
-                        todo!("In Halt");
+                    ChessAction::Halt(_) => {
+                        /* do nothing */
                     },
                     ChessAction::Variation(v) => {
                         match v {

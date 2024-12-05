@@ -20,10 +20,9 @@ pub enum Reason {
     Returned,
 }
 
-#[derive(Clone, Default, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub enum ChessAction {
-    #[default] NewGame,
-    Halted(Reason),
+    Halt(Reason),
     Variation(Delim),
     Setup(FEN),
     Make(Move),
@@ -32,8 +31,7 @@ pub enum ChessAction {
 impl Debug for ChessAction {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            ChessAction::NewGame => write!(f, "NewGame"),
-            ChessAction::Halted(egs) => write!(f, "EndGame({:?})", egs),
+            ChessAction::Halt(egs) => write!(f, "EndGame({:?})", egs),
             ChessAction::Variation(Delim::Start) => write!(f, "Variation(Start)"),
             ChessAction::Variation(Delim::End) => write!(f, "Variation(End)"),
             ChessAction::Setup(fen) => write!(f, "Setup({})", fen),
