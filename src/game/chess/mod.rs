@@ -43,10 +43,6 @@ impl<T> Play for ChessGame<T> where T: Alter + Query + Default + Clone {
 
     fn apply_mut(&mut self, action: &ChessAction) -> &mut Self {
         match action {
-            ChessAction::NewGame => {
-                self.rep = T::default();
-                self.metadata = PositionMetadata::default();
-            }
             ChessAction::Setup(fen) => {
                 let alts = fen.compile();
                 for a in alts {
@@ -88,8 +84,7 @@ mod tests {
     #[tracing_test::traced_test]
     fn correctly_calculates_position_after_several_moves() {
         let mut game : ChessGame<PieceBoard> = ChessGame::default();
-        game.apply_mut(&ChessAction::NewGame)
-            .apply_mut(&ChessAction::Setup(FEN::new(START_POSITION_FEN)))
+        game.apply_mut(&ChessAction::Setup(FEN::new(START_POSITION_FEN)))
             .apply_mut(&ChessAction::Make(Move::new(D2, D4, MoveType::DOUBLE_PAWN)));
 
         let expected_fen = FEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 2");

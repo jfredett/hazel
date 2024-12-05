@@ -81,10 +81,16 @@ impl<'a, T> Unplay for Familiar<'a, ChessGame<T>> where T : Query + Alter + Clon
         match rule {
             // if it's just a make or halt or w/e, just unmake,
             ChessAction::Make(mov) => { self.rep.unmake(*mov); },
-            // if it's a newgame or a setup, we'll have to scan back to the previous setup and recalculate
-            ChessAction::NewGame => { todo!() },
-            ChessAction::Setup(fen) => { todo!() },
-            _ => { todo!() }
+            // if it's a setup, we'll have to scan back to the previous setup and recalculate
+            ChessAction::Setup(fen) => { 
+                todo!() 
+            },
+            ChessAction::Halt(reason) => {
+                todo!()
+            },
+            ChessAction::Variation(_) => {
+                todo!()
+            },
         }
         self
     }
