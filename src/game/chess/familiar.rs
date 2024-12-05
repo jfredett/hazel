@@ -21,7 +21,8 @@
 // 
 //
 
-use crate::{interface::play::Play, types::log::cursor::Cursor};
+use crate::{interface::play::Play, play::Unplay, types::log::cursor::Cursor, Alter, Query};
+use super::{action::ChessAction, ChessGame};
 
 #[derive(Debug, Clone)]
 pub struct Familiar<'a, T> where T : Play + Default {
@@ -40,14 +41,6 @@ impl<'a, T> Familiar<'a, T> where T : Play + Default {
         }
     }
 
-    /*
-    pub fn rewind(&mut self) {
-        if let Some(action) = self.cursor.prev() {
-            self.rep.unwind_mut(action);
-        }
-    }
-    */
-
     pub fn rep(&self) -> &T {
         &self.rep
     }
@@ -55,6 +48,47 @@ impl<'a, T> Familiar<'a, T> where T : Play + Default {
     pub fn metadata(&self) -> T::Metadata {
         self.rep.metadata().clone()
     }
+}
+
+impl<T> Play for Familiar<'_, T> where T : Play + Default {
+    type Rule = T::Rule;
+    type Metadata = T::Metadata;
+
+    fn apply(&self, rule: &Self::Rule) -> Self {
+        let mut new_game = self.clone();
+        new_game.apply_mut(rule);
+        new_game
+    }
+
+    fn apply_mut(&mut self, rule: &Self::Rule) -> &mut Self {
+        self.rep.apply_mut(rule);
+        self
+    }
+
+    fn metadata(&self) -> Self::Metadata {
+        self.rep.metadata()
+    }
+}
+
+impl<'a, T> Unplay for Familiar<'a, ChessGame<T>> where T : Query + Alter + Clone + Default {
+    fn unapply(&self, rule: &Self::Rule) -> Self {
+        let mut new_game = self.clone();
+        new_game.unapply_mut(rule);
+        new_game
+    } 
+
+    fn unapply_mut(&mut self, rule: &Self::Rule) -> &mut Self {
+        match rule {
+            // if it's just a make or halt or w/e, just unmake,
+            ChessAction::Make(mov) => { self.rep.unmake(*mov); },
+            // if it's a newgame or a setup, we'll have to scan back to the previous setup and recalculate
+            ChessAction::NewGame => { todo!() },
+            ChessAction::Setup(fen) => { todo!() },
+            _ => { todo!() }
+        }
+        self
+    }
+
 }
 
 #[cfg(test)]

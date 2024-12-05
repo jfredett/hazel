@@ -7,6 +7,7 @@ pub mod variation;
 
 use action::ChessAction;
 
+use crate::coup::rep::Move;
 use crate::game::position_metadata::PositionMetadata;
 use crate::interface::{Alter, Query, Play};
 
@@ -16,6 +17,12 @@ pub struct ChessGame<T> where T: Alter + Query + Default + Clone {
     metadata: PositionMetadata,
 }
 
+
+impl<T> ChessGame<T> where T: Alter + Query + Default + Clone {
+    pub fn unmake(&mut self, action: Move) {
+        todo!();
+    }
+}
 
 /*
 * In this design, ChessGame can only roll _forward_, the unplay trait would require a bunch more
