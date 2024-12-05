@@ -19,7 +19,7 @@
 // In any case, investigating const time for this code I think makes sense.
 
 
-use crate::board::interface::{Alteration, Query};
+use crate::interface::{Alteration, Query};
 use crate::notation::*;
 use crate::types::{Color, Piece, Occupant};
 use crate::constants::File;
@@ -208,7 +208,7 @@ impl Move {
             return "O-O-O".to_string();
         }
 
-        let mut result = String::new();
+        let mut result = String::default();
 
         let occ = context.get(self.source());
 
@@ -660,7 +660,8 @@ mod test {
     }
 
     mod disambiguate {
-        use crate::board::{Alter, PieceBoard};
+        use crate::Alter;
+        use crate::board::PieceBoard;
 
         use super::*;
 
@@ -716,7 +717,8 @@ mod test {
     }
 
     mod to_star {
-        use crate::board::{Alter, PieceBoard};
+        use crate::board::PieceBoard;
+        use crate::Alter;
 
         use super::*;
 

@@ -2,7 +2,7 @@
 
 use ratatui::prelude::*;
 use crate::board::simple::PieceBoard;
-use crate::board::Query;
+use crate::Query;
 use crate::types::{self, Occupant, Piece};
 use crate::notation::*;
 

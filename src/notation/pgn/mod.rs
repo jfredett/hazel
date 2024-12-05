@@ -11,27 +11,17 @@ use nom::{branch::alt, bytes::complete::tag, character::complete::{multispace0, 
 use tracing::debug;
 
 use crate::notation::pgn::tokenizer::PGNToken;
-use crate::{board::Alter, constants::START_POSITION_FEN, coup::rep::Move, game::variation::Variation, notation::fen::FEN};
+use crate::{Alter, constants::START_POSITION_FEN, coup::rep::Move, game::variation::Variation, notation::fen::FEN};
 use crate::{notation::{ben::BEN, san::SAN}, types::Color};
 
 use super::{san::SANConversionError, Square};
 
 use tag_pair::*;
 
-#[derive(Debug)]
+#[derive(Default, Debug)]
 pub struct PGN {
     tag_pairs: Vec<TagPair>,
     variation: Variation,
-}
-
-
-impl Default for PGN {
-    fn default() -> Self {
-        PGN {
-            tag_pairs: vec![],
-            variation: Variation::new(),
-        }
-    }
 }
 
 impl PGN {
@@ -54,7 +44,7 @@ impl PGN {
 
         let (input, tokens) = PGNToken::tokenize(input)?;
 
-        let mut variation = Variation::new();
+        let mut variation = Variation::default();
         for token in tokens {
             match token {
                 PGNToken::GameStart => {

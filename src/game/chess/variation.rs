@@ -1,9 +1,9 @@
-
-use crate::{board::Alter, types::log::Log};
+use crate::types::log::cursor::Cursor;
+use crate::{interface::Alter, types::log::Log};
 
 use crate::{board::PieceBoard, coup::rep::Move, notation::fen::{PositionMetadata, FEN}};
 
-use super::action::chess::{ChessAction, Delim, Reason};
+use super::action::{ChessAction, Delim, Reason};
 
 #[derive(Debug, Default, Clone)]
 pub struct Variation {
@@ -44,12 +44,12 @@ impl Variation {
     }
 
     pub fn new_game(&mut self) -> &mut Self {
-        self.record(ChessAction::NewGame);
+        self.record(ChessAction::Setup(FEN::start_position()));
         self
     }
 
     pub fn halt(&mut self, state: Reason) -> &mut Self {
-        self.record(ChessAction::Halted(state));
+        self.record(ChessAction::Halt(state));
         self
     }
 
@@ -75,7 +75,7 @@ impl Variation {
     pub fn variation(&mut self, block: impl Fn(&mut Variation)) -> &mut Self {
         self.log.begin();
 
-        let mut variation = Variation::new();
+        let mut variation = Variation::default();
 
         block(&mut variation);
 
@@ -111,11 +111,7 @@ impl Variation {
             let mut metadata = PositionMetadata::default();
             while let Some(action) = cursor.next() {
                 match action {
-                    ChessAction::NewGame => {
-                        board = PieceBoard::default();
-                        metadata = PositionMetadata::default();
-                    },
-                    ChessAction::Halted(_) => {
+                    ChessAction::Halt(_) => {
                         todo!();
                     },
                     ChessAction::Variation(_) => {
@@ -141,6 +137,16 @@ impl Variation {
         })
     }
 
+    pub(crate) fn get_cursor(&self) -> Cursor<ChessAction> {
+        self.log.raw_cursor()
+    }
+
+    /*
+    pub(crate) fn get_writehead(&mut self) -> Log<ChessAction>::WriteHead {
+        self.log.writehead()
+    }
+    */
+
     fn record(&mut self, action: ChessAction) -> &mut Self {
         if self.halted { return self; }
 
@@ -155,7 +161,7 @@ impl Variation {
 mod tests {
     use crate::notation::*;
     use crate::{coup::rep::MoveType, types::Occupant};
-    use crate::board::interface::*;
+    use crate::*;
 
     use super::*;
 
@@ -258,12 +264,8 @@ mod tests {
             let mut metadata = PositionMetadata::default();
             while let Some(action) = cursor.next() {
                 match action {
-                    ChessAction::NewGame => {
-                        board = PieceBoard::default();
-                        metadata = PositionMetadata::default();
-                    },
-                    ChessAction::Halted(_) => {
-                        todo!("In Halt");
+                    ChessAction::Halt(_) => {
+                        /* do nothing */
                     },
                     ChessAction::Variation(v) => {
                         match v {

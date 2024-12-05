@@ -14,7 +14,7 @@
 //! because I've seen it before, I don't know, but I'm very likely not a genius.
 
 use super::{fen::{PositionMetadata, FEN}, Square};
-use crate::{board::{Alter, Alteration, PieceBoard, Query}, types::{Color, Occupant}};
+use crate::{Alter, Alteration, Query, types::{Color, Occupant}};
 use std::fmt::{Debug, Formatter};
 
 mod from_into;
@@ -40,7 +40,7 @@ impl Query for BEN {
 
 impl Alter for BEN {
     fn alter(&self, alter: Alteration) -> Self {
-        let mut ben = self.clone();
+        let mut ben = *self;
         ben.alter_mut(alter);
         ben
     }

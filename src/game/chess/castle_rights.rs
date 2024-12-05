@@ -10,7 +10,7 @@ pub struct CastleRights {
 
 impl Display for CastleRights {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut rights = String::new();
+        let mut rights = String::default();
         if self.white_short {
             rights.push('K');
         }

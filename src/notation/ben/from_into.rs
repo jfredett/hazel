@@ -1,3 +1,5 @@
+use crate::board::PieceBoard;
+
 use super::*;
 
 impl From<FEN> for BEN {

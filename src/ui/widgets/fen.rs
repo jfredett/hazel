@@ -8,7 +8,7 @@ use tracing::{debug, instrument};
 use ratatui::buffer::Buffer;
 
 use crate::board::simple::PieceBoard;
-use crate::board::interface::query;
+use crate::interface::query::to_fen;
 
 
 #[derive(Debug, Default)]
@@ -23,13 +23,13 @@ pub struct FEN {
 
 impl From<&PieceBoard> for FEN {
     fn from(board: &PieceBoard) -> Self {
-        Self::new(query::to_fen(board))
+        Self::new(to_fen(board))
     }
 }
 
 impl From<PieceBoard> for FEN {
     fn from(board: PieceBoard) -> Self {
-        Self::new(query::to_fen(&board))
+        Self::new(to_fen(&board))
     }
 }
 

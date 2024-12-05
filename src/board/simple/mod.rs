@@ -1,4 +1,4 @@
-use crate::board::{alter::Alter, alteration::Alteration, query::Query};
+use crate::interface::{alter::Alter, alteration::Alteration, query::Query};
 use crate::constants::START_POSITION_FEN;
 use crate::types::Occupant;
 use crate::notation::*;
@@ -38,7 +38,7 @@ impl Query for PieceBoard {
 
 impl From<PieceBoard> for FEN {
     fn from(board: PieceBoard) -> Self {
-        super::query::to_fen(&board)
+        crate::interface::query::to_fen(&board)
     }
 }
 
