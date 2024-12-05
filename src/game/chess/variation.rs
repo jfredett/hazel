@@ -1,3 +1,4 @@
+use crate::types::log::cursor::Cursor;
 use crate::{interface::Alter, types::log::Log};
 
 use crate::{board::PieceBoard, coup::rep::Move, notation::fen::{PositionMetadata, FEN}};
@@ -140,11 +141,11 @@ impl Variation {
         })
     }
 
-    /*
-    pub(crate) fn get_cursor(&self) -> Log<ChessAction>::Cursor {
-        self.log.cursor()
+    pub(crate) fn get_cursor(&self) -> Cursor<ChessAction> {
+        self.log.raw_cursor()
     }
 
+    /*
     pub(crate) fn get_writehead(&mut self) -> Log<ChessAction>::WriteHead {
         self.log.writehead()
     }
