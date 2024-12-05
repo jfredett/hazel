@@ -151,7 +151,7 @@ impl FEN {
     }
 
     pub fn metadata(&self) -> PositionMetadata {
-        self.metadata.clone()
+        self.metadata
     }
 }
 

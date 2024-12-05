@@ -73,7 +73,7 @@ mod tests {
 "#;
             let tagpairs = TagPairs::parse(input).unwrap();
             debug!("{:?}", tagpairs);
-            assert_eq!(tagpairs, ("", TagPairs { 0: vec![
+            assert_eq!(tagpairs, ("", TagPairs(vec![
                 TagPair { name: "Event".to_string(), value: "F/S Return Match".to_string() },
                 TagPair { name: "Site".to_string(), value: "Belgrade, Serbia JUG".to_string() },
                 TagPair { name: "Date".to_string(), value: "1992.11.04".to_string() },
@@ -81,7 +81,7 @@ mod tests {
                 TagPair { name: "White".to_string(), value: "Fischer, Robert J.".to_string() },
                 TagPair { name: "Black".to_string(), value: "Spassky, Boris V.".to_string() },
                 TagPair { name: "Result".to_string(), value: "1/2-1/2".to_string() },
-            ]}));
+            ])));
         }
     }
 

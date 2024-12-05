@@ -66,7 +66,7 @@ mod tests {
 
     #[test]
     fn familiar_works_with_pieceboard_to_capture_gamestate() {
-        let mut log = Variation::new();
+        let mut log = Variation::default();
         log.new_game()
            .setup(FEN::new(START_POSITION_FEN))
            .make(Move::new(D2, D4, MoveType::DOUBLE_PAWN))

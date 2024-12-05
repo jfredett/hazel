@@ -34,12 +34,6 @@ impl Drop for Stockfish {
 
 impl Default for Stockfish {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl Stockfish {
-    pub fn new() -> Stockfish {
         // start the stockfish process
         let mut child = Command::new("stockfish")
             .stdin(Stdio::piped())
@@ -53,10 +47,16 @@ impl Stockfish {
 
 
         // just burn off everything it outputs until we ask it to get ready
-        let mut line = String::new();
+        let mut line = String::default();
         let _ = stdout.read_line(&mut line).expect("Failed to first stanza from stockfish");
 
         Stockfish { child, stdin, stdout }
+    }
+}
+
+impl Stockfish {
+    pub fn new() -> Stockfish {
+        Self::default()
     }
 }
 
@@ -74,9 +74,9 @@ impl Engine<UCIMessage> for Stockfish {
         writeln!(self.stdin, "{}", cmd_str).expect("Failed to write to stockfish");
 
         if message.has_response() {
-            let mut response = Vec::new();
+            let mut response = vec![];
             loop {
-                let mut line = String::new();
+                let mut line = String::default();
                 let bytes_read = self.stdout.read_line(&mut line).expect("Failed to read from stockfish");
 
                 if bytes_read == 0 { break; } // EOF reached.
@@ -107,7 +107,7 @@ mod tests {
 
     #[test]
     fn stockfish_connects() {
-        let mut stockfish = Stockfish::new();
+        let mut stockfish = Stockfish::default();
         let response = stockfish.exec_message("uci");
         // I'm only checking the first couple stanzas which I hope stay consistent across versions.
         // I just want a canary to make sure I connected, UCI is timeless.

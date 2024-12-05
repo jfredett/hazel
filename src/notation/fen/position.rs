@@ -14,7 +14,7 @@ pub(crate) struct Position {
 
 impl Position {
     pub fn new(fen: &str) -> Self {
-        let position = Self::compile(&fen);
+        let position = Self::compile(fen);
 
         Self {
             position_string: fen.to_string(),
@@ -71,7 +71,7 @@ impl Display for Position {
 
 impl<C : Query> From<C> for Position {
     fn from(c: C) -> Self {
-        let mut rep = String::new();
+        let mut rep = String::default();
         let mut empty = 0;
         for s in Square::fenwise() {
             let occ = c.get(s);

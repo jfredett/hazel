@@ -40,7 +40,7 @@ impl Query for BEN {
 
 impl Alter for BEN {
     fn alter(&self, alter: Alteration) -> Self {
-        let mut ben = self.clone();
+        let mut ben = *self;
         ben.alter_mut(alter);
         ben
     }
