@@ -32,7 +32,7 @@ tracing-appender = "0.2"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 tokio = { version = "1.16.0", features = ["full"] }
 tokio-stream = "0.1.16"
-tokio-util = { version = "0.7.12", features = ["io"] }
+tokio-util = { version = "0.7.13", features = ["io"] }
 const-str = "0.5.7"
 mutants = "0.0.3"
 nom = "7.1.3"
