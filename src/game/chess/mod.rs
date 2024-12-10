@@ -1,11 +1,12 @@
 pub mod action;
 pub mod castle_rights;
+pub mod delim;
 pub mod familiar;
 pub mod position_metadata;
+pub mod reason;
 pub mod variation;
 
-
-use action::ChessAction;
+use action::Action;
 
 use crate::coup::rep::Move;
 use crate::game::position_metadata::PositionMetadata;
@@ -32,25 +33,24 @@ impl<T> ChessGame<T> where T: Alter + Query + Default + Clone {
 
 // TODO: Maybe wrap the constraint in it's own typeclass?
 impl<T> Play for ChessGame<T> where T: Alter + Query + Default + Clone {
-    type Rule = ChessAction;
     type Metadata = PositionMetadata;
 
-    fn apply(&self, action: &ChessAction) -> Self {
+    fn apply(&self, action: &Self::Action) -> Self {
         let mut new_game = self.clone();
         new_game.apply_mut(action);
         new_game
     }
 
-    fn apply_mut(&mut self, action: &ChessAction) -> &mut Self {
+    fn apply_mut(&mut self, action: &Self::Action) -> &mut Self {
         match action {
-            ChessAction::Setup(fen) => {
+            Action::Setup(fen) => {
                 let alts = fen.compile();
                 for a in alts {
                     self.rep.alter_mut(a);
                 }
                 self.metadata = fen.metadata();
             }
-            ChessAction::Make(mov) => {
+            Action::Make(mov) => {
                 let alts = mov.compile(&self.rep);
                 // Order matters, the metadata must be updated before the board
                 self.metadata.update(mov, &self.rep);
