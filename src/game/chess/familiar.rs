@@ -76,7 +76,16 @@ impl<'a, T> Familiar<'a, T> where T : Play + Default {
     pub fn advance_until(&mut self, predicate: impl Fn(&Self) -> bool) {
         while let Some(coup) = self.cursor.next() {
             match coup {
-                _ => todo!()
+                /*
+                Action::Setup(ben) => {
+                    self.rep = T::default();
+                    self.rep.apply_mut(&Action::Setup(ben));
+                },
+                Action::Make(mov) => {
+                    self.rep.apply_mut(&Action::Make(mov));
+                },
+                */
+                _ => { todo!(); }
             }
 
             if predicate(self) {

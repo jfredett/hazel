@@ -50,11 +50,11 @@ impl From<BEN> for FEN {
     }
 }
 
-impl From<&FEN> for BEN {
-    fn from(fen: &FEN) -> Self {
-        fen.clone().into()
-    }
-}
+// impl From<&FEN> for BEN {
+//     fn from(fen: &FEN) -> Self {
+//         fen.clone().into()
+//     }
+// }
 
 impl From<&BEN> for FEN {
     fn from(ben: &BEN) -> Self {
@@ -62,17 +62,11 @@ impl From<&BEN> for FEN {
     }
 }
 
-impl<'a> From<&'a BEN> for &'a FEN {
-    fn from(ben: &'a BEN) -> &'a FEN {
-        ben.into()
-    }
-}
-
-impl<'a> From<&'a FEN> for &'a BEN {
-    fn from(fen: &'a FEN) -> &'a BEN {
-        fen.into()
-    }
-}
+// impl<'a> From<&'a FEN> for &'a BEN {
+//     fn from(fen: &'a FEN) -> &'a BEN {
+//         fen.into()
+//     }
+// }
 
 #[cfg(test)]
 mod tests {

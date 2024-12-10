@@ -121,7 +121,8 @@ impl Variation {
                         // mainline
                     },
                     Action::Setup(fen) => {
-                        board.set_fen(fen.into());
+                        let f : FEN = (*fen).into();
+                        board.set_fen(&f);
                     },
                     Action::Make(mov) => {
                         metadata.update(mov, &board);
@@ -280,7 +281,8 @@ mod tests {
                         }
                     },
                     Action::Setup(fen) => {
-                        board.set_fen(fen.into());
+                        let f : FEN = fen.into();
+                        board.set_fen(&f);
                     },
                     Action::Make(mov) => {
                         metadata.update(mov, &board);

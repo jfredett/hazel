@@ -118,7 +118,6 @@ impl BEN {
         self.metadata.side_to_move
     }
 
-
     pub fn compile(&self) -> Vec<Alteration> {
         let f : FEN = self.into();
         f.compile()
