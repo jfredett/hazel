@@ -1,15 +1,17 @@
 pub mod action;
 pub mod castle_rights;
+pub mod delim;
 pub mod familiar;
 pub mod position_metadata;
+pub mod reason;
 pub mod variation;
 
-
-use action::ChessAction;
+use action::Action;
 
 use crate::coup::rep::Move;
 use crate::game::position_metadata::PositionMetadata;
 use crate::interface::{Alter, Query, Play};
+use crate::notation::ben::BEN;
 
 #[derive(Clone, Default)]
 pub struct ChessGame<T> where T: Alter + Query + Default + Clone {
@@ -32,25 +34,24 @@ impl<T> ChessGame<T> where T: Alter + Query + Default + Clone {
 
 // TODO: Maybe wrap the constraint in it's own typeclass?
 impl<T> Play for ChessGame<T> where T: Alter + Query + Default + Clone {
-    type Rule = ChessAction;
     type Metadata = PositionMetadata;
 
-    fn apply(&self, action: &ChessAction) -> Self {
+    fn apply(&self, action: &Action<Move, BEN>) -> Self {
         let mut new_game = self.clone();
         new_game.apply_mut(action);
         new_game
     }
 
-    fn apply_mut(&mut self, action: &ChessAction) -> &mut Self {
+    fn apply_mut(&mut self, action: &Action<Move, BEN>) -> &mut Self {
         match action {
-            ChessAction::Setup(fen) => {
+            Action::Setup(fen) => {
                 let alts = fen.compile();
                 for a in alts {
                     self.rep.alter_mut(a);
                 }
                 self.metadata = fen.metadata();
             }
-            ChessAction::Make(mov) => {
+            Action::Make(mov) => {
                 let alts = mov.compile(&self.rep);
                 // Order matters, the metadata must be updated before the board
                 self.metadata.update(mov, &self.rep);
@@ -84,8 +85,8 @@ mod tests {
     #[tracing_test::traced_test]
     fn correctly_calculates_position_after_several_moves() {
         let mut game : ChessGame<PieceBoard> = ChessGame::default();
-        game.apply_mut(&ChessAction::Setup(FEN::new(START_POSITION_FEN)))
-            .apply_mut(&ChessAction::Make(Move::new(D2, D4, MoveType::DOUBLE_PAWN)));
+        game.apply_mut(&Action::Setup(FEN::new(START_POSITION_FEN).into()))
+            .apply_mut(&Action::Make(Move::new(D2, D4, MoveType::DOUBLE_PAWN)));
 
         let expected_fen = FEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 2");
         let actual_fen = FEN::with_metadata(game.rep, game.metadata);

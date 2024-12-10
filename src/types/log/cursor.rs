@@ -15,6 +15,10 @@ impl<'a, T> Cursor<'a, T>  where T: Clone {
         }
     }
 
+    pub fn position(&self) -> usize {
+        self.position.unwrap_or(0)
+    }
+
     pub fn seek(&mut self, position: usize) -> Option<&T> {
         self.position = Some(position);
         self.read()

@@ -1,15 +1,18 @@
+use crate::notation::ben::BEN;
 use crate::types::log::cursor::Cursor;
 use crate::{interface::Alter, types::log::Log};
 
 use crate::{board::PieceBoard, coup::rep::Move, notation::fen::{PositionMetadata, FEN}};
 
-use super::action::{ChessAction, Delim, Reason};
+use super::action::Action;
+use super::delim::Delim;
+use super::reason::Reason;
 
 #[derive(Debug, Default, Clone)]
 pub struct Variation {
     // Active Data
     /// A record of every action in the game
-    log: Log<ChessAction>,
+    log: Log<Action<Move, BEN>>,
     halted: bool
 
     // Caches / Derived Data
@@ -39,22 +42,21 @@ impl Variation {
     }
 
     pub fn make(&mut self, mov: Move) -> &mut Self {
-        self.record(ChessAction::Make(mov));
+        self.record(Action::Make(mov));
         self
     }
 
     pub fn new_game(&mut self) -> &mut Self {
-        self.record(ChessAction::Setup(FEN::start_position()));
-        self
+        self.setup(FEN::start_position())
     }
 
     pub fn halt(&mut self, state: Reason) -> &mut Self {
-        self.record(ChessAction::Halt(state));
+        self.record(Action::Halt(state));
         self
     }
 
-    pub fn setup(&mut self, fen: FEN) -> &mut Self {
-        self.record(ChessAction::Setup(fen.clone()));
+    pub fn setup(&mut self, ben: impl Into<BEN>) -> &mut Self {
+        self.record(Action::Setup(ben.into()));
         self
     }
 
@@ -62,13 +64,13 @@ impl Variation {
     // do this in the PGN::parse side of things, but a pleasant way is not obvious and this better
     // matches the tokenization, so I'm going with it.
     pub(crate) fn start_variation(&mut self) -> &mut Self {
-        self.record(ChessAction::Variation(Delim::Start));
+        self.record(Action::Variation(Delim::Start));
         self
     }
 
     // NOTE: see #start_variation
     pub(crate) fn end_variation(&mut self) -> &mut Self {
-        self.record(ChessAction::Variation(Delim::End));
+        self.record(Action::Variation(Delim::End));
         self
     }
 
@@ -81,11 +83,11 @@ impl Variation {
 
         variation.commit_all();
 
-        self.record(ChessAction::Variation(Delim::Start));
+        self.record(Action::Variation(Delim::Start));
         for action in variation.log.into_iter() {
             self.record(action);
         }
-        self.record(ChessAction::Variation(Delim::End));
+        self.record(Action::Variation(Delim::End));
 
         self.log.commit();
 
@@ -111,17 +113,17 @@ impl Variation {
             let mut metadata = PositionMetadata::default();
             while let Some(action) = cursor.next() {
                 match action {
-                    ChessAction::Halt(_) => {
+                    Action::Halt(_) => {
                         todo!();
                     },
-                    ChessAction::Variation(_) => {
+                    Action::Variation(_) => {
                         // This is a variation, so we don't need to do anything. Only reading the
                         // mainline
                     },
-                    ChessAction::Setup(fen) => {
-                        board.set_fen(fen);
+                    Action::Setup(fen) => {
+                        board.set_fen(fen.into());
                     },
-                    ChessAction::Make(mov) => {
+                    Action::Make(mov) => {
                         metadata.update(mov, &board);
                         for alter in mov.compile(&board) {
                             board.alter_mut(alter);
@@ -137,17 +139,17 @@ impl Variation {
         })
     }
 
-    pub(crate) fn get_cursor(&self) -> Cursor<ChessAction> {
+    pub(crate) fn get_cursor(&self) -> Cursor<Action<Move, BEN>> {
         self.log.raw_cursor()
     }
 
     /*
-    pub(crate) fn get_writehead(&mut self) -> Log<ChessAction>::WriteHead {
+    pub(crate) fn get_writehead(&mut self) -> Log<Action>::WriteHead {
         self.log.writehead()
     }
     */
 
-    fn record(&mut self, action: ChessAction) -> &mut Self {
+    fn record(&mut self, action: Action<Move, BEN>) -> &mut Self {
         if self.halted { return self; }
 
         self.log.record(action);
@@ -159,6 +161,8 @@ impl Variation {
 
 #[cfg(test)]
 mod tests {
+    use game::delim::Delim;
+
     use crate::notation::*;
     use crate::{coup::rep::MoveType, types::Occupant};
     use crate::*;
@@ -166,7 +170,7 @@ mod tests {
     use super::*;
 
     impl Variation {
-        pub fn log(&self) -> Vec<ChessAction> {
+        pub fn log(&self) -> Vec<Action<Move, BEN>> {
             self.log.log()
         }
     }
@@ -264,10 +268,10 @@ mod tests {
             let mut metadata = PositionMetadata::default();
             while let Some(action) = cursor.next() {
                 match action {
-                    ChessAction::Halt(_) => {
+                    Action::Halt(_) => {
                         /* do nothing */
                     },
-                    ChessAction::Variation(v) => {
+                    Action::Variation(v) => {
                         match v {
                             Delim::Start => { },
                             Delim::End => {
@@ -275,10 +279,10 @@ mod tests {
                             }
                         }
                     },
-                    ChessAction::Setup(fen) => {
-                        board.set_fen(fen);
+                    Action::Setup(fen) => {
+                        board.set_fen(fen.into());
                     },
-                    ChessAction::Make(mov) => {
+                    Action::Make(mov) => {
                         metadata.update(mov, &board);
                         for alter in mov.compile(&board) {
                             board.alter_mut(alter);

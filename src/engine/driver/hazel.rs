@@ -6,6 +6,8 @@
 use tracing::*;
 
 use crate::{engine::uci::UCIMessage, game::variation::Variation, notation::{fen::FEN, uci::UCI}};
+use crate::game::chess::action::Action;
+use crate::notation::ben::BEN;
 
 pub use crate::engine::Engine;
 
@@ -119,12 +121,12 @@ mod tests {
     use crate::notation::*;
 
     impl Driver {
-        pub fn log(&self) -> Vec<ChessAction> {
+        pub fn log(&self) -> Vec<Action<Move, BEN>> {
             self.game.log()
         }
     }
 
-    use crate::{constants::{POS2_KIWIPETE_FEN, START_POSITION_FEN}, game::action::ChessAction};
+    use crate::{constants::{POS2_KIWIPETE_FEN, START_POSITION_FEN}};
 
     #[test]
     fn driver_parses_isready() {
@@ -156,7 +158,7 @@ mod tests {
         let response = driver.exec_message("position startpos moves");
         assert_eq!(response, vec![]);
         assert_eq!(driver.game.log(), vec![
-            ChessAction::Setup(FEN::start_position())
+            Action::Setup(FEN::start_position().into())
         ]);
         assert_eq!(driver.game.current_position(), FEN::new(START_POSITION_FEN));
     }
@@ -168,7 +170,7 @@ mod tests {
         let response = driver.exec_message(&format!("position fen {} moves", POS2_KIWIPETE_FEN));
         assert_eq!(response, vec![]);
         assert_eq!(driver.game.log(), vec![
-            ChessAction::Setup(FEN::new(POS2_KIWIPETE_FEN))
+            Action::Setup(FEN::new(POS2_KIWIPETE_FEN).into())
         ]);
         assert_eq!(driver.game.current_position(), FEN::new(POS2_KIWIPETE_FEN));
     }
@@ -179,9 +181,9 @@ mod tests {
         let response = driver.exec_message(&format!("position fen {} moves e2e4 e7e5", START_POSITION_FEN));
         assert_eq!(response, vec![]);
         assert_eq!(driver.game.log(), vec![
-            ChessAction::Setup(FEN::new(START_POSITION_FEN)),
-            ChessAction::Make(Move::new(E2, E4, MoveType::UCI_AMBIGUOUS)),
-            ChessAction::Make(Move::new(E7, E5, MoveType::UCI_AMBIGUOUS))
+            Action::Setup(FEN::new(START_POSITION_FEN).into()),
+            Action::Make(Move::new(E2, E4, MoveType::UCI_AMBIGUOUS)),
+            Action::Make(Move::new(E7, E5, MoveType::UCI_AMBIGUOUS))
         ]);
         assert_eq!(driver.game.current_position(), FEN::new("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2"));
     }
