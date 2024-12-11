@@ -74,6 +74,19 @@ impl Alter for BEN {
     }
 }
 
+pub fn setup<A : Alter + Default>(ben: &BEN) -> A {
+    let mut board = A::default();
+    setup_mut(ben, &mut board);
+    board
+}
+
+pub fn setup_mut<A : Alter>(ben: &BEN, board: &mut A) {
+    let alts = ben.compile();
+    for alteration in alts {
+        board.alter_mut(alteration);
+    }
+}
+
 impl Debug for BEN {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut s = String::from("0x");

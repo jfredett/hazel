@@ -1390,3 +1390,34 @@ work in the current model and would prefer it to be more generic.
 
 The next step is to get `Familiar` correctly evaluating to arbitrary positions in the variation; once I can do that, I
 can start working to extract the type assumptions.
+
+# 11-DEC-2024
+
+## 0047 - familiars
+
+I am, gods help me, thinking about changing some names again. I think I'm starting to see that I really should try to
+pack the metadata in the 'alterations' stream. I rejected it because it kept alterations _very_ simple, but I think I
+need to allow for some kind of arbitrary metadata encoding that would record 'events' that alter some metadata flag,
+this would make it easy to undo and track metadata state, at the cost of making the alterations a little more
+complicated.
+
+I don't think I'm going to chase this rabbit _yet_, but I am not loving how my current design is managing metadata --
+which is to say, it's not really, it's just assuming partial representations will 'work out' and shoving metadata into
+the right spots in whatever way works. I think my goal is to try to get the thing to be able to represent a full PGN
+with variations. My main target for Hazel is high-depth analysis / big data, not necessarily chess playing proper, so
+once I can do that, I can start to replace the ugly bits with more confidence since I'll have a test suite to work
+against.
+
+The current plan is something like:
+
+1. Finish PGN parser via the Familiar system
+2. Implement a recalculation-based 'backwards movement' system for the Familiar.
+3. Wire the Variation to a UI widget that connects to the boardstate shown in the UI.
+4. Finish implementing UCI protocol
+5. Implement an _extremely_ bad evaluator/movegen system that can arguably play chess.
+6. Take a break
+7. Kill every single mutant and get to 100% coverage.
+8. Start to refactor the design to something comfortable.
+
+I'll chip away at that before getting into evaluators and UI and all that. I have plans for that but I think I've
+settled on the design and I just need to finish building it so I can get to the polish phase.

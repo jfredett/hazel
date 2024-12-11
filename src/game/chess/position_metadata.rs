@@ -139,10 +139,8 @@ impl PositionMetadata {
 
         if self.side_to_move == Color::WHITE {
             self.fullmove_number += 1;
-            self.side_to_move = Color::BLACK;
-        } else {
-            self.side_to_move = Color::WHITE;
         }
+        self.side_to_move = !self.side_to_move;
 
         // rely on the color of the piece being moved, rather than reasoning about the side-to-move
         // or delaying it till the end.

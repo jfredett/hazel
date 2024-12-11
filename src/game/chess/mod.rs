@@ -6,23 +6,70 @@ pub mod position_metadata;
 pub mod reason;
 pub mod variation;
 
+use std::fmt::{Debug, Formatter};
+
 use action::Action;
+use tracing::debug;
 
 use crate::coup::rep::Move;
 use crate::game::position_metadata::PositionMetadata;
 use crate::interface::{Alter, Query, Play};
 use crate::notation::ben::BEN;
+use crate::notation::fen::FEN;
 
 #[derive(Clone, Default)]
 pub struct ChessGame<T> where T: Alter + Query + Default + Clone {
-    rep: T,
-    metadata: PositionMetadata,
+    // FIXME: This is bad, I don't like it.
+    pub rep: T,
+    pub metadata: PositionMetadata,
 }
 
+
+impl<T> Debug for ChessGame<T> where T: Debug + Alter + Query + Default + Clone {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "ChessGame {{ rep: {:?}, metadata: {:?} }}", self.rep, self.metadata)
+    }
+}
 
 impl<T> ChessGame<T> where T: Alter + Query + Default + Clone {
     pub fn unmake(&mut self, _action: Move) {
         todo!();
+    }
+}
+
+impl<T> From<BEN> for ChessGame<T> where T : From<BEN> + Alter + Query + Default + Clone {
+    fn from(ben: BEN) -> Self {
+        let rep = T::from(ben);
+        ChessGame {
+            rep,
+            metadata: PositionMetadata::default(),
+        }
+    }
+}
+
+impl<T> From<FEN> for ChessGame<T> where T : From<FEN> + Alter + Query + Default + Clone {
+    fn from(fen: FEN) -> Self {
+        let rep = T::from(fen.clone());
+        ChessGame {
+            rep,
+            metadata: fen.metadata(),
+        }
+    }
+}
+
+impl<T> From<ChessGame<T>> for FEN where T : Into<FEN> + Alter + Query + Default + Clone {
+    fn from(game: ChessGame<T>) -> Self {
+        let mut ret = game.rep.into();
+        ret.set_metadata(game.metadata);
+        ret
+    }
+}
+
+impl<T> From<ChessGame<T>> for BEN where T : Into<BEN> + Alter + Query + Default + Clone {
+    fn from(game: ChessGame<T>) -> Self {
+        let mut ret = game.rep.into();
+        ret.set_metadata(game.metadata);
+        ret
     }
 }
 
@@ -54,7 +101,10 @@ impl<T> Play for ChessGame<T> where T: Alter + Query + Default + Clone {
             Action::Make(mov) => {
                 let alts = mov.compile(&self.rep);
                 // Order matters, the metadata must be updated before the board
+                debug!("Applying move: {:?}", mov);
+                debug!("Metdata before: {:?}", self.metadata);
                 self.metadata.update(mov, &self.rep);
+                debug!("Metdata after: {:?}", self.metadata);
                 for a in alts {
                     self.rep.alter_mut(a);
                 }

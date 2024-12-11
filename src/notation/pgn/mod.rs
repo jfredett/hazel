@@ -68,7 +68,13 @@ impl PGN {
                 PGNToken::Turn(_) => { }
                 PGNToken::Coup(san_str) => {
                     debug!("Coup: {:?}", san_str);
-                    let current_position = variation.current_position();
+                    let mut familiar = variation.familiar();
+                    familiar.advance_to_end();
+                    let current_position = familiar.rep().clone();
+
+                    debug!("Current position: {:?}", current_position.rep);
+                    debug!("Side to Move: {:?}", current_position.metadata.side_to_move);
+
                     let (input, san) = SAN::parse(&san_str, current_position).unwrap();
 
                     assert_eq!(input, "");
@@ -92,7 +98,6 @@ impl PGN {
 mod tests {
     use super::*;
 
-    /*
     mod pgn {
         use super::*;
 
@@ -145,5 +150,4 @@ mod tests {
             assert_eq!(pgn.variation.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
         }
     }
-    */
 }

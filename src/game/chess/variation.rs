@@ -1,13 +1,14 @@
 use crate::notation::ben::BEN;
 use crate::{interface::Alter, types::log::Log};
 use crate::{board::PieceBoard, coup::rep::Move, notation::fen::{PositionMetadata, FEN}};
+use crate::types::log::cursor::Cursor;
 
 use super::action::Action;
 use super::delim::Delim;
+use super::familiar::Familiar;
 use super::reason::Reason;
+use super::ChessGame;
 
-#[cfg(test)]
-use crate::types::log::cursor::Cursor;
 
 #[derive(Debug, Default, Clone)]
 pub struct Variation {
@@ -25,6 +26,10 @@ impl Variation {
             log: Log::start(),
             halted: false
         }
+    }
+
+    pub fn familiar<'a>(&mut self) -> Familiar<ChessGame<PieceBoard>> {
+        Familiar::new(self.get_cursor())
     }
 
     pub fn commit(&mut self) -> &mut Self {
@@ -141,7 +146,6 @@ impl Variation {
         })
     }
 
-    #[cfg(test)]
     pub(crate) fn get_cursor(&self) -> Cursor<Action<Move, BEN>> {
         self.log.raw_cursor()
     }

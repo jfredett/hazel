@@ -1,3 +1,5 @@
+use tracing::debug;
+
 use crate::{interface::play::Play, play::Unplay, types::log::cursor::Cursor, Alter, Query};
 use super::delim::Delim;
 use super::{action::Action, ChessGame};
@@ -68,16 +70,13 @@ impl<'a, T> Familiar<'a, T> where T : Play + Default {
     }
 
     pub fn advance(&mut self) {
-        // NOTE: I could do `self.advance_until(|_| true)` here, but I think this is probably
-        // faster? Whenever I get around to caring about how fast this is I'll take a look.
-        if let Some(action) = self.cursor.next() {
-            self.rep.apply_mut(action);
-        }
+        self.advance_until(|_| true);
     }
 
     pub fn advance_until(&mut self, predicate: impl Fn(&Self) -> bool) {
-        while let Some(coup) = self.cursor.next() {
-            match coup {
+        while let Some(action) = self.cursor.next() {
+            debug!("STARTING NEW ACTION");
+            match action {
                 Action::Setup(ben) => {
                     // FIXME: This is probably how I should tackle proper unapply/unmake?
                     // self.stack.push(self.rep.clone());
@@ -86,6 +85,7 @@ impl<'a, T> Familiar<'a, T> where T : Play + Default {
                     self.rep.apply_mut(&Action::Setup(*ben));
                 },
                 Action::Make(mov) => {
+                    debug!("Making move: {:?}", mov);
                     self.rep.apply_mut(&Action::Make(*mov));
                 },
                 Action::Variation(Delim::Start) => {

@@ -1,5 +1,18 @@
+use ben::BEN;
+
 use super::*;
 
+impl From<BEN> for PieceBoard {
+    fn from(ben: BEN) -> Self {
+        ben::setup(&ben)
+    }
+}
+
+impl From<&BEN> for PieceBoard {
+    fn from(ben: &BEN) -> Self {
+        ben::setup(ben)
+    }
+}
 
 impl From<FEN> for PieceBoard {
     fn from(fen: FEN) -> Self {

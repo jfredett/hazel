@@ -50,6 +50,13 @@ impl From<BEN> for FEN {
     }
 }
 
+impl From<PieceBoard> for BEN {
+    fn from(pb: PieceBoard) -> Self {
+        let fen : FEN = pb.into();
+        fen.into()
+    }
+}
+
 // impl From<&FEN> for BEN {
 //     fn from(fen: &FEN) -> Self {
 //         fen.clone().into()

@@ -378,7 +378,6 @@ mod tests {
         }
 
         #[test]
-        #[tracing_test::traced_test]
         fn imports_from_pgn_with_no_variations_and_halts() {
             let (input, tokens) = PGNToken::tokenize_file("tests/fixtures/no-variations-and-halts.pgn").unwrap();
 
