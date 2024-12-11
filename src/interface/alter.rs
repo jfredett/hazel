@@ -1,4 +1,4 @@
-use crate::board::interface::alteration::Alteration;
+use crate::interface::alteration::Alteration;
 
 
 /// implementing Alter states that the implementor can apply and reverse alterations to the board.

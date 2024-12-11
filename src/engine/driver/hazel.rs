@@ -21,7 +21,7 @@ impl Driver {
     pub fn new() -> Driver {
         Driver {
             debug: false,
-            game: Variation::new()
+            game: Variation::default()
         }
     }
 }
@@ -114,21 +114,24 @@ impl Engine<UCIMessage> for Driver {
 
 #[cfg(test)]
 mod tests {
+    use ben::BEN;
+
     use super::*;
     use crate::coup::rep::{Move, MoveType};
+    use crate::game::action::Action;
     use crate::notation::*;
 
     impl Driver {
-        pub fn log(&self) -> Vec<ChessAction> {
+        pub fn log(&self) -> Vec<Action<Move, BEN>> {
             self.game.log()
         }
     }
 
-    use crate::{constants::{POS2_KIWIPETE_FEN, START_POSITION_FEN}, game::action::chess::ChessAction};
+    use crate::{constants::{POS2_KIWIPETE_FEN, START_POSITION_FEN}};
 
     #[test]
     fn driver_parses_isready() {
-        let mut driver = Driver::new();
+        let mut driver = Driver::default();
         let response = driver.exec(&UCIMessage::IsReady);
         assert_eq!(response, vec![UCIMessage::ReadyOk]);
         // this but with a vec![] instead of Some
@@ -136,14 +139,14 @@ mod tests {
 
     #[test]
     fn driver_parses_uci() {
-        let mut driver = Driver::new();
+        let mut driver = Driver::default();
         let response = driver.exec(&UCIMessage::UCI);
         assert_eq!(response, vec![UCIMessage::ID("Hazel".to_string(), "0.1".to_string())]);
     }
 
     #[test]
     fn driver_parses_debug() {
-        let mut driver = Driver::new();
+        let mut driver = Driver::default();
         assert!(!driver.debug);
         let response = driver.exec(&UCIMessage::Debug(true));
         assert_eq!(response, vec![]);
@@ -152,36 +155,36 @@ mod tests {
 
     #[test]
     fn driver_sets_up_start_position() {
-        let mut driver = Driver::new();
+        let mut driver = Driver::default();
         let response = driver.exec_message("position startpos moves");
         assert_eq!(response, vec![]);
         assert_eq!(driver.game.log(), vec![
-            ChessAction::Setup(FEN::start_position())
+            Action::Setup(FEN::start_position().into())
         ]);
         assert_eq!(driver.game.current_position(), FEN::new(START_POSITION_FEN));
     }
 
     #[test]
     fn driver_sets_up_arbitrary_position() {
-        let mut driver = Driver::new();
+        let mut driver = Driver::default();
 
         let response = driver.exec_message(&format!("position fen {} moves", POS2_KIWIPETE_FEN));
         assert_eq!(response, vec![]);
         assert_eq!(driver.game.log(), vec![
-            ChessAction::Setup(FEN::new(POS2_KIWIPETE_FEN))
+            Action::Setup(FEN::new(POS2_KIWIPETE_FEN).into())
         ]);
         assert_eq!(driver.game.current_position(), FEN::new(POS2_KIWIPETE_FEN));
     }
 
     #[test]
     fn driver_plays_moves_specified_by_position() {
-        let mut driver = Driver::new();
+        let mut driver = Driver::default();
         let response = driver.exec_message(&format!("position fen {} moves e2e4 e7e5", START_POSITION_FEN));
         assert_eq!(response, vec![]);
         assert_eq!(driver.game.log(), vec![
-            ChessAction::Setup(FEN::new(START_POSITION_FEN)),
-            ChessAction::Make(Move::new(E2, E4, MoveType::UCI_AMBIGUOUS)),
-            ChessAction::Make(Move::new(E7, E5, MoveType::UCI_AMBIGUOUS))
+            Action::Setup(FEN::new(START_POSITION_FEN).into()),
+            Action::Make(Move::new(E2, E4, MoveType::UCI_AMBIGUOUS)),
+            Action::Make(Move::new(E7, E5, MoveType::UCI_AMBIGUOUS))
         ]);
         assert_eq!(driver.game.current_position(), FEN::new("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2"));
     }

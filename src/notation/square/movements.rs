@@ -71,7 +71,7 @@ impl Square {
     /// "move in the direction the pawns of the given color move".
     ///
     /// I use marching terms here. Each command is the command to march in a particular direction.
-
+    ///
     /// ```
     /// # use hazel::notation::*;
     /// # use hazel::types::Color;
@@ -272,7 +272,7 @@ impl Square {
 
     /// Piece Moves
     /// TODO: I'm pretty sure this could be const.
-
+    ///
     /// Return all the ways a piece of the given color _could have arrived_ on this square. e.g.,
     /// the White Pawn Unmove of D4 is C3, D2, D3, and E3. (The squares from which a white pawn
     /// could arrive on the square).

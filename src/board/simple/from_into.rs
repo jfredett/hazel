@@ -1,5 +1,18 @@
+use ben::BEN;
+
 use super::*;
 
+impl From<BEN> for PieceBoard {
+    fn from(ben: BEN) -> Self {
+        ben::setup(&ben)
+    }
+}
+
+impl From<&BEN> for PieceBoard {
+    fn from(ben: &BEN) -> Self {
+        ben::setup(ben)
+    }
+}
 
 impl From<FEN> for PieceBoard {
     fn from(fen: FEN) -> Self {
@@ -33,7 +46,7 @@ mod tests {
     mod fen {
         use super::*;
 
-        use crate::board::interface::query;
+        use crate::interface::query;
         use crate::constants::{EMPTY_POSITION_FEN, START_POSITION_FEN};
 
         #[test]
@@ -71,7 +84,7 @@ mod tests {
 
         #[test]
         pub fn converts_from_borrowed_reference_correctly() {
-            let fen = FEN::new(&START_POSITION_FEN);
+            let fen = FEN::new(START_POSITION_FEN);
             let mut board = PieceBoard::default();
             board.set_fen(&fen);
             let fen2 = query::to_fen(&board);

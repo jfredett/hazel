@@ -1,3 +1,5 @@
+use crate::board::PieceBoard;
+
 use super::*;
 
 impl From<FEN> for BEN {
@@ -47,6 +49,31 @@ impl From<BEN> for FEN {
         fen
     }
 }
+
+impl From<PieceBoard> for BEN {
+    fn from(pb: PieceBoard) -> Self {
+        let fen : FEN = pb.into();
+        fen.into()
+    }
+}
+
+// impl From<&FEN> for BEN {
+//     fn from(fen: &FEN) -> Self {
+//         fen.clone().into()
+//     }
+// }
+
+impl From<&BEN> for FEN {
+    fn from(ben: &BEN) -> Self {
+        (*ben).into()
+    }
+}
+
+// impl<'a> From<&'a FEN> for &'a BEN {
+//     fn from(fen: &'a FEN) -> &'a BEN {
+//         fen.into()
+//     }
+// }
 
 #[cfg(test)]
 mod tests {

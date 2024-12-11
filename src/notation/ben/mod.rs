@@ -14,7 +14,7 @@
 //! because I've seen it before, I don't know, but I'm very likely not a genius.
 
 use super::{fen::{PositionMetadata, FEN}, Square};
-use crate::{board::{Alter, Alteration, PieceBoard, Query}, types::{Color, Occupant}};
+use crate::{Alter, Alteration, Query, types::{Color, Occupant}};
 use std::fmt::{Debug, Formatter};
 
 mod from_into;
@@ -40,7 +40,7 @@ impl Query for BEN {
 
 impl Alter for BEN {
     fn alter(&self, alter: Alteration) -> Self {
-        let mut ben = self.clone();
+        let mut ben = *self;
         ben.alter_mut(alter);
         ben
     }
@@ -71,6 +71,19 @@ impl Alter for BEN {
         }
 
         self
+    }
+}
+
+pub fn setup<A : Alter + Default>(ben: &BEN) -> A {
+    let mut board = A::default();
+    setup_mut(ben, &mut board);
+    board
+}
+
+pub fn setup_mut<A : Alter>(ben: &BEN, board: &mut A) {
+    let alts = ben.compile();
+    for alteration in alts {
+        board.alter_mut(alteration);
     }
 }
 
@@ -118,6 +131,10 @@ impl BEN {
         self.metadata.side_to_move
     }
 
+    pub fn compile(&self) -> Vec<Alteration> {
+        let f : FEN = self.into();
+        f.compile()
+    }
 }
 
 

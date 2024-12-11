@@ -11,27 +11,17 @@ use nom::{branch::alt, bytes::complete::tag, character::complete::{multispace0, 
 use tracing::debug;
 
 use crate::notation::pgn::tokenizer::PGNToken;
-use crate::{board::Alter, constants::START_POSITION_FEN, coup::rep::Move, game::variation::Variation, notation::fen::FEN};
+use crate::{Alter, constants::START_POSITION_FEN, coup::rep::Move, game::variation::Variation, notation::fen::FEN};
 use crate::{notation::{ben::BEN, san::SAN}, types::Color};
 
 use super::{san::SANConversionError, Square};
 
 use tag_pair::*;
 
-#[derive(Debug)]
+#[derive(Default, Debug)]
 pub struct PGN {
     tag_pairs: Vec<TagPair>,
     variation: Variation,
-}
-
-
-impl Default for PGN {
-    fn default() -> Self {
-        PGN {
-            tag_pairs: vec![],
-            variation: Variation::new(),
-        }
-    }
 }
 
 impl PGN {
@@ -49,12 +39,16 @@ impl PGN {
         Ok(pgn)
     }
 
+    pub fn current_position(&mut self) -> FEN {
+        self.variation.current_position()
+    }
+
     pub fn parse(input: &str) -> IResult<&str, Self> {
         let mut pgn = PGN::default();
 
         let (input, tokens) = PGNToken::tokenize(input)?;
 
-        let mut variation = Variation::new();
+        let mut variation = Variation::default();
         for token in tokens {
             match token {
                 PGNToken::GameStart => {
@@ -78,12 +72,22 @@ impl PGN {
                 PGNToken::Turn(_) => { }
                 PGNToken::Coup(san_str) => {
                     debug!("Coup: {:?}", san_str);
-                    let current_position = variation.current_position();
+                    let mut familiar = variation.familiar();
+                    familiar.advance_to_end();
+                    let current_position = familiar.rep().clone();
+
                     let (input, san) = SAN::parse(&san_str, current_position).unwrap();
 
                     assert_eq!(input, "");
 
                     variation.make(san.try_into().unwrap()).commit();
+                },
+                PGNToken::Halt(reason) => {
+                    variation.halt(reason).commit();
+                },
+                PGNToken::GameEnd => {
+                    debug!("Game end");
+                    pgn.variation = variation.clone();
                 },
                 _ => {
                     debug!("Unhandled token: {:?}", token);
@@ -102,58 +106,56 @@ impl PGN {
 mod tests {
     use super::*;
 
-    /*
     mod pgn {
         use super::*;
 
         #[test]
         #[tracing_test::traced_test]
         fn imports_from_pgn_with_no_variations_and_halts() {
-            let pgn = PGN::load("tests/fixtures/no-variations-and-halts.pgn").unwrap();
+            let mut pgn = PGN::load("tests/fixtures/no-variations-and-halts.pgn").unwrap();
 
-            similar_asserts::assert_eq!(pgn.variation.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
+            similar_asserts::assert_eq!(pgn.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
         }
 
         #[test]
         fn imports_from_pgn_with_no_variations_and_halt() {
-            let pgn = PGN::load("tests/fixtures/no-variations-and-no-halt.pgn").unwrap();
+            let mut pgn = PGN::load("tests/fixtures/no-variations-and-no-halt.pgn").unwrap();
 
             //FIXME: This is the wrong FEN.
-            assert_eq!(pgn.variation.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
+            assert_eq!(pgn.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
         }
 
         #[test]
         #[tracing_test::traced_test]
         fn imports_from_pgn_with_variations_and_no_halt() {
-            let pgn = PGN::load("tests/fixtures/with-variations-no-halt.pgn").unwrap();
+            let mut pgn = PGN::load("tests/fixtures/with-variations-no-halt.pgn").unwrap();
 
             //FIXME: This is the wrong FEN.
-            assert_eq!(pgn.variation.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
+            assert_eq!(pgn.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
         }
 
         #[test]
         fn imports_from_pgn_with_variations_and_halt() {
-            let pgn = PGN::load("tests/fixtures/with-variations-halts.pgn").unwrap();
+            let mut pgn = PGN::load("tests/fixtures/with-variations-halts.pgn").unwrap();
 
             //FIXME: This is the wrong FEN.
-            assert_eq!(pgn.variation.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
+            assert_eq!(pgn.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
         }
 
         #[test]
         fn imports_from_pgn_with_nested_variations_and_no_halt() {
-            let pgn = PGN::load("tests/fixtures/with-nested-variations-no-halt.pgn").unwrap();
+            let mut pgn = PGN::load("tests/fixtures/with-nested-variations-no-halt.pgn").unwrap();
 
             //FIXME: This is the wrong FEN.
-            assert_eq!(pgn.variation.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
+            assert_eq!(pgn.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
         }
 
         #[test]
         fn imports_from_pgn_with_nested_variations_and_halt() {
-            let pgn = PGN::load("tests/fixtures/with-nested-variations-halts.pgn").unwrap();
+            let mut pgn = PGN::load("tests/fixtures/with-nested-variations-halts.pgn").unwrap();
 
             //FIXME: This is the wrong FEN.
-            assert_eq!(pgn.variation.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
+            assert_eq!(pgn.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
         }
     }
-    */
 }

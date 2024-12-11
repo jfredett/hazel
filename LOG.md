@@ -1302,3 +1302,122 @@ would have to be done in a second pass after tokenization, but it would make the
 
 I'm going to split this work into a new branch, then kill mutants until I can merge `pgn`. The tests for the actual
 `pgn` class will be lacking, but I think I'll just have to make it up elsewhere.
+
+# 26-NOV-2024
+
+## 1252 - familiars
+
+Continuing from previous entry, I'm starting to solidify the design of the playing-end of this thing.
+
+I have this setup:
+
+```
+
+Log is a way to store a sequence of anything, in our case ChessActions
+
+Chess Action supports a notion of 'Variation'
+
+The Log lays out it's contents as single, seekable stream, similar to the File API.
+
+Log can produce a Cursor or WriteHead (mutable cursor) on itself, which can be used to navigate the log.
+
+A Familiar takes a Cursor and calculates some useful values, in particular the current board state and current metadata
+information.
+
+Familiars are generic, they only care that the type they work over implements `Play`, which itself is a trait that is
+generic over the Rule and Metadata types that govern whatever abstract game they define.
+
+A Familiar can be specialized to a specific representation type to allow for faster/more efficient calculation, it might
+be responsible for caching important results, etc. Most directly, it's responsible for calculating the current board
+and metadata state.
+
+```
+
+The final engine will essentially be a Log, a bunch of Familiars that can be created/destroyed as needed, and insodoing
+I can have multiple representations that can all benefit from intraconversion. Familiars should have a 'Set Position
+with cached state' option which allows one familiar to transfer it's state to another; so that a Familiar optimized for
+fast scanning can then feed one that's designed for fast querying, etc.
+
+This also means new representations can be easily compared apples-to-apples with exisitng representations.
+
+# 30-NOV-2024
+
+## 1049 - familiars
+
+I'm thinking about some reorg. Part of the process of building `Familiar` has made it clear that what I have is quite
+capable of representing pretty generically any kind of abstract perfect information game, and I'd like to preserve that
+property and make it more explicit in the organization. I'm thinking of these changes:
+
+1. [x] Move `src/game/` tree to have a `src/game/<name of abstract game>/<contents here>` structure, so I can represent
+   other games.
+2. Extract the `PositionMetadata` struct to this new location for the `chess` subdirectory.
+3. [x] Move `board/interface` to the top level.
+4. [x] Move `compiles_to` to the interface section, though presently it's unused and may remain there, I may leave this on a
+   twig and remove it from the trunk, haven't decided yet.
+
+`Hazel` can then have (ideally) a relatively abstract idea of what a game is, and can hopefully lead to some reuse with
+some of the scaffolding (e.g., whatever alpha-beta/minimax/mcts/nnue bullshit I come up with) with other games. I'm
+thinking primarily for fairychess, but also even something like `nim` for testing purposes could be handy. `nim` is an
+extremely simple game, so it's possibly valuable for debugging and testing purposes, remains to be seen.
+
+All of this should also provide a nice place to put a `Game` structure that can then implement `Play`, this should be
+generic with respect to board representation and metadata representation, but canonically should use the
+`PositionMetadata` struct for metadata, and any `Query + Alter` capable rep.
+
+## 1114 - familiars
+
+As of now, all but #2 is done, tests are passing, so time for a big commit.
+
+## 2321 - familiars
+
+I'm working on the last move from above, and I'm thinking of some further tweaks I want to consider.
+
+In particular, I think I'm going to want to build an 'Index'/'Cache' system for `Log`. Eventually I want to be able to
+refer to different parts of the log by different criteria. For instance, I might want to search the log for a specific
+turn's position in a specific variation, I need to find the place in the log where that is, and I may want to cache that
+position for later use, so I'm starting to think of what that might look like. In particular I suspect something like
+the `familiar` system would be used to maintain that index and cache. Ultimately this sort of works as a file format for
+a database, and `hazel` acts as an interface to that database.
+
+# 10-DEC-2024
+
+## 1314 - familiars
+
+I've been chipping away at this and I've gone for a bit of a tweak, embedding a lot of what was `ChessAction` into the
+Play trait first class. It's still tied to specific move/boardrep types, but I think that's okay for the moment. I need
+the boardrep because I need to support 'setup' commands, and obviously I need the movetype, but I dislike how things
+work in the current model and would prefer it to be more generic.
+
+The next step is to get `Familiar` correctly evaluating to arbitrary positions in the variation; once I can do that, I
+can start working to extract the type assumptions.
+
+# 11-DEC-2024
+
+## 0047 - familiars
+
+I am, gods help me, thinking about changing some names again. I think I'm starting to see that I really should try to
+pack the metadata in the 'alterations' stream. I rejected it because it kept alterations _very_ simple, but I think I
+need to allow for some kind of arbitrary metadata encoding that would record 'events' that alter some metadata flag,
+this would make it easy to undo and track metadata state, at the cost of making the alterations a little more
+complicated.
+
+I don't think I'm going to chase this rabbit _yet_, but I am not loving how my current design is managing metadata --
+which is to say, it's not really, it's just assuming partial representations will 'work out' and shoving metadata into
+the right spots in whatever way works. I think my goal is to try to get the thing to be able to represent a full PGN
+with variations. My main target for Hazel is high-depth analysis / big data, not necessarily chess playing proper, so
+once I can do that, I can start to replace the ugly bits with more confidence since I'll have a test suite to work
+against.
+
+The current plan is something like:
+
+1. Finish PGN parser via the Familiar system
+2. Implement a recalculation-based 'backwards movement' system for the Familiar.
+3. Wire the Variation to a UI widget that connects to the boardstate shown in the UI.
+4. Finish implementing UCI protocol
+5. Implement an _extremely_ bad evaluator/movegen system that can arguably play chess.
+6. Take a break
+7. Kill every single mutant and get to 100% coverage.
+8. Start to refactor the design to something comfortable.
+
+I'll chip away at that before getting into evaluators and UI and all that. I have plans for that but I think I've
+settled on the design and I just need to finish building it so I can get to the polish phase.
