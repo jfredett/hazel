@@ -7,7 +7,7 @@ use crate::notation::*;
 use crate::types::Occupant;
 
 #[derive(Debug, Clone)]
-pub(crate) struct Position {
+pub struct Position {
     position_string: String,
     position: Vec<Alteration>
 }

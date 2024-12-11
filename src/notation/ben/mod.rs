@@ -99,7 +99,12 @@ impl Debug for BEN {
 
 
 impl BEN {
-    pub fn new() -> Self {
+    pub fn new(pos: &str) -> Self{
+        let f = FEN::new(pos);
+        f.into()
+    }
+
+    pub fn empty() -> Self {
         Self {
             position: [0; 32],
             metadata: PositionMetadata::default()
@@ -148,7 +153,7 @@ mod tests {
 
     #[quickcheck]
     fn alter_mut(square: Square, occupant: Occupant) {
-        let mut ben = BEN::new();
+        let mut ben = BEN::empty();
 
         assert!(ben.get(square) == Occupant::Empty);
         ben.alter_mut(Alteration::place(square, occupant));
@@ -159,7 +164,7 @@ mod tests {
 
     #[test]
     fn alter() {
-        let ben = BEN::new();
+        let ben = BEN::empty();
         let ben = ben.alter(Alteration::Place { square: A1, occupant: Occupant::white_pawn() });
         let ben = ben.alter(Alteration::Place { square: H8, occupant: Occupant::black_king() });
         let ben = ben.alter(Alteration::Place { square: H1, occupant: Occupant::white_queen() });
@@ -192,7 +197,7 @@ mod tests {
 
     #[test]
     fn metadata() {
-        let mut ben = BEN::new();
+        let mut ben = BEN::empty();
         assert_eq!(ben.metadata(), PositionMetadata::default());
 
         let metadata = PositionMetadata {

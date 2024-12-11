@@ -6,8 +6,6 @@ pub mod position_metadata;
 pub mod reason;
 pub mod variation;
 
-use std::fmt::{Debug, Formatter};
-
 use action::Action;
 
 use crate::coup::rep::Move;
@@ -21,19 +19,6 @@ pub struct ChessGame<T> where T: Alter + Query + Default + Clone {
     // FIXME: This is bad, I don't like it.
     pub rep: T,
     pub metadata: PositionMetadata,
-}
-
-
-impl<T> Debug for ChessGame<T> where T: Debug + Alter + Query + Default + Clone {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "ChessGame {{ rep: {:?}, metadata: {:?} }}", self.rep, self.metadata)
-    }
-}
-
-impl<T> ChessGame<T> where T: Alter + Query + Default + Clone {
-    pub fn unmake(&mut self, _action: Move) {
-        todo!();
-    }
 }
 
 impl<T> From<BEN> for ChessGame<T> where T : From<BEN> + Alter + Query + Default + Clone {
@@ -128,7 +113,6 @@ mod tests {
 
 
     #[test]
-    #[tracing_test::traced_test]
     fn correctly_calculates_position_after_several_moves() {
         let mut game : ChessGame<PieceBoard> = ChessGame::default();
         game.apply_mut(&Action::Setup(FEN::new(START_POSITION_FEN).into()))
@@ -138,6 +122,52 @@ mod tests {
         let actual_fen = FEN::with_metadata(game.rep, game.metadata);
 
         similar_asserts::assert_eq!(actual_fen, expected_fen);
+    }
+
+    mod from_into {
+        use super::*;
+
+        #[test]
+        fn from_ben() {
+            let ben = BEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR w KQkq d3 0 2");
+            let game : ChessGame<PieceBoard> = ben.into();
+            let expected_fen = FEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR w KQkq d3 0 2");
+            let actual_fen = FEN::with_metadata(game.rep, game.metadata);
+
+            similar_asserts::assert_eq!(actual_fen.position(), expected_fen.position());
+        }
+
+        #[test]
+        fn from_fen() {
+            let fen = FEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR w KQkq d3 0 2");
+            let game : ChessGame<PieceBoard> = fen.into();
+            let expected_fen = FEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR w KQkq d3 0 2");
+            let actual_fen = FEN::with_metadata(game.rep, game.metadata);
+
+            similar_asserts::assert_eq!(actual_fen.position(), expected_fen.position());
+        }
+
+        #[test]
+        fn into_ben() {
+            let mut game : ChessGame<PieceBoard> = ChessGame::default();
+            game.apply_mut(&Action::Setup(FEN::new(START_POSITION_FEN).into()));
+
+            let ben : BEN = game.clone().into();
+            let expected_fen = BEN::new(START_POSITION_FEN);
+
+            similar_asserts::assert_eq!(ben, expected_fen);
+        }
+
+        #[test]
+        fn into_fen() {
+            // Doing it this way exercises the non-mutable apply method
+            let game : ChessGame<PieceBoard> = ChessGame::default().apply(&Action::Setup(FEN::new(START_POSITION_FEN).into()));
+
+            let fen : FEN = game.clone().into();
+            let expected_fen = FEN::new(START_POSITION_FEN);
+
+            similar_asserts::assert_eq!(fen, expected_fen);
+        }
     }
 }
 

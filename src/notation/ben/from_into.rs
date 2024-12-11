@@ -4,7 +4,7 @@ use super::*;
 
 impl From<FEN> for BEN {
     fn from(fen: FEN) -> Self {
-        let mut ben = BEN::new();
+        let mut ben = BEN::empty();
         let mut idx = 0;
         let mut squares = Square::by_rank_and_file();
 
@@ -92,7 +92,7 @@ mod tests {
 
     #[test]
     fn from_ben() {
-        let ben = BEN::new();
+        let ben = BEN::empty();
         let fen : FEN = ben.into();
 
         assert_eq!(fen, FEN::new(EMPTY_POSITION_FEN));

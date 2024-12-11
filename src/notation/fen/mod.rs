@@ -70,6 +70,10 @@ impl FEN {
         Self::new(START_POSITION_FEN)
     }
 
+    pub fn position(&self) -> Position {
+        self.position.clone()
+    }
+
     /// Sometimes you just want to specify the position without all the metadata, this
     /// assumes you are describing a position with white-to-move, all castling rights, no en
     /// passant square.
