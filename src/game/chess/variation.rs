@@ -28,7 +28,7 @@ impl Variation {
         }
     }
 
-    pub fn familiar<'a>(&mut self) -> Familiar<ChessGame<PieceBoard>> {
+    pub fn familiar(&mut self) -> Familiar<ChessGame<PieceBoard>> {
         Familiar::new(self.get_cursor())
     }
 

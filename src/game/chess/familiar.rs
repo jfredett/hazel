@@ -151,7 +151,7 @@ impl<T> Play for Familiar<'_, T> where T : Play + Default {
     }
 }
 
-impl<'a, T> Unplay for Familiar<'a, ChessGame<T>> where T : Query + Alter + Clone + Default {
+impl<T> Unplay for Familiar<'_, ChessGame<T>> where T : Query + Alter + Clone + Default {
     fn unapply(&self, action: &Action<Move, BEN>) -> Self {
         let mut new_game = self.clone();
         new_game.unapply_mut(action);
