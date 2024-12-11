@@ -9,13 +9,11 @@
 use std::fmt::Display;
 use std::str::SplitWhitespace;
 
-use tracing::debug;
-
 use crate::interface::Query;
 use crate::constants::File;
 use crate::coup::rep::Move;
 use crate::game::chess::castle_rights::CastleRights;
-use crate::{notation::*, query};
+use crate::notation::*;
 use crate::types::{Color, Occupant, Piece};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

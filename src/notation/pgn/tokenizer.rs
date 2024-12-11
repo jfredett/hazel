@@ -506,7 +506,7 @@ mod tests {
         fn parses_halt() {
             let (input, token) = PGNToken::halt("1-0 ").unwrap();
             assert_eq!(input, "");
-            assert_eq!(token, PGNToken::Halt(Reason::Winner(Color::WHITE)));;
+            assert_eq!(token, PGNToken::Halt(Reason::Winner(Color::WHITE)));
 
             let (input, token) = PGNToken::halt("0-1 ").unwrap();
             assert_eq!(input, "");

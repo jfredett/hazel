@@ -9,7 +9,6 @@ pub mod variation;
 use std::fmt::{Debug, Formatter};
 
 use action::Action;
-use tracing::debug;
 
 use crate::coup::rep::Move;
 use crate::game::position_metadata::PositionMetadata;

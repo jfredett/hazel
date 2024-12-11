@@ -1,5 +1,3 @@
-use tracing::debug;
-
 use crate::{interface::play::Play, play::Unplay, types::log::cursor::Cursor, Alter, Query};
 use super::delim::Delim;
 use super::{action::Action, ChessGame};
@@ -90,24 +88,19 @@ impl<'a, T> Familiar<'a, T> where T : Play + Default {
                     self.rep.apply_mut(&Action::Make(*mov));
                 },
                 Action::Variation(Delim::Start) => {
-                    // FIXME: this is subtly wrong.
-                    // Really is should be push, then unmake the last move, then proceed with the
-                    // variation. Maybe before each action I can keep the previous rep handy for an
-                    // easy revert?
+                    // save the previous state
                     self.stack.push(self.rep.clone());
+                    // and unwind one move
                     self.rep = self.prev_rep.clone();
                 },
                 Action::Variation(Delim::End) => {
                     self.prev_rep = self.rep.clone();
                     self.rep = self.stack.pop().unwrap();
                 },
-                Action::Halt(reason) => {
+                Action::Halt(_reason) => {
                     /* noop */
                     // FIXME: should this... do anything?
                 },
-                _ => {
-                    todo!();
-                }
             }
 
             if predicate(self) {

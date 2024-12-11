@@ -1,6 +1,6 @@
 use crate::notation::ben::BEN;
-use crate::{interface::Alter, types::log::Log};
-use crate::{board::PieceBoard, coup::rep::Move, notation::fen::{PositionMetadata, FEN}};
+use crate::types::log::Log;
+use crate::{board::PieceBoard, coup::rep::Move, notation::fen::FEN};
 use crate::types::log::cursor::Cursor;
 
 use super::action::Action;
@@ -144,6 +144,7 @@ mod tests {
     use game::delim::Delim;
 
     use crate::notation::*;
+    use crate::game::chess::PositionMetadata;
     use crate::{coup::rep::MoveType, types::Occupant};
     use crate::*;
 
