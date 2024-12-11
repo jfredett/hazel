@@ -1378,3 +1378,15 @@ turn's position in a specific variation, I need to find the place in the log whe
 position for later use, so I'm starting to think of what that might look like. In particular I suspect something like
 the `familiar` system would be used to maintain that index and cache. Ultimately this sort of works as a file format for
 a database, and `hazel` acts as an interface to that database.
+
+# 10-DEC-2024
+
+## 1314 - familiars
+
+I've been chipping away at this and I've gone for a bit of a tweak, embedding a lot of what was `ChessAction` into the
+Play trait first class. It's still tied to specific move/boardrep types, but I think that's okay for the moment. I need
+the boardrep because I need to support 'setup' commands, and obviously I need the movetype, but I dislike how things
+work in the current model and would prefer it to be more generic.
+
+The next step is to get `Familiar` correctly evaluating to arbitrary positions in the variation; once I can do that, I
+can start working to extract the type assumptions.
