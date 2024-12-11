@@ -21,7 +21,7 @@ pub struct ChessGame<T> where T: Alter + Query + Default + Clone {
 
 
 impl<T> ChessGame<T> where T: Alter + Query + Default + Clone {
-    pub fn unmake(&mut self, action: Move) {
+    pub fn unmake(&mut self, _action: Move) {
         todo!();
     }
 }

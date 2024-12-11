@@ -129,9 +129,11 @@ impl<T> Log<T> where T: Clone {
         Cursor::new(self)
     }
 
+    /*
     pub(crate) fn raw_writehead(&mut self) -> WriteHead<T> {
         WriteHead::new(self)
     }
+    */
 }
 
 impl<T> IntoIterator for Log<T> where T: Clone {

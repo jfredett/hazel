@@ -6,8 +6,6 @@
 use tracing::*;
 
 use crate::{engine::uci::UCIMessage, game::variation::Variation, notation::{fen::FEN, uci::UCI}};
-use crate::game::chess::action::Action;
-use crate::notation::ben::BEN;
 
 pub use crate::engine::Engine;
 
@@ -116,8 +114,11 @@ impl Engine<UCIMessage> for Driver {
 
 #[cfg(test)]
 mod tests {
+    use ben::BEN;
+
     use super::*;
     use crate::coup::rep::{Move, MoveType};
+    use crate::game::action::Action;
     use crate::notation::*;
 
     impl Driver {

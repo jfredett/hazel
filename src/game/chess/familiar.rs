@@ -79,6 +79,9 @@ impl<'a, T> Familiar<'a, T> where T : Play + Default {
         while let Some(coup) = self.cursor.next() {
             match coup {
                 Action::Setup(ben) => {
+                    // FIXME: This is probably how I should tackle proper unapply/unmake?
+                    // self.stack.push(self.rep.clone());
+
                     self.rep = T::default();
                     self.rep.apply_mut(&Action::Setup(*ben));
                 },
@@ -149,7 +152,11 @@ impl<'a, T> Unplay for Familiar<'a, ChessGame<T>> where T : Query + Alter + Clon
         new_game
     } 
 
-    fn unapply_mut(&mut self, action: &Action<Move, BEN>) -> &mut Self {
+    /// NOTE: Unapply is a misnomer, because it doesn't actually care about the action taken, it
+    /// just recalculates from the start via the `seek` method. Ideally it would be a mix, if it is
+    /// asked to unapply a Variation, it rewinds to the start of the variation and scrolls to the
+    /// end, after which it can do normal 'unmake'.
+    fn unapply_mut(&mut self, _action: &Action<Move, BEN>) -> &mut Self {
         let target_position = self.cursor.position() - 1;
         self.seek(target_position);
         self

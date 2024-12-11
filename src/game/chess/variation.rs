@@ -1,12 +1,13 @@
 use crate::notation::ben::BEN;
-use crate::types::log::cursor::Cursor;
 use crate::{interface::Alter, types::log::Log};
-
 use crate::{board::PieceBoard, coup::rep::Move, notation::fen::{PositionMetadata, FEN}};
 
 use super::action::Action;
 use super::delim::Delim;
 use super::reason::Reason;
+
+#[cfg(test)]
+use crate::types::log::cursor::Cursor;
 
 #[derive(Debug, Default, Clone)]
 pub struct Variation {
@@ -140,6 +141,7 @@ impl Variation {
         })
     }
 
+    #[cfg(test)]
     pub(crate) fn get_cursor(&self) -> Cursor<Action<Move, BEN>> {
         self.log.raw_cursor()
     }
