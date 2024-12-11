@@ -1,4 +1,5 @@
 use crate::{interface::play::Play, play::Unplay, types::log::cursor::Cursor, Alter, Query};
+use super::delim::Delim;
 use super::{action::Action, ChessGame};
 use crate::notation::ben::BEN;
 use crate::coup::rep::Move;
@@ -7,6 +8,7 @@ use crate::coup::rep::Move;
 pub struct Familiar<'a, T> where T : Play + Default {
     // TODO: Temporarily fixing the types
     cursor: Cursor<'a, Action<Move, BEN>>,
+    stack: Vec<T>,
     rep: T
 }
 
@@ -54,7 +56,7 @@ pub struct Familiar<'a, T> where T : Play + Default {
 
 impl<'a, T> Familiar<'a, T> where T : Play + Default {
     pub fn new(cursor: Cursor<'a, Action<Move, BEN>>) -> Self {
-        Self { cursor, rep: T::default() }
+        Self { cursor, stack: vec![], rep: T::default() }
     }
 
     pub fn rep(&self) -> &T {
@@ -76,15 +78,19 @@ impl<'a, T> Familiar<'a, T> where T : Play + Default {
     pub fn advance_until(&mut self, predicate: impl Fn(&Self) -> bool) {
         while let Some(coup) = self.cursor.next() {
             match coup {
-                /*
                 Action::Setup(ben) => {
                     self.rep = T::default();
-                    self.rep.apply_mut(&Action::Setup(ben));
+                    self.rep.apply_mut(&Action::Setup(*ben));
                 },
                 Action::Make(mov) => {
-                    self.rep.apply_mut(&Action::Make(mov));
+                    self.rep.apply_mut(&Action::Make(*mov));
                 },
-                */
+                Action::Variation(Delim::Start) => {
+                    self.stack.push(self.rep.clone());
+                },
+                Action::Variation(Delim::End) => {
+                    self.rep = self.stack.pop().unwrap();
+                },
                 _ => { todo!(); }
             }
 
@@ -99,12 +105,12 @@ impl<'a, T> Familiar<'a, T> where T : Play + Default {
     }
 
     pub fn advance_by(&mut self, count: usize) {
-        for _ in 0..count {
-            self.advance();
-        }
+        let target = self.cursor.position() + count;
+        self.advance_until(|f| f.cursor.position() == target);
     }
 
     pub fn restart(&mut self) {
+        // note this seeks the _cursor_, not the familiar
         self.cursor.seek(0);
         self.rep = T::default();
     }
@@ -158,22 +164,51 @@ mod tests {
 
     use super::*;
 
-    #[test]
-    fn familiar_works_with_pieceboard_to_capture_gamestate() {
+    fn example_game() -> Variation {
         let mut log = Variation::default();
         log.new_game()
-           .setup(FEN::new(START_POSITION_FEN))
            .make(Move::new(D2, D4, MoveType::DOUBLE_PAWN))
            .make(Move::new(D7, D5, MoveType::DOUBLE_PAWN))
+           .make(Move::new(C1, F4, MoveType::QUIET)) 
+           .make(Move::new(G8, F6, MoveType::QUIET)) 
+           .start_variation()
+                .make(Move::new(B1, C3, MoveType::QUIET))
+           .end_variation()
+           .make(Move::new(E2, E3, MoveType::QUIET))
+           .make(Move::new(E7, E6, MoveType::QUIET))
            .commit();
+        log
+    }
 
+    #[test]
+    fn familiar_works_with_pieceboard_to_capture_gamestate() {
+        let log = example_game();
         let cursor = log.get_cursor();
         let mut familiar : Familiar<ChessGame<PieceBoard>> = Familiar::new(cursor);
 
-        familiar.advance_by(4);
+        // Setup is the 'zeroth' action, and we proceed actionwise. At the moment that also
+        // corresponds to ply number, but the example game has variations so that is not reliable.
+        familiar.advance_by(2);
 
         assert_eq!(familiar.rep().rep, FEN::new("rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2").into());
         assert_eq!(familiar.metadata().fullmove_number, 2);
+    }
+
+    #[test]
+    fn familiar_finds_the_variation_position() {
+        let log = example_game();
+        let cursor = log.get_cursor();
+        let mut familiar : Familiar<ChessGame<PieceBoard>> = Familiar::new(cursor);
+
+        // We advance _over_ the variation opening, but stop inside.
+        familiar.advance_by(6);
+
+        let f = FEN::from(familiar.rep().rep);
+        println!("{}", f);
+
+        assert_eq!(familiar.rep().rep, FEN::new("rnbqkb1r/ppp1pppp/5n2/3p4/3P1B2/2N5/PPP1PPPP/R2QKBNR w KQkq - 0 1").into());
+        assert_eq!(familiar.metadata().fullmove_number, 4);
+
     }
 }
 
