@@ -11,6 +11,7 @@ pub struct Familiar<'a, T> where T : Play + Default {
     // TODO: Temporarily fixing the types
     cursor: Cursor<'a, Action<Move, BEN>>,
     stack: Vec<T>,
+    prev_rep: T,
     rep: T
 }
 
@@ -58,7 +59,7 @@ pub struct Familiar<'a, T> where T : Play + Default {
 
 impl<'a, T> Familiar<'a, T> where T : Play + Default {
     pub fn new(cursor: Cursor<'a, Action<Move, BEN>>) -> Self {
-        Self { cursor, stack: vec![], rep: T::default() }
+        Self { cursor, stack: vec![], prev_rep: T::default(), rep: T::default() }
     }
 
     pub fn rep(&self) -> &T {
@@ -81,17 +82,25 @@ impl<'a, T> Familiar<'a, T> where T : Play + Default {
                     // FIXME: This is probably how I should tackle proper unapply/unmake?
                     // self.stack.push(self.rep.clone());
 
+                    self.prev_rep = self.rep.clone();
                     self.rep = T::default();
                     self.rep.apply_mut(&Action::Setup(*ben));
                 },
                 Action::Make(mov) => {
                     debug!("Making move: {:?}", mov);
+                    self.prev_rep = self.rep.clone();
                     self.rep.apply_mut(&Action::Make(*mov));
                 },
                 Action::Variation(Delim::Start) => {
+                    // FIXME: this is subtly wrong.
+                    // Really is should be push, then unmake the last move, then proceed with the
+                    // variation. Maybe before each action I can keep the previous rep handy for an
+                    // easy revert?
                     self.stack.push(self.rep.clone());
+                    self.rep = self.prev_rep.clone();
                 },
                 Action::Variation(Delim::End) => {
+                    self.prev_rep = self.rep.clone();
                     self.rep = self.stack.pop().unwrap();
                 },
                 Action::Halt(reason) => {
@@ -187,7 +196,7 @@ mod tests {
            .make(Move::new(C1, F4, MoveType::QUIET)) 
            .make(Move::new(G8, F6, MoveType::QUIET)) 
            .start_variation()
-                .make(Move::new(B1, C3, MoveType::QUIET))
+                .make(Move::new(B8, C6, MoveType::QUIET))
            .end_variation()
            .make(Move::new(E2, E3, MoveType::QUIET))
            .make(Move::new(E7, E6, MoveType::QUIET))
@@ -221,9 +230,8 @@ mod tests {
         let f = FEN::from(familiar.rep().rep);
         println!("{}", f);
 
-        assert_eq!(familiar.rep().rep, FEN::new("rnbqkb1r/ppp1pppp/5n2/3p4/3P1B2/2N5/PPP1PPPP/R2QKBNR w KQkq - 0 1").into());
-        assert_eq!(familiar.metadata().fullmove_number, 4);
-
+        assert_eq!(familiar.rep().rep, FEN::new("r1bqkbnr/ppp1pppp/2n5/3p4/3P1B2/8/PPP1PPPP/RN1QKBNR w KQkq - 2 3").into());
+        assert_eq!(familiar.metadata().fullmove_number, 3);
     }
 }
 
