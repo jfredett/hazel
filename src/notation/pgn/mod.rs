@@ -39,6 +39,10 @@ impl PGN {
         Ok(pgn)
     }
 
+    pub fn current_position(&mut self) -> FEN {
+        self.variation.current_position()
+    }
+
     pub fn parse(input: &str) -> IResult<&str, Self> {
         let mut pgn = PGN::default();
 
@@ -72,14 +76,18 @@ impl PGN {
                     familiar.advance_to_end();
                     let current_position = familiar.rep().clone();
 
-                    debug!("Current position: {:?}", current_position.rep);
-                    debug!("Side to Move: {:?}", current_position.metadata.side_to_move);
-
                     let (input, san) = SAN::parse(&san_str, current_position).unwrap();
 
                     assert_eq!(input, "");
 
                     variation.make(san.try_into().unwrap()).commit();
+                },
+                PGNToken::Halt(reason) => {
+                    variation.halt(reason).commit();
+                },
+                PGNToken::GameEnd => {
+                    debug!("Game end");
+                    pgn.variation = variation.clone();
                 },
                 _ => {
                     debug!("Unhandled token: {:?}", token);
@@ -104,50 +112,50 @@ mod tests {
         #[test]
         #[tracing_test::traced_test]
         fn imports_from_pgn_with_no_variations_and_halts() {
-            let pgn = PGN::load("tests/fixtures/no-variations-and-halts.pgn").unwrap();
+            let mut pgn = PGN::load("tests/fixtures/no-variations-and-halts.pgn").unwrap();
 
-            similar_asserts::assert_eq!(pgn.variation.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
+            similar_asserts::assert_eq!(pgn.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
         }
 
         #[test]
         fn imports_from_pgn_with_no_variations_and_halt() {
-            let pgn = PGN::load("tests/fixtures/no-variations-and-no-halt.pgn").unwrap();
+            let mut pgn = PGN::load("tests/fixtures/no-variations-and-no-halt.pgn").unwrap();
 
             //FIXME: This is the wrong FEN.
-            assert_eq!(pgn.variation.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
+            assert_eq!(pgn.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
         }
 
         #[test]
         #[tracing_test::traced_test]
         fn imports_from_pgn_with_variations_and_no_halt() {
-            let pgn = PGN::load("tests/fixtures/with-variations-no-halt.pgn").unwrap();
+            let mut pgn = PGN::load("tests/fixtures/with-variations-no-halt.pgn").unwrap();
 
             //FIXME: This is the wrong FEN.
-            assert_eq!(pgn.variation.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
+            assert_eq!(pgn.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
         }
 
         #[test]
         fn imports_from_pgn_with_variations_and_halt() {
-            let pgn = PGN::load("tests/fixtures/with-variations-halts.pgn").unwrap();
+            let mut pgn = PGN::load("tests/fixtures/with-variations-halts.pgn").unwrap();
 
             //FIXME: This is the wrong FEN.
-            assert_eq!(pgn.variation.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
+            assert_eq!(pgn.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
         }
 
         #[test]
         fn imports_from_pgn_with_nested_variations_and_no_halt() {
-            let pgn = PGN::load("tests/fixtures/with-nested-variations-no-halt.pgn").unwrap();
+            let mut pgn = PGN::load("tests/fixtures/with-nested-variations-no-halt.pgn").unwrap();
 
             //FIXME: This is the wrong FEN.
-            assert_eq!(pgn.variation.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
+            assert_eq!(pgn.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
         }
 
         #[test]
         fn imports_from_pgn_with_nested_variations_and_halt() {
-            let pgn = PGN::load("tests/fixtures/with-nested-variations-halts.pgn").unwrap();
+            let mut pgn = PGN::load("tests/fixtures/with-nested-variations-halts.pgn").unwrap();
 
             //FIXME: This is the wrong FEN.
-            assert_eq!(pgn.variation.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
+            assert_eq!(pgn.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
         }
     }
 }

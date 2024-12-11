@@ -113,37 +113,10 @@ impl Variation {
     // This will ensure during parsing PGNs that the correct context is maintained, since we always
     // want to calculate the shortest path to the variation at the tip of the log during that
     // process.
-    pub fn current_position(&self) -> FEN {
-        self.log.cursor(|cursor| {
-            let mut board = PieceBoard::default();
-            let mut metadata = PositionMetadata::default();
-            while let Some(action) = cursor.next() {
-                match action {
-                    Action::Halt(_) => {
-                        todo!();
-                    },
-                    Action::Variation(_) => {
-                        // This is a variation, so we don't need to do anything. Only reading the
-                        // mainline
-                    },
-                    Action::Setup(fen) => {
-                        let f : FEN = (*fen).into();
-                        board.set_fen(&f);
-                    },
-                    Action::Make(mov) => {
-                        metadata.update(mov, &board);
-                        for alter in mov.compile(&board) {
-                            board.alter_mut(alter);
-                        }
-                    },
-                }
-            }
-
-            // Now board and metadata are caught up, so we just ask board to write it's fen
-            let mut ret = FEN::from(board);
-            ret.set_metadata(metadata);
-            ret
-        })
+    pub fn current_position(&mut self) -> FEN {
+        let mut fam = self.familiar();
+        fam.advance_to_end();
+        fam.rep().clone().into()
     }
 
     pub(crate) fn get_cursor(&self) -> Cursor<Action<Move, BEN>> {

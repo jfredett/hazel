@@ -94,7 +94,15 @@ impl<'a, T> Familiar<'a, T> where T : Play + Default {
                 Action::Variation(Delim::End) => {
                     self.rep = self.stack.pop().unwrap();
                 },
-                _ => { todo!(); }
+                Action::Halt(reason) => {
+                    debug!("Halting: {:?}", reason);
+                    /* noop */
+                    // FIXME: should this... do anything?
+                },
+                _ => {
+                    debug!("Unhandled Action: {:?}", action);
+                    todo!();
+                }
             }
 
             if predicate(self) {

@@ -15,7 +15,7 @@ pub enum Action<T, S> where T: Clone + PartialEq, S: Clone + PartialEq {
 impl<T, S> Debug for Action<T, S> where T: Clone + PartialEq + Debug, S: Clone + PartialEq + Debug {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Action::Halt(egs) => write!(f, "EndGame({:?})", egs),
+            Action::Halt(egs) => write!(f, "Halt({:?})", egs),
             Action::Variation(Delim::Start) => write!(f, "Variation(Start)"),
             Action::Variation(Delim::End) => write!(f, "Variation(End)"),
             Action::Setup(fen) => write!(f, "Setup({:?})", fen),

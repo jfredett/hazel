@@ -1,6 +1,8 @@
 use nom::{branch::alt, bytes::complete::tag, character::complete::{char, alpha1, multispace0, newline, one_of}, combinator::opt, multi::many1, sequence::delimited, IResult};
 use tracing::debug;
 
+use crate::{game::reason::Reason, types::Color};
+
 use super::TagPair;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -14,7 +16,7 @@ pub enum PGNToken {
     Comment(String),
     VariationStart,
     VariationEnd,
-    Halt
+    Halt(Reason),
 }
 
 const SAN_MOVE_CHARS: &str = "abcdefghRNBQKx12345678";
@@ -107,7 +109,15 @@ impl PGNToken {
         let (input, _) = multispace0(input)?;
 
         match is_halt {
-            Some(_) => Ok((input, PGNToken::Halt)),
+            Some(r) => {
+                let reason = match r {
+                    "0-1" => Reason::Winner(Color::BLACK),
+                    "1-0" => Reason::Winner(Color::WHITE),
+                    "1/2-1/2" => Reason::Stalemate,
+                    _ => Reason::Aborted
+                };
+                Ok((input, PGNToken::Halt(reason)))
+            },
             None => Err(nom::Err::Error(nom::error::Error::new(input, nom::error::ErrorKind::Tag))),
         }
     }
@@ -292,7 +302,7 @@ mod tests {
                     PGNToken::VariationEnd,
                     PGNToken::Turn(6), PGNToken::Coup("Rxb8".to_string().to_string()),
                     PGNToken::Turn(7), PGNToken::Coup("c4".to_string()), PGNToken::Coup("g6".to_string()),
-                    PGNToken::Halt,
+                    PGNToken::Halt(Reason::Winner(Color::BLACK)),
                     PGNToken::GameEnd
                 ];
                 assert_eq!(input, "");
@@ -369,7 +379,7 @@ mod tests {
                     PGNToken::VariationEnd,
                     PGNToken::Turn(6), PGNToken::Coup("Rxb8".to_string().to_string()),
                     PGNToken::Turn(7), PGNToken::Coup("c4".to_string()), PGNToken::Coup("g6".to_string()),
-                    PGNToken::Halt,
+                    PGNToken::Halt(Reason::Winner(Color::BLACK)),
                     PGNToken::GameEnd
                 ];
                 assert_eq!(input, "");
@@ -419,7 +429,7 @@ mod tests {
                 PGNToken::Turn(27), PGNToken::Coup("Bxe5".to_string()), PGNToken::Coup("Qxd3".to_string()), PGNToken::Annotation("+".to_string()),
                 PGNToken::Turn(28), PGNToken::Coup("Re2".to_string()), PGNToken::Coup("Bxg2".to_string()), PGNToken::Annotation("+".to_string()),
                 PGNToken::Turn(29), PGNToken::Coup("Ke1".to_string()), PGNToken::Coup("Rd8".to_string()),
-                PGNToken::Halt,
+                PGNToken::Halt(Reason::Winner(Color::BLACK)),
                 PGNToken::GameEnd
             ];
 
@@ -499,19 +509,19 @@ mod tests {
         fn parses_halt() {
             let (input, token) = PGNToken::halt("1-0 ").unwrap();
             assert_eq!(input, "");
-            assert_eq!(token, PGNToken::Halt);
+            assert_eq!(token, PGNToken::Halt(Reason::Winner(Color::WHITE)));;
 
             let (input, token) = PGNToken::halt("0-1 ").unwrap();
             assert_eq!(input, "");
-            assert_eq!(token, PGNToken::Halt);
+            assert_eq!(token, PGNToken::Halt(Reason::Winner(Color::BLACK)));
 
             let (input, token) = PGNToken::halt("1/2-1/2 ").unwrap();
             assert_eq!(input, "");
-            assert_eq!(token, PGNToken::Halt);
+            assert_eq!(token, PGNToken::Halt(Reason::Stalemate));
 
             let (input, token) = PGNToken::halt("* ").unwrap();
             assert_eq!(input, "");
-            assert_eq!(token, PGNToken::Halt);
+            assert_eq!(token, PGNToken::Halt(Reason::Aborted));
         }
     }
 
