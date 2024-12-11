@@ -1,6 +1,6 @@
 use crate::types::Color;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Reason {
     /// Checkmate by the given color
     Winner(Color),

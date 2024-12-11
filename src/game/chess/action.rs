@@ -26,7 +26,27 @@ impl<T, S> Debug for Action<T, S> where T: Clone + PartialEq + Debug, S: Clone +
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use ben::BEN;
 
+    use super::*;
+    use crate::{constants::START_POSITION_FEN, coup::rep::{Move, MoveType}, notation::*};
+
+    #[test]
+    fn debug_formats_correctly() {
+        let action : Action<Move, BEN> = Action::Halt(Reason::Stalemate);
+        assert_eq!(format!("{:?}", action), "Halt(Stalemate)");
+
+        let action : Action<Move, BEN> = Action::Make(Move::new(A1, A2, MoveType::QUIET));
+        assert_eq!(format!("{:?}", action), "Make(a1 (00) -> a2 (08) (QUIET) [0o000200])");
+
+        let action : Action<Move, BEN> = Action::Setup(BEN::new(START_POSITION_FEN));
+        assert_eq!(format!("{:?}", action), "Setup(0x42356324111111110000000000000000000000000000000077777777a89bc98a)");
+
+        let action : Action<Move, BEN> = Action::Variation(Delim::Start);
+        assert_eq!(format!("{:?}", action), "Variation(Start)");
+
+        let action : Action<Move, BEN> = Action::Variation(Delim::End);
+        assert_eq!(format!("{:?}", action), "Variation(End)");
+    }
 }
 
