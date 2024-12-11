@@ -52,26 +52,21 @@ impl PGN {
         for token in tokens {
             match token {
                 PGNToken::GameStart => {
-                    debug!("Game start");
                     variation.new_game()
                              .setup(FEN::new(START_POSITION_FEN))
                              .commit();
                 },
                 PGNToken::TagPair(tp) => {
-                    debug!("Tag pair");
                     pgn.tag_pairs.push(tp);
                 },
                 PGNToken::VariationStart => {
-                    debug!("Variation start");
                     variation.start_variation().commit();
                 },
                 PGNToken::VariationEnd => {
-                    debug!("Variation end");
                     variation.end_variation().commit();
                 },
                 PGNToken::Turn(_) => { }
                 PGNToken::Coup(san_str) => {
-                    debug!("Coup: {:?}", san_str);
                     let mut familiar = variation.familiar();
                     familiar.advance_to_end();
                     let current_position = familiar.rep().clone();
@@ -86,11 +81,9 @@ impl PGN {
                     variation.halt(reason).commit();
                 },
                 PGNToken::GameEnd => {
-                    debug!("Game end");
                     pgn.variation = variation.clone();
                 },
                 _ => {
-                    debug!("Unhandled token: {:?}", token);
                 }
             }
         }

@@ -150,13 +150,10 @@ impl PGNToken {
         let mut tokens = Vec::new();
         tokens.push(PGNToken::GameStart);
 
-        debug!("Processing 1: {}", input);
         let (input, tag_pairs) = Self::tag_pair_section(input)?;
         tokens.extend(tag_pairs);
-        debug!("Processing 2: {}", input);
 
         let (input, _) = newline(input)?;
-        debug!("Processing 3: {}", input);
 
         let (input, toks) = Self::variation_section(input)?;
         tokens.extend(toks);

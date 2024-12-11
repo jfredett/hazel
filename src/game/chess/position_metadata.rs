@@ -144,9 +144,6 @@ impl PositionMetadata {
 
         // rely on the color of the piece being moved, rather than reasoning about the side-to-move
         // or delaying it till the end.
-        debug!("Move: {:?}", mov);
-        debug!("Board: {:?}", query::display_board(board));
-        debug!("Piece at source: {:?}", board.get(mov.source()));
 
         let Occupant::Occupied(piece, color) = board.get(mov.source()) else { panic!("Move has no source piece"); };
 

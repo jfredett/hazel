@@ -85,7 +85,6 @@ impl Engine<UCIMessage> for Stockfish {
                 if *message != UCIMessage::D {
                     response.push(UCIMessage::parse(line));
                 } else {
-                    debug!("{}", line);
                 }
 
                 if message.is_complete(line) { break; } // Check if the response is complete.

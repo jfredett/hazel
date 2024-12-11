@@ -101,10 +101,7 @@ impl<T> Play for ChessGame<T> where T: Alter + Query + Default + Clone {
             Action::Make(mov) => {
                 let alts = mov.compile(&self.rep);
                 // Order matters, the metadata must be updated before the board
-                debug!("Applying move: {:?}", mov);
-                debug!("Metdata before: {:?}", self.metadata);
                 self.metadata.update(mov, &self.rep);
-                debug!("Metdata after: {:?}", self.metadata);
                 for a in alts {
                     self.rep.alter_mut(a);
                 }

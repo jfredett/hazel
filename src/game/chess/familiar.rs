@@ -76,7 +76,6 @@ impl<'a, T> Familiar<'a, T> where T : Play + Default {
 
     pub fn advance_until(&mut self, predicate: impl Fn(&Self) -> bool) {
         while let Some(action) = self.cursor.next() {
-            debug!("STARTING NEW ACTION");
             match action {
                 Action::Setup(ben) => {
                     // FIXME: This is probably how I should tackle proper unapply/unmake?
@@ -87,7 +86,6 @@ impl<'a, T> Familiar<'a, T> where T : Play + Default {
                     self.rep.apply_mut(&Action::Setup(*ben));
                 },
                 Action::Make(mov) => {
-                    debug!("Making move: {:?}", mov);
                     self.prev_rep = self.rep.clone();
                     self.rep.apply_mut(&Action::Make(*mov));
                 },
@@ -104,12 +102,10 @@ impl<'a, T> Familiar<'a, T> where T : Play + Default {
                     self.rep = self.stack.pop().unwrap();
                 },
                 Action::Halt(reason) => {
-                    debug!("Halting: {:?}", reason);
                     /* noop */
                     // FIXME: should this... do anything?
                 },
                 _ => {
-                    debug!("Unhandled Action: {:?}", action);
                     todo!();
                 }
             }

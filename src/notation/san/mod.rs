@@ -306,7 +306,6 @@ impl TryFrom<SAN> for Move {
     // LAN-style which is much easier to convert since the source_sq is already there.
     fn try_from(san: SAN) -> Result<Move, SANConversionError> {
         if san.is_ambiguous() {
-            debug!("SAN is ambiguous: {:?}", san);
             return Err(SANConversionError::IsAmbiguous("SAN is ambiguous"));
         }
 

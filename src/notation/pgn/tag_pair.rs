@@ -72,7 +72,6 @@ mod tests {
 [Result "1/2-1/2"]
 "#;
             let tagpairs = TagPairs::parse(input).unwrap();
-            debug!("{:?}", tagpairs);
             assert_eq!(tagpairs, ("", TagPairs(vec![
                 TagPair { name: "Event".to_string(), value: "F/S Return Match".to_string() },
                 TagPair { name: "Site".to_string(), value: "Belgrade, Serbia JUG".to_string() },
