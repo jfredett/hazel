@@ -3,7 +3,7 @@
 use nom::{branch::alt, bytes::complete::tag, character::complete::char, combinator::opt, IResult};
 use tracing::{debug, instrument};
 
-use crate::{board::Query, coup::rep::{Move, MoveType}, types::{Bitboard, Color, Occupant, Piece}};
+use crate::{interface::Query, coup::rep::{Move, MoveType}, types::{Bitboard, Color, Occupant, Piece}};
 use crate::types::pextboard;
 use crate::notation::*;
 
@@ -306,7 +306,6 @@ impl TryFrom<SAN> for Move {
     // LAN-style which is much easier to convert since the source_sq is already there.
     fn try_from(san: SAN) -> Result<Move, SANConversionError> {
         if san.is_ambiguous() {
-            debug!("SAN is ambiguous: {:?}", san);
             return Err(SANConversionError::IsAmbiguous("SAN is ambiguous"));
         }
 

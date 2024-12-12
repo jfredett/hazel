@@ -1,8 +1,10 @@
+use crate::board::PieceBoard;
+
 use super::*;
 
 impl From<FEN> for BEN {
     fn from(fen: FEN) -> Self {
-        let mut ben = BEN::new();
+        let mut ben = BEN::empty();
         let mut idx = 0;
         let mut squares = Square::by_rank_and_file();
 
@@ -48,6 +50,31 @@ impl From<BEN> for FEN {
     }
 }
 
+impl From<PieceBoard> for BEN {
+    fn from(pb: PieceBoard) -> Self {
+        let fen : FEN = pb.into();
+        fen.into()
+    }
+}
+
+// impl From<&FEN> for BEN {
+//     fn from(fen: &FEN) -> Self {
+//         fen.clone().into()
+//     }
+// }
+
+impl From<&BEN> for FEN {
+    fn from(ben: &BEN) -> Self {
+        (*ben).into()
+    }
+}
+
+// impl<'a> From<&'a FEN> for &'a BEN {
+//     fn from(fen: &'a FEN) -> &'a BEN {
+//         fen.into()
+//     }
+// }
+
 #[cfg(test)]
 mod tests {
     use crate::constants::EMPTY_POSITION_FEN;
@@ -65,7 +92,7 @@ mod tests {
 
     #[test]
     fn from_ben() {
-        let ben = BEN::new();
+        let ben = BEN::empty();
         let fen : FEN = ben.into();
 
         assert_eq!(fen, FEN::new(EMPTY_POSITION_FEN));

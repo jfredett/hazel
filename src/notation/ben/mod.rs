@@ -14,7 +14,7 @@
 //! because I've seen it before, I don't know, but I'm very likely not a genius.
 
 use super::{fen::{PositionMetadata, FEN}, Square};
-use crate::{board::{Alter, Alteration, PieceBoard, Query}, types::{Color, Occupant}};
+use crate::{Alter, Alteration, Query, types::{Color, Occupant}};
 use std::fmt::{Debug, Formatter};
 
 mod from_into;
@@ -40,7 +40,7 @@ impl Query for BEN {
 
 impl Alter for BEN {
     fn alter(&self, alter: Alteration) -> Self {
-        let mut ben = self.clone();
+        let mut ben = *self;
         ben.alter_mut(alter);
         ben
     }
@@ -74,19 +74,38 @@ impl Alter for BEN {
     }
 }
 
+pub fn setup<A : Alter + Default>(ben: &BEN) -> A {
+    let mut board = A::default();
+    setup_mut(ben, &mut board);
+    board
+}
+
+pub fn setup_mut<A : Alter>(ben: &BEN, board: &mut A) {
+    let alts = ben.compile();
+    for alteration in alts {
+        board.alter_mut(alteration);
+    }
+}
+
 impl Debug for BEN {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut s = String::from("0x");
         for byte in self.position.iter() {
             s.push_str(&format!("{:02x}", byte));
         }
+
         write!(f, "{}", s)
     }
 }
 
 
 impl BEN {
-    pub fn new() -> Self {
+    pub fn new(pos: &str) -> Self{
+        let f = FEN::new(pos);
+        f.into()
+    }
+
+    pub fn empty() -> Self {
         Self {
             position: [0; 32],
             metadata: PositionMetadata::default()
@@ -118,6 +137,10 @@ impl BEN {
         self.metadata.side_to_move
     }
 
+    pub fn compile(&self) -> Vec<Alteration> {
+        let f : FEN = self.into();
+        f.compile()
+    }
 }
 
 
@@ -131,7 +154,7 @@ mod tests {
 
     #[quickcheck]
     fn alter_mut(square: Square, occupant: Occupant) {
-        let mut ben = BEN::new();
+        let mut ben = BEN::empty();
 
         assert!(ben.get(square) == Occupant::Empty);
         ben.alter_mut(Alteration::place(square, occupant));
@@ -142,7 +165,7 @@ mod tests {
 
     #[test]
     fn alter() {
-        let ben = BEN::new();
+        let ben = BEN::empty();
         let ben = ben.alter(Alteration::Place { square: A1, occupant: Occupant::white_pawn() });
         let ben = ben.alter(Alteration::Place { square: H8, occupant: Occupant::black_king() });
         let ben = ben.alter(Alteration::Place { square: H1, occupant: Occupant::white_queen() });
@@ -175,7 +198,7 @@ mod tests {
 
     #[test]
     fn metadata() {
-        let mut ben = BEN::new();
+        let mut ben = BEN::empty();
         assert_eq!(ben.metadata(), PositionMetadata::default());
 
         let metadata = PositionMetadata {

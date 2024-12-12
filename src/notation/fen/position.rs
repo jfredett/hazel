@@ -1,20 +1,20 @@
 use std::fmt::{Display, Formatter};
 
-use crate::board::{Alteration, Query};
+use crate::interface::{Alteration, Query};
 use crate::constants::EMPTY_POSITION_FEN;
 use crate::types::{Color, Piece};
 use crate::notation::*;
 use crate::types::Occupant;
 
 #[derive(Debug, Clone)]
-pub(super) struct Position {
+pub struct Position {
     position_string: String,
     position: Vec<Alteration>
 }
 
 impl Position {
     pub fn new(fen: &str) -> Self {
-        let position = Self::compile(&fen);
+        let position = Self::compile(fen);
 
         Self {
             position_string: fen.to_string(),
@@ -71,7 +71,7 @@ impl Display for Position {
 
 impl<C : Query> From<C> for Position {
     fn from(c: C) -> Self {
-        let mut rep = String::new();
+        let mut rep = String::default();
         let mut empty = 0;
         for s in Square::fenwise() {
             let occ = c.get(s);

@@ -1,15 +1,20 @@
+use crate::notation::ben::BEN;
+use crate::types::log::Log;
+use crate::{board::PieceBoard, coup::rep::Move, notation::fen::FEN};
+use crate::types::log::cursor::Cursor;
 
-use crate::{board::Alter, types::log::Log};
+use super::action::Action;
+use super::delim::Delim;
+use super::familiar::Familiar;
+use super::reason::Reason;
+use super::ChessGame;
 
-use crate::{board::PieceBoard, coup::rep::Move, notation::fen::{PositionMetadata, FEN}};
-
-use super::action::chess::{ChessAction, Delim, Reason};
 
 #[derive(Debug, Default, Clone)]
 pub struct Variation {
     // Active Data
     /// A record of every action in the game
-    log: Log<ChessAction>,
+    log: Log<Action<Move, BEN>>,
     halted: bool
 
     // Caches / Derived Data
@@ -21,6 +26,10 @@ impl Variation {
             log: Log::start(),
             halted: false
         }
+    }
+
+    pub fn familiar(&mut self) -> Familiar<ChessGame<PieceBoard>> {
+        Familiar::new(self.get_cursor())
     }
 
     pub fn commit(&mut self) -> &mut Self {
@@ -39,22 +48,21 @@ impl Variation {
     }
 
     pub fn make(&mut self, mov: Move) -> &mut Self {
-        self.record(ChessAction::Make(mov));
+        self.record(Action::Make(mov));
         self
     }
 
     pub fn new_game(&mut self) -> &mut Self {
-        self.record(ChessAction::NewGame);
-        self
+        self.setup(FEN::start_position())
     }
 
     pub fn halt(&mut self, state: Reason) -> &mut Self {
-        self.record(ChessAction::Halted(state));
+        self.record(Action::Halt(state));
         self
     }
 
-    pub fn setup(&mut self, fen: FEN) -> &mut Self {
-        self.record(ChessAction::Setup(fen.clone()));
+    pub fn setup(&mut self, ben: impl Into<BEN>) -> &mut Self {
+        self.record(Action::Setup(ben.into()));
         self
     }
 
@@ -62,30 +70,30 @@ impl Variation {
     // do this in the PGN::parse side of things, but a pleasant way is not obvious and this better
     // matches the tokenization, so I'm going with it.
     pub(crate) fn start_variation(&mut self) -> &mut Self {
-        self.record(ChessAction::Variation(Delim::Start));
+        self.record(Action::Variation(Delim::Start));
         self
     }
 
     // NOTE: see #start_variation
     pub(crate) fn end_variation(&mut self) -> &mut Self {
-        self.record(ChessAction::Variation(Delim::End));
+        self.record(Action::Variation(Delim::End));
         self
     }
 
     pub fn variation(&mut self, block: impl Fn(&mut Variation)) -> &mut Self {
         self.log.begin();
 
-        let mut variation = Variation::new();
+        let mut variation = Variation::default();
 
         block(&mut variation);
 
         variation.commit_all();
 
-        self.record(ChessAction::Variation(Delim::Start));
+        self.record(Action::Variation(Delim::Start));
         for action in variation.log.into_iter() {
             self.record(action);
         }
-        self.record(ChessAction::Variation(Delim::End));
+        self.record(Action::Variation(Delim::End));
 
         self.log.commit();
 
@@ -105,43 +113,23 @@ impl Variation {
     // This will ensure during parsing PGNs that the correct context is maintained, since we always
     // want to calculate the shortest path to the variation at the tip of the log during that
     // process.
-    pub fn current_position(&self) -> FEN {
-        self.log.cursor(|cursor| {
-            let mut board = PieceBoard::default();
-            let mut metadata = PositionMetadata::default();
-            while let Some(action) = cursor.next() {
-                match action {
-                    ChessAction::NewGame => {
-                        board = PieceBoard::default();
-                        metadata = PositionMetadata::default();
-                    },
-                    ChessAction::Halted(_) => {
-                        todo!();
-                    },
-                    ChessAction::Variation(_) => {
-                        // This is a variation, so we don't need to do anything. Only reading the
-                        // mainline
-                    },
-                    ChessAction::Setup(fen) => {
-                        board.set_fen(fen);
-                    },
-                    ChessAction::Make(mov) => {
-                        metadata.update(mov, &board);
-                        for alter in mov.compile(&board) {
-                            board.alter_mut(alter);
-                        }
-                    },
-                }
-            }
-
-            // Now board and metadata are caught up, so we just ask board to write it's fen
-            let mut ret = FEN::from(board);
-            ret.set_metadata(metadata);
-            ret
-        })
+    pub fn current_position(&mut self) -> FEN {
+        let mut fam = self.familiar();
+        fam.advance_to_end();
+        fam.rep().clone().into()
     }
 
-    fn record(&mut self, action: ChessAction) -> &mut Self {
+    pub(crate) fn get_cursor(&self) -> Cursor<Action<Move, BEN>> {
+        self.log.raw_cursor()
+    }
+
+    /*
+    pub(crate) fn get_writehead(&mut self) -> Log<Action>::WriteHead {
+        self.log.writehead()
+    }
+    */
+
+    fn record(&mut self, action: Action<Move, BEN>) -> &mut Self {
         if self.halted { return self; }
 
         self.log.record(action);
@@ -153,14 +141,17 @@ impl Variation {
 
 #[cfg(test)]
 mod tests {
+    use game::delim::Delim;
+
     use crate::notation::*;
+    use crate::game::chess::PositionMetadata;
     use crate::{coup::rep::MoveType, types::Occupant};
-    use crate::board::interface::*;
+    use crate::*;
 
     use super::*;
 
     impl Variation {
-        pub fn log(&self) -> Vec<ChessAction> {
+        pub fn log(&self) -> Vec<Action<Move, BEN>> {
             self.log.log()
         }
     }
@@ -258,14 +249,10 @@ mod tests {
             let mut metadata = PositionMetadata::default();
             while let Some(action) = cursor.next() {
                 match action {
-                    ChessAction::NewGame => {
-                        board = PieceBoard::default();
-                        metadata = PositionMetadata::default();
+                    Action::Halt(_) => {
+                        /* do nothing */
                     },
-                    ChessAction::Halted(_) => {
-                        todo!("In Halt");
-                    },
-                    ChessAction::Variation(v) => {
+                    Action::Variation(v) => {
                         match v {
                             Delim::Start => { },
                             Delim::End => {
@@ -273,10 +260,11 @@ mod tests {
                             }
                         }
                     },
-                    ChessAction::Setup(fen) => {
-                        board.set_fen(fen);
+                    Action::Setup(fen) => {
+                        let f : FEN = fen.into();
+                        board.set_fen(&f);
                     },
-                    ChessAction::Make(mov) => {
+                    Action::Make(mov) => {
                         metadata.update(mov, &board);
                         for alter in mov.compile(&board) {
                             board.alter_mut(alter);

@@ -1,10 +1,18 @@
+// TODO: This should be extracted to the toplevel. It's not really notation-specific, it's
+// game-specific. src/game should maybe have a structure like:
+//
+// src/game/chess/<existing stuff>
+// src/game/nim/<nim stuff>
+// src/game/<other-abstract-game>/impl
+//
+// etc
 use std::fmt::Display;
 use std::str::SplitWhitespace;
 
-use crate::board::Query;
+use crate::interface::Query;
 use crate::constants::File;
 use crate::coup::rep::Move;
-use crate::notation::fen::castle_rights::CastleRights;
+use crate::game::chess::castle_rights::CastleRights;
 use crate::notation::*;
 use crate::types::{Color, Occupant, Piece};
 
@@ -129,13 +137,12 @@ impl PositionMetadata {
 
         if self.side_to_move == Color::WHITE {
             self.fullmove_number += 1;
-            self.side_to_move = Color::BLACK;
-        } else {
-            self.side_to_move = Color::WHITE;
         }
+        self.side_to_move = !self.side_to_move;
 
         // rely on the color of the piece being moved, rather than reasoning about the side-to-move
         // or delaying it till the end.
+
         let Occupant::Occupied(piece, color) = board.get(mov.source()) else { panic!("Move has no source piece"); };
 
 
@@ -191,10 +198,9 @@ impl From<PositionMetadata> for u32 {
             None => 0,
             Some(sq) => (1 << EP_FLAG_SHIFT) | ((sq.file() as u8) << EP_FILE_SHIFT),
         };
-        
-        b2 |= (data.halfmove_clock as u8) << HMC_SHIFT;
-        b2 |= (data.side_to_move as u8) << STM_SHIFT;
 
+        b2 |= (data.halfmove_clock) << HMC_SHIFT;
+        b2 |= (data.side_to_move as u8) << STM_SHIFT;
 
         let [b3, b4] = data.fullmove_number.to_ne_bytes();
 

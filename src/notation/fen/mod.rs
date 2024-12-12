@@ -1,23 +1,16 @@
-mod position_metadata;
 mod position;
-mod castle_rights;
-
 use std::fmt::{Debug, Display};
 
 use tracing::instrument;
 
-use crate::board::Alter;
-use crate::board::Alteration;
-use crate::board::PieceBoard;
-use crate::board::Query;
-use crate::constants::{EMPTY_POSITION_FEN, START_POSITION_FEN};
+use crate::{board::PieceBoard, constants::{EMPTY_POSITION_FEN, START_POSITION_FEN}, interface::{Alter, Alteration, Query}};
 use crate::types::Color;
 use crate::notation::*;
 use crate::types::Occupant;
 
+pub use crate::game::chess::{castle_rights::CastleRights, position_metadata::PositionMetadata};
 
-pub use position_metadata::PositionMetadata;
-pub use castle_rights::CastleRights;
+
 use position::Position;
 
 #[derive(Clone)]
@@ -40,7 +33,6 @@ impl PartialEq for FEN {
 }
 impl Eq for FEN {}
 
-
 impl Query for FEN {
     fn get(&self, s: impl Into<Square>) -> Occupant {
         // TODO: This can be done directly from the string representation of the FEN, but this is
@@ -59,7 +51,6 @@ impl Alter for FEN {
         new
     }
 
-    // HACK: This doesn't do metadata, it probably should.
     fn alter_mut(&mut self, alteration: Alteration) -> &mut Self {
         let mut pb = PieceBoard::from(self.clone());
         pb.alter_mut(alteration);
@@ -79,6 +70,10 @@ impl FEN {
         Self::new(START_POSITION_FEN)
     }
 
+    pub fn position(&self) -> Position {
+        self.position.clone()
+    }
+
     /// Sometimes you just want to specify the position without all the metadata, this
     /// assumes you are describing a position with white-to-move, all castling rights, no en
     /// passant square.
@@ -87,6 +82,16 @@ impl FEN {
         Self {
             position: Position::new(fen),
             metadata: PositionMetadata::default(),
+        }
+    }
+
+    //FIXME: Probably this isn't the right level of visibility, and it's only needed for tests, but
+    //Position is a private struct so maybe it's fine. I don't know.
+    #[cfg(test)]
+    pub(crate) fn with_metadata(position: impl Into<Position>, metadata: PositionMetadata) -> Self {
+        Self {
+            position: position.into(),
+            metadata
         }
     }
 
@@ -150,7 +155,7 @@ impl FEN {
     }
 
     pub fn metadata(&self) -> PositionMetadata {
-        self.metadata.clone()
+        self.metadata
     }
 }
 

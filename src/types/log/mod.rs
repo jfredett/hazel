@@ -116,7 +116,7 @@ impl<T> Log<T> where T: Clone {
     /// Cursor offers a readonly view of the current state of the log. The cursor object lives for
     /// as long as the provided block.
     pub fn cursor<A>(&self, block: impl Fn(&mut Cursor<T>) -> A) -> A {
-        let mut cursor = Cursor::new(self);
+        let mut cursor = self.raw_cursor();
         block(&mut cursor)
     }
 
@@ -124,6 +124,16 @@ impl<T> Log<T> where T: Clone {
         let mut write_head = WriteHead::new(self);
         block(&mut write_head);
     }
+
+    pub(crate) fn raw_cursor(&self) -> Cursor<T> {
+        Cursor::new(self)
+    }
+
+    /*
+    pub(crate) fn raw_writehead(&mut self) -> WriteHead<T> {
+        WriteHead::new(self)
+    }
+    */
 }
 
 impl<T> IntoIterator for Log<T> where T: Clone {

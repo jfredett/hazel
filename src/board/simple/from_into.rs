@@ -1,5 +1,18 @@
+use ben::BEN;
+
 use super::*;
 
+impl From<BEN> for PieceBoard {
+    fn from(ben: BEN) -> Self {
+        ben::setup(&ben)
+    }
+}
+
+impl From<&BEN> for PieceBoard {
+    fn from(ben: &BEN) -> Self {
+        ben::setup(ben)
+    }
+}
 
 impl From<FEN> for PieceBoard {
     fn from(fen: FEN) -> Self {
@@ -33,7 +46,7 @@ mod tests {
     mod fen {
         use super::*;
 
-        use crate::board::interface::query;
+        use crate::interface::query;
         use crate::constants::{EMPTY_POSITION_FEN, START_POSITION_FEN};
 
         #[test]
@@ -53,25 +66,23 @@ mod tests {
 
         #[test]
         pub fn converts_fen_to_board_correctly() {
-            let fen = FEN::new(START_POSITION_FEN);
-            let mut board = PieceBoard::default();
-            board.set_fen(&fen);
+            let ben = BEN::new(START_POSITION_FEN);
+            let board = PieceBoard::from(&ben);
             let fen2 = query::to_fen(&board);
-            assert_eq!(fen, fen2);
+            assert_eq!(ben, fen2.into());
         }
 
         #[test]
         pub fn converts_each_offset_correctly() {
-            let fen = FEN::new("p7/1p6/2p5/3p4/4p3/5p2/6p1/7p w KQkq - 0 1");
-            let mut board = PieceBoard::default();
-            board.set_fen(&fen);
+            let ben = BEN::new("p7/1p6/2p5/3p4/4p3/5p2/6p1/7p w KQkq - 0 1");
+            let board : PieceBoard = ben.into();
             let fen2 = query::to_fen(&board);
-            assert_eq!(fen, fen2);
+            assert_eq!(ben, fen2.into());
         }
 
         #[test]
         pub fn converts_from_borrowed_reference_correctly() {
-            let fen = FEN::new(&START_POSITION_FEN);
+            let fen = FEN::new(START_POSITION_FEN);
             let mut board = PieceBoard::default();
             board.set_fen(&fen);
             let fen2 = query::to_fen(&board);

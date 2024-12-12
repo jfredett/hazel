@@ -2,7 +2,7 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Widget, Block, Borders};
 use ratatui::buffer::Buffer;
 
-use crate::board::Query;
+use crate::Query;
 use crate::board::simple::PieceBoard;
 use crate::notation::*;
 
