@@ -104,10 +104,8 @@ impl<T> Play for ChessGame<T> where T: Alter + Query + Default + Clone {
 #[cfg(test)]
 mod tests {
     use crate::board::PieceBoard;
-    use crate::coup::rep::MoveType;
     use crate::types::{Color, Occupant};
-    use crate::{constants::START_POSITION_FEN, coup::rep::Move, notation::fen::FEN};
-    use crate::notation::*;
+    use crate::{constants::START_POSITION_FEN, coup::rep::{Move, MoveType}, game::ChessGame, notation::*};
 
     use super::*;
 
@@ -167,6 +165,29 @@ mod tests {
             let expected_fen = FEN::new(START_POSITION_FEN);
 
             similar_asserts::assert_eq!(fen, expected_fen);
+        }
+    }
+
+    mod play_impl {
+
+        use super::*;
+
+        #[test]
+        fn play_applies_correctly() {
+            let game = ChessGame::<PieceBoard>::from(FEN::start_position());
+            let action = Action::Make(Move::new(D2, D4, MoveType::DOUBLE_PAWN));
+            let new_game = game.apply(&action);
+            let actual_ben : BEN = new_game.into();
+            assert_eq!(actual_ben, BEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 2"));
+        }
+
+        #[test]
+        fn play_applies_mutably_correctly() {
+            let mut game = ChessGame::<PieceBoard>::from(FEN::start_position());
+            let action = Action::Make(Move::new(D2, D4, MoveType::DOUBLE_PAWN));
+            game.apply_mut(&action);
+            let actual_ben : BEN = game.into();
+            assert_eq!(actual_ben, BEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 2"));
         }
     }
 }
