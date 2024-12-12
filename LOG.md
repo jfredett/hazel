@@ -1434,3 +1434,10 @@ at least gather the API into one spot so I could look at it.
 
 In any case, I'm just going to start tweaking stuff and see what happens. Can't overthink if you stay busy breaking
 stuff.
+
+# 12-DEC-2024
+
+## 0004 - srailimaf
+
+Starting in on #2 from above, the first step will be doing some work working on the `Unplay` side of things and maybe
+doing some genericizing.
