@@ -93,6 +93,7 @@ impl Debug for BEN {
         for byte in self.position.iter() {
             s.push_str(&format!("{:02x}", byte));
         }
+
         write!(f, "{}", s)
     }
 }
