@@ -1421,3 +1421,16 @@ The current plan is something like:
 
 I'll chip away at that before getting into evaluators and UI and all that. I have plans for that but I think I've
 settled on the design and I just need to finish building it so I can get to the polish phase.
+
+## 2128
+
+I merged, finishing #1 from above. I think #2 will require some work on the `ChessGame` component, I'm pretty unhappy
+with how `BEN` and `FEN` are sort of scattered around, I would prefer to treat the board rep more abstractly, and this
+gets back to the `Alter` system and what a 'board representation' really is. I think it might start to reveal itself as
+I start to remove the hard `Move` and `BEN` types in Action.
+
+I could approach this in the 'dumb' way of replacing ChessGame with a trait that captures it's current API. This would
+at least gather the API into one spot so I could look at it.
+
+In any case, I'm just going to start tweaking stuff and see what happens. Can't overthink if you stay busy breaking
+stuff.
