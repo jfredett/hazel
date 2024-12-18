@@ -81,7 +81,7 @@ impl<T> From<&MoveSheet> for ChessGame<T> where T : Alter + Query + Default + Cl
         let mut game = ChessGame::default();
         game.apply_mut(&Action::Setup(sheet.initial_state));
 
-        for m in &sheet.line {
+        for m in sheet.line() {
             game.apply_mut(&Action::Make(*m));
         }
         game
@@ -96,6 +96,66 @@ mod tests {
 
     use super::*;
 
+    #[test]
+    fn unwinding_and_empty_sheet_is_a_noop() {
+        let mut sheet = MoveSheet::new();
+        assert_eq!(sheet.line().len(), 0);
+        sheet.unwind();
+        assert_eq!(sheet.line().len(), 0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn unwind_past_a_double_branch_should_panic() {
+        // there should never be a case in a valid variation where the branch appears twice in a
+        // row.
+        let mut sheet = MoveSheet::new();
+        sheet.record(Move::new(D2, D3, MoveType::QUIET));
+        sheet.branch();
+        sheet.branch();
+        sheet.record(Move::new(D3, D4, MoveType::QUIET));
+
+        sheet.unwind();
+        sheet.unwind();
+        sheet.unwind(); // should panic here
+
+        assert!(false);
+    }
+
+    #[test]
+    #[should_panic]
+    fn pruning_past_a_double_branch_should_panic() {
+        // there should never be a case in a valid variation where the branch appears twice in a
+        // row.
+        let mut sheet = MoveSheet::new();
+        sheet.record(Move::new(D2, D3, MoveType::QUIET));
+        sheet.branch();
+        sheet.branch();
+        sheet.record(Move::new(D3, D4, MoveType::QUIET));
+
+        sheet.prune();
+
+        assert!(false);
+    }
+
+    #[test]
+    fn unwinding_past_a_valid_variation_works() {
+        // there should never be a case in a valid variation where the branch appears twice in a
+        // row.
+        let mut sheet = MoveSheet::new();
+        sheet.record(Move::new(D2, D4, MoveType::QUIET));
+        sheet.branch();
+        sheet.record(Move::new(D2, D3, MoveType::DOUBLE_PAWN));
+
+        sheet.unwind();
+        sheet.unwind();
+
+        let rep = ChessGame::<PieceBoard>::from(sheet);
+        let ben : BEN = rep.into();
+
+        assert_eq!(ben, BEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 2"));
+
+    }
 
     #[test]
     fn movesheet_calculates_rep_correctly() {
@@ -103,7 +163,7 @@ mod tests {
 
         sheet.record(Move::new(D2, D4, MoveType::DOUBLE_PAWN));
 
-        let game : ChessGame<PieceBoard> = ChessGame::<PieceBoard>::from(&sheet);
+        let game : ChessGame<PieceBoard> = ChessGame::<PieceBoard>::from(sheet);
         let actual_fen : BEN = game.into();
 
         let expected_fen = BEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 2");
