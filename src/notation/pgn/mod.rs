@@ -110,7 +110,6 @@ mod tests {
         fn imports_from_pgn_with_no_variations_and_halt() {
             let mut pgn = PGN::load("tests/fixtures/no-variations-and-no-halt.pgn").unwrap();
 
-            //FIXME: This is the wrong FEN.
             assert_eq!(pgn.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
         }
 
@@ -119,7 +118,6 @@ mod tests {
         fn imports_from_pgn_with_variations_and_no_halt() {
             let mut pgn = PGN::load("tests/fixtures/with-variations-no-halt.pgn").unwrap();
 
-            //FIXME: This is the wrong FEN.
             assert_eq!(pgn.current_position(), FEN::new("1rbqkb1r/pp2p2p/2p2pp1/3p3n/2PP4/4PN2/PP3PPP/RN1QKB1R w KQk - 0 8"));
         }
 
@@ -127,7 +125,6 @@ mod tests {
         fn imports_from_pgn_with_variations_and_halt() {
             let mut pgn = PGN::load("tests/fixtures/with-variations-halts.pgn").unwrap();
 
-            //FIXME: This is the wrong FEN.
             assert_eq!(pgn.current_position(), FEN::new("1rbqkb1r/pp2p2p/2p2pp1/3p3n/2PP4/4PN2/PP3PPP/RN1QKB1R w KQk - 0 8"));
         }
 
@@ -142,7 +139,6 @@ mod tests {
         fn imports_from_pgn_with_nested_variations_and_halt() {
             let mut pgn = PGN::load("tests/fixtures/with-nested-variations-halts.pgn").unwrap();
 
-            //FIXME: This is the wrong FEN.
             assert_eq!(pgn.current_position(), FEN::new("1rbqkb1r/pp2p2p/2p2pp1/3p3n/2PP4/4PN2/PP3PPP/RN1QKB1R w KQk - 0 8"));
         }
     }
