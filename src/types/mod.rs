@@ -15,6 +15,8 @@ pub mod direction;
 
 // A freely moving cursor-based log object for recording and replaying actions.
 pub mod log;
+// A type for storing a stack of moves while allowing for variations.
+pub mod movesheet;
 
 
 pub use bitboard::Bitboard;
