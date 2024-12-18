@@ -55,7 +55,7 @@ impl MoveSheet {
 
     pub fn unwind(&mut self) {
         match self.sheet.pop() {
-            Some(MoveSheetEntry::Move(m)) => {
+            Some(MoveSheetEntry::Move(_)) => {
                 self.line.pop();
             },
             Some(MoveSheetEntry::Branch) => {

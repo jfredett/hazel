@@ -29,21 +29,10 @@ impl<'a> Familiar<'a> {
 
         while let Some(action) = self.cursor.prev() {
             match action {
-                Action::Setup(ben) => {
+                Action::Setup(_) => {
                     self.movesheets.pop();
                 }
-                Action::Make(mov) => {
-                    self.movesheet().unwind();
-                }
-                Action::Variation(Delim::Start) => {
-                    self.movesheet().unwind();
-                }
-                Action::Variation(Delim::End) => {
-                    self.movesheet().unwind();
-                }
-                Action::Halt(_reason) => {
-                    self.movesheet().unwind();
-                }
+                _ => { self.movesheet().unwind(); }
             }
 
             if predicate(self) {
@@ -193,6 +182,30 @@ mod tests {
             let after_rep = familiar.rep::<ChessGame<PieceBoard>>().rep;
 
             initial_rep == after_rep
+        }
+        #[test]
+        fn rewind_can_rewind_past_a_variation() {
+            let log = example_game();
+            let cursor = log.get_cursor();
+            let mut familiar = Familiar::new(cursor);
+
+            // find the variation
+            familiar.advance_by(5);
+
+            let prevariation_rep = familiar.rep::<ChessGame<PieceBoard>>().rep;
+
+            // enter it
+            familiar.advance();
+
+            let variation_rep = familiar.rep::<ChessGame<PieceBoard>>().rep;
+
+            assert_ne!(prevariation_rep, variation_rep);
+
+            familiar.rewind();
+
+            let postvariation_rep = familiar.rep::<ChessGame<PieceBoard>>().rep;
+
+            assert_eq!(prevariation_rep, postvariation_rep);
         }
 
         #[test]
