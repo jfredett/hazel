@@ -2,129 +2,31 @@ use crate::{coup::rep::Move, interface::play::Play, notation::ben::BEN, types::{
 use super::{action::Action, delim::Delim};
 
 #[derive(Debug, Clone)]
-pub struct Familiar<'a, T> where T : Play + Default {
+pub struct Familiar<'a> {
     // TODO: Temporarily fixing the types
-    //
-    // I think the solution here is to think about BEN/FEN etc in the context of turning into a
-    // 'gamestate' of some kind. ChessGame is an example of a GameState. a vector of usizes would
-    // be a gamestate for nim. A vector of bool? would be a gamestate for tic-tac-toe. A game state
-    //
-    // The familiar should probably handle the action destructuring, and maintain a cache of
-    // gamestates that are available to the various strategies? I'm thinking in the context of the
-    // advance/rewind strategies, which I guess are really "calculate the representation at a point
-    // relative to the 'current' one." So the state of the cursor would naturally drift, as it
-    // expects to be at a certain location. I suppose the cursor can simply jump over to whereever
-    // the 'advance/rewind' strategy wants it to be as a preparation step.
-    //
-    // Ultimately it'd be nice to write metadata into the log via a familiar with a WriteHead,
-    // strategies should ignore any action it doesn't care about.
-    //
-    // 
     cursor: Cursor<'a, Action<Move, BEN>>,
     movesheet: MoveSheet,
     setup_stack: Vec<BEN>,
-    stack: Vec<T>,
-    prev_rep: T,
-    rep: T,
 }
 
-// cursor
-//
 
-impl<'a, T> Familiar<'a, T> where T : Play + Default + From<&'a MoveSheet> {
+impl<'a> Familiar<'a> {
     pub fn new(cursor: Cursor<'a, Action<Move, BEN>>) -> Self {
-        Self { cursor, stack: vec![], setup_stack: vec![], movesheet: MoveSheet::default(), prev_rep: T::default(), rep: T::default() }
+        Self { cursor, setup_stack: vec![], movesheet: MoveSheet::default() }
     }
 
-    pub fn rep(&'a self) -> T {
+    pub fn rep<T>(&'a self) -> T where T: Play + From<&'a MoveSheet> {
         T::from(&self.movesheet)
     }
 
-    pub fn metadata(&'a self) -> T::Metadata {
-        self.rep().metadata()
+    pub fn metadata<T>(&'a self) -> T::Metadata where T: Play + From<&'a MoveSheet> {
+        self.rep::<T>().metadata()
     }
 
     pub fn advance(&mut self) {
         self.advance_until(|_| true);
     }
 
-    // pub fn scan_backward(&mut self, predicate: impl Fn(&Self) -> bool) -> (usize, Action<Move, BEN>) {
-    //     let original = self.clone();
-
-    //     while !predicate(self) {
-    //         self.cursor.prev();
-    //     }
-    //     let found_position = self.cursor.position();
-
-    //     *self = original;
-
-    //     (found_position, action)
-    // }
-
-    // pub fn scan_forward(&mut self, predicate: impl Fn(&Self) -> bool) -> (usize, Action<Move, BEN>) {
-    //     let original = self.clone();
-
-    //     while !predicate(self) {
-    //         self.cursor.next();
-    //     }
-
-    //     let found_position = self.cursor.position();
-    //     let action = self.cursor.current().unwrap();
-
-    //     *self = original;
-
-    //     (found_position, action)
-    // }
-
-    // Rewind really wants it's own stack/prevrep thing.
-    //
-    // What if I approached this and advance more as a lazy evaluation thing. Push a stack of
-    // actions to the 'do' or 'undo' stack. When I call `rep`, do all the stuff in the stack, if
-    // it's a big difference, I can jump to a nearby saved position and replay from there.
-    //
-    // This would make it so that these functions are much simpler, and I can extract all the state
-    // calculation logic to a single function that reconciles those stacks.
-    //
-    // alternatively, I could extract this to a function that takes a predicate that produces a
-    // _direction_. The predicate would evaluate the current state and return a direction to move
-    // in. The function would then move the cursor in the direction indicated either by:
-    //
-    // if the 'todo' stack is empty, pushing the instruction onto the do stack and marking the
-    // direction we are travelling (forward or backward). If backward, this is a sequence of
-    // actions to _undo_, if forward, it's actions to _do_ to the state.
-    //
-    // if the todo stack is not empty, and we are moving in the opposite direction, we pop the
-    // stack and do nothing, if we are moving in the same direction, we push the instruction onto
-    // the stack.
-    //
-    // The function can potentially nest, that is, it can recursively call the 'step' function.
-    // This should be fine.
-    //
-    // I suppose this could be done with a lagging cursor, or just recording the position of the
-    // last evaluation of the rep? Then undoing should be trivial.
-    //
-    // Yah, hold on.
-    //
-    // If I have a rep like:
-    //
-    // F {
-    //   cursor: Cursor<...>
-    //   rep: (usize, T)
-    //   stack: Vec<(usize, T)>
-    // }
-    //
-    // Then we just delay calculating the rep until we need it, at which time we either roll
-    // forward, building up the variation stack as needed. Then when we roll back over the
-    // variation delimiter, we pop the stack and continue. Unmaking moves will require the current
-    // rep, so most of the time the cursor will be kept current, but while calculating some other final
-    // position, we only pay for cursor moves until the end, when we pay to calculate the
-    // representation once.
-    //
-    // This would centralize all that to one point so it's easy to access caches and the like
-    // later.
-    //
-    // The predicate should be (self -> Proceed) Proceed is an enum, it can be Forward, Backward,
-    // Directly(position), etc. Eventually the predicate should be specified in a DSL.
     pub fn rewind_until(&mut self, predicate: impl Fn(&Self) -> bool) {
         while let Some(action) = self.cursor.prev() {
             match action {
@@ -293,47 +195,50 @@ mod tests {
     fn familiar_works_with_pieceboard_to_capture_gamestate() {
         let log = example_game();
         let cursor = log.get_cursor();
-        let mut familiar : Familiar<ChessGame<PieceBoard>> = Familiar::new(cursor);
+        let mut familiar = Familiar::new(cursor);
 
         // Setup is the 'zeroth' action, and we proceed actionwise. At the moment that also
         // corresponds to ply number, but the example game has variations so that is not reliable.
         familiar.advance_by(2);
 
-        assert_eq!(familiar.rep().rep, FEN::new("rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2").into());
-        assert_eq!(familiar.metadata().fullmove_number, 2);
+        assert_eq!(familiar.rep::<ChessGame<PieceBoard>>().rep, FEN::new("rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2").into());
+
+        let metadata : PositionMetadata = familiar.metadata::<ChessGame<PieceBoard>>();
+
+        assert_eq!(metadata.fullmove_number, 2);
     }
 
     #[test]
     fn familiar_finds_the_variation_position() {
         let log = example_game();
         let cursor = log.get_cursor();
-        let mut familiar : Familiar<ChessGame<PieceBoard>> = Familiar::new(cursor);
+        let mut familiar = Familiar::new(cursor);
 
         // We advance _over_ the variation opening, but stop inside.
         familiar.advance_by(6);
 
-        let f = FEN::from(familiar.rep().rep);
-        println!("{}", f);
+        assert_eq!(familiar.rep::<ChessGame<PieceBoard>>().rep, FEN::new("r1bqkbnr/ppp1pppp/2n5/3p4/3P1B2/8/PPP1PPPP/RN1QKBNR w KQkq - 2 3").into());
 
-        assert_eq!(familiar.rep().rep, FEN::new("r1bqkbnr/ppp1pppp/2n5/3p4/3P1B2/8/PPP1PPPP/RN1QKBNR w KQkq - 2 3").into());
-        assert_eq!(familiar.metadata().fullmove_number, 3);
+        let metadata : PositionMetadata = familiar.metadata::<ChessGame<PieceBoard>>();
+
+        assert_eq!(metadata.fullmove_number, 3);
     }
 
     #[test]
     fn advance_moves_stepwise() {
         let log = example_game();
         let cursor = log.get_cursor();
-        let mut familiar : Familiar<ChessGame<PieceBoard>> = Familiar::new(cursor);
+        let mut familiar = Familiar::new(cursor);
 
         // Seek to just before the target, then advance by one
         familiar.advance_by(5);
         familiar.advance();
 
-        let f = FEN::from(familiar.rep().rep);
-        println!("{}", f);
+        assert_eq!(familiar.rep::<ChessGame<PieceBoard>>().rep, FEN::new("r1bqkbnr/ppp1pppp/2n5/3p4/3P1B2/8/PPP1PPPP/RN1QKBNR w KQkq - 2 3").into());
 
-        assert_eq!(familiar.rep().rep, FEN::new("r1bqkbnr/ppp1pppp/2n5/3p4/3P1B2/8/PPP1PPPP/RN1QKBNR w KQkq - 2 3").into());
-        assert_eq!(familiar.metadata().fullmove_number, 3);
+        let metadata : PositionMetadata = familiar.metadata::<ChessGame<PieceBoard>>();
+
+        assert_eq!(metadata.fullmove_number, 3);
     }
 }
 

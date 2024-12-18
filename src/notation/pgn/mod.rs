@@ -67,11 +67,7 @@ impl PGN {
                 },
                 PGNToken::Turn(_) => { }
                 PGNToken::Coup(san_str) => {
-                    let mut familiar = variation.familiar();
-                    familiar.advance_to_end();
-                    let current_position = familiar.rep().clone();
-
-                    let (input, san) = SAN::parse(&san_str, current_position).unwrap();
+                    let (input, san) = SAN::parse(&san_str, variation.current_position()).unwrap();
 
                     assert_eq!(input, "");
 

@@ -52,6 +52,28 @@ impl MoveSheet {
             panic!("Invalid MoveSheet, double-branch");
         }
     }
+
+    pub fn unwind(&mut self) {
+        match self.sheet.pop() {
+            Some(MoveSheetEntry::Move(m)) => {
+                self.line.pop();
+            },
+            Some(MoveSheetEntry::Branch) => {
+                if let MoveSheetEntry::Move(m) = self.sheet.last().unwrap() {
+                    self.line.push(*m);
+                } else {
+                    panic!("Invalid MoveSheet, double-branch");
+                }
+            },
+            None => {}
+        }
+    }
+}
+
+impl<T> From<MoveSheet> for ChessGame<T> where T : Alter + Query + Default + Clone {
+    fn from(sheet: MoveSheet) -> Self {
+        ChessGame::<T>::from(&sheet)
+    }
 }
 
 impl<T> From<&MoveSheet> for ChessGame<T> where T : Alter + Query + Default + Clone {

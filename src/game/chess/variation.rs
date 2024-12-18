@@ -28,7 +28,7 @@ impl Variation {
         }
     }
 
-    pub fn familiar(&mut self) -> Familiar<ChessGame<PieceBoard>> {
+    pub fn familiar(&mut self) -> Familiar {
         Familiar::new(self.get_cursor())
     }
 
@@ -116,7 +116,8 @@ impl Variation {
     pub fn current_position(&mut self) -> FEN {
         let mut fam = self.familiar();
         fam.advance_to_end();
-        fam.rep().clone().into()
+        // TODO: Replace this with a generic 'FastRep' type alias that is optimized for this case
+        fam.rep::<ChessGame<PieceBoard>>().clone().into()
     }
 
     pub(crate) fn get_cursor(&self) -> Cursor<Action<Move, BEN>> {
