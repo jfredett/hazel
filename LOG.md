@@ -1434,3 +1434,89 @@ at least gather the API into one spot so I could look at it.
 
 In any case, I'm just going to start tweaking stuff and see what happens. Can't overthink if you stay busy breaking
 stuff.
+
+# 12-DEC-2024
+
+## 0004 - srailimaf
+
+Starting in on #2 from above, the first step will be doing some work working on the `Unplay` side of things and maybe
+doing some genericizing.
+
+## 1000 - srailimaf
+
+I've been poking around at some other tools I might want to integrate, and came across `insta`, which I think would
+greatly improve the tests for the UI. More generally, I want to start considering how to refactor the test code. I like
+being able to put tests right alongside the code it's testing, but I think ultimately I'd prefer if the test code were a
+little less heavily duplicated.
+
+I found `rstest` which offers a little extra, and I think I have a plan for how to refactor longterm.
+
+1. Keep developing using `#[test]` and the builtin runner along side the source. These are 'in situ' unit tests, they
+   are intended to simply do whatever is necessary to make whatever assertion is intended.
+2. `tests/unit/` contains an equivalent folder structure, but uses `rstest` to run the tests, and is more heavily
+   factored and intended to be the place where `in situ` tests are moved to once the functionality is stablized (and
+   really, once I get tired of the long file size).
+3. `tests/integration/` can contains integration tests
+4. `tests/ui` for ui tests via `insta`
+
+and so on.
+
+The goal would be to slowly extract to some generic 'spec' -- especially for integration tests, relying on
+non-hazel-specific tools to implement the test as much as possible will allow for easy cross-comparison with knonw-good
+engines. The spec will ideally be engine-agnostic to some extent, so that it should be relatively low maintenance as I
+keep tweaking stuff in hazel.
+
+I have some loose refactoring that happens in the unit tests as of right now, and coverage is pretty good, but
+integration is a little weak. I've been thinking about other metrics that could be useful with respect to coverage, in
+particular I've been thinking about two in particular:
+
+1. Lines / Test Coverage - How many lines does a particular test touch in our code?
+2. assertions / line - How many assertions are made per line of code? 
+
+Ideally we want a test to cover as _few_ lines as possible (tests should be precise), while making as many (good)
+assertions as possible per line. The former is probably easy to calculate based on the .lcov information, but the latter
+is a little trickier. I suspect that these are the underlying metrics that `mutant`-style testing reveals. Having a high
+assertion-per-line ratio would mean that random changes to code are more likely to be caught by _some_ test, reducing
+the class of 'tests-missing-obvious-logic-error' mutant, but not the 'subtle-logical-change' mutant. The latter is far
+more rare than the former. Fewer lines touched per test means that the test is making more targeted assertions, which
+should address the latter.
+
+I may take a sidequest at some point to investigate how to calculate these metrics, if nothing else than because I like
+a good metric.
+
+# 14-DEC-2024
+
+## 0049 - srailimaf
+
+I'm really not liking how the rewind stuff is coming together, and I think I need to change the approach and think about
+how I'm going to use Familiar. Initially I was thinking of it as a being fully bidirectional, but trying to track all
+the necessary state is looking very complicated, and trying to pack it inside the class itself is looking tricky.
+
+I'm going to keep trying just to see if the additional state calculation needed is really as bad as I think, but I'm
+pretty sure it's going to get out of hand, mostly around variation management.
+
+# 17-DEC-2024
+
+## 1042 - srailimaf
+
+This is idle thoughts about how to break up what's in `hazel` rn. I don't think I want to keep everything in the same
+codebase longterm, since large parts of it will become quite static (e.g,. the PGN parser, the UCI parser, etc); and
+other parts are really not particularly chess related (the `Log` type, in particular, and the UI to some extent may be
+worth separating, if only for namespace friendliness).
+
+This would leave the core chess functionality in the main `hazel` crate.
+
+Right now my compile times are fine, couple seconds, maybe a minute or two for a fresh build, but I can see the writing
+on the wall. It's also just getting cluttered in the project, so I'm itching to organize.
+
+I think the `Log` type is going to be the first out, especially because I expect it will see re-use outside of this
+project, and because I have some ideas on how to extend it to be more useful in terms of how it manages the data it
+stores. In particular, I want to extend it to dynamically load segments into and out of the log, so that I can store
+logs bounded by disk space and not memory. To do this, I'll need to have the _Cursor_ types be responsible for holding
+the Log data in memory, and the main `Log` type will instead use a `WriteHead` to write to an abstract log which is
+stored in segments on disk. Finally making it all async would be nice, but I'm not sure if this design'll scale to that.
+Probably a single-writer multi-reader would be 'fine', or some kind of segment-based locking, IDK.
+
+It's not a new idea but it's a very nice one, and it seems like it'd be fun to build.
+
+

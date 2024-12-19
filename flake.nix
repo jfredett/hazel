@@ -30,8 +30,14 @@
                 rustflags = "-C target-feature=+bmi1,+bmi2";
               };
 
+              # enterShell = ''
+              #   jq '.["parser-directories"][0] = "${pkgs.tree-sitter-grammars.tree-sitter-rust}"' .treesitter-config.json.template > .treesitter-config.json
+              # '';
 
-              packages = with pkgs; [
+
+              packages = with pkgs; let 
+                ts = tree-sitter.withPlugins (p: [ p.tree-sitter-rust ] );
+              in [
                 bacon
                 cargo-llvm-cov
                 cargo-mutants
@@ -41,6 +47,8 @@
                 imhex
                 just
                 linuxKernel.packages.linux_6_6.perf
+                tree-sitter
+                ts
                 mold
                 perf-tools
                 stockfish

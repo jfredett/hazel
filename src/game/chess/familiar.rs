@@ -1,56 +1,85 @@
-use crate::{coup::rep::Move, interface::play::Play, notation::ben::BEN, types::log::cursor::Cursor};
+use crate::{coup::rep::Move, interface::play::Play, notation::ben::BEN, types::{log::cursor::Cursor, movesheet::MoveSheet}};
 use super::{action::Action, delim::Delim};
 
 #[derive(Debug, Clone)]
-pub struct Familiar<'a, T> where T : Play + Default {
+pub struct Familiar<'a> {
     // TODO: Temporarily fixing the types
     cursor: Cursor<'a, Action<Move, BEN>>,
-    stack: Vec<T>,
-    prev_rep: T,
-    rep: T
+    movesheets: Vec<MoveSheet>,
 }
 
-impl<'a, T> Familiar<'a, T> where T : Play + Default {
+
+impl<'a> Familiar<'a> {
     pub fn new(cursor: Cursor<'a, Action<Move, BEN>>) -> Self {
-        Self { cursor, stack: vec![], prev_rep: T::default(), rep: T::default() }
+        Self { cursor, movesheets: vec![MoveSheet::default()] }
     }
 
-    pub fn rep(&self) -> &T {
-        &self.rep
+    pub fn rep<T>(&'a self) -> T where T: Play + From<&'a MoveSheet> {
+        let movesheet = self.movesheets.last().unwrap();
+        T::from(&movesheet)
     }
 
-    pub fn metadata(&self) -> T::Metadata {
-        self.rep.metadata().clone()
+    pub fn metadata<T>(&'a self) -> T::Metadata where T: Play + From<&'a MoveSheet> {
+        self.rep::<T>().metadata()
     }
 
-    pub fn advance(&mut self) {
-        self.advance_until(|_| true);
-    }
+    pub fn rewind_until(&mut self, predicate: impl Fn(&Self) -> bool) {
+        // verify we don't already satisfy the predicate
+        if predicate(self) { return; }
 
-    pub fn advance_until(&mut self, predicate: impl Fn(&Self) -> bool) {
-        while let Some(action) = self.cursor.next() {
+        while let Some(action) = self.cursor.prev() {
             match action {
-                Action::Setup(ben) => {
-                    // FIXME: This is probably how I should tackle proper unapply/unmake?
-                    // self.stack.push(self.rep.clone());
+                Action::Setup(_) => {
+                    self.movesheets.pop();
+                }
+                _ => { self.movesheet().unwind(); }
+            }
 
-                    self.prev_rep = self.rep.clone();
-                    self.rep = T::default();
-                    self.rep.apply_mut(&Action::Setup(*ben));
+            if predicate(self) {
+                break;
+            }
+        }
+
+    }
+
+    pub fn rewind(&mut self) {
+        self.rewind_by(1);
+    }
+
+    pub fn rewind_to_start(&mut self) {
+        self.rewind_until(|_| false);
+    }
+
+    pub fn rewind_by(&mut self, count: usize) {
+        let target = self.cursor.position() - count;
+        self.rewind_until(|f| f.cursor.position() == target);
+    }
+
+    /// Given a predicate, advance the underlying cursor until the predicate is satisfied.
+    /// As each action is touched, update the representation.
+    pub fn advance_until(&mut self, predicate: impl Fn(&Self) -> bool) {
+        // verify we don't already satisfy the predicate
+        if predicate(self) { return; }
+
+        loop {
+            let Some(action) = self.cursor.next() else {
+                break;
+            };
+
+            match action.clone() {
+                Action::Setup(ben) => {
+                    let mut new_sheet = MoveSheet::default();
+                    new_sheet.set_initial_state(ben);
+                    self.movesheets.push(new_sheet);
                 },
                 Action::Make(mov) => {
-                    self.prev_rep = self.rep.clone();
-                    self.rep.apply_mut(&Action::Make(*mov));
+                    self.movesheet().record(mov);
                 },
                 Action::Variation(Delim::Start) => {
-                    // save the previous state
-                    self.stack.push(self.rep.clone());
-                    // and unwind one move
-                    self.rep = self.prev_rep.clone();
+                    self.movesheet().branch();
                 },
                 Action::Variation(Delim::End) => {
-                    self.prev_rep = self.rep.clone();
-                    self.rep = self.stack.pop().unwrap();
+                    self.movesheet().prune();
                 },
                 Action::Halt(_reason) => {
                     /* noop */
@@ -64,6 +93,10 @@ impl<'a, T> Familiar<'a, T> where T : Play + Default {
         }
     }
 
+    pub fn advance(&mut self) {
+        self.advance_by(1);
+    }
+
     pub fn advance_to_end(&mut self) {
         self.advance_until(|_| false);
     }
@@ -71,6 +104,10 @@ impl<'a, T> Familiar<'a, T> where T : Play + Default {
     pub fn advance_by(&mut self, count: usize) {
         let target = self.cursor.position() + count;
         self.advance_until(|f| f.cursor.position() == target);
+    }
+
+    fn movesheet(&mut self) -> &mut MoveSheet {
+        self.movesheets.last_mut().unwrap()
     }
 }
 
@@ -81,67 +118,230 @@ mod tests {
 
     use super::*;
 
-    fn example_game() -> Variation {
+    pub(in self) fn example_game() -> Variation {
         let mut log = Variation::default();
         log.new_game()
-           .make(Move::new(D2, D4, MoveType::DOUBLE_PAWN))
-           .make(Move::new(D7, D5, MoveType::DOUBLE_PAWN))
-           .make(Move::new(C1, F4, MoveType::QUIET)) 
-           .make(Move::new(G8, F6, MoveType::QUIET)) 
-           .start_variation()
+            .make(Move::new(D2, D4, MoveType::DOUBLE_PAWN))
+            .make(Move::new(D7, D5, MoveType::DOUBLE_PAWN))
+            .make(Move::new(C1, F4, MoveType::QUIET)) 
+            .make(Move::new(G8, F6, MoveType::QUIET)) 
+            .start_variation()
                 .make(Move::new(B8, C6, MoveType::QUIET))
-           .end_variation()
-           .make(Move::new(E2, E3, MoveType::QUIET))
-           .make(Move::new(E7, E6, MoveType::QUIET))
-           .commit();
+            .end_variation()
+            .make(Move::new(E2, E3, MoveType::QUIET))
+            .make(Move::new(E7, E6, MoveType::QUIET))
+            .commit();
         log
     }
 
-    #[test]
-    fn familiar_works_with_pieceboard_to_capture_gamestate() {
+    #[quickcheck]
+    fn rewind_and_advance_are_inverses(amt: usize) -> bool {
         let log = example_game();
         let cursor = log.get_cursor();
-        let mut familiar : Familiar<ChessGame<PieceBoard>> = Familiar::new(cursor);
+        let mut familiar = Familiar::new(cursor);
 
-        // Setup is the 'zeroth' action, and we proceed actionwise. At the moment that also
-        // corresponds to ply number, but the example game has variations so that is not reliable.
-        familiar.advance_by(2);
+        if ![1, 6].contains(&amt) {
+            return true;
+        }
 
-        assert_eq!(familiar.rep().rep, FEN::new("rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2").into());
-        assert_eq!(familiar.metadata().fullmove_number, 2);
+
+        let initial_rep = familiar.rep::<ChessGame<PieceBoard>>().rep;
+
+        familiar.advance_by(amt);
+        familiar.rewind_by(amt);
+
+        let after_rep = familiar.rep::<ChessGame<PieceBoard>>().rep;
+
+
+        initial_rep == after_rep
     }
 
-    #[test]
-    fn familiar_finds_the_variation_position() {
-        let log = example_game();
-        let cursor = log.get_cursor();
-        let mut familiar : Familiar<ChessGame<PieceBoard>> = Familiar::new(cursor);
 
-        // We advance _over_ the variation opening, but stop inside.
-        familiar.advance_by(6);
 
-        let f = FEN::from(familiar.rep().rep);
-        println!("{}", f);
+    mod rewind {
+        use crate::constants::EMPTY_POSITION_FEN;
 
-        assert_eq!(familiar.rep().rep, FEN::new("r1bqkbnr/ppp1pppp/2n5/3p4/3P1B2/8/PPP1PPPP/RN1QKBNR w KQkq - 2 3").into());
-        assert_eq!(familiar.metadata().fullmove_number, 3);
+        use super::*;
+
+        #[quickcheck]
+        fn rewinding_by_nothing_is_a_noop(amt: usize) -> bool {
+            let log = example_game();
+            let cursor = log.get_cursor();
+            let mut familiar = Familiar::new(cursor);
+
+            if ![1, 6].contains(&amt) {
+                return true;
+            }
+
+            familiar.advance_by(amt);
+
+            let initial_rep = familiar.rep::<ChessGame<PieceBoard>>().rep;
+
+            familiar.rewind_by(0);
+
+            let after_rep = familiar.rep::<ChessGame<PieceBoard>>().rep;
+
+            initial_rep == after_rep
+        }
+        #[test]
+        fn rewind_can_rewind_past_a_variation() {
+            let log = example_game();
+            let cursor = log.get_cursor();
+            let mut familiar = Familiar::new(cursor);
+
+            // find the variation
+            familiar.advance_by(5);
+
+            let prevariation_rep = familiar.rep::<ChessGame<PieceBoard>>().rep;
+
+            // enter it
+            familiar.advance();
+
+            let variation_rep = familiar.rep::<ChessGame<PieceBoard>>().rep;
+
+            assert_ne!(prevariation_rep, variation_rep);
+
+            familiar.rewind();
+
+            let postvariation_rep = familiar.rep::<ChessGame<PieceBoard>>().rep;
+
+            assert_eq!(prevariation_rep, postvariation_rep);
+        }
+
+        #[test]
+        fn rewind_can_rewind() {
+            let log = example_game();
+            let cursor = log.get_cursor();
+            let mut familiar = Familiar::new(cursor);
+
+            // Setup is the 'zeroth' action, and we proceed actionwise. At the moment that also
+            // corresponds to ply number, but the example game has variations so that is not reliable.
+            familiar.advance_by(3);
+            familiar.rewind();
+
+            assert_eq!(familiar.rep::<ChessGame<PieceBoard>>().rep, FEN::new("rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2").into());
+
+            let metadata : PositionMetadata = familiar.metadata::<ChessGame<PieceBoard>>();
+
+            assert_eq!(metadata.fullmove_number, 2);
+        }
+
+        #[test]
+        fn rewind_to_beginning_rewinds_to_beginning() {
+            let log = example_game();
+            let cursor = log.get_cursor();
+            let mut familiar = Familiar::new(cursor);
+
+
+            // Setup is the 'zeroth' action, and we proceed actionwise. At the moment that also
+            // corresponds to ply number, but the example game has variations so that is not reliable.
+            familiar.advance_by(3);
+            familiar.rewind_to_start();
+
+            assert_eq!(familiar.rep::<ChessGame<PieceBoard>>().rep, FEN::new(EMPTY_POSITION_FEN).into());
+
+            let metadata : PositionMetadata = familiar.metadata::<ChessGame<PieceBoard>>();
+
+            assert_eq!(metadata.fullmove_number, 1);
+        }
+
+        #[test]
+        fn rewind_is_rewind_by_one() {
+            let log = example_game();
+            let cursor = log.get_cursor();
+            let mut familiar = Familiar::new(cursor);
+
+            // calculate once by rewind_by
+            familiar.advance_by(3);
+            familiar.rewind_by(1);
+
+            let first_rep = familiar.rep::<ChessGame<PieceBoard>>().rep;
+
+            // then again by rewind
+            let cursor = log.get_cursor();
+            let mut familiar = Familiar::new(cursor);
+
+            familiar.advance_by(3);
+            familiar.rewind();
+
+            let second_rep = familiar.rep::<ChessGame<PieceBoard>>().rep;
+            assert_eq!(first_rep, second_rep);
+        }
     }
 
-    #[test]
-    fn advance_moves_stepwise() {
-        let log = example_game();
-        let cursor = log.get_cursor();
-        let mut familiar : Familiar<ChessGame<PieceBoard>> = Familiar::new(cursor);
+    mod advance {
+        use super::*;
 
-        // Seek to just before the target, then advance by one
-        familiar.advance_by(5);
-        familiar.advance();
+        #[quickcheck]
+        fn advancing_by_nothing_is_a_noop(amt: usize) -> bool {
+            let log = example_game();
+            let cursor = log.get_cursor();
+            let mut familiar = Familiar::new(cursor);
 
-        let f = FEN::from(familiar.rep().rep);
-        println!("{}", f);
+            if ![1, 6].contains(&amt) {
+                return true;
+            }
 
-        assert_eq!(familiar.rep().rep, FEN::new("r1bqkbnr/ppp1pppp/2n5/3p4/3P1B2/8/PPP1PPPP/RN1QKBNR w KQkq - 2 3").into());
-        assert_eq!(familiar.metadata().fullmove_number, 3);
+            familiar.advance_by(amt);
+
+            let initial_rep = familiar.rep::<ChessGame<PieceBoard>>().rep;
+
+            familiar.advance_by(0);
+
+            let after_rep = familiar.rep::<ChessGame<PieceBoard>>().rep;
+
+            initial_rep == after_rep
+        }
+
+        #[test]
+        fn familiar_works_with_pieceboard_to_capture_gamestate() {
+            let log = example_game();
+            let cursor = log.get_cursor();
+            let mut familiar = Familiar::new(cursor);
+
+            // Setup is the 'zeroth' action, and we proceed actionwise. At the moment that also
+            // corresponds to ply number, but the example game has variations so that is not reliable.
+            familiar.advance_by(2);
+
+            assert_eq!(familiar.rep::<ChessGame<PieceBoard>>().rep, FEN::new("rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2").into());
+
+            let metadata : PositionMetadata = familiar.metadata::<ChessGame<PieceBoard>>();
+
+            assert_eq!(metadata.fullmove_number, 2);
+        }
+
+        #[test]
+        fn familiar_finds_the_variation_position() {
+            let log = example_game();
+            let cursor = log.get_cursor();
+            let mut familiar = Familiar::new(cursor);
+
+            // We advance _over_ the variation opening, but stop inside.
+            familiar.advance_by(6);
+
+            assert_eq!(familiar.rep::<ChessGame<PieceBoard>>().rep, FEN::new("r1bqkbnr/ppp1pppp/2n5/3p4/3P1B2/8/PPP1PPPP/RN1QKBNR w KQkq - 2 3").into());
+
+            let metadata : PositionMetadata = familiar.metadata::<ChessGame<PieceBoard>>();
+
+            assert_eq!(metadata.fullmove_number, 3);
+        }
+
+        #[test]
+        fn advance_moves_stepwise() {
+            let log = example_game();
+            let cursor = log.get_cursor();
+            let mut familiar = Familiar::new(cursor);
+
+            // Seek to just before the target, then advance by one
+            familiar.advance_by(5);
+            familiar.advance();
+
+            assert_eq!(familiar.rep::<ChessGame<PieceBoard>>().rep, FEN::new("r1bqkbnr/ppp1pppp/2n5/3p4/3P1B2/8/PPP1PPPP/RN1QKBNR w KQkq - 2 3").into());
+
+            let metadata : PositionMetadata = familiar.metadata::<ChessGame<PieceBoard>>();
+
+            assert_eq!(metadata.fullmove_number, 3);
+        }
     }
+
 }
-
