@@ -42,6 +42,7 @@
                 cargo-llvm-cov
                 cargo-mutants
                 cargo-nextest
+                cargo-insta
                 cloc
                 gnuplot
                 imhex

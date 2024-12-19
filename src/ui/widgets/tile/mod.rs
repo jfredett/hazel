@@ -8,6 +8,7 @@ use super::game_section::GameSectionLayout;
 use super::placeholder::Placeholder;
 
 use crate::board::simple::PieceBoard;
+use crate::notation::pgn::PGN;
 
 lazy_static! {
     static ref LAYOUT : Layout = Layout::default()
@@ -31,7 +32,7 @@ pub struct Tile {
     query_line: Query,
     */
     engine_io_section: EngineIOSection,
-    state: PieceBoard,
+    state: PGN,
 }
 
 
@@ -39,7 +40,9 @@ impl Tile {
     pub fn new() -> Self {
         Self {
             engine_io_section: EngineIOSection::default(),
-            state: PieceBoard::default(),
+            // HACK: Obviously wrong, but pending loading up from a game/interacting with an engine
+            // backend.
+            state: PGN::load("tests/fixtures/no-variations-and-halts.pgn").unwrap(),
         }
     }
 
@@ -55,12 +58,12 @@ impl Tile {
         self.engine_io_section.handle_enter();
     }
 
-    pub fn set_state(&mut self, state: PieceBoard) {
+    pub fn set_state(&mut self, state: PGN) {
         self.state = state;
     }
 
     pub fn query_line(&self) -> FEN {
-        FEN::from(self.state).center()
+        FEN::new(self.state.current_position().into())
     }
 }
 
@@ -74,7 +77,7 @@ impl Widget for &Tile {
         let adjusted_area = Rect::new(area.x, area.y, WIDTH, HEIGHT);
         let chunks = LAYOUT.split(adjusted_area);
 
-        let game_section = GameSectionLayout::new(self.state);
+        let game_section = GameSectionLayout::new(self.state.clone());
         game_section.render(chunks[0], buf);
         Placeholder::of_size(chunks[1].width, chunks[1].height).borders(Borders::LEFT | Borders::RIGHT).render(chunks[1], buf);
 
@@ -88,6 +91,8 @@ impl Widget for &Tile {
 
 #[cfg(test)]
 mod tests {
+    use insta::assert_debug_snapshot;
+
     use super::*;
 
     #[test]
@@ -99,50 +104,7 @@ mod tests {
         let tile = Tile::new();
         tile.render(rect, &mut actual);
 
-        // FIXME: https://github.com/ratatui/ratatui/issues/605 This issue does what I _wish_ this
-        // was doing, in particular, I'd prefer the corners 'merge' into the next set of borders,
-        // but they don't do that right now and I can't really ascertain what state that fork is in
-        // other than it's 260something commits old at time of writing.
-        let mut expected = Buffer::with_lines(vec![
-            "               Placeholder                                       ",
-            "               Placeholder              a8 b8 c8 d8 e8 f8 g8 h8  ",
-            "               Placeholder                                       ",
-            "┌──────────────────┐┌──────────────────┐a7 b7 c7 d7 e7 f7 g7 h7  ",
-            "│    Placeholder   ││    Placeholder   │                         ",
-            "│    Placeholder   ││    Placeholder   │a6 b6 c6 d6 e6 f6 g6 h6  ",
-            "│    Placeholder   ││    Placeholder   │                         ",
-            "│    Placeholder   ││    Placeholder   │a5 b5 c5 d5 e5 f5 g5 h5  ",
-            "│    Placeholder   ││    Placeholder   │                         ",
-            "│    Placeholder   ││    Placeholder   │a4 b4 c4 d4 e4 f4 g4 h4  ",
-            "│    Placeholder   ││    Placeholder   │                         ",
-            "│    Placeholder   ││    Placeholder   │a3 b3 c3 d3 e3 f3 g3 h3  ",
-            "│    Placeholder   ││    Placeholder   │                         ",
-            "│    Placeholder   ││    Placeholder   │a2 b2 c2 d2 e2 f2 g2 h2  ",
-            "│    Placeholder   ││    Placeholder   │                         ",
-            "│    Placeholder   ││    Placeholder   │a1 b1 c1 d1 e1 f1 g1 h1  ",
-            "│    Placeholder   ││    Placeholder   │       Placeholder       ",
-            "│    Placeholder   ││    Placeholder   │       Placeholder       ",
-            "└──────────────────┘└──────────────────┘       Placeholder       ",
-            "│                 8/8/8/8/8/8/8/8 w KQkq - 0 1                 │",
-            "┌──────────────────────────────────────────────────────────────┐ ",
-            "│                                                              │ ",
-            "│                                                              │ ",
-            "│                                                              │ ",
-            "│                                                              │ ",
-            "│                                                              │ ",
-            "│                                                              │ ",
-            "│                                                              │ ",
-            "│                                                              │ ",
-            "│                                                              │ ",
-            "└──────────────────────────────────────────────────────────────┘ ",
-            "$>                                                               ",
-            "                                                                 ",
-        ]);
-
-        // Ignore style differences for now
-        expected.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
-        actual.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
-        assert_eq!(actual, expected);
+        assert_debug_snapshot!(actual);
     }
     #[test]
     fn renders_as_expected() {
@@ -153,46 +115,7 @@ mod tests {
         let tile = Tile::new();
         tile.render(rect, &mut actual);
 
-        // FIXME: see above
-        let mut expected = Buffer::with_lines(vec![
-            "               Placeholder                                      ",
-            "               Placeholder              a8 b8 c8 d8 e8 f8 g8 h8 ",
-            "               Placeholder                                      ",
-            "┌──────────────────┐┌──────────────────┐a7 b7 c7 d7 e7 f7 g7 h7 ",
-            "│    Placeholder   ││    Placeholder   │                        ",
-            "│    Placeholder   ││    Placeholder   │a6 b6 c6 d6 e6 f6 g6 h6 ",
-            "│    Placeholder   ││    Placeholder   │                        ",
-            "│    Placeholder   ││    Placeholder   │a5 b5 c5 d5 e5 f5 g5 h5 ",
-            "│    Placeholder   ││    Placeholder   │                        ",
-            "│    Placeholder   ││    Placeholder   │a4 b4 c4 d4 e4 f4 g4 h4 ",
-            "│    Placeholder   ││    Placeholder   │                        ",
-            "│    Placeholder   ││    Placeholder   │a3 b3 c3 d3 e3 f3 g3 h3 ",
-            "│    Placeholder   ││    Placeholder   │                        ",
-            "│    Placeholder   ││    Placeholder   │a2 b2 c2 d2 e2 f2 g2 h2 ",
-            "│    Placeholder   ││    Placeholder   │                        ",
-            "│    Placeholder   ││    Placeholder   │a1 b1 c1 d1 e1 f1 g1 h1 ",
-            "│    Placeholder   ││    Placeholder   │       Placeholder      ",
-            "│    Placeholder   ││    Placeholder   │       Placeholder      ",
-            "└──────────────────┘└──────────────────┘       Placeholder      ",
-            "│                 8/8/8/8/8/8/8/8 w KQkq - 0 1                 │",
-            "┌──────────────────────────────────────────────────────────────┐",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "└──────────────────────────────────────────────────────────────┘",
-            "$>                                                              ",
-        ]);
-
-        // Unify the styles, I'm comfortable not testing that for now.
-        expected.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
-        actual.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
-        assert_eq!(actual, expected);
+        assert_debug_snapshot!(actual);
     }
 }
 

@@ -1,6 +1,8 @@
 use ratatui::layout::Direction;
 use ratatui::prelude::*;
 
+use crate::game::variation::Variation;
+use crate::notation::pgn::PGN;
 use crate::ui::widgets::placeholder::Placeholder;
 
 lazy_static! {
@@ -16,12 +18,12 @@ lazy_static! {
 
 #[derive(Default)]
 pub struct PGNSection {
+    pgn: PGN,
 }
 
 impl PGNSection {
-    pub fn new() -> Self {
-        Self {
-        }
+    pub fn new(pgn: PGN) -> Self {
+        Self { pgn }
     }
 }
 
@@ -29,19 +31,25 @@ impl Widget for &PGNSection {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let chunks = LAYOUT.split(area);
 
-        let pgn = Placeholder::of_size(chunks[0].width, chunks[0].height); // &mut pgnwidget::new();
-        pgn.render(chunks[0], buf);//, state);
+        let pgn = Placeholder::of_size(chunks[0].width, chunks[0].height);
+        pgn.render(chunks[0], buf);
 
-        // This is shown as time-per-move in the sketch, but should be swappable for whatever I
-        // like.
         let query = Placeholder::of_size(chunks[1].width, chunks[1].height);
-        query.render(chunks[1], buf);//, state);
+        query.render(chunks[1], buf);
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use insta::assert_debug_snapshot;
+
+    use crate::notation::pgn::PGN;
+
     use super::*;
+
+    fn example_game() -> PGN {
+        PGN::load("tests/fixtures/no-variations-and-halts.pgn").unwrap()
+    }
 
     #[test]
     fn renders_as_expected() {
@@ -49,30 +57,10 @@ mod tests {
         let mut buffer = Buffer::empty(rect);
         buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
-        let board_section = &mut PGNSection::new();
+        let board_section = &mut PGNSection::new(example_game());
         board_section.render(rect, &mut buffer);
 
-        let mut expected = Buffer::with_lines(vec![
-            "┌───────────────────────────────┐┌─────────────────────────────┐",
-            "│          Placeholder          ││         Placeholder         │",
-            "│          Placeholder          ││         Placeholder         │",
-            "│          Placeholder          ││         Placeholder         │",
-            "│          Placeholder          ││         Placeholder         │",
-            "│          Placeholder          ││         Placeholder         │",
-            "│          Placeholder          ││         Placeholder         │",
-            "│          Placeholder          ││         Placeholder         │",
-            "│          Placeholder          ││         Placeholder         │",
-            "│          Placeholder          ││         Placeholder         │",
-            "│          Placeholder          ││         Placeholder         │",
-            "│          Placeholder          ││         Placeholder         │",
-            "│          Placeholder          ││         Placeholder         │",
-            "│          Placeholder          ││         Placeholder         │",
-            "│          Placeholder          ││         Placeholder         │",
-            "└───────────────────────────────┘└─────────────────────────────┘",
-        ]);
-        expected.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
-
-        assert_eq!(buffer, expected);
+        assert_debug_snapshot!(buffer)
     }
 }
 

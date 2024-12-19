@@ -2,6 +2,7 @@ use ratatui::layout::Direction;
 use ratatui::prelude::*;
 use ratatui::widgets::Borders;
 
+use crate::notation::pgn::PGN;
 use crate::ui::widgets::placeholder::Placeholder;
 
 mod pgn_section;
@@ -20,11 +21,13 @@ lazy_static! {
 
 #[derive(Default)]
 pub struct InfoSection {
+    pgn: PGNSection,
 }
 
 impl InfoSection {
-    pub fn new() -> Self {
+    pub fn new(pgn: PGN) -> Self {
         Self {
+            pgn: PGNSection::new(pgn)
         }
     }
 }
@@ -36,8 +39,7 @@ impl Widget for &InfoSection {
         let ticker_widget = Placeholder::of_size(chunks[0].width, chunks[0].height).borders(Borders::NONE); // &mut info_section::InfoSection::new();
         ticker_widget.render(chunks[0], buf);//, state);
 
-        let pgn_section = PGNSection::new();
-        pgn_section.render(chunks[1], buf);
+        self.pgn.render(chunks[1], buf);
     }
 }
 
@@ -45,13 +47,17 @@ impl Widget for &InfoSection {
 mod tests {
     use super::*;
 
+    fn example_game() -> PGN {
+        PGN::load("tests/fixtures/no-variations-and-halts.pgn").unwrap()
+    }
+
     #[test]
     fn renders_as_expected() {
         let rect = Rect::new(0, 0, 64, 16);
         let mut buffer = Buffer::empty(rect);
         buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
-        let board_section = &mut InfoSection::new();
+        let board_section = &mut InfoSection::new(example_game());
         board_section.render(rect, &mut buffer);
 
         let mut expected = Buffer::with_lines(vec![

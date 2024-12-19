@@ -19,6 +19,7 @@ use super::{san::SANConversionError, Square};
 use tag_pair::*;
 
 #[derive(Default, Debug)]
+#[derive(Clone)]
 pub struct PGN {
     tag_pairs: Vec<TagPair>,
     variation: Variation,
@@ -39,8 +40,9 @@ impl PGN {
         Ok(pgn)
     }
 
-    pub fn current_position(&mut self) -> FEN {
-        self.variation.current_position()
+    pub fn current_position(&self) -> FEN {
+        let mut v = self.variation.clone();
+        v.current_position()
     }
 
     pub fn parse(input: &str) -> IResult<&str, Self> {
