@@ -1,5 +1,7 @@
-use crate::{coup::rep::Move, interface::play::Play, notation::ben::BEN, types::{log::cursor::Cursor, movesheet::MoveSheet}};
-use super::{action::Action, delim::Delim};
+use tracing::instrument;
+
+use crate::{board::PieceBoard, coup::rep::Move, interface::play::Play, notation::ben::BEN, types::{log::cursor::Cursor, movesheet::MoveSheet}};
+use super::{action::Action, delim::Delim, ChessGame};
 
 #[derive(Debug, Clone)]
 pub struct Familiar<'a> {
@@ -16,14 +18,20 @@ impl<'a> Familiar<'a> {
 
     pub fn rep<T>(&'a self) -> T where T: Play + From<&'a MoveSheet> {
         let movesheet = self.movesheets.last().unwrap();
-        T::from(&movesheet)
+        T::from(movesheet)
     }
 
     pub fn metadata<T>(&'a self) -> T::Metadata where T: Play + From<&'a MoveSheet> {
         self.rep::<T>().metadata()
     }
 
-    pub fn rewind_until(&mut self, predicate: impl Fn(&Self) -> bool) {
+    pub fn current_move(&self) -> Option<Move> {
+        tracing::debug!("current_move {:?}", self.movesheet().current_move());
+        let movesheet = self.movesheet();
+        movesheet.current_move()
+    }
+
+    pub fn rewind_until(&mut self, mut predicate: impl FnMut(&Self) -> bool) {
         // verify we don't already satisfy the predicate
         if predicate(self) { return; }
 
@@ -32,7 +40,7 @@ impl<'a> Familiar<'a> {
                 Action::Setup(_) => {
                     self.movesheets.pop();
                 }
-                _ => { self.movesheet().unwind(); }
+                _ => { self.movesheet_mut().unwind(); }
             }
 
             if predicate(self) {
@@ -51,13 +59,17 @@ impl<'a> Familiar<'a> {
     }
 
     pub fn rewind_by(&mut self, count: usize) {
-        let target = self.cursor.position() - count;
-        self.rewind_until(|f| f.cursor.position() == target);
+        let target = self.cursor_position() - count;
+        self.rewind_until(|f| f.cursor_position() == target);
+    }
+
+    pub fn cursor_position(&self) -> usize {
+        self.cursor.position()
     }
 
     /// Given a predicate, advance the underlying cursor until the predicate is satisfied.
     /// As each action is touched, update the representation.
-    pub fn advance_until(&mut self, predicate: impl Fn(&Self) -> bool) {
+    pub fn advance_until(&mut self, mut predicate: impl FnMut(&Self) -> bool) {
         // verify we don't already satisfy the predicate
         if predicate(self) { return; }
 
@@ -73,13 +85,13 @@ impl<'a> Familiar<'a> {
                     self.movesheets.push(new_sheet);
                 },
                 Action::Make(mov) => {
-                    self.movesheet().record(mov);
+                    self.movesheet_mut().record(mov);
                 },
                 Action::Variation(Delim::Start) => {
-                    self.movesheet().branch();
+                    self.movesheet_mut().branch();
                 },
                 Action::Variation(Delim::End) => {
-                    self.movesheet().prune();
+                    self.movesheet_mut().prune();
                 },
                 Action::Halt(_reason) => {
                     /* noop */
@@ -102,12 +114,20 @@ impl<'a> Familiar<'a> {
     }
 
     pub fn advance_by(&mut self, count: usize) {
-        let target = self.cursor.position() + count;
-        self.advance_until(|f| f.cursor.position() == target);
+        let target = self.cursor_position() + count;
+        self.advance_until(|f| f.cursor_position() == target);
     }
 
-    fn movesheet(&mut self) -> &mut MoveSheet {
+    pub fn move_string(&self) -> String {
+        self.movesheet().last_move_string().unwrap_or_default()
+    }
+
+    fn movesheet_mut(&mut self) -> &mut MoveSheet {
         self.movesheets.last_mut().unwrap()
+    }
+
+    fn movesheet(&self) -> &MoveSheet {
+        self.movesheets.last().unwrap()
     }
 }
 

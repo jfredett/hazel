@@ -1,4 +1,4 @@
-use crate::{constants::START_POSITION_FEN, coup::rep::Move, game::{action::Action, ChessGame}, notation::ben::BEN, Alter, Play, Query};
+use crate::{board::PieceBoard, constants::START_POSITION_FEN, coup::rep::Move, game::{action::Action, ChessGame}, notation::ben::BEN, Alter, Play, Query};
 
 #[derive(Clone, Debug)]
 pub enum MoveSheetEntry {
@@ -24,6 +24,24 @@ impl MoveSheet {
 
     pub fn set_initial_state(&mut self, ben: BEN) {
         self.initial_state = ben;
+    }
+
+    pub fn current_move(&self) -> Option<Move> {
+        self.line.last().copied()
+    }
+
+    pub fn last_move_string(&self) -> Option<String> {
+        let mut ctx = self.line.clone();
+        ctx.pop();
+
+        let mut g : ChessGame<PieceBoard> = ChessGame::default();
+        g.apply_mut(&Action::Setup(self.initial_state));
+
+        for m in ctx {
+            g.apply_mut(&Action::Make(m));
+        }
+
+        self.current_move().map(|m| m.to_pgn(&g.rep))
     }
 
     pub fn line(&self) -> &[Move] {

@@ -60,27 +60,7 @@ mod tests {
         let board_section = &mut InfoSection::new(example_game());
         board_section.render(rect, &mut buffer);
 
-        let mut expected = Buffer::with_lines(vec![
-            "                           Placeholder                          ",
-            "                           Placeholder                          ",
-            "                           Placeholder                          ",
-            "┌───────────────────────────────┐┌─────────────────────────────┐",
-            "│          Placeholder          ││         Placeholder         │",
-            "│          Placeholder          ││         Placeholder         │",
-            "│          Placeholder          ││         Placeholder         │",
-            "│          Placeholder          ││         Placeholder         │",
-            "│          Placeholder          ││         Placeholder         │",
-            "│          Placeholder          ││         Placeholder         │",
-            "│          Placeholder          ││         Placeholder         │",
-            "│          Placeholder          ││         Placeholder         │",
-            "│          Placeholder          ││         Placeholder         │",
-            "│          Placeholder          ││         Placeholder         │",
-            "│          Placeholder          ││         Placeholder         │",
-            "└───────────────────────────────┘└─────────────────────────────┘",
-        ]);
-        expected.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
-
-        assert_eq!(buffer, expected);
+        insta::assert_debug_snapshot!(buffer);
     }
 }
 

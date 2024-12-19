@@ -10,7 +10,7 @@ use std::io::Error;
 use nom::{branch::alt, bytes::complete::tag, character::complete::{multispace0, multispace1, newline, one_of}, combinator::opt, multi::{many0, many1}, sequence::delimited, IResult};
 use tracing::debug;
 
-use crate::notation::pgn::tokenizer::PGNToken;
+use crate::{game::familiar::Familiar, notation::pgn::tokenizer::PGNToken};
 use crate::{Alter, constants::START_POSITION_FEN, coup::rep::Move, game::variation::Variation, notation::fen::FEN};
 use crate::{notation::{ben::BEN, san::SAN}, types::Color};
 
@@ -40,6 +40,10 @@ impl PGN {
         Ok(pgn)
     }
 
+    pub fn familiar(&mut self) -> Familiar {
+        self.variation.familiar()
+    }
+
     pub fn current_position(&self) -> FEN {
         let mut v = self.variation.clone();
         v.current_position()
@@ -55,7 +59,6 @@ impl PGN {
             match token {
                 PGNToken::GameStart => {
                     variation.new_game()
-                             .setup(FEN::new(START_POSITION_FEN))
                              .commit();
                 },
                 PGNToken::TagPair(tp) => {
@@ -103,14 +106,14 @@ mod tests {
         #[test]
         #[tracing_test::traced_test]
         fn imports_from_pgn_with_no_variations_and_halts() {
-            let mut pgn = PGN::load("tests/fixtures/no-variations-and-halts.pgn").unwrap();
+            let pgn = PGN::load("tests/fixtures/no-variations-and-halts.pgn").unwrap();
 
             similar_asserts::assert_eq!(pgn.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
         }
 
         #[test]
         fn imports_from_pgn_with_no_variations_and_halt() {
-            let mut pgn = PGN::load("tests/fixtures/no-variations-and-no-halt.pgn").unwrap();
+            let pgn = PGN::load("tests/fixtures/no-variations-and-no-halt.pgn").unwrap();
 
             assert_eq!(pgn.current_position(), FEN::new("3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - - 2 30"));
         }
@@ -118,28 +121,28 @@ mod tests {
         #[test]
         #[tracing_test::traced_test]
         fn imports_from_pgn_with_variations_and_no_halt() {
-            let mut pgn = PGN::load("tests/fixtures/with-variations-no-halt.pgn").unwrap();
+            let pgn = PGN::load("tests/fixtures/with-variations-no-halt.pgn").unwrap();
 
             assert_eq!(pgn.current_position(), FEN::new("1rbqkb1r/pp2p2p/2p2pp1/3p3n/2PP4/4PN2/PP3PPP/RN1QKB1R w KQk - 0 8"));
         }
 
         #[test]
         fn imports_from_pgn_with_variations_and_halt() {
-            let mut pgn = PGN::load("tests/fixtures/with-variations-halts.pgn").unwrap();
+            let pgn = PGN::load("tests/fixtures/with-variations-halts.pgn").unwrap();
 
             assert_eq!(pgn.current_position(), FEN::new("1rbqkb1r/pp2p2p/2p2pp1/3p3n/2PP4/4PN2/PP3PPP/RN1QKB1R w KQk - 0 8"));
         }
 
         #[test]
         fn imports_from_pgn_with_nested_variations_and_no_halt() {
-            let mut pgn = PGN::load("tests/fixtures/with-nested-variations-no-halt.pgn").unwrap();
+            let pgn = PGN::load("tests/fixtures/with-nested-variations-no-halt.pgn").unwrap();
 
             assert_eq!(pgn.current_position(), FEN::new("1rbqkb1r/pp2p2p/2p2pp1/3p3n/2PP4/4PN2/PP3PPP/RN1QKB1R w KQk - 0 8"));
         }
 
         #[test]
         fn imports_from_pgn_with_nested_variations_and_halt() {
-            let mut pgn = PGN::load("tests/fixtures/with-nested-variations-halts.pgn").unwrap();
+            let pgn = PGN::load("tests/fixtures/with-nested-variations-halts.pgn").unwrap();
 
             assert_eq!(pgn.current_position(), FEN::new("1rbqkb1r/pp2p2p/2p2pp1/3p3n/2PP4/4PN2/PP3PPP/RN1QKB1R w KQk - 0 8"));
         }

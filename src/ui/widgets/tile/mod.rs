@@ -63,7 +63,7 @@ impl Tile {
     }
 
     pub fn query_line(&self) -> FEN {
-        FEN::new(self.state.current_position().into())
+        FEN::new(self.state.current_position()).alignment(Alignment::Center)
     }
 }
 

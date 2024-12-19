@@ -18,12 +18,35 @@ lazy_static! {
 
 #[derive(Default)]
 pub struct PGNSection {
+    current_position: usize,
     pgn: PGN,
 }
 
 impl PGNSection {
     pub fn new(pgn: PGN) -> Self {
-        Self { pgn }
+        Self { current_position: 16, pgn }
+    }
+
+    pub fn render_variation(&self, area: Rect, buf: &mut Buffer) {
+        let mut pgn = self.pgn.clone();
+        let mut s = vec![]; 
+        let mut f = pgn.familiar();
+
+        f.advance_until(|f_inner| {
+
+            if !f_inner.move_string().is_empty() {
+                s.push(f_inner.move_string());
+            }
+
+            f_inner.cursor_position() == self.current_position
+        });
+
+        let text = s.chunks(2).enumerate().map(|(idx, chunk)| {
+            format!("{:2}. {}", idx + 1, chunk.join(" "))
+        }).collect::<Vec<String>>().join("\n");
+        tracing::debug!("Rendering: {:?}", text);
+
+        Text::styled(text, Style::default()).render(area, buf);
     }
 }
 
@@ -31,8 +54,7 @@ impl Widget for &PGNSection {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let chunks = LAYOUT.split(area);
 
-        let pgn = Placeholder::of_size(chunks[0].width, chunks[0].height);
-        pgn.render(chunks[0], buf);
+        self.render_variation(chunks[0], buf);
 
         let query = Placeholder::of_size(chunks[1].width, chunks[1].height);
         query.render(chunks[1], buf);
@@ -52,6 +74,7 @@ mod tests {
     }
 
     #[test]
+    #[tracing_test::traced_test]
     fn renders_as_expected() {
         let rect = Rect::new(0, 0, 64, 16);
         let mut buffer = Buffer::empty(rect);
