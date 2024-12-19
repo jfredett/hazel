@@ -7,7 +7,6 @@ use super::fen::FEN;
 use super::game_section::GameSectionLayout;
 use super::placeholder::Placeholder;
 
-use crate::board::simple::PieceBoard;
 use crate::notation::pgn::PGN;
 
 lazy_static! {

@@ -7,9 +7,6 @@ use ratatui::widgets::{Block, Borders};
 
 use tracing::instrument;
 
-use crate::board::PieceBoard;
-use crate::notation::fen::FEN;
-
 use super::widgets::tile::Tile;
 
 enum Mode {

@@ -1,7 +1,6 @@
-use tracing::instrument;
 
-use crate::{board::PieceBoard, coup::rep::Move, interface::play::Play, notation::ben::BEN, types::{log::cursor::Cursor, movesheet::MoveSheet}};
-use super::{action::Action, delim::Delim, ChessGame};
+use crate::{coup::rep::Move, interface::play::Play, notation::ben::BEN, types::{log::cursor::Cursor, movesheet::MoveSheet}};
+use super::{action::Action, delim::Delim};
 
 #[derive(Debug, Clone)]
 pub struct Familiar<'a> {

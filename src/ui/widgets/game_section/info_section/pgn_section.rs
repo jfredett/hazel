@@ -1,7 +1,6 @@
 use ratatui::layout::Direction;
 use ratatui::prelude::*;
 
-use crate::game::variation::Variation;
 use crate::notation::pgn::PGN;
 use crate::ui::widgets::placeholder::Placeholder;
 

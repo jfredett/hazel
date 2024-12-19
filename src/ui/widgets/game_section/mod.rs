@@ -8,7 +8,6 @@ use board_section::BoardSection;
 use info_section::InfoSection;
 
 use crate::board::simple::PieceBoard;
-use crate::game::ChessGame;
 use crate::notation::pgn::PGN;
 
 lazy_static! {
@@ -34,7 +33,6 @@ impl GameSectionLayout<'_> {
     // There are a set of UI traits that I should probably build independently of the engine, this
     // would be one of them.
     pub fn new(pgn: PGN) -> Self {
-        let mut pgn = pgn;
         let board : PieceBoard = pgn.current_position().into();
         Self {
             info_section: InfoSection::new(pgn),
