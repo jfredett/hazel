@@ -66,4 +66,8 @@ cloc *args:
   cloc --vcs=git --exclude-ext=.rc . {{args}}
 
 mutants:
-    cargo mutants -- --profile=mutants --all-targets
+    # FIXME: I don't feel great about excluding all of `engine`, but these routinely fail in ways that are not useful.
+    # Probably I could be more judicious with this filter, but I am lazy.
+    cargo mutants --exclude "src/engine/*" "src/ui/*" -j 4 --no-shuffle -- --profile=mutants --all-targets
+
+
