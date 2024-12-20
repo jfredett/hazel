@@ -37,8 +37,9 @@ impl EngineIOSection {
     pub fn handle_enter(&mut self) {
         let content = self.input.flush();
 
+        // echo to output
         self.output.push(format!("> {}",  content));
-        // TODO: Send to engine as well
+
     }
 }
 
@@ -57,6 +58,8 @@ impl Widget for &EngineIOSection {
 
 #[cfg(test)]
 mod tests {
+    use insta::assert_compact_debug_snapshot;
+
     use super::*;
 
     #[test]
@@ -80,28 +83,8 @@ mod tests {
 
         engine_io_section.render(rect, &mut buffer);
 
-        let mut expected = Buffer::with_lines(vec![
-            "┌──────────────────────────────────────────────────────────────┐",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│Stockfish 16.1 by the Stockfish developers (see AUTHORS file) │",
-            "│> isready                                                     │", // prefixes inputs by >
-            "│readyok                                                       │",
-            "│> position startpos moves                                     │",
-            "│> go depth 1                                                  │",
-            "│info string NNUE evaluation using nn-baff1ede1f90.nnue        │",
-            "│info string NNUE evaluation using nn-b1a57edbea57.nnue        │",
-            "│info depth 1 seldepth 2 multipv 1 score cp 0 nodes 20 nps 1000│", // wraps long lines?
-            "│ hashfull 0 tbhits 0 time 20 pv d2d4                          │",
-            "│bestmove d2d4                                                 │",
-            "└──────────────────────────────────────────────────────────────┘",
-            "$>                                                              ",
-        ]);
 
-        expected.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
-        assert_eq!(buffer, expected);
+        assert_compact_debug_snapshot!(buffer);
     }
 
     #[test]
@@ -117,17 +100,7 @@ mod tests {
 
         engine_io_section.render(rect, &mut buffer);
 
-        let mut expected = Buffer::with_lines(vec![
-            "┌─────────────────────────┐",
-            "│A line exceeding, the buf│",
-            "│fers shortened width, sho│",
-            "│uld be wrapped around.   │",
-            "└─────────────────────────┘",
-            "$>                         ",
-        ]);
-        expected.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
-
-        assert_eq!(buffer, expected);
+        assert_compact_debug_snapshot!(buffer);
     }
 
     #[test]
@@ -148,31 +121,7 @@ mod tests {
 
         engine_io_section.render(rect, &mut buffer);
 
-        let mut expected = Buffer::with_lines(vec![
-            "┌──────────────────────────────────────────────────────────────┐",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "└──────────────────────────────────────────────────────────────┘",
-            "$> abcdefg                                                      ",
-        ]);
-
-
-        expected.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
-
-        assert_eq!(buffer, expected);
-
+        assert_compact_debug_snapshot!(buffer);
     }
 
     #[test]
@@ -195,30 +144,8 @@ mod tests {
 
         engine_io_section.render(rect, &mut buffer);
 
-        let mut expected = Buffer::with_lines(vec![
-            "┌──────────────────────────────────────────────────────────────┐",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "└──────────────────────────────────────────────────────────────┘",
-            "$> abcdef                                                       ",
-        ]);
 
-        expected.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
-
-        assert_eq!(buffer, expected);
-
+        assert_compact_debug_snapshot!(buffer);
     }
 
 
@@ -242,30 +169,7 @@ mod tests {
 
         engine_io_section.render(rect, &mut buffer);
 
-        let mut expected = Buffer::with_lines(vec![
-            "┌──────────────────────────────────────────────────────────────┐",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│                                                              │",
-            "│> abcdefg                                                     │",
-            "└──────────────────────────────────────────────────────────────┘",
-            "$>                                                              ",
-        ]);
-
-        expected.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
-
-        assert_eq!(buffer, expected);
-
+        assert_compact_debug_snapshot!(buffer);
     }
 }
 

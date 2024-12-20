@@ -1,6 +1,8 @@
 // Actual implementation of Hazel as a chess engine
 
 
+use std::collections::HashMap;
+
 // TODO: This should grab UCI messages and take a Hazel::Brain and wire the two together. It can do
 // some basic parsing of the UCI Messages to Hazel types, but otherwise be pretty 'dumb'
 use tracing::*;
@@ -13,16 +15,21 @@ pub use crate::engine::Engine;
 // TODO: Rename this to Hazel
 #[derive(Default)]
 pub struct Driver {
-    debug: bool,
-    game: Variation
+    game: Variation,
+    // this should be a smarter type
+    options: HashMap<String, Option<String>>
 }
 
 impl Driver {
     pub fn new() -> Driver {
         Driver {
-            debug: false,
+            options: HashMap::new(),
             game: Variation::default()
         }
+    }
+
+    pub fn debug(&self) -> bool {
+        self.options.get("debug").unwrap_or(&None).is_some()
     }
 }
 
@@ -49,10 +56,11 @@ impl Engine<UCIMessage> for Driver {
                 vec![UCIMessage::ID("Hazel".to_string(), "0.1".to_string())]
             }
             UCIMessage::Debug(flag) => {
-                self.debug = *flag;
+                self.options.insert("debug".to_string(), Some((*flag).to_string()));
                 vec![]
             }
-            UCIMessage::SetOption(_name, _values) => {
+            UCIMessage::SetOption(name, value) => {
+                self.options.insert(name.clone(), value.clone());
                 vec![]
             }
             UCIMessage::Register => {
@@ -147,10 +155,10 @@ mod tests {
     #[test]
     fn driver_parses_debug() {
         let mut driver = Driver::default();
-        assert!(!driver.debug);
+        assert!(!driver.debug());
         let response = driver.exec(&UCIMessage::Debug(true));
         assert_eq!(response, vec![]);
-        assert!(driver.debug)
+        assert!(driver.debug())
     }
 
     #[test]

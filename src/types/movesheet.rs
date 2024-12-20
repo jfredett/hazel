@@ -136,8 +136,6 @@ mod tests {
         sheet.unwind();
         sheet.unwind();
         sheet.unwind(); // should panic here
-
-        assert!(false);
     }
 
     #[test]
@@ -152,8 +150,6 @@ mod tests {
         sheet.record(Move::new(D3, D4, MoveType::QUIET));
 
         sheet.prune();
-
-        assert!(false);
     }
 
     #[test]
@@ -172,7 +168,6 @@ mod tests {
         let ben : BEN = rep.into();
 
         assert_eq!(ben, BEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 2"));
-
     }
 
     #[test]

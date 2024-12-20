@@ -15,7 +15,7 @@ lazy_static! {
         .constraints(
             [
                 Constraint::Length(19), // Game Section w/ Info and Board Sections
-                Constraint::Length(1), // Query Line, shown in the sketch w/ a FEN of the current position.
+                Constraint::Length(1),  // Query Line, shown in the sketch w/ a FEN of the current position.
                 Constraint::Length(12), // Engine IO Section
             ]
                 .as_ref(),
@@ -27,9 +27,6 @@ const HEIGHT : u16 = 32;
 
 #[derive(Default)]
 pub struct Tile {
-    /*
-    query_line: Query,
-    */
     engine_io_section: EngineIOSection,
     state: PGN,
 }
