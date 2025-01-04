@@ -40,6 +40,10 @@ impl PGN {
         Ok(pgn)
     }
 
+    pub fn tags(&self) -> &Vec<TagPair> {
+        &self.tag_pairs
+    }
+
     pub fn familiar(&mut self) -> Familiar {
         self.variation.familiar()
     }

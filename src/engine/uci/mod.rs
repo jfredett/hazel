@@ -4,6 +4,17 @@ use tracing::{instrument, info, error};
 use std::fmt::{self, Display, Formatter};
 
 
+/* FIXME: 4-JAN-2025 1110
+*
+* This sucks.
+*
+* I should have this parse to like, full structs maybe? At the very least it should be two enums,
+* UCIEngine and UCIInterface, and probably using `nom` makes sense since I use it for PGNs.
+*
+* Go, Position, and a few others could certainly benefit from being parsed into more rich
+* structures.
+*/
+
 pub const START_POSITION_FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 pub const LONDON_POSITION_FEN: &str = "r1bqk2r/pp2bppp/2n1pn2/2pp4/3P1B2/2P1PN1P/PP1N1PP1/R2QKB1R b KQkq - 0 7";
 

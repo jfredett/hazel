@@ -1519,4 +1519,56 @@ Probably a single-writer multi-reader would be 'fine', or some kind of segment-b
 
 It's not a new idea but it's a very nice one, and it seems like it'd be fun to build.
 
+# 27-DEC-2024
 
+## 2337 - ui
+
+I'm working a bit on the UI and a bit on the game driver itself, I'm thinking I'm going to tear up and rebuild the UI
+from scratch. The initial design is a little bit too split up and I think a less layered approach makes sense. It should
+really be more like a three layer tree, a collection of forms, containing widgets, which contain widgets. 
+
+I'd like to experiment with a image-in-the-terminal API, I think designing the Driver and UI in tandem will help as
+well, since I think I want the Driver to ultimately house the UI startup code anyway, because ultimately the main entry
+point is going to configure an instance of the driver, and then run it.
+
+That makes it so the Driver is the primary entry point, and everything can ultimately speak it's little language to
+drive whatever it needs to do. This will also make it easier to expose driver internals to the UI, which is it's main
+goal.
+
+Ideally the UI would work by setting up some arbitrary query on the hazel engine and then use the output of that query
+to render itself. That would reduce the UI to a `Query` widget and a bunch of glue widgets that glue different
+`Query`-derived widgets together. `Query` can then also be used outside the UI to drive the engine in general.
+
+The idea would be that the query specifies a particular state you want the engine to converge on, and then it will
+return an iterator of solutions to that query. So a query might be logically "Find the best move after a 6 ply search =
+the position at turn 10 for black of the current game.". The Query widget would then break the query into the 'command'
+part ('in the position at turn 10 for black of the current game.') and the 'constraint' part ('the best move after a 6
+ply search); and it would then create a 'job' that the driver would pick up and run based on some scheduler (ideally the
+job would contain metadata about what it intends to do so the scheduler can be efficient in how it runs the jobs to save
+work).
+
+Ultimately I'm interested more in making `hazel` good at the statistical analysis of large bodies of chess games, not
+so much necessarily an engine that is good at beating you at chess; there's stockfish for that. I am aiming to build
+something closer to a "Chess Machine" that can take a script targeting a simple command/query language and then generate
+games for further analysis. It should be good enough to play and be a reliable, if weak, engine.
+
+The engine what actually solves the constraint I *think* might just be a MCTS; I can say with some probability what,
+e.g., an evaluation distribution looks like. If I get the itch I do want to take a stab at a home-made NNUE
+implementation which would ostensibly give me a very strong eval function, so coupled with some SIMD MCTS I can at least
+implement a big subset of what I'm interested in, which is statistical views subject to some clever evaluation function.
+That evaluation function can generate richer evaluation structures, and I think it could be interesting to see what kind
+of trouble you can get up to with that.
+
+# 28-DEC-2024
+
+## 1514 - ui
+
+As everyone else seems to be doing at TOW, I'm trying out the `ghostty` terminal emulator; and I have to say, the hype
+seems pretty reasonable. Coming from iTerm2, it definitely 'feels' faster. I'm not sure if that's just placebo, but it
+feels like it renders at a higher framerate.
+
+The relevance to this project comes down to protocol wrt images-in-the-terminal. `ghostty` uses the `kitty` protocol,
+iTerm2 uses it's own. Barring significant issues, I'm already thinking `ghostty` might win out in at least the near
+term. I do want to investigate `alacritty` for this as well. Depending on how I go, the choice of protocol will be made.
+I like iTerm, I've been a longterm user, but the fact that `ghostty` is already well integrated with `nix` from the repo
+up is very appealing.

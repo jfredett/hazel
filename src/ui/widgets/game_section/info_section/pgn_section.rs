@@ -15,6 +15,13 @@ lazy_static! {
         );
 }
 
+
+// this should be a stateful widget, it's struct-state should just be style information
+// information, the provided state will be the current position of the cursor and what to display
+// in the box.
+//
+// The parent will hold t
+
 #[derive(Default)]
 pub struct PGNSection {
     current_position: usize,
@@ -23,7 +30,19 @@ pub struct PGNSection {
 
 impl PGNSection {
     pub fn new(pgn: PGN) -> Self {
-        Self { current_position: 16, pgn }
+        Self { current_position: 0, pgn }
+    }
+
+    pub fn set_position(&mut self, position: usize) {
+        self.current_position = position;
+    }
+
+    pub fn advance(&mut self) {
+        self.current_position += 1;
+    }
+
+    pub fn retreat(&mut self) {
+        self.current_position -= 1;
     }
 
     pub fn render_variation(&self, area: Rect, buf: &mut Buffer) {
@@ -80,6 +99,7 @@ mod tests {
         buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
         let board_section = &mut PGNSection::new(example_game());
+        board_section.set_position(16);
         board_section.render(rect, &mut buffer);
 
         assert_debug_snapshot!(buffer)
