@@ -52,6 +52,25 @@ struct AnotherMessage {
     pub message: String
 }
 
+#[derive(Clone, Debug)]
+struct IncrementCounterMessage;
+
+#[derive(Clone, Debug)]
+struct DisplayStateMessage;
+
+
+impl<const BUF_SIZE: usize> RunsOn<Driver<BUF_SIZE, String, usize>> for IncrementCounterMessage {
+    fn run(&self, driver: &mut Driver<BUF_SIZE, String, usize>) {
+        driver.state += 1;
+    }
+}
+
+
+impl<const BUF_SIZE: usize, S> RunsOn<Driver<BUF_SIZE, String, S>> for DisplayStateMessage where S: Debug {
+    fn run(&self, driver: &mut Driver<BUF_SIZE, String, S>) {
+        driver.outbox.send(format!("State: {:?}", driver.state)).unwrap();
+    }
+}
 
 impl<const BUF_SIZE: usize, S> RunsOn<Driver<BUF_SIZE, String, S>> for HelloWorldMessage {
     fn run(&self, driver: &mut Driver<BUF_SIZE, String, S>) {
@@ -77,7 +96,7 @@ impl<const BUF_SIZE: usize, S> RunsOn<Driver<BUF_SIZE, String, S>> for AnotherMe
 pub async fn main() {
     println!("Driver Example Stub Thing");
 
-    let (tx, mut rx, handle) = Driver::<32, String, ()>::spawn().await;
+    let (tx, mut rx, handle) = Driver::<32, String, usize>::spawn().await;
 
     let echo = tokio::spawn(async move {
         let mut idx = 0;
@@ -98,6 +117,7 @@ pub async fn main() {
                 Err(TryRecvError::Empty) => { println!("No messages in queue"); }
                 Err(e) => { panic!("Error receiving message: {:?}", e); },
             }
+
             println!("State of Queue: {:?}", rx.len());
             tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
         }
@@ -108,6 +128,8 @@ pub async fn main() {
             tx.send(Box::new(HelloWorldMessage)).await.unwrap();
             tx.send(Box::new(GoodbyeWorldMessage)).await.unwrap();
             tx.send(Box::new(AnotherMessage { message: "Another Message".to_string() })).await.unwrap();
+            tx.send(Box::new(IncrementCounterMessage)).await.unwrap();
+            tx.send(Box::new(DisplayStateMessage)).await.unwrap();
             tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
         }
     });
