@@ -55,7 +55,7 @@ impl<S, R> ActorHandle<S, R> where
 
         tokio::spawn(async move {
             let mut actor_handle = Actor::<S, R>::new(inbox_rx, outbox_tx).await;
-            actor_handle.run().await; 
+            actor_handle.run().await;
         });
 
         ActorHandle {
