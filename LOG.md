@@ -1572,3 +1572,35 @@ iTerm2 uses it's own. Barring significant issues, I'm already thinking `ghostty`
 term. I do want to investigate `alacritty` for this as well. Depending on how I go, the choice of protocol will be made.
 I like iTerm, I've been a longterm user, but the fact that `ghostty` is already well integrated with `nix` from the repo
 up is very appealing.
+
+# 8-JAN-2024
+
+## 1541 - ui
+
+I took some time to write a little Actor-adjacent (I don't think these _technically_ qualify as proper actors, but
+whatever) system for `Hazel` to use, it should be enough to separate out the communication logic from the chess logic,
+which I hope will make it easier to finally get it done. It also supports an open ended 'message' system. To implement a
+new message, a struct implements `MessageFor<W>` where `W` is, in theory, a `Witch` backend, but could be whatever if I
+want to create a new engine later. The `Witch` type is a little message reactor machine thing. It's somewhere between a
+genserver, SmallTalk object, Ruby class, and twisted nightmare that only the damned may dream of.
+
+I used to be a ruby guy, so I'll let you guess where I got the inspiration.
+
+In any case, the next step is to refactor the Driver to use this backend, and that means extracting out the stateful
+bits from the communicating bits.
+
+One other tidbit about the design is that the request and response types are separate. The response type is arbitrary
+because I explicitly _did not_ include a general way to get at a Witch's state object (which is also arbitrary) from the
+Handle that controls it. I don't want to make an assumption about how one should interact with their state, and very
+often returning a whole object would be silly anyway. Messages do not generally allow for direct response (although such
+a thing could be encoded in a message type easily to bypass the built in `write` mechanism), all output from the Actor
+is through the broadcast channel. It's assumed every client will want to recieve every message in lockstep.
+
+I don't intend to really have more than one or two of these at present, though I could see using this as a stepping
+stone towards multiple separate instances across multiple machines, all communicating. Ultimately my goal was to learn
+`tokio`, and I think I've got it to hand now. Reasoning about it is tricky for sure, but it honestly just reminds me of
+Haskell, it's just a matter of understanding how the laziness works and then chasing the compiler around until
+everything type and borrowchecks.
+
+It's a pretty nice system, I am interested to eventually investigate `tower` for this or another project, but time will
+tell.

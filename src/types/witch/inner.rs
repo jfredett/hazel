@@ -1,12 +1,13 @@
 use tokio::sync::{mpsc, broadcast};
 
-use super::{message_for::MessageFor, MessageForWitch};
+use super::MessageForWitch;
 
 pub struct Witch<const BUF_SIZE : usize, S, R>
+
 where S : Default + Send + Clone + 'static,
       R : Send + Clone + 'static
 {
-    state: S,
+    pub state: S,
     inbox: mpsc::Receiver<MessageForWitch<BUF_SIZE, S, R>>,
     outbox: broadcast::Sender<R>,
 }
@@ -30,13 +31,7 @@ where S : Default + Send + Clone + 'static,
         }
     }
 
-    fn write(&mut self, v: R) {
-        self.outbox.send(v);
+    pub fn write(&mut self, v: R) {
+        let _ = self.outbox.send(v);
     }
-}
-
-
-#[cfg(test)]
-mod tests {
-
 }

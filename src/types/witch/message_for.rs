@@ -1,5 +1,5 @@
+// use super::error::WitchError;
 
-pub trait MessageFor<A> where Self: Send {
-    fn run(&self, actor: &mut A);
+pub trait MessageFor<W> where Self: Send {
+    fn run(&self, actor: &mut W); // -> Result<(), WitchError<E>>;
 }
-
