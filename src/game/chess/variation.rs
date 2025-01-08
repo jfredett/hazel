@@ -130,7 +130,7 @@ impl Variation {
     }
     */
 
-    fn record(&mut self, action: Action<Move, BEN>) -> &mut Self {
+    pub fn record(&mut self, action: Action<Move, BEN>) -> &mut Self {
         if self.halted { return self; }
 
         self.log.record(action);

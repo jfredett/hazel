@@ -7,8 +7,6 @@ use ratatui::widgets::{Block, Borders};
 
 use tracing::instrument;
 
-use crate::engine::driver::Driver;
-
 use super::widgets::tile::Tile;
 
 enum Mode {
@@ -18,7 +16,7 @@ enum Mode {
 
 pub struct Hazel {
     flags: HashMap<String, bool>,
-    engine: Driver,
+    engine: (),
     // UI
     mode: Mode,
     tile: Tile,
@@ -37,7 +35,7 @@ impl Hazel {
     pub fn new() -> Self {
         let s = Self {
             flags: HashMap::new(),
-            engine: Driver::new(),
+            engine: (),
             mode: Mode::Command,
             tile: Tile::new(),
         };
