@@ -18,15 +18,17 @@ use tracing_subscriber::prelude::*;
 async fn main() {
     info!("Welcome to Hazel.");
 
+    console_subscriber::init();
+
     // TODO: actually parse arguments
     let headless : bool = true;
 
     if headless {
         // Log to STDERR
         let (non_blocking, _guard) = tracing_appender::non_blocking(std::io::stderr());
-        tracing_subscriber::fmt()
-            .with_writer(non_blocking)
-            .init();
+        // tracing_subscriber::fmt()
+        //     .with_writer(non_blocking)
+        //     .init();
         let _ = uci::run().await;
     } else {
         // Log to a file

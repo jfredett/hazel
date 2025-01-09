@@ -1604,3 +1604,17 @@ everything type and borrowchecks.
 
 It's a pretty nice system, I am interested to eventually investigate `tower` for this or another project, but time will
 tell.
+
+## 1901 - ui
+
+I'm thinking a bit about refactoring the tests. I think I'd like to break out of the habit of writing the tests in the
+same file; it makes the files quite large, and I much prefer lots of small files, even if it means jumping around some
+more. I suspect I'll want to add some editor shortcuts for alternating between test and source files, and maybe also add
+in some kind of shortcut for running relevant benchmarks as well, not quite sure how I'll do that, but when the time
+comes.
+
+In any case. I think I'm going to look towards centralizing and better codifying the tests I have, and once I have
+something that can, ostensibly, play chess, I'll probably take the time to move to `rstest` and get something with good
+coverage and few mutants. I generally aim to have the testing part of the codebase be 1/3rd to 1/2 the total size of the
+codebase, and I'm sitting close to the 1/2 mark, so I definitely want to take some time to build something that can be
+extended naturally and easily.

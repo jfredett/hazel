@@ -1,5 +1,6 @@
 use tokio::sync::{mpsc, broadcast};
 use tokio::sync::Mutex;
+use tracing::error;
 use std::sync::Arc;
 
 use super::{MessageForWitch, Witch, WitchError};
@@ -33,13 +34,26 @@ impl<const BUF_SIZE: usize, S, R> WitchHandle<BUF_SIZE, S, R> where
         }
     }
 
-    pub async fn send(&self, msg: MessageForWitch<BUF_SIZE, S, R>) {
-        let _ = self.inbox.send(msg).await;
+    pub async fn with_initialization_message(msg: MessageForWitch<BUF_SIZE, S, R>) -> WitchHandle<BUF_SIZE, S, R> {
+        let handle = WitchHandle::new().await;
+        handle.send(msg).await;
+        handle
     }
 
+    pub async fn send(&self, msg: MessageForWitch<BUF_SIZE, S, R>) {
+        match self.inbox.send(msg).await {
+            Ok(_) => {},
+            Err(e) => {
+                error!("Error sending message to WitchHandle: {:?}", e);
+            }
+        }
+    }
+
+    /// Nonblocking read of the output channel.
     pub async fn read(&self) -> Option<R> {
         self.outbox.lock().await
             .recv().await
             .ok()
     }
+
 }

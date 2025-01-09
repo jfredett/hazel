@@ -27,7 +27,7 @@
                 channel = "nightly";
                 components = [ "rustc" "cargo" "clippy" "rustfmt" "rust-analyzer" "miri" "llvm-tools" ];
                 # FIXME: I would love for this to be part of the Cargo.toml, and not the flake.
-                rustflags = "-C target-feature=+bmi1,+bmi2";
+                rustflags = "--cfg tokio_unstable -Ctarget-feature=+bmi2 -Ctarget-feature=+bmi1";
               };
 
               # enterShell = ''
@@ -49,6 +49,7 @@
                 just
                 linuxKernel.packages.linux_6_6.perf
                 tree-sitter
+                tokio-console
                 ts
                 mold
                 perf-tools

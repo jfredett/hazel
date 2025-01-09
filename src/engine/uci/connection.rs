@@ -24,10 +24,12 @@ pub async fn run_with_io<T,U>(input: T, mut output: U) -> io::Result<()>
 where T: 'static + io::Read + Send, U: 'static + io::Write + Send {
     let hazel = WitchHazel::<1024>::new().await;
 
+    print!("> ");
     let echo_handle = hazel.clone();
     tokio::spawn(async move {
         while let Some(msg) = echo_handle.read().await {
             println!("{:?}", msg);
+            print!("> ");
         }
     });
 
@@ -39,7 +41,7 @@ where T: 'static + io::Read + Send, U: 'static + io::Write + Send {
     loop {
         let line = lines.next().unwrap().unwrap();
         let message = UCIMessage::parse(&line);
-        hazel.send(Box::new(message));
+        hazel.send(Box::new(message)).await;
     }
 }
 

@@ -20,8 +20,9 @@ mod tests {
         use super::*;
 
         struct TestMessage;
+        #[async_trait::async_trait]
         impl MessageFor<Witch<10, i32, i32>> for TestMessage {
-            fn run(&self, witch: &mut Witch<10, i32, i32>) {
+            async fn run(&self, witch: &mut Witch<10, i32, i32>) {
                 witch.write(10);
             }
         }
@@ -43,7 +44,7 @@ mod tests {
     // the subset of Witches where the type of messages is also the type of responses, could be
     // sent _back_ with updated internal state.
     mod stateful_messages {
-
+        //TODO
     }
 
     // Additionally, messages can update the _internal state of the Witch itself_.
@@ -51,15 +52,17 @@ mod tests {
         use super::*;
 
         struct StateUpdatingMessage;
+        #[async_trait::async_trait]
         impl MessageFor<Witch<10, i32, i32>> for StateUpdatingMessage {
-            fn run(&self, witch: &mut Witch<10, i32, i32>) {
+            async fn run(&self, witch: &mut Witch<10, i32, i32>) {
                 witch.state = 10;
             }
         }
 
         struct ReadStateMessage;
+        #[async_trait::async_trait]
         impl MessageFor<Witch<10, i32, i32>> for ReadStateMessage {
-            fn run(&self, witch: &mut Witch<10, i32, i32>) {
+            async fn run(&self, witch: &mut Witch<10, i32, i32>) {
                 witch.write(witch.state);
             }
         }
@@ -80,6 +83,46 @@ mod tests {
     // Struct/Enum, not special. If it makes sense to enumify it, that's fine, just implement
     // MessageFor
     mod enum_messages {
+        use super::*;
+
+        enum Command {
+            Incr,
+            Decr,
+            GetState
+        }
+
+        #[async_trait::async_trait]
+        impl MessageFor<Witch<10, i32, i32>> for Command {
+            async fn run(&self, witch: &mut Witch<10, i32, i32>) {
+                match self {
+                    Command::Incr => witch.state += 1,
+                    Command::Decr => witch.state -= 1,
+                    Command::GetState => witch.write(witch.state),
+                }
+            }
+        }
+
+        struct ExampleInitMessage;
+        #[async_trait::async_trait]
+        impl MessageFor<Witch<10, i32, i32>> for ExampleInitMessage {
+            async fn run(&self, witch: &mut Witch<10, i32, i32>) {
+                witch.state = 100;
+            }
+        }
+
+        #[tokio::test]
+        async fn test_state_initialization() {
+            let w = WitchHandle::<10, i32, i32>::with_initialization_message(Box::new(ExampleInitMessage)).await;
+
+            w.send(Box::new(Command::GetState)).await;
+            assert_eq!(w.read().await, Some(100));
+
+            w.send(Box::new(Command::Incr)).await;
+            w.send(Box::new(Command::Incr)).await;
+            w.send(Box::new(Command::Decr)).await;
+            w.send(Box::new(Command::GetState)).await;
+            assert_eq!(w.read().await, Some(101));
+        }
 
     }
 }

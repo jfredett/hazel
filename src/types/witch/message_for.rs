@@ -1,5 +1,7 @@
 // use super::error::WitchError;
+use async_trait::async_trait;
 
+#[async_trait]
 pub trait MessageFor<W> where Self: Send {
-    fn run(&self, actor: &mut W); // -> Result<(), WitchError<E>>;
+    async fn run(&self, actor: &mut W); // -> Result<(), WitchError<E>>;
 }

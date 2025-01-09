@@ -27,7 +27,7 @@ where S : Default + Send + Clone + 'static,
     pub(super) async fn run(&mut self) {
         loop {
             let msg = self.inbox.recv().await.unwrap();
-            msg.run(self);
+            msg.run(self).await;
         }
     }
 
