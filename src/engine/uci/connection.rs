@@ -27,9 +27,14 @@ where T: 'static + io::Read + Send, U: 'static + io::Write + Send {
     print!("> ");
     let echo_handle = hazel.clone();
     tokio::spawn(async move {
+        info!("Waiting for message");
         while let Some(msg) = echo_handle.read().await {
-            println!("{:?}", msg);
-            print!("> ");
+            match write!(output, "{:?}\n> ", msg) {
+                Ok(_) => {},
+                Err(e) => {
+                    error!("Error writing to output: {:?}", e);
+                }
+            }
         }
     });
 
@@ -53,14 +58,14 @@ mod tests {
     /*
     #[tokio::test]
     async fn test_with_dummy_io() {
-        // BUG: This is a bad test, doesn't check output
-        //
-        // Probably I need to write these as 'real' integration tests that spawn a process and do
-        // stuff to it.
-        let input = "uci\nisready\n".as_bytes();
-        let output = Vec::new();
-        let result = run_with_io(input, output).await;
-        assert!(result.is_ok());
+    // BUG: This is a bad test, doesn't check output
+    //
+    // Probably I need to write these as 'real' integration tests that spawn a process and do
+    // stuff to it.
+    let input = "uci\nisready\n".as_bytes();
+    let output = Vec::new();
+    let result = run_with_io(input, output).await;
+    assert!(result.is_ok());
     }
     */
 }

@@ -3,7 +3,7 @@ use tokio::sync::Mutex;
 use tracing::error;
 use std::sync::Arc;
 
-use super::{MessageForWitch, Witch, WitchError};
+use super::{MessageForWitch, Witch};
 
 #[derive(Clone)]
 pub struct WitchHandle<const BUF_SIZE: usize, S, R>
@@ -23,8 +23,9 @@ impl<const BUF_SIZE: usize, S, R> WitchHandle<BUF_SIZE, S, R> where
         let (inbox_tx, inbox_rx) = mpsc::channel(100);
         let (outbox_tx, outbox_rx) = broadcast::channel(100);
 
+        let sase = inbox_tx.clone();
         tokio::spawn(async move {
-            let mut actor_handle = Witch::<BUF_SIZE, S, R>::new(inbox_rx, outbox_tx).await;
+            let mut actor_handle = Witch::<BUF_SIZE, S, R>::new(inbox_rx, sase, outbox_tx).await;
             actor_handle.run().await;
         });
 
@@ -40,6 +41,8 @@ impl<const BUF_SIZE: usize, S, R> WitchHandle<BUF_SIZE, S, R> where
         handle
     }
 
+    // FIXME: Technically this duplicates Witch#send, but IDK if I should rely on the extra
+    // hop or just eat the cost of the duplication.
     pub async fn send(&self, msg: MessageForWitch<BUF_SIZE, S, R>) {
         match self.inbox.send(msg).await {
             Ok(_) => {},

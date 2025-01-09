@@ -1,11 +1,15 @@
 use std::collections::HashMap;
-use std::io;
 
 use async_trait::async_trait;
-use tracing::*;
+use tracing::error;
 
+use crate::constants::START_POSITION_FEN;
+use crate::coup::rep::Move;
 use crate::engine::uci::UCIMessage;
+use crate::game::reason::Reason;
 use crate::game::variation::Variation;
+use crate::notation::ben::BEN;
+use crate::notation::uci::UCI;
 use crate::types::witch::{MessageFor, Witch, WitchHandle};
 
 #[derive(Clone, Copy, PartialEq, Debug, Default)]
@@ -19,15 +23,28 @@ pub enum State {
 #[derive(Default, Clone, Debug)]
 pub struct Hazel {
     state: State,
+    position: Option<Position>,
     game: Variation,
     options: HashMap<String, Option<String>>
+}
+
+#[derive(Debug, Clone)]
+pub struct Position {
+    initial: BEN,
+    moves: Vec<Move>,
+}
+
+impl Position {
+    fn new(fen: impl Into<BEN>, moves: Vec<Move>) -> Self {
+        Self { initial: fen.into(), moves }
+    }
 }
 
 impl Hazel {
     pub fn is_ready(&self) -> bool {
         self.state == State::Ready
     }
-} 
+}
 
 #[derive(Clone, Debug, Default)]
 pub enum HazelResponse {
@@ -58,6 +75,8 @@ impl<const BUF_SIZE: usize> MessageFor<Witch<BUF_SIZE, Hazel, HazelResponse>> fo
 
 #[async_trait]
 impl<const BUF_SIZE: usize> MessageFor<Witch<BUF_SIZE, Hazel, HazelResponse>> for UCIMessage {
+    // NOTE: At least from some light testing with stockfish, bad commands are ignored entirely.
+    // I've chosen to log them to STDERR
     async fn run(&self, witch: &mut Witch<BUF_SIZE, Hazel, HazelResponse>) {
         // To implement these, there are some UCI commands that are more like 'queries', I need to
         // treat them as such, these are long-term things that should not block further message
@@ -87,8 +106,38 @@ impl<const BUF_SIZE: usize> MessageFor<Witch<BUF_SIZE, Hazel, HazelResponse>> fo
             UCIMessage::IsReady => {
                 witch.write(HazelResponse::UCIResponse(UCIMessage::ReadyOk));
             },
+            UCIMessage::SetOption(name, value) => {
+                witch.state.options.insert(name.clone(), value.clone());
+            },
+            UCIMessage::UCINewGame => {
+                // push position onto the variation in place (creating a variation if necessary),
+                // end the game as an abort.
+
+                if witch.state.position.is_some() {
+
+                    let pos = witch.state.position.clone().unwrap();
+                    let init = pos.initial;
+                    witch.state.game.setup(init);
+                    for m in pos.moves.iter() {
+                        witch.state.game.make(*m);
+                    }
+                } else {
+                    witch.state.game.setup(BEN::new(START_POSITION_FEN));
+                }
+            },
+            UCIMessage::Position(fen, moves) => {
+                let moves = moves.iter().map(|m| UCI::try_from(m).unwrap().into()).collect();
+                let ben = BEN::new(fen);
+                witch.state.position = Some(Position::new(ben, moves));
+            },
+            UCIMessage::Go(_) => {
+                // for now, we will just statically 'search' by replying with a 'bestmove' based on
+                // a random move, right now stubbing in a null move with no ponder
+                witch.write(HazelResponse::UCIResponse(UCIMessage::Info(vec!["Status".to_string(), "WIP".to_string()])));
+                witch.write(HazelResponse::UCIResponse(UCIMessage::BestMove("0000".to_string(), None)));
+            },
             _ => {
-                panic!("Unsupported Message: {:?}", self);
+                error!("Unsupported UCI Message: {:?}", self);
             }
         }
     }
