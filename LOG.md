@@ -1618,3 +1618,34 @@ something that can, ostensibly, play chess, I'll probably take the time to move 
 coverage and few mutants. I generally aim to have the testing part of the codebase be 1/3rd to 1/2 the total size of the
 codebase, and I'm sitting close to the 1/2 mark, so I definitely want to take some time to build something that can be
 extended naturally and easily.
+
+# 9-JAN-2025
+
+## 1500 - ui
+
+I think I've got the headless side of this about where I need it. I still don't have a movegen or evaluator or anything,
+but I should be able to get the UI side of things up and running, then I just want to get things set up so I can run the
+tokio-console tool, have tracing go to a log file, and also show up in the UI, and then also be able to take commands
+from the UI.
+
+That's not too much, right?
+
+In any case, I *think* I might actually merge this once I know CI is good. The UI change is probably a total rewrite,
+the structure I used in the last iteration was too broken up, and I should really aim to have more 'everything in one
+bucket' model to start.
+
+Ultimately the UI, STDIO, and Error Log threads should all branch off of `WitchHazel`, `Hazel` is the chess side,
+`Witch` is the communication engine, and `WitchHazel` is the handle that manages all the IO. I should be able to move
+the `run_with_io` code into the `WitchHazel` type as an associated function, and I can similarly move the UI code there
+as well.
+
+I would like to take some time to write up a move generator, if only so I can have it play random chess and actually
+'use' the engine, but I don't want to get too distracted from current progress. There is a lot of fleshing out to do of
+the `WitchHazel` stuff, including custom messages for debugging, and also getting some kind way of having messages
+allocate resources in various subsystems. One of the things I found is I will definitely want to be able to 'defer'
+messages -- so that the main queue is actually just the input stream, and the first step is delineating between, e.g.,
+UCI commands to update the engine state, versus Hazel-specific stuff to control what the engine is doing internally.
+
+I suppose this might mean I have a few actors to build, I could have a UCI frontend actor that forwards messages to the
+WitchHazel actor. WitchHazel can happily talk to itself, but the UCI actor only has state sufficient for the current UCI
+game. 

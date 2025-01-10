@@ -7,7 +7,7 @@ use std::io::{self, BufRead};
 use tracing::{error, info};
 
 use crate::engine::uci::UCIMessage;
-use crate::engine::driver::WitchHazel;
+use crate::engine::driver::{HazelResponse, WitchHazel};
 
 #[cfg_attr(test, mutants::skip)]
 pub async fn run() -> io::Result<()> {
@@ -24,17 +24,18 @@ pub async fn run_with_io<T,U>(input: T, mut output: U) -> io::Result<()>
 where T: 'static + io::Read + Send, U: 'static + io::Write + Send {
     let hazel = WitchHazel::<1024>::new().await;
 
-    print!("> ");
     let echo_handle = hazel.clone();
     tokio::spawn(async move {
-        info!("Waiting for message");
-        while let Some(msg) = echo_handle.read().await {
-            match write!(output, "{:?}\n> ", msg) {
+        while let Some(resp) = echo_handle.read().await {
+            let msg = match resp {
+                HazelResponse::UCIResponse(uci_msg) => { format!("{}\n", uci_msg) },
+                _ => { format!("{:?}", resp) }
+            };
+            match output.write_all(msg.as_bytes()) {
                 Ok(_) => {},
-                Err(e) => {
-                    error!("Error writing to output: {:?}", e);
-                }
+                Err(e) => { error!("Error writing to output: {}", e); }
             }
+            output.flush().unwrap();
         }
     });
 
@@ -48,24 +49,4 @@ where T: 'static + io::Read + Send, U: 'static + io::Write + Send {
         let message = UCIMessage::parse(&line);
         hazel.send(Box::new(message)).await;
     }
-}
-
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    /*
-    #[tokio::test]
-    async fn test_with_dummy_io() {
-    // BUG: This is a bad test, doesn't check output
-    //
-    // Probably I need to write these as 'real' integration tests that spawn a process and do
-    // stuff to it.
-    let input = "uci\nisready\n".as_bytes();
-    let output = Vec::new();
-    let result = run_with_io(input, output).await;
-    assert!(result.is_ok());
-    }
-    */
 }

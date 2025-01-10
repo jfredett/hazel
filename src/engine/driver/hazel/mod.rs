@@ -114,7 +114,6 @@ impl<const BUF_SIZE: usize> MessageFor<Witch<BUF_SIZE, Hazel, HazelResponse>> fo
                 // end the game as an abort.
 
                 if witch.state.position.is_some() {
-
                     let pos = witch.state.position.clone().unwrap();
                     let init = pos.initial;
                     witch.state.game.setup(init);

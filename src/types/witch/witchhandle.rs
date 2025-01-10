@@ -41,8 +41,18 @@ impl<const BUF_SIZE: usize, S, R> WitchHandle<BUF_SIZE, S, R> where
         handle
     }
 
-    // FIXME: Technically this duplicates Witch#send, but IDK if I should rely on the extra
-    // hop or just eat the cost of the duplication.
+    /// NOTE: Technically this duplicates Witch#send, but I think it is a correct, instrinsic duplication.
+    ///
+    /// Because `WitchHandle` does not have direct access to the `Witch`, it can send
+    /// messages over it's channel. Since `Witch` has it's own channel over which it can send
+    /// messages, it can, nearly identically, send messages to itself, which is handy for keeping
+    /// all the logic in the messages themselves.
+    ///
+    /// However, these two approaches are, in essence, exactly the same except for the specific
+    /// inbox being used, they _appear_ to duplicate. Indeed, we could extract this to a 'dumb
+    /// send' function that replaces this, but tbh, I think the duplication is _fine_. It's less
+    /// confusing, one fewer indirection, and ultimately the cost of the WET is better than the
+    /// cost of the DRY.
     pub async fn send(&self, msg: MessageForWitch<BUF_SIZE, S, R>) {
         match self.inbox.send(msg).await {
             Ok(_) => {},
@@ -52,11 +62,10 @@ impl<const BUF_SIZE: usize, S, R> WitchHandle<BUF_SIZE, S, R> where
         }
     }
 
-    /// Nonblocking read of the output channel.
+    /// Blocking read of the output channel.
     pub async fn read(&self) -> Option<R> {
         self.outbox.lock().await
             .recv().await
             .ok()
     }
-
 }
