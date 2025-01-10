@@ -1649,3 +1649,23 @@ UCI commands to update the engine state, versus Hazel-specific stuff to control 
 I suppose this might mean I have a few actors to build, I could have a UCI frontend actor that forwards messages to the
 WitchHazel actor. WitchHazel can happily talk to itself, but the UCI actor only has state sufficient for the current UCI
 game. 
+
+## 2302 - ui
+
+I got distracted. I'm stuck debating how I want to approach the next bit of work. I'm leaning towards movegen, I've done
+it once, I should be able to port it over relatively quickly. The tools I've got in place now make it much nicer to work
+with. Getting anything in place gets me closer to a working engine, which was originally my EOY goal.
+
+I do want to rebuild the UI, but I think it's still going to be flawed until I have a working engine to back it. I
+considered building something that would just talk to stockfish, but the point of the UI is to have a backend look into
+Hazel, so building against stockfish doesn't really get me anything.
+
+Building the movegen will necessarily build out the DSL for WitchHazel as well, so I think it's time to merge this and
+go back to procrastinating on UI stuff. This branch has been exceedingly misnamed for it's entire life, and I think that
+might be my favorite thing about it. It's final act, in fact, was one in which it was ultimately decided that not only
+should most of that code be deleted,
+
+but also that I should do it later.
+
+Larry Wall said that the three virtues of the good programmer are Laziness, Impatience, and Hubris. I am a good
+programmer.
