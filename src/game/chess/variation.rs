@@ -10,7 +10,7 @@ use super::reason::Reason;
 use super::ChessGame;
 
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, PartialEq, Default, Clone)]
 pub struct Variation {
     // Active Data
     /// A record of every action in the game

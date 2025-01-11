@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use async_trait::async_trait;
 use tracing::error;
 
+use crate::board::PieceBoard;
 use crate::constants::START_POSITION_FEN;
 use crate::coup::rep::Move;
 use crate::engine::uci::UCIMessage;
@@ -11,6 +12,7 @@ use crate::game::variation::Variation;
 use crate::notation::ben::BEN;
 use crate::notation::uci::UCI;
 use crate::types::witch::{MessageFor, Witch, WitchHandle};
+use crate::{Alter, Alteration};
 
 #[derive(Clone, Copy, PartialEq, Debug, Default)]
 pub enum State {
@@ -20,18 +22,40 @@ pub enum State {
     Quitting,
 }
 
-#[derive(Default, Clone, Debug)]
+#[derive(Default, PartialEq, Clone, Debug)]
 pub struct Hazel {
+    /// The current state of the engine.
     state: State,
+    /// The current position of the active game. If this is `None`, it means no game is currently
+    /// being played.
     position: Option<Position>,
+    /// A Variation containing games loaded from some source, or saved from the current gamestate.
+    /// NOTE: This is not like the others. Maybe `Hazel` should focus on being just the UCI-related
+    /// bits, and then it can talk to a `WitchHazel` which is just the database bits?
     game: Variation,
+    /// Options set by the UI or other external sources.
     options: HashMap<String, Option<String>>
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Position {
     initial: BEN,
     moves: Vec<Move>,
+}
+
+impl From<Position> for Vec<Alteration> {
+    fn from(pos: Position) -> Self {
+        let mut ret = pos.initial.compile();
+        let mut board = PieceBoard::from(pos.initial);
+        for m in pos.moves.iter() {
+            let alterations = m.compile(&board);
+            for a in alterations.iter() {
+                board.alter_mut(*a);
+            }
+            ret.extend(alterations);
+        }
+        ret
+    }
 }
 
 impl Position {
@@ -46,11 +70,11 @@ impl Hazel {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, PartialEq, Debug, Default)]
 pub enum HazelResponse {
     #[default] Silence,
-    Transition(State),
     UCIResponse(UCIMessage),
+    Debug(Hazel)
 }
 
 pub type WitchHazel<const BUF_SIZE: usize> = WitchHandle<BUF_SIZE, Hazel, HazelResponse>;
@@ -139,5 +163,59 @@ impl<const BUF_SIZE: usize> MessageFor<Witch<BUF_SIZE, Hazel, HazelResponse>> fo
                 error!("Unsupported UCI Message: {:?}", self);
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+    use tokio::sync::{oneshot, Mutex};
+
+    use super::*;
+
+    struct Debug;
+    #[async_trait]
+    impl MessageFor<Witch<10, Hazel, HazelResponse>> for Debug {
+        async fn run(&self, witch: &mut Witch<10, Hazel, HazelResponse>) {
+            witch.write(HazelResponse::Debug(witch.state.clone()));
+        }
+    }
+
+    mod uci_messages {
+        use super::*;
+
+        #[tokio::test]
+        async fn uci() {
+            let w : WitchHandle<10, Hazel, HazelResponse> = WitchHandle::new().await;
+
+            w.send(Box::new(UCIMessage::UCI)).await;
+            let result = w.read().await;
+
+            assert_eq!(result, Some(HazelResponse::UCIResponse(UCIMessage::ID("hazel".to_string(), "0.1".to_string()))));
+        }
+
+        #[tokio::test]
+        async fn is_ready() {
+            let w : WitchHandle<10, Hazel, HazelResponse> = WitchHandle::new().await;
+
+            w.send(Box::new(UCIMessage::IsReady)).await;
+            let result = w.read().await;
+
+            assert_eq!(result, Some(HazelResponse::UCIResponse(UCIMessage::ReadyOk)));
+        }
+
+        #[tokio::test]
+        async fn set_option() {
+            let w : WitchHandle<10, Hazel, HazelResponse> = WitchHandle::new().await;
+
+            w.send(Box::new(UCIMessage::SetOption("name".to_string(), Some("value".to_string())))).await;
+            w.send(Box::new(Debug)).await;
+            if let Some(HazelResponse::Debug(result)) = w.read().await {
+                assert_eq!(result.options.get("name"), Some(&Some("value".to_string())));
+            } else {
+                panic!("Expected Debug response");
+            }
+        }
+
     }
 }
