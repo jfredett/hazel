@@ -1519,4 +1519,153 @@ Probably a single-writer multi-reader would be 'fine', or some kind of segment-b
 
 It's not a new idea but it's a very nice one, and it seems like it'd be fun to build.
 
+# 27-DEC-2024
 
+## 2337 - ui
+
+I'm working a bit on the UI and a bit on the game driver itself, I'm thinking I'm going to tear up and rebuild the UI
+from scratch. The initial design is a little bit too split up and I think a less layered approach makes sense. It should
+really be more like a three layer tree, a collection of forms, containing widgets, which contain widgets. 
+
+I'd like to experiment with a image-in-the-terminal API, I think designing the Driver and UI in tandem will help as
+well, since I think I want the Driver to ultimately house the UI startup code anyway, because ultimately the main entry
+point is going to configure an instance of the driver, and then run it.
+
+That makes it so the Driver is the primary entry point, and everything can ultimately speak it's little language to
+drive whatever it needs to do. This will also make it easier to expose driver internals to the UI, which is it's main
+goal.
+
+Ideally the UI would work by setting up some arbitrary query on the hazel engine and then use the output of that query
+to render itself. That would reduce the UI to a `Query` widget and a bunch of glue widgets that glue different
+`Query`-derived widgets together. `Query` can then also be used outside the UI to drive the engine in general.
+
+The idea would be that the query specifies a particular state you want the engine to converge on, and then it will
+return an iterator of solutions to that query. So a query might be logically "Find the best move after a 6 ply search =
+the position at turn 10 for black of the current game.". The Query widget would then break the query into the 'command'
+part ('in the position at turn 10 for black of the current game.') and the 'constraint' part ('the best move after a 6
+ply search); and it would then create a 'job' that the driver would pick up and run based on some scheduler (ideally the
+job would contain metadata about what it intends to do so the scheduler can be efficient in how it runs the jobs to save
+work).
+
+Ultimately I'm interested more in making `hazel` good at the statistical analysis of large bodies of chess games, not
+so much necessarily an engine that is good at beating you at chess; there's stockfish for that. I am aiming to build
+something closer to a "Chess Machine" that can take a script targeting a simple command/query language and then generate
+games for further analysis. It should be good enough to play and be a reliable, if weak, engine.
+
+The engine what actually solves the constraint I *think* might just be a MCTS; I can say with some probability what,
+e.g., an evaluation distribution looks like. If I get the itch I do want to take a stab at a home-made NNUE
+implementation which would ostensibly give me a very strong eval function, so coupled with some SIMD MCTS I can at least
+implement a big subset of what I'm interested in, which is statistical views subject to some clever evaluation function.
+That evaluation function can generate richer evaluation structures, and I think it could be interesting to see what kind
+of trouble you can get up to with that.
+
+# 28-DEC-2024
+
+## 1514 - ui
+
+As everyone else seems to be doing at TOW, I'm trying out the `ghostty` terminal emulator; and I have to say, the hype
+seems pretty reasonable. Coming from iTerm2, it definitely 'feels' faster. I'm not sure if that's just placebo, but it
+feels like it renders at a higher framerate.
+
+The relevance to this project comes down to protocol wrt images-in-the-terminal. `ghostty` uses the `kitty` protocol,
+iTerm2 uses it's own. Barring significant issues, I'm already thinking `ghostty` might win out in at least the near
+term. I do want to investigate `alacritty` for this as well. Depending on how I go, the choice of protocol will be made.
+I like iTerm, I've been a longterm user, but the fact that `ghostty` is already well integrated with `nix` from the repo
+up is very appealing.
+
+# 8-JAN-2024
+
+## 1541 - ui
+
+I took some time to write a little Actor-adjacent (I don't think these _technically_ qualify as proper actors, but
+whatever) system for `Hazel` to use, it should be enough to separate out the communication logic from the chess logic,
+which I hope will make it easier to finally get it done. It also supports an open ended 'message' system. To implement a
+new message, a struct implements `MessageFor<W>` where `W` is, in theory, a `Witch` backend, but could be whatever if I
+want to create a new engine later. The `Witch` type is a little message reactor machine thing. It's somewhere between a
+genserver, SmallTalk object, Ruby class, and twisted nightmare that only the damned may dream of.
+
+I used to be a ruby guy, so I'll let you guess where I got the inspiration.
+
+In any case, the next step is to refactor the Driver to use this backend, and that means extracting out the stateful
+bits from the communicating bits.
+
+One other tidbit about the design is that the request and response types are separate. The response type is arbitrary
+because I explicitly _did not_ include a general way to get at a Witch's state object (which is also arbitrary) from the
+Handle that controls it. I don't want to make an assumption about how one should interact with their state, and very
+often returning a whole object would be silly anyway. Messages do not generally allow for direct response (although such
+a thing could be encoded in a message type easily to bypass the built in `write` mechanism), all output from the Actor
+is through the broadcast channel. It's assumed every client will want to recieve every message in lockstep.
+
+I don't intend to really have more than one or two of these at present, though I could see using this as a stepping
+stone towards multiple separate instances across multiple machines, all communicating. Ultimately my goal was to learn
+`tokio`, and I think I've got it to hand now. Reasoning about it is tricky for sure, but it honestly just reminds me of
+Haskell, it's just a matter of understanding how the laziness works and then chasing the compiler around until
+everything type and borrowchecks.
+
+It's a pretty nice system, I am interested to eventually investigate `tower` for this or another project, but time will
+tell.
+
+## 1901 - ui
+
+I'm thinking a bit about refactoring the tests. I think I'd like to break out of the habit of writing the tests in the
+same file; it makes the files quite large, and I much prefer lots of small files, even if it means jumping around some
+more. I suspect I'll want to add some editor shortcuts for alternating between test and source files, and maybe also add
+in some kind of shortcut for running relevant benchmarks as well, not quite sure how I'll do that, but when the time
+comes.
+
+In any case. I think I'm going to look towards centralizing and better codifying the tests I have, and once I have
+something that can, ostensibly, play chess, I'll probably take the time to move to `rstest` and get something with good
+coverage and few mutants. I generally aim to have the testing part of the codebase be 1/3rd to 1/2 the total size of the
+codebase, and I'm sitting close to the 1/2 mark, so I definitely want to take some time to build something that can be
+extended naturally and easily.
+
+# 9-JAN-2025
+
+## 1500 - ui
+
+I think I've got the headless side of this about where I need it. I still don't have a movegen or evaluator or anything,
+but I should be able to get the UI side of things up and running, then I just want to get things set up so I can run the
+tokio-console tool, have tracing go to a log file, and also show up in the UI, and then also be able to take commands
+from the UI.
+
+That's not too much, right?
+
+In any case, I *think* I might actually merge this once I know CI is good. The UI change is probably a total rewrite,
+the structure I used in the last iteration was too broken up, and I should really aim to have more 'everything in one
+bucket' model to start.
+
+Ultimately the UI, STDIO, and Error Log threads should all branch off of `WitchHazel`, `Hazel` is the chess side,
+`Witch` is the communication engine, and `WitchHazel` is the handle that manages all the IO. I should be able to move
+the `run_with_io` code into the `WitchHazel` type as an associated function, and I can similarly move the UI code there
+as well.
+
+I would like to take some time to write up a move generator, if only so I can have it play random chess and actually
+'use' the engine, but I don't want to get too distracted from current progress. There is a lot of fleshing out to do of
+the `WitchHazel` stuff, including custom messages for debugging, and also getting some kind way of having messages
+allocate resources in various subsystems. One of the things I found is I will definitely want to be able to 'defer'
+messages -- so that the main queue is actually just the input stream, and the first step is delineating between, e.g.,
+UCI commands to update the engine state, versus Hazel-specific stuff to control what the engine is doing internally.
+
+I suppose this might mean I have a few actors to build, I could have a UCI frontend actor that forwards messages to the
+WitchHazel actor. WitchHazel can happily talk to itself, but the UCI actor only has state sufficient for the current UCI
+game. 
+
+## 2302 - ui
+
+I got distracted. I'm stuck debating how I want to approach the next bit of work. I'm leaning towards movegen, I've done
+it once, I should be able to port it over relatively quickly. The tools I've got in place now make it much nicer to work
+with. Getting anything in place gets me closer to a working engine, which was originally my EOY goal.
+
+I do want to rebuild the UI, but I think it's still going to be flawed until I have a working engine to back it. I
+considered building something that would just talk to stockfish, but the point of the UI is to have a backend look into
+Hazel, so building against stockfish doesn't really get me anything.
+
+Building the movegen will necessarily build out the DSL for WitchHazel as well, so I think it's time to merge this and
+go back to procrastinating on UI stuff. This branch has been exceedingly misnamed for it's entire life, and I think that
+might be my favorite thing about it. It's final act, in fact, was one in which it was ultimately decided that not only
+should most of that code be deleted,
+
+but also that I should do it later.
+
+Larry Wall said that the three virtues of the good programmer are Laziness, Impatience, and Hubris. I am a good
+programmer.

@@ -7,7 +7,6 @@ pub mod cursor;
 pub mod transaction;
 pub mod write_head;
 
-
 #[derive(Clone)]
 pub struct Log<T> where T: Clone {
     log: Vec<T>,
@@ -16,6 +15,12 @@ pub struct Log<T> where T: Clone {
     stack: Vec<Transaction<T>>,
 
     write_head: usize
+}
+
+impl<T> PartialEq for Log<T> where T : Clone + PartialEq {
+    fn eq(&self, other: &Self) -> bool {
+        self.log == other.log
+    }
 }
 
 impl<T> Debug for Log<T> where T: Debug + Clone {
@@ -56,6 +61,10 @@ impl<T> Log<T> where T: Clone {
         self.stack.push(self.current_txn.clone());
         self.current_txn = Transaction::begin();
         self
+    }
+
+    pub fn read(&self) -> Option<&T> {
+        self.log.get(self.write_head)
     }
 
     pub fn record(&mut self, action: T) -> &mut Self {
@@ -157,5 +166,33 @@ mod tests {
         pub fn txn_state(&self) -> Vec<T> {
             self.current_txn.content().clone()
         }
+    }
+
+
+    #[test]
+    fn seek_to_end() {
+        let mut log = Log::start();
+        log.record(1).record(2).record(3).commit();
+
+        log.seek(2);
+        assert_eq!(log.read(), Some(&3));
+    }
+
+    #[test]
+    #[should_panic]
+    fn seek_past_end() {
+        let mut log = Log::start();
+        log.record(1).record(2).record(3).commit();
+
+        log.seek(4);
+    }
+
+    #[test]
+    #[tracing_test::traced_test]
+    fn is_empty() {
+        let mut log = Log::<i32>::start();
+        assert!(log.is_empty());
+        log.record(1).commit();
+        assert!(!log.is_empty());
     }
 }

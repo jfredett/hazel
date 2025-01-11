@@ -20,7 +20,7 @@
 
 
 use crate::interface::{Alteration, Query};
-use crate::notation::*;
+use crate::{notation::*, query};
 use crate::types::{Color, Piece, Occupant};
 use crate::constants::File;
 
@@ -214,6 +214,7 @@ impl Move {
 
         let source_file = File::from_index(self.source().index()).to_pgn();
 
+        tracing::debug!("context: {:?}", query::to_fen(context));
         result.push_str(match occ.piece().unwrap() {
             Piece::Pawn => if metadata.is_capture() { source_file } else { "" },
             Piece::Knight => "N",

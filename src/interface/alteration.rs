@@ -14,8 +14,6 @@ pub enum Alteration {
     Clear,
 }
 
-
-
 impl Debug for Alteration {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {

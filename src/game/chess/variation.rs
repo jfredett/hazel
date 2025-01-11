@@ -10,7 +10,7 @@ use super::reason::Reason;
 use super::ChessGame;
 
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, PartialEq, Default, Clone)]
 pub struct Variation {
     // Active Data
     /// A record of every action in the game
@@ -130,7 +130,7 @@ impl Variation {
     }
     */
 
-    fn record(&mut self, action: Action<Move, BEN>) -> &mut Self {
+    pub fn record(&mut self, action: Action<Move, BEN>) -> &mut Self {
         if self.halted { return self; }
 
         self.log.record(action);

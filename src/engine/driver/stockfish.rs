@@ -61,14 +61,13 @@ impl Stockfish {
 }
 
 impl Engine<UCIMessage> for Stockfish {
-
     #[instrument]
-    fn exec_message(&mut self, message: &str) -> Vec<UCIMessage> {
-        self.exec(&UCIMessage::parse(message))
+    async fn exec_message(&mut self, message: &str) -> Vec<UCIMessage> {
+        self.exec(&UCIMessage::parse(message)).await
     }
 
     #[instrument]
-    fn exec(&mut self, message: &UCIMessage) -> Vec<UCIMessage> {
+    async fn exec(&mut self, message: &UCIMessage) -> Vec<UCIMessage> {
         let cmd_str = message.to_string();
 
         writeln!(self.stdin, "{}", cmd_str).expect("Failed to write to stockfish");
@@ -93,7 +92,6 @@ impl Engine<UCIMessage> for Stockfish {
             return vec![]
         }
     }
-
 }
 
 #[cfg(test)]
@@ -103,10 +101,10 @@ mod tests {
     use super::*;
     use crate::engine::uci::UCIMessage;
 
-    #[test]
-    fn stockfish_connects() {
+    #[tokio::test]
+    async fn stockfish_connects() {
         let mut stockfish = Stockfish::default();
-        let response = stockfish.exec_message("uci");
+        let response = stockfish.exec_message("uci").await;
         // I'm only checking the first couple stanzas which I hope stay consistent across versions.
         // I just want a canary to make sure I connected, UCI is timeless.
         assert_matches!(&response[0], UCIMessage::ID(key, value) if key == "name" && value.starts_with("Stockfish"));
