@@ -4,7 +4,6 @@ use async_trait::async_trait;
 use tracing::error;
 
 use crate::board::PieceBoard;
-use crate::constants::START_POSITION_FEN;
 use crate::coup::rep::Move;
 use crate::engine::uci::UCIMessage;
 use crate::game::reason::Reason;
@@ -32,6 +31,8 @@ pub struct Hazel {
     /// A Variation containing games loaded from some source, or saved from the current gamestate.
     /// NOTE: This is not like the others. Maybe `Hazel` should focus on being just the UCI-related
     /// bits, and then it can talk to a `WitchHazel` which is just the database bits?
+    /// 11-JAN-2025 0053 - This should be it's own witch, that acts as the 'database' end to which
+    /// the WitchHazel can hold a handle.
     game: Variation,
     /// Options set by the UI or other external sources.
     options: HashMap<String, Option<String>>
@@ -134,7 +135,7 @@ impl<const BUF_SIZE: usize> MessageFor<Witch<BUF_SIZE, Hazel, HazelResponse>> fo
                 witch.state.options.insert(name.clone(), value.clone());
             },
             UCIMessage::UCINewGame => {
-                // push position onto the variation in place (creating a variation if necessary),
+                // TODO: push position onto the variation in place (creating a variation if necessary),
                 // end the game as an abort.
 
                 if witch.state.position.is_some() {
@@ -144,9 +145,13 @@ impl<const BUF_SIZE: usize> MessageFor<Witch<BUF_SIZE, Hazel, HazelResponse>> fo
                     for m in pos.moves.iter() {
                         witch.state.game.make(*m);
                     }
-                } else {
-                    witch.state.game.setup(BEN::new(START_POSITION_FEN));
+                    // TODO: Calculate the endgame if it's a checkmate, otherwise it's an abort
+                    // for now, just going to say it's an abort.
+                    witch.state.game.halt(Reason::Aborted);
+                    witch.state.game.commit();
                 }
+
+                witch.state.position = None;
             },
             UCIMessage::Position(fen, moves) => {
                 let moves = moves.iter().map(|m| UCI::try_from(m).unwrap().into()).collect();
@@ -182,6 +187,8 @@ mod tests {
     }
 
     mod uci_messages {
+        use crate::constants::START_POSITION_FEN;
+
         use super::*;
 
         #[tokio::test]
@@ -217,5 +224,32 @@ mod tests {
             }
         }
 
+        #[tokio::test]
+        async fn uci_new_game() {
+            let w : WitchHandle<10, Hazel, HazelResponse> = WitchHandle::new().await;
+
+            w.send(Box::new(UCIMessage::Position(START_POSITION_FEN.to_string(), vec![]))).await;
+            w.send(Box::new(UCIMessage::UCINewGame)).await;
+            w.send(Box::new(Debug)).await;
+            if let Some(HazelResponse::Debug(result)) = w.read().await {
+                assert_eq!(result.position, None);
+                assert_ne!(result.game.log().len(), 0);
+            } else {
+                panic!("Expected Debug response");
+            }
+        }
+
+        #[tokio::test]
+        async fn position() {
+            let w : WitchHandle<10, Hazel, HazelResponse> = WitchHandle::new().await;
+
+            w.send(Box::new(UCIMessage::Position(START_POSITION_FEN.to_string(), vec![]))).await;
+            w.send(Box::new(Debug)).await;
+            if let Some(HazelResponse::Debug(result)) = w.read().await {
+                assert_eq!(result.position.unwrap().initial, BEN::new(START_POSITION_FEN));
+            } else {
+                panic!("Expected Debug response");
+            }
+        }
     }
 }
