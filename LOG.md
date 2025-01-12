@@ -1693,3 +1693,14 @@ I figure I can dump the relevant information out to a file, then ideally increme
 From there I'd like to generate some graphics I can use to start show the topology; I spent a good hour or so looking
 for an off-the-shelf tool to just do the diagramming, but I can't stand literally every single tool, and I don't have
 the desk space to do it by hand.
+
+## 2156 - movegen
+
+Worked a bit and generalized things, I'll need to build up a little model, but I think it could work pretty well. I
+should be able to calculate the relevant module from the file path, since I essentially never have a module nested
+without it being a separate file other than for tests.
+
+What works now is a dump of the definition of every struct, enum, and trait, along with it's path.
+
+Ideally I'll generate something approximating a UML card for each of these types, then I can figure out how to link it
+all together.
