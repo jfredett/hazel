@@ -20,6 +20,7 @@
           default = devenv.lib.mkShell {
             inherit inputs pkgs;
 
+
             modules = [{
               languages.rust = {
                 enable = true;
@@ -30,9 +31,17 @@
                 rustflags = "--cfg tokio_unstable -Ctarget-feature=+bmi2 -Ctarget-feature=+bmi1";
               };
 
-              # enterShell = ''
-              #   jq '.["parser-directories"][0] = "${pkgs.tree-sitter-grammars.tree-sitter-rust}"' .treesitter-config.json.template > .treesitter-config.json
-              # '';
+              languages.ruby = {
+                enable = true;
+                bundler.enable = true;
+              };
+
+              enterShell = ''
+                mkdir -p .parsers
+                rm .parsers/*
+                ln -s "${pkgs.tree-sitter-grammars.tree-sitter-rust}/parser" .parsers/rust.so
+                ln -s "${pkgs.tree-sitter-grammars.tree-sitter-rust}/queries" .parsers/rust_queries
+              '';
 
 
               packages = with pkgs; let 
@@ -49,6 +58,7 @@
                 just
                 linuxKernel.packages.linux_6_6.perf
                 tree-sitter
+                tree-sitter-grammars.tree-sitter-rust
                 tokio-console
                 ts
                 mold

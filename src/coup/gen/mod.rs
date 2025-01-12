@@ -20,12 +20,24 @@ mod king;
 // - `occupancy(color)`: Returns an iterator of all squares occupied by the specified color
 // - `empty()`: Returns an iterator of all empty squares
 // - `occupied()`: Returns an iterator of all occupied squares
+// - `in_check(color)`: Returns whether the specified color is in check
+// - `demense(color)`: An iterator of all the squares attacked by any piece of the specified color
+// - `threats(sq)` : An iterator of all the squares attacking the specified square
+//
+// at a low level, as well:
+//
+// - `validate(Move)`: Returns whether the specified move is valid (i.e., legal)
+//
 //
 // and so on, these, internally, would call other messages and eventually return the desired result
 // to an output stream. Ideally it would allow for multiple, independent output streams somehow.
 // This engine could be extended arbitrarily to support new messages; and for other board
 // representations, it could be implemented differently, eventually allowing for a single interface
 // to query boardstate regardless of the underlying representation.
+//
+// Ideally this will allow the little engine actually doing all the calculations to pro-actively
+// arrange and reduce work via caching or other optimizations.
+//
 
 
 struct MoveGenerator {
