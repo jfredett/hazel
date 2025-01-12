@@ -48,6 +48,9 @@ test *ARGS:
         fi
     fi
 
+treesitter:
+    bundle install
+    bundle exec ruby ./scripts/treesitter.rb
 
 coverage:
     cargo llvm-cov nextest --no-fail-fast --lcov --output-path ./.lcov
