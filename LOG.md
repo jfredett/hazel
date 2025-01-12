@@ -1669,3 +1669,27 @@ but also that I should do it later.
 
 Larry Wall said that the three virtues of the good programmer are Laziness, Impatience, and Hubris. I am a good
 programmer.
+
+# 11-JAN-2025
+
+## 2137 - movegen
+
+I merged, started on movegen, then immediately began procrastinating.
+
+I roughed in a little script to hook up to `tree-sitter` for querying across the source. My aim is to build up some
+scripts to collect some topological information about the codebase.
+
+In particular, I'm beginning to get close to the point where I don't have sufficient spare memory to dedicate to this to
+hold the whole project in my head, which means my organization is starting to break down. I *know* there is a tangled
+web of redundant representations, and I know _sort of_ where all the wiring goes, but I need to get a lower resolution
+view of the codebase to start to untangle it.
+
+My first step is to build up something that can pull out the traits, structs, and enums and all their relevant APIs to
+some set of files. I can think of 'easier' ways to do this (leveraging docgen, for instance, could get me partly there),
+but I'd like to sharpen my `tree-sitter` tool, and I haven't written ruby in a while. I'll also need to have it crawl
+the `src` directory and apply the query to every file and build whatever index file I need.
+
+I figure I can dump the relevant information out to a file, then ideally incrementally update it based on filechange.
+From there I'd like to generate some graphics I can use to start show the topology; I spent a good hour or so looking
+for an off-the-shelf tool to just do the diagramming, but I can't stand literally every single tool, and I don't have
+the desk space to do it by hand.
