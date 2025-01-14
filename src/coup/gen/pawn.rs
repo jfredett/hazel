@@ -1,7 +1,7 @@
 use crate::constants::move_tables::PAWN_MOVES;
 use crate::engine::driver::Position;
 use crate::Query;
-use crate::types::Piece;
+use crate::types::{Occupant, Piece};
 use crate::coup::rep::Move;
 use crate::notation::*;
 use crate::types::color::Color;
@@ -29,7 +29,7 @@ pub fn generate_moves(position: &Position, color: Color) -> Vec<PossibleMove> {
     for source_sq in position.find_all(Piece::Pawn) {
         let bb = PAWN_MOVES[source_sq.into()][color.into()];
         for target_sq in bb {
-            if let Occupied(..) = position.get(target_sq) {
+            if let Occupant::Occupied(..) = position.get(target_sq) {
                 ret.push(PossibleMove::Possible(source_sq, target_sq));
             } else {
                 // if it's an attack move, then it's not possible, if it's an advance move, then
