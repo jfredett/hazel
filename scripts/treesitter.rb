@@ -6,36 +6,105 @@ require 'find'
 
 class Location
   attr_accessor :file, :line, :column
+
+  def initialize(file, line, column)
+    @file = file; @line = line; @column = column
+  end
 end
 
-class Type 
+class Type
   attr_accessor :name, :location, :kind
+  attr_reader :api
 
-  def self.register!(name, type)
-    @registry ||= {}
-    @registry[name] = type
+  def initialize(name, location, kind)
+    @name = name; @location = location; @kind = kind
   end
 
-  def self.struct(name, definition)
-    new(:struct, name, definition).tap { |o| register!(name, o) }
+  def find_apis!(refresh: false)
+    @api = nil if refresh
+    return @api unless @api.nil?
+
+    @api = {}
+
+    Query[:Impl].run!(self.name).each do |result|
+      result.matches.each do |match|
+        name = match["function.name"]
+        params = match["function.parameters"]
+        return_type = match["function.return_type"]
+        trait_name = match["trait.name"]
+        trait_args = match["trait.args"]
+
+        trait = if trait_name.nil?
+          nil
+        elsif trait_args.nil?
+          "#{trait_name.text}"
+        else
+          "#{trait_name.text}#{trait_args.text}"
+        end
+
+        params = params.text unless params.nil?
+        return_type = return_type.text unless return_type.nil?
+
+
+        location = Location.new(
+          result.path,
+          match["function.name"].range.start_point.row,
+          match["function.name"].range.start_point.column
+        )
+
+        api = API.new(
+          self,
+          location,
+          name.text,
+          params,
+          return_type
+        )
+
+        key = [trait, name.text]
+
+        @api[key] = api
+      end
+    end
+
+    # suppress output
+    nil
   end
 
-  def self.enum(name, defintiion)
-    new(:enum, name, defintion).tap { |o| register!(name, o) }
-  end
+  class << self
+    def register!(name, obj)
+      @registry ||= {}
+      @registry[name] = obj
+    end
 
-  def self.trait(name, defintiion)
-    new(:trait, name, defintion).tap { |o| register!(name, o) }
+    def [](name)
+      @registry[name]
+    end
+
+    def struct(name, location)
+      new(name, location, :struct).tap { |o| register!(name, o) }
+    end
+
+    def enum(name, location)
+      new(name, location, :enum).tap { |o| register!(name, o) }
+    end
+
+    def trait(name, location)
+      new(name, location, :trait).tap { |o| register!(name, o) }
+    end
   end
 
 end
 
 
-class Impl
-  attr_accessor :type, :location, :trait
+class API
+  attr_accessor :parent, :location, :trait
 
-  def initialize(type, location, trait = nil)
-    @type = type; @location = location; @trait = trait
+  def initialize(parent, location, name, params, return_type, trait = nil)
+    @parent = parent; @location = location; @name = name; @params = params; @return_type = return_type; @trait = trait
+  end
+
+  def returns?
+    !@return_type.nil?
   end
 
   def implements_trait?
@@ -188,15 +257,15 @@ end
 SourceTree.load!
 Query.load!
 
-results = Query[:Structs].run!
-results.each do |result|
-  # TODO: Move this into the query .scm somehow?
-  key = "struct.name"
-  result.matches.each do |match|
-    obj = match[key]
-    puts "#{result.path}:#{obj.range.start_point.row}: #{key.gsub(".name","")} #{obj.text}"
-  end
-end
+# results = Query[:Structs].run!
+# results.each do |result|
+#   # TODO: Move this into the query .scm somehow?
+#   key = "struct.name"
+#   result.matches.each do |match|
+#     obj = match[key]
+#     puts "#{result.path}:#{obj.range.start_point.row}: #{key.gsub(".name","")} #{obj.text}"
+#   end
+# end
 
 puts ""
 puts "=================="
@@ -204,6 +273,36 @@ puts ""
 
 
 # TODO: impl.scm -> impl.scm.erb, and pass the type name through.
-Query[:Impl2].run!("Move").each do |result|
-  puts result.matches[0]["impl.body"].text
+Query[:Impl].run!("Move").each do |result|
+  result.matches.each do |match|
+    puts "#{match["function.name"].text}#{match["function.parameters"].text}"
+  end
 end
+
+Query[:Structs].run!.each do |result|
+  match = result.matches[0]
+  name = match["struct.name"]
+  location = Location.new(
+    result.path,
+    name.range.start_point.row,
+    name.range.start_point.column
+  )
+  Type.struct(name.text, location)
+end
+
+Query[:Enums].run!.each do |result|
+  match = result.matches[0]
+  name = match["enum.name"]
+  location = Location.new(
+    result.path,
+    name.range.start_point.row,
+    name.range.start_point.column
+  )
+  Type.enum(name.text, location)
+end
+
+
+
+Type["UCI"].find_apis!
+
+binding.pry
