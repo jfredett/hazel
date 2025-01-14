@@ -1,17 +1,66 @@
 require 'tree_sitter'
 require 'pry'
-
-
-# parser = TreeSitter::Parser.new
-# language = TreeSitter::Language.load('rust', '/nix/store/rp6435n8gklillifhyvdsq7z5sqzv8b2-tree-sitter-rust-grammar-0.24.4/parser')
-# parser.language = language
-
-# source_code = File.read('src/lib.rs')
-
-# tree = parser.parse_string(nil, source_code)
-
 require 'tree_stand'
 require 'find'
+
+
+class Location
+  attr_accessor :file, :line, :column
+end
+
+class Type 
+  attr_accessor :name, :location, :kind
+
+  def self.register!(name, type)
+    @registry ||= {}
+    @registry[name] = type
+  end
+
+  def self.struct(name, definition)
+    new(:struct, name, definition).tap { |o| register!(name, o) }
+  end
+
+  def self.enum(name, defintiion)
+    new(:enum, name, defintion).tap { |o| register!(name, o) }
+  end
+
+  def self.trait(name, defintiion)
+    new(:trait, name, defintion).tap { |o| register!(name, o) }
+  end
+
+end
+
+
+def Impl
+  attr_accessor :type, :location, :trait
+
+  def initialize(type, location, trait = nil)
+    @type = type; @location = location; @trait = trait
+  end
+
+  def implements_trait?
+    !@trait.nil?
+  end
+end
+
+def Query
+  def self.load!
+    Find.find('queries') do |path|
+      # find all the `.scm`, subdirs, and .rbs in `queries`, load each into a class that allows it to be executed across
+      # the whole source tree, producing the model as a result.
+    end
+  end
+end
+
+
+class SourceTree
+  def self.load!
+    Find.fine('src') do |path
+      # port the stuff from below, load it all once, and then have an API for running query across the whole tree
+    end
+  end
+
+end
 
 TreeStand.configure do
   config.parser_path = '.parsers'
@@ -22,6 +71,11 @@ parser = TreeStand::Parser.new('rust')
 # Load queries to a hash
 queries = {
   structs_enums_traits: File.read('queries/structs_enums_traits.scm'),
+  # These should be parameterized?
+  impl_for: File.read('queries/impl_for.scm'), # Searches for a bare impl block for a given typename.
+  impl_for_trait: File.read('queries/impl_for_trait.scm'), # Given a type name and a trait, searches for an impl block for that type for that trait.
+  trait_def: File.read('queries/trait_def.scm'), # Given a trait name, searches for the trait definition.
+  struct_def: File.read('queries/struct_def.scm'), # Given a struct name, searches for the struct definition.
 }
 
 source_files = Find.find('src') do |path|
@@ -47,12 +101,3 @@ source_files = Find.find('src') do |path|
     end
   end
 end
-
-
-
-# matches = tree.query(<<~QUERY)
-#   (struct_item name: (type_identifier) @struct.name)
-#   (enum_item name: (type_identifier) @enum.name)
-#   (trait_item name: (type_identifier) @enum.name)
-# QUERY
-
