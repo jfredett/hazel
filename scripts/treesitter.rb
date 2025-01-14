@@ -66,10 +66,12 @@ class Query
         scm = SCM.new(path)
         @registry[scm.key] = scm
       when path.end_with?('.rb')
-        require path
+        require File.join('.', path)
         klass_name = Query.key_for(path)
         klass = Object.const_get(klass_name)
-        @registry[klass_name] = klass.new
+        @registry[klass_name] = klass.new(path)
+      when path.end_with?('.scm.erb')
+        # TODO: `run!` should take a context hash.
       else
         next
       end
@@ -91,11 +93,10 @@ class Query
 
   def initialize(path)
     @src = path
-    @code = File.read(path)
   end
 
   def run!
-    raise 'abstract'
+    SourceTree.query(self.code)
   end
 
   def self.key_for(path)
@@ -110,9 +111,9 @@ class Query
 end
 
 class SCM < Query
-  def run!
-    puts "Running #{key}"
-    SourceTree.query(self.code)
+  def initialize(path)
+    super
+    @code = File.read(path)
   end
 end
 
@@ -132,7 +133,7 @@ class SourceTree
 
     def query(code)
       self.sources.map do |path, entry|
-        puts "Querying #{entry.path}"
+        # TODO: Move #query to Entry
         matches = entry.content.query(code)
         if matches.any?
           Result.new(path, entry.content.query(code))
@@ -166,6 +167,8 @@ class SourceTree
     end
   end
 
+  # TODO: Entry should have #query, and also a creation method that takes raw source and parses it for querying. This
+  # way I can execute queries on the results of other queries.
   class Entry
     attr_accessor :path
 
@@ -174,7 +177,6 @@ class SourceTree
     end
 
     def content
-      puts "Parsing #{@path}"
       @content ||= SourceTree.parse(File.read(@path))
     end
   end
@@ -187,15 +189,21 @@ SourceTree.load!
 Query.load!
 
 results = Query[:Structs].run!
-binding.pry
 results.each do |result|
+  # TODO: Move this into the query .scm somehow?
   key = "struct.name"
   result.matches.each do |match|
     obj = match[key]
     puts "#{result.path}:#{obj.range.start_point.row}: #{key.gsub(".name","")} #{obj.text}"
   end
+end
 
-rescue => e
-  binding.pry
-  abort
+puts ""
+puts "=================="
+puts ""
+
+
+# TODO: impl.scm -> impl.scm.erb, and pass the type name through.
+Query[:Impl2].run!("Move").each do |result|
+  puts result.matches[0]["impl.body"].text
 end
