@@ -1,4 +1,5 @@
 #TODO: Break this into files... I should probably make a gem. :/
+#TODO: Issue when parsing types w/ lots of generics (like Familiar), check on that.
 require 'async'
 require 'async/barrier'
 require 'find'
@@ -64,7 +65,8 @@ class Type
           location,
           name.text,
           params,
-          return_type
+          return_type,
+          trait
         )
 
         key = [trait, name.text]
@@ -94,9 +96,9 @@ class Type
     <<~DIA
       #{self.uml_kind} #{self.name} {
         .. fields ..
-        #{self.fields.map { |f| "#{f.name}: #{f.type}" }.join("\n  ")}
+        #{self.fields.map(&:to_uml).join("\n  ")}
         .. methods ..
-        #{self.api.map { |k, v| "#{v.name}()" }.join("\n  ")} 
+        #{self.api.map { |k, v| v.to_uml }.join("\n  ")} 
       }
     DIA
   end
@@ -145,7 +147,7 @@ class API
   end
 
   def to_uml
-    ret = "#{ret}(#{@params})"
+    ret = "#{@name}#{@params}"
     ret = "#{@trait}::#{ret}" if self.implements_trait?
     ret = "#{ret} -> #{@return_type}" if self.returns?
     ret
@@ -296,47 +298,18 @@ class SourceTree
 
 end
 
-
-
+# TODO: Marshall this and only load if the SHA has changed. -- Make a Marshall class, probably I should name this
+# something, damn it I'm getting attached.
 SourceTree.load!
 Query.load!
 
-# results = Query[:Structs].run!
-# results.each do |result|
-#   # TODO: Move this into the query .scm somehow?
-#   key = "struct.name"
-#   result.matches.each do |match|
-#     obj = match[key]
-#     puts "#{result.path}:#{obj.range.start_point.row}: #{key.gsub(".name","")} #{obj.text}"
-#   end
-# end
-
-puts ""
-puts "=================="
-puts ""
-
-
-# TODO: Marshall this and only load if the SHA has changed.
-# TODO: generalize the `dia` stuff below
-# TODO: Generate a basic UML diagram (no connections) with PlantUML
-
-
-def dia_for(klass) 
-  <<~DIA
-  @startuml
-  class #{klass.to_s} {
-  #{Type[klass].api.map { |k, v| "#{v.name}()" }.join("\n  ")}
-  }
-  @enduml
-  DIA
-end
 
 barrier = Async::Barrier.new
 Async do
 
   # TODO: These could be unified into a single query that returns any of them and extracts the :kind that way.
   barrier.async do
-    puts "Parsing Structs..."
+    STDERR.puts "Parsing Structs..."
     Query[:Structs].run!.each do |result|
       match = result.matches[0]
       name = match["struct.name"]
@@ -350,7 +323,7 @@ Async do
   end
 
   barrier.async do
-    puts "Parsing Enums..."
+    STDERR.puts "Parsing Enums..."
     Query[:Enums].run!.each do |result|
       match = result.matches[0]
       name = match["enum.name"]
@@ -364,7 +337,7 @@ Async do
   end
 
   barrier.async do
-    puts "Parsing Traits..."
+    STDERR.puts "Parsing Traits..."
     Query[:Traits].run!.each do |result|
       match = result.matches[0]
       name = match["trait.name"]
@@ -379,10 +352,10 @@ Async do
 
   barrier.wait
 
-  puts "Finding APIs..."
+  STDERR.puts "Finding APIs..."
   Type.types.each do |ty|
     barrier.async do
-      puts "  #{ty.kind} #{ty.name}"
+      STDERR.puts "  #{ty.kind} #{ty.name}"
       ty.find_apis!
     end
   end
@@ -401,6 +374,6 @@ Async do
   barrier.wait
 end
 
-puts "Done!"
+STDERR.puts "Done!"
 
 
