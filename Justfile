@@ -48,9 +48,10 @@ test *ARGS:
         fi
     fi
 
-treesitter:
-    bundle install
-    bundle exec ruby ./scripts/treesitter.rb
+treesitter FORMAT="utxt":
+    @bundle install &>/dev/null
+    bundle exec ruby ./scripts/treesitter.rb | tee uml.out
+    plantuml -t{{FORMAT}} uml.out
 
 coverage:
     cargo llvm-cov nextest --no-fail-fast --lcov --output-path ./.lcov

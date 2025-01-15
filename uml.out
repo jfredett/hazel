@@ -3,13 +3,13 @@ class PieceBoard {
   .. fields ..
   
   .. methods ..
-  from(ben: BEN)
-  from(ben: &BEN)
-  from(fen: FEN)
-  from(fen: &FEN)
-  default()
-  get(&self, square: impl Into<Square>)
-  alter(&self, alter: Alteration) 
+  From<BEN>::from(ben: BEN)
+  From<&BEN>::from(ben: &BEN)
+  From<FEN>::from(fen: FEN)
+  From<&FEN>::from(fen: &FEN)
+  Default::default()
+  Query::get(&self, square: impl Into<Square>)
+  Alter::alter(&self, alter: Alteration) 
 }
 
 class MoveGenerator {
@@ -24,8 +24,8 @@ class Move {
   
   .. methods ..
   generate(&ply: &Ply, color: Color)
-  fmt(&self, f: &mut Formatter<'_>)
-  fmt(&self, f: &mut Formatter<'_>)
+  Debug::fmt(&self, f: &mut Formatter<'_>)
+  Display::fmt(&self, f: &mut Formatter<'_>)
   empty()
   new(source: impl Into<Square>, target: impl Into<Square>, metadata: MoveType)
   null()
@@ -38,7 +38,7 @@ class Move {
   promotion_piece(&self)
   move_metadata(&self)
   to_uci(&self)
-  from(uci: UCI) 
+  From<UCI>::from(uci: UCI) 
 }
 
 class Hazel {
@@ -53,7 +53,7 @@ class Stockfish {
   .. fields ..
   
   .. methods ..
-  default()
+  Default::default()
   new() 
 }
 
@@ -70,9 +70,9 @@ class CastleRights {
   .. fields ..
   
   .. methods ..
-  from(castling: u8)
-  from(castling: u32)
-  arbitrary(g: &mut Gen) 
+  From<u8>::from(castling: u8)
+  From<u32>::from(castling: u32)
+  Arbitrary::arbitrary(g: &mut Gen) 
 }
 
 class Familiar {
@@ -93,9 +93,9 @@ class PositionMetadata {
   .. fields ..
   
   .. methods ..
-  default()
-  from(data: u32)
-  arbitrary(g: &mut Gen) 
+  Default::default()
+  From<u32>::from(data: u32)
+  Arbitrary::arbitrary(g: &mut Gen) 
 }
 
 class Variation {
@@ -111,11 +111,11 @@ class BEN {
   .. fields ..
   
   .. methods ..
-  from(game: ChessGame<T>)
-  from(fen: FEN)
-  from(pb: PieceBoard)
-  get(&self, square: impl Into<Square>)
-  alter(&self, alter: Alteration)
+  From<ChessGame<T>>::from(game: ChessGame<T>)
+  From<FEN>::from(fen: FEN)
+  From<PieceBoard>::from(pb: PieceBoard)
+  Query::get(&self, square: impl Into<Square>)
+  Alter::alter(&self, alter: Alteration)
   new(pos: &str)
   empty()
   with_metadata(metadata: PositionMetadata)
@@ -127,13 +127,13 @@ class FEN {
   .. fields ..
   
   .. methods ..
-  from(board: PieceBoard)
-  from(game: ChessGame<T>)
-  from(ben: BEN)
-  from(ben: &BEN)
-  get(&self, s: impl Into<Square>)
-  alter(&self, alteration: Alteration)
-  default()
+  From<PieceBoard>::from(board: PieceBoard)
+  From<ChessGame<T>>::from(game: ChessGame<T>)
+  From<BEN>::from(ben: BEN)
+  From<&BEN>::from(ben: &BEN)
+  Query::get(&self, s: impl Into<Square>)
+  Alter::alter(&self, alteration: Alteration)
+  Default::default()
   start_position()
   position(&self)
   with_default_metadata(fen: &str)
@@ -143,7 +143,7 @@ class FEN {
   castling(&self)
   setup(&self)
   metadata(&self)
-  from(board: &PieceBoard)
+  From<&PieceBoard>::from(board: &PieceBoard)
   set_style(mut self, style: Style)
   alignment(mut self, alignment: Alignment)
   center(self) 
@@ -154,8 +154,8 @@ class Position {
   
   .. methods ..
   new(fen: &str)
-  from(c: C)
-  default() 
+  From<C>::from(c: C)
+  Default::default() 
 }
 
 class PGN {
@@ -191,8 +191,8 @@ class RankFile {
   .. fields ..
   
   .. methods ..
-  default()
-  from(square: Square)
+  Default::default()
+  From<Square>::from(square: Square)
   last_square(&self)
   current_square(&self) 
 }
@@ -201,10 +201,10 @@ class Square {
   .. fields ..
   
   .. methods ..
-  from(coords: (usize, usize))
-  from(coords: (u16, u16))
-  from((rank, file): (usize, File))
-  from(square: &Square)
+  From<(usize, usize)>::from(coords: (usize, usize))
+  From<(u16, u16)>::from(coords: (u16, u16))
+  From<(usize, File)>::from((rank, file): (usize, File))
+  From<&Square>::from(square: &Square)
   by_rank_and_file()
   fenwise()
   along_rank(rank: usize)
@@ -212,21 +212,21 @@ class Square {
   new(index: usize)
   set_rank(&mut self, rank: usize)
   set_file(&mut self, file: usize)
-  arbitrary(g: &mut Gen) 
+  Arbitrary::arbitrary(g: &mut Gen) 
 }
 
 class NonEdgeSquare {
   .. fields ..
   
   .. methods ..
-  arbitrary(g: &mut Gen) 
+  Arbitrary::arbitrary(g: &mut Gen) 
 }
 
 class UCI {
   .. fields ..
   
   .. methods ..
-  from(mov: Move) 
+  From<Move>::from(mov: Move) 
 }
 
 class IndexIterator {
@@ -240,20 +240,20 @@ class Bitboard {
   .. fields ..
   
   .. methods ..
-  arbitrary(g: &mut Gen)
-  not(self)
-  mul(self, rhs: Bitboard)
-  mul(self, rhs: u64)
+  Arbitrary::arbitrary(g: &mut Gen)
+  Not::not(self)
+  Mul::mul(self, rhs: Bitboard)
+  Mul<u64>::mul(self, rhs: u64)
   empty()
   full()
   from_index(index: usize)
-  default()
-  fmt(&self, f: &mut Formatter<'_>)
-  fmt(&self, f: &mut Formatter<'_>)
-  from(u: usize)
-  from(n: N)
-  from(b: u64)
-  from(n: &str)
+  Default::default()
+  Debug::fmt(&self, f: &mut Formatter<'_>)
+  Display::fmt(&self, f: &mut Formatter<'_>)
+  From<usize>::from(u: usize)
+  From<N>::from(n: N)
+  From<u64>::from(b: u64)
+  From<&str>::from(n: &str)
   shift(&self, d: Direction)
   shift_by(&self, d: Direction, amt: usize) 
 }
@@ -422,11 +422,11 @@ enum File {
   .. fields ..
   
   .. methods ..
-  from(value: u8)
-  from(value: char)
+  From<u8>::from(value: u8)
+  From<char>::from(value: char)
   to_bitboard(self)
   from_index(index: usize)
-  arbitrary(g: &mut Gen) 
+  Arbitrary::arbitrary(g: &mut Gen) 
 }
 
 enum PossibleMove {
@@ -526,11 +526,11 @@ enum Color {
   .. fields ..
   
   .. methods ..
-  from(value: u8)
+  From<u8>::from(value: u8)
   pawn_direction(self)
   pawn_rank(self)
   promotion_rank(self)
-  arbitrary(g: &mut Gen) 
+  Arbitrary::arbitrary(g: &mut Gen) 
 }
 
 enum Direction {
@@ -551,7 +551,7 @@ enum Occupant {
   .. fields ..
   
   .. methods ..
-  from(value: u8)
+  From<u8>::from(value: u8)
   empty()
   white(piece: Piece)
   black(piece: Piece)
@@ -573,7 +573,7 @@ enum Occupant {
   queen(color: Color)
   king(color: Color)
   pawn(color: Color)
-  arbitrary(g: &mut Gen) 
+  Arbitrary::arbitrary(g: &mut Gen) 
 }
 
 enum Piece {
@@ -581,8 +581,8 @@ enum Piece {
   
   .. methods ..
   last_piece()
-  from(v: u16)
-  arbitrary(g: &mut Gen) 
+  From<u16>::from(v: u16)
+  Arbitrary::arbitrary(g: &mut Gen) 
 }
 
 enum WitchError {

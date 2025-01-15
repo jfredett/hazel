@@ -35,10 +35,10 @@
                     };
 
                     enterShell = ''
-                                mkdir -p .parsers
-                                rm .parsers/*
-                                ln -s "${pkgs.tree-sitter-grammars.tree-sitter-rust}/parser" .parsers/rust.so
-                                ln -s "${pkgs.tree-sitter-grammars.tree-sitter-rust}/queries" .parsers/rust_queries
+                        mkdir -p .parsers
+                        rm .parsers/*
+                        ln -s "${pkgs.tree-sitter-grammars.tree-sitter-rust}/parser" .parsers/rust.so
+                        ln -s "${pkgs.tree-sitter-grammars.tree-sitter-rust}/queries" .parsers/rust_queries
                     '';
 
 
