@@ -50,7 +50,7 @@ test *ARGS:
 
 treesitter FORMAT="utxt":
     @bundle install &>/dev/null
-    bundle exec ruby ./scripts/treesitter.rb | tee uml.out
+    bundle exec ruby ./scripts/main.rb | tee uml.out
     plantuml -t{{FORMAT}} uml.out
 
 coverage:
