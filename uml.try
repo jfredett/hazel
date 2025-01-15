@@ -1,0 +1,659 @@
+@startuml
+interface Engine {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+interface Alter {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+interface CompilesTo {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+interface Play {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+interface Query {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+interface MessageFor {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+class PieceBoard {
+  .. fields ..
+  
+  .. methods ..
+  from()
+  from()
+  from()
+  from()
+  default()
+  get()
+  alter() 
+}
+
+class MoveGenerator {
+  .. fields ..
+  
+  .. methods ..
+  new() 
+}
+
+class Move {
+  .. fields ..
+  
+  .. methods ..
+  generate()
+  fmt()
+  fmt()
+  empty()
+  new()
+  null()
+  from_notation()
+  to_pgn()
+  long_castle()
+  short_castle()
+  source()
+  target()
+  promotion_piece()
+  move_metadata()
+  to_uci()
+  from() 
+}
+
+class Hazel {
+  .. fields ..
+  
+  .. methods ..
+  new()
+  input_widget() 
+}
+
+class Stockfish {
+  .. fields ..
+  
+  .. methods ..
+  default()
+  new() 
+}
+
+class UCIOption {
+  .. fields ..
+  
+  .. methods ..
+  new()
+  empty()
+  parse() 
+}
+
+class CastleRights {
+  .. fields ..
+  
+  .. methods ..
+  from()
+  from()
+  arbitrary() 
+}
+
+class Familiar {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+class ChessGame {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+class PositionMetadata {
+  .. fields ..
+  
+  .. methods ..
+  default()
+  from()
+  arbitrary() 
+}
+
+class Variation {
+  .. fields ..
+  
+  .. methods ..
+  new()
+  familiar()
+  current_position() 
+}
+
+class BEN {
+  .. fields ..
+  
+  .. methods ..
+  from()
+  from()
+  from()
+  get()
+  alter()
+  new()
+  empty()
+  with_metadata()
+  metadata()
+  side_to_move() 
+}
+
+class FEN {
+  .. fields ..
+  
+  .. methods ..
+  from()
+  from()
+  from()
+  from()
+  get()
+  alter()
+  default()
+  start_position()
+  position()
+  with_default_metadata()
+  with_metadata()
+  new()
+  side_to_move()
+  castling()
+  setup()
+  metadata()
+  from()
+  set_style()
+  alignment()
+  center() 
+}
+
+class Position {
+  .. fields ..
+  
+  .. methods ..
+  new()
+  from()
+  default() 
+}
+
+class PGN {
+  .. fields ..
+  
+  .. methods ..
+  familiar()
+  current_position() 
+}
+
+class TagPairs {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+class SAN {
+  .. fields ..
+  
+  .. methods ..
+  new() 
+}
+
+class RankIterator {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+class RankFile {
+  .. fields ..
+  
+  .. methods ..
+  default()
+  from()
+  last_square()
+  current_square() 
+}
+
+class Square {
+  .. fields ..
+  
+  .. methods ..
+  from()
+  from()
+  from()
+  from()
+  by_rank_and_file()
+  fenwise()
+  along_rank()
+  along_file()
+  new()
+  set_rank()
+  set_file()
+  arbitrary() 
+}
+
+class NonEdgeSquare {
+  .. fields ..
+  
+  .. methods ..
+  arbitrary() 
+}
+
+class UCI {
+  .. fields ..
+  
+  .. methods ..
+  from() 
+}
+
+class IndexIterator {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+class Bitboard {
+  .. fields ..
+  
+  .. methods ..
+  arbitrary()
+  not()
+  mul()
+  mul()
+  empty()
+  full()
+  from_index()
+  default()
+  fmt()
+  fmt()
+  from()
+  from()
+  from()
+  from()
+  shift()
+  shift_by() 
+}
+
+class Cursor {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+class Log {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+class Transaction {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+class WriteHead {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+class MoveSheet {
+  .. fields ..
+  
+  .. methods ..
+  new() 
+}
+
+class PEXTBoard {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+class Witch {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+class TestMessage {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+class WitchHandle {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+class Board {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+class EngineIOSection {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+class BoardSection {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+class InfoSection {
+  .. fields ..
+  
+  .. methods ..
+  new() 
+}
+
+class PGNSection {
+  .. fields ..
+  
+  .. methods ..
+  new() 
+}
+
+class GameSectionLayout {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+class Input {
+  .. fields ..
+  
+  .. methods ..
+  content()
+  flush() 
+}
+
+class Output {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+class Placeholder {
+  .. fields ..
+  
+  .. methods ..
+  of_size()
+  borders()
+  text()
+  calculate_text()
+  set_style() 
+}
+
+class SmallBoard {
+  .. fields ..
+  
+  .. methods ..
+  from() 
+}
+
+class Tile {
+  .. fields ..
+  
+  .. methods ..
+  new()
+  query_line() 
+}
+
+class Charray {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+class Mask {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+enum File {
+  .. fields ..
+  
+  .. methods ..
+  from()
+  from()
+  to_bitboard()
+  from_index()
+  arbitrary() 
+}
+
+enum PossibleMove {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+enum MoveType {
+  .. fields ..
+  
+  .. methods ..
+  new()
+  quiet()
+  capture()
+  short_castle()
+  long_castle()
+  null_move() 
+}
+
+enum State {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+enum UCIMessage {
+  .. fields ..
+  
+  .. methods ..
+  parse() 
+}
+
+enum Action {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+enum Delim {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+enum Reason {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+enum Alteration {
+  .. fields ..
+  
+  .. methods ..
+  place()
+  remove()
+  tag()
+  clear()
+  inverse() 
+}
+
+enum PGNToken {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+enum Disambiguator {
+  .. fields ..
+  
+  .. methods ..
+  square() 
+}
+
+enum CastleMove {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+enum RankDirection {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+enum Color {
+  .. fields ..
+  
+  .. methods ..
+  from()
+  pawn_direction()
+  pawn_rank()
+  promotion_rank()
+  arbitrary() 
+}
+
+enum Direction {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+enum MoveSheetEntry {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+enum Occupant {
+  .. fields ..
+  
+  .. methods ..
+  from()
+  empty()
+  white()
+  black()
+  white_king()
+  white_queen()
+  white_rook()
+  white_bishop()
+  white_knight()
+  white_pawn()
+  black_king()
+  black_queen()
+  black_rook()
+  black_bishop()
+  black_knight()
+  black_pawn()
+  rook()
+  knight()
+  bishop()
+  queen()
+  king()
+  pawn()
+  arbitrary() 
+}
+
+enum Piece {
+  .. fields ..
+  
+  .. methods ..
+  last_piece()
+  from()
+  arbitrary() 
+}
+
+enum WitchError {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+enum Command {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+enum Mode {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+enum Origin {
+  .. fields ..
+  
+  .. methods ..
+   
+}
+
+@enduml
+Done!

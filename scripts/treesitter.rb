@@ -1,7 +1,10 @@
-require 'tree_sitter'
-require 'pry'
-require 'tree_stand'
+#TODO: Break this into files... I should probably make a gem. :/
+require 'async'
+require 'async/barrier'
 require 'find'
+require 'pry'
+require 'tree_sitter'
+require 'tree_stand'
 
 
 class Location
@@ -13,11 +16,14 @@ class Location
 end
 
 class Type
-  attr_accessor :name, :location, :kind
+  # TODO: Look at this mess, clean up.
+  attr_accessor :name, :location, :kind, :fields
   attr_reader :api
 
-  def initialize(name, location, kind)
-    @name = name; @location = location; @kind = kind
+  # TODO: Fields. Removing the default should break the right stuff, extend the query, maybe connect w/ the
+  # struct/enum/trait refactor?
+  def initialize(name, location, kind, fields = {})
+    @name = name; @location = location; @kind = kind ; @fields = fields; 
   end
 
   def find_apis!(refresh: false)
@@ -29,6 +35,7 @@ class Type
     Query[:Impl].run!(self.name).each do |result|
       result.matches.each do |match|
         name = match["function.name"]
+        next if name.nil?
         params = match["function.parameters"]
         return_type = match["function.return_type"]
         trait_name = match["trait.name"]
@@ -70,10 +77,38 @@ class Type
     nil
   end
 
+  def uml_kind
+    case self.kind
+    when :struct
+      "class"
+    when :enum
+      "enum"
+    when :trait
+      "interface"
+    else
+      raise "Unknown kind: #{self.kind}"
+    end
+  end
+
+  def to_uml
+    <<~DIA
+      #{self.uml_kind} #{self.name} {
+        .. fields ..
+        #{self.fields.map { |f| "#{f.name}: #{f.type}" }.join("\n  ")}
+        .. methods ..
+        #{self.api.map { |k, v| "#{v.name}()" }.join("\n  ")} 
+      }
+    DIA
+  end
+
   class << self
     def register!(name, obj)
       @registry ||= {}
       @registry[name] = obj
+    end
+
+    def types
+      @registry.values
     end
 
     def [](name)
@@ -92,12 +127,10 @@ class Type
       new(name, location, :trait).tap { |o| register!(name, o) }
     end
   end
-
 end
 
-
 class API
-  attr_accessor :parent, :location, :trait
+  attr_reader :parent, :location, :trait, :name, :params, :return_type
 
   def initialize(parent, location, name, params, return_type, trait = nil)
     @parent = parent; @location = location; @name = name; @params = params; @return_type = return_type; @trait = trait
@@ -110,46 +143,17 @@ class API
   def implements_trait?
     !@trait.nil?
   end
+
+  def to_uml
+    ret = "#{ret}(#{@params})"
+    ret = "#{@trait}::#{ret}" if self.implements_trait?
+    ret = "#{ret} -> #{@return_type}" if self.returns?
+    ret
+  end
 end
 
 class Query
   attr_reader :src_path, :code
-
-  # Find all the queries in the queries directory, and load them into a registry by name. Queries can be either `.scm`
-  # or .`.rb` files. `.scm` files are assumed to be treesitter queries to be executed on the source tree and return
-  # their matches from the #run! method.
-  #
-  # `.rb` files are assumed to be ducks of the Query class (you can subclass it to get most of the behavior for most
-  # queries). This will let you implement your own `#run!` method, and you can refer to other queries by their name in
-  # the registry a la `Query[:NameOfQuery].run!`.
-  #
-  # This method loads all these queries into a flat registry, nested directories are allowed, but the namespace is flat,
-  # So you will need to ensure that your queries have unique names across the whole `queries` directory and it's
-  # children.
-  def self.load!
-    @registry ||= {}
-    Find.find('queries') do |path|
-      Find.prune if File.directory?(path) && File.basename(path).start_with?('.')
-      case
-      when path.end_with?('.scm')
-        scm = SCM.new(path)
-        @registry[scm.key] = scm
-      when path.end_with?('.rb')
-        require File.join('.', path)
-        klass_name = Query.key_for(path)
-        klass = Object.const_get(klass_name)
-        @registry[klass_name] = klass.new(path)
-      when path.end_with?('.scm.erb')
-        # TODO: `run!` should take a context hash.
-      else
-        next
-      end
-    end
-  end
-
-  def self.[](key)
-    @registry[key]
-  end
 
   # TODO: this should support a filter over the find results. When executing I want to cache the parse if I can, but I
   # could generate a list of paths using another find, this assumes no changes during the generation, but locking is a
@@ -168,14 +172,54 @@ class Query
     SourceTree.query(self.code)
   end
 
-  def self.key_for(path)
-    snake_case = File.basename(path).gsub('.scm', '').gsub('.rb', '')
-    # "camel_case" -> :CamelCase
-    snake_case.split('_').map(&:capitalize).join.to_sym
-  end
-
   def key
     self.class.key_for(@src)
+  end
+
+  class << self
+    # Find all the queries in the queries directory, and load them into a registry by name. Queries can be either `.scm`
+    # or .`.rb` files. `.scm` files are assumed to be treesitter queries to be executed on the source tree and return
+    # their matches from the #run! method.
+    #
+    # `.rb` files are assumed to be ducks of the Query class (you can subclass it to get most of the behavior for most
+    # queries). This will let you implement your own `#run!` method, and you can refer to other queries by their name in
+    # the registry a la `Query[:NameOfQuery].run!`.
+    #
+    # This method loads all these queries into a flat registry, nested directories are allowed, but the namespace is flat,
+    # So you will need to ensure that your queries have unique names across the whole `queries` directory and it's
+    # children.
+    # 
+    # TODO: Strategy pattern
+    def load!
+      @registry ||= {}
+      Find.find('queries') do |path|
+        Find.prune if File.directory?(path) && File.basename(path).start_with?('.')
+        case
+        when path.end_with?('.scm')
+          scm = SCM.new(path)
+          @registry[scm.key] = scm
+        when path.end_with?('.rb')
+          require File.join('.', path)
+          klass_name = Query.key_for(path)
+          klass = Object.const_get(klass_name)
+          @registry[klass_name] = klass.new(path)
+        when path.end_with?('.scm.erb')
+          # TODO: `run!` should take a context hash.
+        else
+          next
+        end
+      end
+    end
+
+    def [](key)
+      @registry[key]
+    end
+
+    def key_for(path)
+      snake_case = File.basename(path).gsub('.scm', '').gsub('.rb', '')
+      # "camel_case" -> :CamelCase
+      snake_case.split('_').map(&:capitalize).join.to_sym
+    end
   end
 end
 
@@ -272,37 +316,91 @@ puts "=================="
 puts ""
 
 
-# TODO: impl.scm -> impl.scm.erb, and pass the type name through.
-Query[:Impl].run!("Move").each do |result|
-  result.matches.each do |match|
-    puts "#{match["function.name"].text}#{match["function.parameters"].text}"
+# TODO: Marshall this and only load if the SHA has changed.
+# TODO: generalize the `dia` stuff below
+# TODO: Generate a basic UML diagram (no connections) with PlantUML
+
+
+def dia_for(klass) 
+  <<~DIA
+  @startuml
+  class #{klass.to_s} {
+  #{Type[klass].api.map { |k, v| "#{v.name}()" }.join("\n  ")}
+  }
+  @enduml
+  DIA
+end
+
+barrier = Async::Barrier.new
+Async do
+
+  # TODO: These could be unified into a single query that returns any of them and extracts the :kind that way.
+  barrier.async do
+    puts "Parsing Structs..."
+    Query[:Structs].run!.each do |result|
+      match = result.matches[0]
+      name = match["struct.name"]
+      location = Location.new(
+        result.path,
+        name.range.start_point.row,
+        name.range.start_point.column
+      )
+      Type.struct(name.text, location)
+    end
   end
+
+  barrier.async do
+    puts "Parsing Enums..."
+    Query[:Enums].run!.each do |result|
+      match = result.matches[0]
+      name = match["enum.name"]
+      location = Location.new(
+        result.path,
+        name.range.start_point.row,
+        name.range.start_point.column
+      )
+      Type.enum(name.text, location)
+    end
+  end
+
+  barrier.async do
+    puts "Parsing Traits..."
+    Query[:Traits].run!.each do |result|
+      match = result.matches[0]
+      name = match["trait.name"]
+      location = Location.new(
+        result.path,
+        name.range.start_point.row,
+        name.range.start_point.column
+      )
+      Type.trait(name.text, location)
+    end
+  end
+
+  barrier.wait
+
+  puts "Finding APIs..."
+  Type.types.each do |ty|
+    barrier.async do
+      puts "  #{ty.kind} #{ty.name}"
+      ty.find_apis!
+    end
+  end
+
+  barrier.wait
+
+  puts "@startuml"
+  Type.types.each do |ty|
+    barrier.async do
+      puts ty.to_uml
+      puts ""
+    end
+  end
+  puts "@enduml"
+
+  barrier.wait
 end
 
-Query[:Structs].run!.each do |result|
-  match = result.matches[0]
-  name = match["struct.name"]
-  location = Location.new(
-    result.path,
-    name.range.start_point.row,
-    name.range.start_point.column
-  )
-  Type.struct(name.text, location)
-end
-
-Query[:Enums].run!.each do |result|
-  match = result.matches[0]
-  name = match["enum.name"]
-  location = Location.new(
-    result.path,
-    name.range.start_point.row,
-    name.range.start_point.column
-  )
-  Type.enum(name.text, location)
-end
+puts "Done!"
 
 
-
-Type["UCI"].find_apis!
-
-binding.pry
