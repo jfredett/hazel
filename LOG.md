@@ -1704,3 +1704,29 @@ What works now is a dump of the definition of every struct, enum, and trait, alo
 
 Ideally I'll generate something approximating a UML card for each of these types, then I can figure out how to link it
 all together.
+
+# 15-JAN-2025
+
+## 1111 - movegen
+
+Made a lot of progress on the ruby/treesitter stuff, and integrated `PlantUML` which I really like so far. I think I'm
+at the point where I need to start treating it as it's own thing, but it's still very tied to this project, so I'm not
+sure I want to move it out of the repo yet. I also have a long-term plan to make `hazel` a multi-crate thing, in
+particular the `ui`, the `types` and this ruby thing (which lacks a name) should all be separate projects, but probably
+under the same git repo? Not sure.
+
+I know cargo supports this OOB, so I'm gonna take some time soon and work on a prototype of this, but I think the crate
+split is probably after movegen is done.
+
+Right now I can generate some UML 'cards' for each of the ADTs in the repo (more or less), there is still some missing
+information here and there, but the concept is working alright and it's mostly about marshalling things to my internal
+representation.
+
+I _would_ like to rewrite a bunch of this in Rust at some point, the ruby is quite slow, but I definitely want to get it
+producing a diagram with at least all the cards, and maybe adding some relationships where it makes sense.
+
+## 1456 - movegen
+
+Two steps back, one step forward on the UML thing, I broke it up, started refactoring to support grabbing fields, and
+ended up turning a bunch of things off in the meantime. I think I'm getting pretty close to the 'just extract it' and
+maybe even the 'riir' phase of this thing, but for now I'm just going to keep chipping away at it.

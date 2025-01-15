@@ -13,6 +13,7 @@ pub mod from_into;
 #[derive(Clone, Copy, PartialEq)]
 pub struct PieceBoard {
     pub board: [Occupant; 64],
+    tmp: ()
 }
 
 impl Default for PieceBoard {
