@@ -1,5 +1,6 @@
 # Captures items in `impl (Trait<T> for)? #TYPE` blocks.
-class Query
+# TODO: I think I'm missing all the Async stuff?
+class Quer
   class Impl < SCM
     def code(type_name)
       <<~QUERY.strip

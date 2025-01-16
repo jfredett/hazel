@@ -8,7 +8,11 @@ class Query
         ; @vis struct @type {
         ;  <@field.vis @field.name: @field.type>,*
         ; }
-
+        ;
+        ; These are not captured by this query
+        ;
+        ; struct NewType(isize);
+        ; type TypeAlias = isize;
         (struct_item
           (visibility_modifier)? @vis
           name: (type_identifier) @type
@@ -36,7 +40,6 @@ class Query
         )
         type_name = name.text
 
-        # FIXME: Does not appear to capture all fields.
         fields = {}
         result.matches.each do |match|
           vis = match["field.vis"].text if match.has_key? "field.vis"

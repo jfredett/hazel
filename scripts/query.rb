@@ -36,6 +36,8 @@ class Query
     # children.
     #
     # This loads all the queries underneath the `Query` constant to avoid name collisions.
+    #
+    # TODO: Drop support for .scm, just do .rb, and collapse SCM -> Query
     def load!
       @registry ||= {}
       Find.find('queries') do |path|
@@ -49,8 +51,6 @@ class Query
           klass_name = Query.key_for(path)
           klass = Query.const_get(klass_name)
           @registry[klass_name] = klass.new(path)
-        when path.end_with?('.scm.erb')
-          # TODO: `run!` should take a context hash.
         else
           next
         end

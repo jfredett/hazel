@@ -3,10 +3,20 @@ class Type
   attr_accessor :name, :location, :kind, :fields
   attr_reader :api
 
-  # FIXME: Fields is currently really 'fields' or 'variants with optional fields', the latter only if `kind` is :enum. 
-  # These should be separate classes, but I end up in naming confliction with the query stuff. Solution is to namespace
-  # query objects underneath `Query` and type stuff underneath `Type`, but that probably needs a bigger refactor to
-  # separate files and maybe a separate project.
+  FILTERED_FIELD_TYPES = %w(u8 u16 u32 u64 i8 i16 i32 i64 isize usize bool str char String () Self)
+  
+
+  # FIXME: 15-JAN-2025 - Afternoon - Fields is currently really 'fields' or 'variants with optional fields', the latter
+  # only if `kind` is :enum. These should be separate classes, but I end up in naming confliction with the query stuff.
+  # Solution is to namespace query objects underneath `Query` and type stuff underneath `Type`, but that probably needs
+  # a bigger refactor to separate files and maybe a separate project.
+  #
+  # 2218 - Put the queries transparently under `Query`. The way to refactor this is going to move to a module `Model`
+  # under which I'll have `Struct, Field, Enum, Variant, Trait`, etc. Last will be to extract the database creation
+  # stuff to it's own class that can then be responsible for creating and saving the results of queries.
+  #
+  # I also need to shove this in a better directory structure.
+  #
   def initialize(name, location, kind, fields = {})
     @name = name; @location = location; @kind = kind ; @fields = fields;
   end
@@ -66,7 +76,7 @@ class Type
   def uml_kind
     case self.kind
     when :struct
-      "class"
+      "struct"
     when :enum
       "enum"
     when :trait
@@ -74,6 +84,16 @@ class Type
     else
       raise "Unknown kind: #{self.kind}"
     end
+  end
+
+  def uml_links
+    self.fields.values.map do |f|
+      "\"#{f.type}\" *-- \"#{self.name}\"" unless self.skip_field?(f.type)
+    end.reject(&:nil?).join("\n")
+  end
+
+  def skip_field?(field_type)
+    FILTERED_FIELD_TYPES.include?(field_type)
   end
 
   def to_uml
