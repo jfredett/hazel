@@ -38,13 +38,14 @@ class Query
 
         # FIXME: Does not appear to capture all fields.
         fields = {}
-        result.matches.each do |field|
+        result.matches.each do |match|
           vis = match["field.vis"].text if match.has_key? "field.vis"
           field_name = match["field.name"].text if match.has_key? "field.name"
           type = match["field.type"].text if match.has_key? "field.type"
 
           fields[field_name.to_sym] = Field.new(vis, field_name.to_sym, type)
         end
+
 
         Type.struct(type_name, location, fields)
       end

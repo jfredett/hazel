@@ -2,6 +2,7 @@
 class PieceBoard {
   .. fields ..
   pub board: [Occupant; 64]
+  tmp: ()
   .. methods ..
   From<BEN>::from(ben: BEN)
   From<&BEN>::from(ben: &BEN)
@@ -22,6 +23,9 @@ class MoveGenerator {
 class Hazel {
   .. fields ..
   flags: HashMap<String, bool>
+  engine: ()
+  mode: Mode
+  tile: Tile
   .. methods ..
   new()
   input_widget(&self) 
@@ -30,6 +34,8 @@ class Hazel {
 class Stockfish {
   .. fields ..
   child: Child
+  stdin: ChildStdin
+  stdout: BufReader<ChildStdout>
   .. methods ..
   Default::default()
   new() 
@@ -38,6 +44,11 @@ class Stockfish {
 class UCIOption {
   .. fields ..
   name: String
+  option_type: String
+  default: String
+  min: String
+  max: String
+  var: Vec<String>
   .. methods ..
   new(name: String, option_type: String, default: String, min: String, max: String, var: Vec<String>)
   empty()
@@ -47,6 +58,9 @@ class UCIOption {
 class CastleRights {
   .. fields ..
   pub white_short: bool
+  pub white_long: bool
+  pub black_short: bool
+  pub black_long: bool
   .. methods ..
   From<u8>::from(castling: u8)
   From<u32>::from(castling: u32)
@@ -56,6 +70,7 @@ class CastleRights {
 class Familiar {
   .. fields ..
   cursor: Cursor<'a, Action<Move, BEN>>
+  movesheets: Vec<MoveSheet>
   .. methods ..
    
 }
@@ -63,6 +78,7 @@ class Familiar {
 class ChessGame {
   .. fields ..
   pub rep: T
+  pub metadata: PositionMetadata
   .. methods ..
    
 }
@@ -70,6 +86,10 @@ class ChessGame {
 class PositionMetadata {
   .. fields ..
   pub side_to_move: Color
+  pub castling: CastleRights
+  pub en_passant: Option<Square>
+  pub halfmove_clock: u8
+  pub fullmove_number: u16
   .. methods ..
   Default::default()
   From<u32>::from(data: u32)
@@ -79,6 +99,7 @@ class PositionMetadata {
 class Variation {
   .. fields ..
   log: Log<Action<Move, BEN>>
+  halted: bool
   .. methods ..
   new()
   familiar(&mut self)
@@ -88,6 +109,7 @@ class Variation {
 class BEN {
   .. fields ..
   position: [u8; 32]
+  metadata: PositionMetadata
   .. methods ..
   From<ChessGame<T>>::from(game: ChessGame<T>)
   From<FEN>::from(fen: FEN)
@@ -104,6 +126,8 @@ class BEN {
 class FEN {
   .. fields ..
   fen: crate::notation::fen::FEN
+  style: Style
+  alignment: Alignment
   .. methods ..
   From<PieceBoard>::from(board: PieceBoard)
   From<ChessGame<T>>::from(game: ChessGame<T>)
@@ -130,6 +154,7 @@ class FEN {
 class Position {
   .. fields ..
   position_string: String
+  position: Vec<Alteration>
   .. methods ..
   new(fen: &str)
   From<C>::from(c: C)
@@ -139,6 +164,7 @@ class Position {
 class PGN {
   .. fields ..
   tag_pairs: Vec<TagPair>
+  variation: Variation
   .. methods ..
   familiar(&mut self)
   current_position(&self) 
@@ -147,6 +173,7 @@ class PGN {
 class TagPair {
   .. fields ..
   pub(crate) name: String
+  pub(crate) value: String
   .. methods ..
    
 }
@@ -154,13 +181,25 @@ class TagPair {
 class SAN {
   .. fields ..
   source_piece: Option<Piece>
+  captured_piece: Option<Piece>
+  disambiguator: Option<Disambiguator>
+  capturing: bool
+  source_sq: Option<Square>
+  target_sq: Option<Square>
+  ambiguous_sq: Option<Square>
+  promotion: Option<Piece>
+  castle_short: bool
+  castle_long: bool
+  context: BEN
   .. methods ..
   new(fen: impl Into<BEN>) 
 }
 
 class RankIterator {
   .. fields ..
-  rank: usize
+  rank: Option<usize>
+  file: File
+  direction: RankDirection
   .. methods ..
    
 }
@@ -168,6 +207,10 @@ class RankIterator {
 class RankFile {
   .. fields ..
   done: bool
+  rank: usize
+  file: usize
+  rank_direction: RankDirection
+  file_direction: FileDirection
   .. methods ..
   Default::default()
   From<Square>::from(square: Square)
@@ -178,6 +221,9 @@ class RankFile {
 class UCI {
   .. fields ..
   source: Square
+  target: Square
+  promotion_piece: Option<Piece>
+  metadata: MoveType
   .. methods ..
   From<Move>::from(mov: Move) 
 }
@@ -192,6 +238,7 @@ class IndexIterator {
 class Cursor {
   .. fields ..
   log: &'a Log<T>
+  position: Option<usize>
   .. methods ..
    
 }
@@ -199,6 +246,9 @@ class Cursor {
 class Log {
   .. fields ..
   log: Vec<T>
+  current_txn: Transaction<T>
+  stack: Vec<Transaction<T>>
+  write_head: usize
   .. methods ..
    
 }
@@ -206,6 +256,7 @@ class Log {
 class Transaction {
   .. fields ..
   content: Vec<T>
+  finished: bool
   .. methods ..
    
 }
@@ -213,6 +264,7 @@ class Transaction {
 class WriteHead {
   .. fields ..
   log: &'a mut Log<T>
+  position: usize
   .. methods ..
    
 }
@@ -220,6 +272,8 @@ class WriteHead {
 class MoveSheet {
   .. fields ..
   sheet: Vec<MoveSheetEntry>
+  line: Vec<Move>
+  initial_state: BEN
   .. methods ..
   new() 
 }
@@ -234,6 +288,9 @@ class PEXTBoard {
 class Witch {
   .. fields ..
   pub state: S
+  inbox: mpsc::Receiver<MessageForWitch<BUF_SIZE, S, R>>
+  sase: mpsc::Sender<MessageForWitch<BUF_SIZE, S, R>>
+  outbox: broadcast::Sender<R>
   .. methods ..
    
 }
@@ -241,6 +298,7 @@ class Witch {
 class WitchHandle {
   .. fields ..
   inbox: mpsc::Sender<MessageForWitch<BUF_SIZE, S, R>>
+  outbox: Arc<Mutex<broadcast::Receiver<R>>>
   .. methods ..
    
 }
@@ -248,6 +306,7 @@ class WitchHandle {
 class Board {
   .. fields ..
   state: PieceBoard
+  board: Table<'a>
   .. methods ..
    
 }
@@ -255,6 +314,7 @@ class Board {
 class EngineIOSection {
   .. fields ..
   output: Output
+  input: Input
   .. methods ..
    
 }
@@ -276,6 +336,7 @@ class InfoSection {
 class PGNSection {
   .. fields ..
   current_position: usize
+  pgn: PGN
   .. methods ..
   new(pgn: PGN) 
 }
@@ -283,6 +344,7 @@ class PGNSection {
 class GameSectionLayout {
   .. fields ..
   info_section: InfoSection
+  board_section: BoardSection<'a>
   .. methods ..
    
 }
@@ -305,6 +367,10 @@ class Output {
 class Placeholder {
   .. fields ..
   width: u16
+  height: u16
+  borders: Borders
+  text: &'static str
+  style: Style
   .. methods ..
   of_size( width: u16, height: u16)
   borders(mut self, borders: Borders)
@@ -323,6 +389,7 @@ class SmallBoard {
 class Tile {
   .. fields ..
   engine_io_section: EngineIOSection
+  state: PGN
   .. methods ..
   new()
   query_line(&self) 
@@ -331,6 +398,7 @@ class Tile {
 class Charray {
   .. fields ..
   origin: Origin
+  data: [[u8; W]; H]
   .. methods ..
    
 }
@@ -338,6 +406,9 @@ class Charray {
 class Mask {
   .. fields ..
   command: String
+  pub stdin: ChildStdin
+  pub stdout: ReceiverStream<String>
+  pub stderr: ReceiverStream<String>
   .. methods ..
    
 }
