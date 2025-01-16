@@ -66,6 +66,15 @@ Async do
       puts ""
     end
   end
+
+  barrier.wait
+
+  Type.types.each do |ty|
+    barrier.async do
+      puts ty.uml_links
+      puts ""
+    end
+  end
   puts "@enduml"
 
   barrier.wait

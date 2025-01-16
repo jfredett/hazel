@@ -51,7 +51,7 @@ test *ARGS:
 treesitter FORMAT="utxt":
     @bundle install &>/dev/null
     bundle exec ruby ./scripts/main.rb | tee uml.out
-    plantuml -t{{FORMAT}} uml.out
+    plantuml -t{{FORMAT}} -darkmode uml.out
 
 coverage:
     cargo llvm-cov nextest --no-fail-fast --lcov --output-path ./.lcov

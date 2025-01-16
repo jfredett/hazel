@@ -1,5 +1,5 @@
 @startuml
-class PieceBoard {
+struct PieceBoard {
   .. fields ..
   pub board: [Occupant; 64]
   tmp: ()
@@ -13,14 +13,14 @@ class PieceBoard {
   Alter::alter(&self, alter: Alteration) 
 }
 
-class MoveGenerator {
+struct MoveGenerator {
   .. fields ..
   position: Position
   .. methods ..
   new(position: Position) 
 }
 
-class Hazel {
+struct Hazel {
   .. fields ..
   flags: HashMap<String, bool>
   engine: ()
@@ -31,7 +31,7 @@ class Hazel {
   input_widget(&self) 
 }
 
-class Stockfish {
+struct Stockfish {
   .. fields ..
   child: Child
   stdin: ChildStdin
@@ -41,7 +41,7 @@ class Stockfish {
   new() 
 }
 
-class UCIOption {
+struct UCIOption {
   .. fields ..
   name: String
   option_type: String
@@ -55,7 +55,7 @@ class UCIOption {
   parse(option: &str) 
 }
 
-class CastleRights {
+struct CastleRights {
   .. fields ..
   pub white_short: bool
   pub white_long: bool
@@ -67,7 +67,7 @@ class CastleRights {
   Arbitrary::arbitrary(g: &mut Gen) 
 }
 
-class Familiar {
+struct Familiar {
   .. fields ..
   cursor: Cursor<'a, Action<Move, BEN>>
   movesheets: Vec<MoveSheet>
@@ -75,7 +75,7 @@ class Familiar {
    
 }
 
-class ChessGame {
+struct ChessGame {
   .. fields ..
   pub rep: T
   pub metadata: PositionMetadata
@@ -83,7 +83,7 @@ class ChessGame {
    
 }
 
-class PositionMetadata {
+struct PositionMetadata {
   .. fields ..
   pub side_to_move: Color
   pub castling: CastleRights
@@ -96,7 +96,7 @@ class PositionMetadata {
   Arbitrary::arbitrary(g: &mut Gen) 
 }
 
-class Variation {
+struct Variation {
   .. fields ..
   log: Log<Action<Move, BEN>>
   halted: bool
@@ -106,7 +106,7 @@ class Variation {
   current_position(&mut self) 
 }
 
-class BEN {
+struct BEN {
   .. fields ..
   position: [u8; 32]
   metadata: PositionMetadata
@@ -123,7 +123,7 @@ class BEN {
   side_to_move(&self) 
 }
 
-class FEN {
+struct FEN {
   .. fields ..
   fen: crate::notation::fen::FEN
   style: Style
@@ -151,7 +151,7 @@ class FEN {
   center(self) 
 }
 
-class Position {
+struct Position {
   .. fields ..
   position_string: String
   position: Vec<Alteration>
@@ -161,7 +161,7 @@ class Position {
   Default::default() 
 }
 
-class PGN {
+struct PGN {
   .. fields ..
   tag_pairs: Vec<TagPair>
   variation: Variation
@@ -170,7 +170,7 @@ class PGN {
   current_position(&self) 
 }
 
-class TagPair {
+struct TagPair {
   .. fields ..
   pub(crate) name: String
   pub(crate) value: String
@@ -178,7 +178,7 @@ class TagPair {
    
 }
 
-class SAN {
+struct SAN {
   .. fields ..
   source_piece: Option<Piece>
   captured_piece: Option<Piece>
@@ -195,7 +195,7 @@ class SAN {
   new(fen: impl Into<BEN>) 
 }
 
-class RankIterator {
+struct RankIterator {
   .. fields ..
   rank: Option<usize>
   file: File
@@ -204,7 +204,7 @@ class RankIterator {
    
 }
 
-class RankFile {
+struct RankFile {
   .. fields ..
   done: bool
   rank: usize
@@ -218,7 +218,7 @@ class RankFile {
   current_square(&self) 
 }
 
-class UCI {
+struct UCI {
   .. fields ..
   source: Square
   target: Square
@@ -228,14 +228,14 @@ class UCI {
   From<Move>::from(mov: Move) 
 }
 
-class IndexIterator {
+struct IndexIterator {
   .. fields ..
   source: Bitboard
   .. methods ..
    
 }
 
-class Cursor {
+struct Cursor {
   .. fields ..
   log: &'a Log<T>
   position: Option<usize>
@@ -243,7 +243,7 @@ class Cursor {
    
 }
 
-class Log {
+struct Log {
   .. fields ..
   log: Vec<T>
   current_txn: Transaction<T>
@@ -253,7 +253,7 @@ class Log {
    
 }
 
-class Transaction {
+struct Transaction {
   .. fields ..
   content: Vec<T>
   finished: bool
@@ -261,7 +261,7 @@ class Transaction {
    
 }
 
-class WriteHead {
+struct WriteHead {
   .. fields ..
   log: &'a mut Log<T>
   position: usize
@@ -269,7 +269,7 @@ class WriteHead {
    
 }
 
-class MoveSheet {
+struct MoveSheet {
   .. fields ..
   sheet: Vec<MoveSheetEntry>
   line: Vec<Move>
@@ -278,14 +278,14 @@ class MoveSheet {
   new() 
 }
 
-class PEXTBoard {
+struct PEXTBoard {
   .. fields ..
   table: Box<[Bitboard; SIZE]>
   .. methods ..
    
 }
 
-class Witch {
+struct Witch {
   .. fields ..
   pub state: S
   inbox: mpsc::Receiver<MessageForWitch<BUF_SIZE, S, R>>
@@ -295,7 +295,7 @@ class Witch {
    
 }
 
-class WitchHandle {
+struct WitchHandle {
   .. fields ..
   inbox: mpsc::Sender<MessageForWitch<BUF_SIZE, S, R>>
   outbox: Arc<Mutex<broadcast::Receiver<R>>>
@@ -303,7 +303,7 @@ class WitchHandle {
    
 }
 
-class Board {
+struct Board {
   .. fields ..
   state: PieceBoard
   board: Table<'a>
@@ -311,7 +311,7 @@ class Board {
    
 }
 
-class EngineIOSection {
+struct EngineIOSection {
   .. fields ..
   output: Output
   input: Input
@@ -319,21 +319,21 @@ class EngineIOSection {
    
 }
 
-class BoardSection {
+struct BoardSection {
   .. fields ..
   board_widget: Board<'a>
   .. methods ..
    
 }
 
-class InfoSection {
+struct InfoSection {
   .. fields ..
   pgn: PGNSection
   .. methods ..
   new(pgn: PGN) 
 }
 
-class PGNSection {
+struct PGNSection {
   .. fields ..
   current_position: usize
   pgn: PGN
@@ -341,7 +341,7 @@ class PGNSection {
   new(pgn: PGN) 
 }
 
-class GameSectionLayout {
+struct GameSectionLayout {
   .. fields ..
   info_section: InfoSection
   board_section: BoardSection<'a>
@@ -349,7 +349,7 @@ class GameSectionLayout {
    
 }
 
-class Input {
+struct Input {
   .. fields ..
   content: String
   .. methods ..
@@ -357,14 +357,14 @@ class Input {
   flush(&mut self) 
 }
 
-class Output {
+struct Output {
   .. fields ..
   buffer: Vec<String>
   .. methods ..
    
 }
 
-class Placeholder {
+struct Placeholder {
   .. fields ..
   width: u16
   height: u16
@@ -379,14 +379,14 @@ class Placeholder {
   set_style(mut self, style: Style) 
 }
 
-class SmallBoard {
+struct SmallBoard {
   .. fields ..
   board: PieceBoard
   .. methods ..
   from(board: &PieceBoard) 
 }
 
-class Tile {
+struct Tile {
   .. fields ..
   engine_io_section: EngineIOSection
   state: PGN
@@ -395,7 +395,7 @@ class Tile {
   query_line(&self) 
 }
 
-class Charray {
+struct Charray {
   .. fields ..
   origin: Origin
   data: [[u8; W]; H]
@@ -403,7 +403,7 @@ class Charray {
    
 }
 
-class Mask {
+struct Mask {
   .. fields ..
   command: String
   pub stdin: ChildStdin
@@ -412,5 +412,150 @@ class Mask {
   .. methods ..
    
 }
+
+"[Occupant; 64]" *-- "PieceBoard"
+
+"Position" *-- "MoveGenerator"
+
+"HashMap<String, bool>" *-- "Hazel"
+
+"Mode" *-- "Hazel"
+"Tile" *-- "Hazel"
+
+"Child" *-- "Stockfish"
+"ChildStdin" *-- "Stockfish"
+"BufReader<ChildStdout>" *-- "Stockfish"
+
+
+
+
+
+
+"Vec<String>" *-- "UCIOption"
+
+
+
+
+
+"Cursor<'a, Action<Move, BEN>>" *-- "Familiar"
+"Vec<MoveSheet>" *-- "Familiar"
+
+"T" *-- "ChessGame"
+"PositionMetadata" *-- "ChessGame"
+
+"Color" *-- "PositionMetadata"
+"CastleRights" *-- "PositionMetadata"
+"Option<Square>" *-- "PositionMetadata"
+
+
+"Log<Action<Move, BEN>>" *-- "Variation"
+
+"[u8; 32]" *-- "BEN"
+"PositionMetadata" *-- "BEN"
+
+"crate::notation::fen::FEN" *-- "FEN"
+"Style" *-- "FEN"
+"Alignment" *-- "FEN"
+
+
+"Vec<Alteration>" *-- "Position"
+
+"Vec<TagPair>" *-- "PGN"
+"Variation" *-- "PGN"
+
+
+
+"Option<Piece>" *-- "SAN"
+"Option<Piece>" *-- "SAN"
+"Option<Disambiguator>" *-- "SAN"
+
+"Option<Square>" *-- "SAN"
+"Option<Square>" *-- "SAN"
+"Option<Square>" *-- "SAN"
+"Option<Piece>" *-- "SAN"
+
+
+"BEN" *-- "SAN"
+
+"Option<usize>" *-- "RankIterator"
+"File" *-- "RankIterator"
+"RankDirection" *-- "RankIterator"
+
+
+
+
+"RankDirection" *-- "RankFile"
+"FileDirection" *-- "RankFile"
+
+"Square" *-- "UCI"
+"Square" *-- "UCI"
+"Option<Piece>" *-- "UCI"
+"MoveType" *-- "UCI"
+
+"Bitboard" *-- "IndexIterator"
+
+"&'a Log<T>" *-- "Cursor"
+"Option<usize>" *-- "Cursor"
+
+"Vec<T>" *-- "Log"
+"Transaction<T>" *-- "Log"
+"Vec<Transaction<T>>" *-- "Log"
+
+"Vec<T>" *-- "Transaction"
+
+"&'a mut Log<T>" *-- "WriteHead"
+
+"Vec<MoveSheetEntry>" *-- "MoveSheet"
+"Vec<Move>" *-- "MoveSheet"
+"BEN" *-- "MoveSheet"
+
+"Box<[Bitboard; SIZE]>" *-- "PEXTBoard"
+
+"S" *-- "Witch"
+"mpsc::Receiver<MessageForWitch<BUF_SIZE, S, R>>" *-- "Witch"
+"mpsc::Sender<MessageForWitch<BUF_SIZE, S, R>>" *-- "Witch"
+"broadcast::Sender<R>" *-- "Witch"
+
+"mpsc::Sender<MessageForWitch<BUF_SIZE, S, R>>" *-- "WitchHandle"
+"Arc<Mutex<broadcast::Receiver<R>>>" *-- "WitchHandle"
+
+"PieceBoard" *-- "Board"
+"Table<'a>" *-- "Board"
+
+"Output" *-- "EngineIOSection"
+"Input" *-- "EngineIOSection"
+
+"Board<'a>" *-- "BoardSection"
+
+"PGNSection" *-- "InfoSection"
+
+
+"PGN" *-- "PGNSection"
+
+"InfoSection" *-- "GameSectionLayout"
+"BoardSection<'a>" *-- "GameSectionLayout"
+
+
+
+"Vec<String>" *-- "Output"
+
+
+
+"Borders" *-- "Placeholder"
+"&'static str" *-- "Placeholder"
+"Style" *-- "Placeholder"
+
+"PieceBoard" *-- "SmallBoard"
+
+"EngineIOSection" *-- "Tile"
+"PGN" *-- "Tile"
+
+"Origin" *-- "Charray"
+"[[u8; W]; H]" *-- "Charray"
+
+
+"ChildStdin" *-- "Mask"
+"ReceiverStream<String>" *-- "Mask"
+"ReceiverStream<String>" *-- "Mask"
 
 @enduml
