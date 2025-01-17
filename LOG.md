@@ -1730,3 +1730,17 @@ producing a diagram with at least all the cards, and maybe adding some relations
 Two steps back, one step forward on the UML thing, I broke it up, started refactoring to support grabbing fields, and
 ended up turning a bunch of things off in the meantime. I think I'm getting pretty close to the 'just extract it' and
 maybe even the 'riir' phase of this thing, but for now I'm just going to keep chipping away at it.
+
+# 16-JAN-2025
+
+## 1118 - movegen
+
+The irony is that I kinda need this tool for the ruby stuff as well now, hard to keep track of _it's_ structure.
+
+I'm not gonna do that though. I think I can get this close enough to unblock my movegen work, then I definitely need to
+rethink how to do this in Rust instead of Ruby, the way I have the Ruby structured is 'right' I think, so it should just
+be a port to Rust.
+
+I want to look at the `syn` crate over `treesitter`, as well. I have a feeling it's not going to work the way I want,
+because I still want to be able to generate diagrams even for incorrect/invalid syntax when possible, but it's
+definitely worth a peek.
