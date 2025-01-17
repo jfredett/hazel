@@ -418,7 +418,6 @@ struct Mask {
 "Position" *-- "MoveGenerator"
 
 "HashMap<String, bool>" *-- "Hazel"
-
 "Mode" *-- "Hazel"
 "Tile" *-- "Hazel"
 
@@ -426,14 +425,7 @@ struct Mask {
 "ChildStdin" *-- "Stockfish"
 "BufReader<ChildStdout>" *-- "Stockfish"
 
-
-
-
-
-
 "Vec<String>" *-- "UCIOption"
-
-
 
 
 
@@ -447,7 +439,6 @@ struct Mask {
 "CastleRights" *-- "PositionMetadata"
 "Option<Square>" *-- "PositionMetadata"
 
-
 "Log<Action<Move, BEN>>" *-- "Variation"
 
 "[u8; 32]" *-- "BEN"
@@ -456,7 +447,6 @@ struct Mask {
 "crate::notation::fen::FEN" *-- "FEN"
 "Style" *-- "FEN"
 "Alignment" *-- "FEN"
-
 
 "Vec<Alteration>" *-- "Position"
 
@@ -468,21 +458,15 @@ struct Mask {
 "Option<Piece>" *-- "SAN"
 "Option<Piece>" *-- "SAN"
 "Option<Disambiguator>" *-- "SAN"
-
 "Option<Square>" *-- "SAN"
 "Option<Square>" *-- "SAN"
 "Option<Square>" *-- "SAN"
 "Option<Piece>" *-- "SAN"
-
-
 "BEN" *-- "SAN"
 
 "Option<usize>" *-- "RankIterator"
 "File" *-- "RankIterator"
 "RankDirection" *-- "RankIterator"
-
-
-
 
 "RankDirection" *-- "RankFile"
 "FileDirection" *-- "RankFile"
@@ -529,7 +513,6 @@ struct Mask {
 
 "PGNSection" *-- "InfoSection"
 
-
 "PGN" *-- "PGNSection"
 
 "InfoSection" *-- "GameSectionLayout"
@@ -538,8 +521,6 @@ struct Mask {
 
 
 "Vec<String>" *-- "Output"
-
-
 
 "Borders" *-- "Placeholder"
 "&'static str" *-- "Placeholder"
@@ -552,7 +533,6 @@ struct Mask {
 
 "Origin" *-- "Charray"
 "[[u8; W]; H]" *-- "Charray"
-
 
 "ChildStdin" *-- "Mask"
 "ReceiverStream<String>" *-- "Mask"
