@@ -1,0 +1,9 @@
+@startuml
+stdio --> main_entry : Command Sent to Engine
+main_entry --> hazel : Command Sent as a MessageFor-message to the Hazel Witch
+hazel --> hazel      : Attempt to parse the command to some known language (UCI, Winboard, whatever).
+hazel --> plan : create     : Create a plan to update the Witch<Hazel> instance, which may in turn call out to other services
+hazel <-- plan : Execute the plan
+hazel --> main_entry : Flush output to a buffer managed by the main entry point
+stdio <-- main_entry : Flush output to stdout
+@enduml
