@@ -1,0 +1,27 @@
+     ┌─────┐              ┌──────────┐                                                 ┌─────┐                                                                                                       ┌────┐
+     │stdio│              │main_entry│                                                 │hazel│                                                                                                       │plan│
+     └──┬──┘              └─────┬────┘                                                 └──┬──┘                                                                                                       └──┬─┘
+        │Command Sent to Engine │                                                         │                                                                                                             │  
+        │ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─>│                                                         │                                                                                                             │  
+        │                       │                                                         │                                                                                                             │  
+        │                       │Command Sent as a MessageFor-message to the Hazel Witch  │                                                                                                             │  
+        │                       │ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─>│                                                                                                             │  
+        │                       │                                                         │                                                                                                             │  
+        │                       │                                                         │─ ─ ┐                                                                                                        │  
+        │                       │                                                         │    | Attempt to parse the command to some known language (UCI, Winboard, whatever).                         │  
+        │                       │                                                         │< ─ ┘                                                                                                        │  
+        │                       │                                                         │                                                                                                             │  
+        │                       │                                                         │create     : Create a plan to update the Witch<Hazel> instance, which may in turn call out to other services │  
+        │                       │                                                         │ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─>│  
+        │                       │                                                         │                                                                                                             │  
+        │                       │                                                         │                                              Execute the plan                                               │  
+        │                       │                                                         │<─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ │  
+        │                       │                                                         │                                                                                                             │  
+        │                       │Flush output to a buffer managed by the main entry point │                                                                                                             │  
+        │                       │<─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ │                                                                                                             │  
+        │                       │                                                         │                                                                                                             │  
+        │Flush output to stdout │                                                         │                                                                                                             │  
+        │<─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ │                                                         │                                                                                                             │  
+     ┌──┴──┐              ┌─────┴────┐                                                 ┌──┴──┐                                                                                                       ┌──┴─┐
+     │stdio│              │main_entry│                                                 │hazel│                                                                                                       │plan│
+     └─────┘              └──────────┘                                                 └─────┘                                                                                                       └────┘
