@@ -48,7 +48,6 @@ test *ARGS:
         fi
     fi
 
-
 coverage:
     cargo llvm-cov nextest --no-fail-fast --lcov --output-path ./.lcov
 

@@ -1669,3 +1669,78 @@ but also that I should do it later.
 
 Larry Wall said that the three virtues of the good programmer are Laziness, Impatience, and Hubris. I am a good
 programmer.
+
+# 11-JAN-2025
+
+## 2137 - movegen
+
+I merged, started on movegen, then immediately began procrastinating.
+
+I roughed in a little script to hook up to `tree-sitter` for querying across the source. My aim is to build up some
+scripts to collect some topological information about the codebase.
+
+In particular, I'm beginning to get close to the point where I don't have sufficient spare memory to dedicate to this to
+hold the whole project in my head, which means my organization is starting to break down. I *know* there is a tangled
+web of redundant representations, and I know _sort of_ where all the wiring goes, but I need to get a lower resolution
+view of the codebase to start to untangle it.
+
+My first step is to build up something that can pull out the traits, structs, and enums and all their relevant APIs to
+some set of files. I can think of 'easier' ways to do this (leveraging docgen, for instance, could get me partly there),
+but I'd like to sharpen my `tree-sitter` tool, and I haven't written ruby in a while. I'll also need to have it crawl
+the `src` directory and apply the query to every file and build whatever index file I need.
+
+I figure I can dump the relevant information out to a file, then ideally incrementally update it based on filechange.
+From there I'd like to generate some graphics I can use to start show the topology; I spent a good hour or so looking
+for an off-the-shelf tool to just do the diagramming, but I can't stand literally every single tool, and I don't have
+the desk space to do it by hand.
+
+## 2156 - movegen
+
+Worked a bit and generalized things, I'll need to build up a little model, but I think it could work pretty well. I
+should be able to calculate the relevant module from the file path, since I essentially never have a module nested
+without it being a separate file other than for tests.
+
+What works now is a dump of the definition of every struct, enum, and trait, along with it's path.
+
+Ideally I'll generate something approximating a UML card for each of these types, then I can figure out how to link it
+all together.
+
+# 15-JAN-2025
+
+## 1111 - movegen
+
+Made a lot of progress on the ruby/treesitter stuff, and integrated `PlantUML` which I really like so far. I think I'm
+at the point where I need to start treating it as it's own thing, but it's still very tied to this project, so I'm not
+sure I want to move it out of the repo yet. I also have a long-term plan to make `hazel` a multi-crate thing, in
+particular the `ui`, the `types` and this ruby thing (which lacks a name) should all be separate projects, but probably
+under the same git repo? Not sure.
+
+I know cargo supports this OOB, so I'm gonna take some time soon and work on a prototype of this, but I think the crate
+split is probably after movegen is done.
+
+Right now I can generate some UML 'cards' for each of the ADTs in the repo (more or less), there is still some missing
+information here and there, but the concept is working alright and it's mostly about marshalling things to my internal
+representation.
+
+I _would_ like to rewrite a bunch of this in Rust at some point, the ruby is quite slow, but I definitely want to get it
+producing a diagram with at least all the cards, and maybe adding some relationships where it makes sense.
+
+## 1456 - movegen
+
+Two steps back, one step forward on the UML thing, I broke it up, started refactoring to support grabbing fields, and
+ended up turning a bunch of things off in the meantime. I think I'm getting pretty close to the 'just extract it' and
+maybe even the 'riir' phase of this thing, but for now I'm just going to keep chipping away at it.
+
+# 16-JAN-2025
+
+## 1118 - movegen
+
+The irony is that I kinda need this tool for the ruby stuff as well now, hard to keep track of _it's_ structure.
+
+I'm not gonna do that though. I think I can get this close enough to unblock my movegen work, then I definitely need to
+rethink how to do this in Rust instead of Ruby, the way I have the Ruby structured is 'right' I think, so it should just
+be a port to Rust.
+
+I want to look at the `syn` crate over `treesitter`, as well. I have a feeling it's not going to work the way I want,
+because I still want to be able to generate diagrams even for incorrect/invalid syntax when possible, but it's
+definitely worth a peek.
