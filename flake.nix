@@ -2,70 +2,49 @@
     inputs = {
         nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
         fenix.url = "github:nix-community/fenix";
-        devenv.url = "github:cachix/devenv";
-        bugstalker.url = "github:godzie44/BugStalker";
+        devshell.url = "github:numtide/devshell";
+        flake-parts.url = "github:hercules-ci/flake-parts";
+
+        rust-manifest = {
+            url = "https://static.rust-lang.org/dist/2025-02-12/channel-rust-nightly.toml";
+            flake = false;
+        };
     };
 
-    outputs = { self, nixpkgs, bugstalker, devenv, fenix, ... } @ inputs: let
-        systems = [ "x86_64-linux" "i686-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
-        forAllSystems = f: builtins.listToAttrs (map (name: { inherit name; value = f name; }) systems);
-    in {
-        packages.x86_64-linux.devenv-up = self.devShells.x86_64-linux.default.config.procfileScript;
-        devShells = forAllSystems (system: let
-            pkgs = import nixpkgs { inherit system; };
-        in {
-            default = devenv.lib.mkShell {
-                inherit inputs pkgs;
+    outputs = { self, nixpkgs, fenix, rust-manifest, devshell, flake-parts, ... } @ inputs:
+        flake-parts.lib.mkFlake { inherit inputs; } {
+            imports = [
+                devshell.flakeModule
+            ];
 
-                modules = [{
-                    dotenv.enable = true;
-                    languages.rust = {
-                        enable = true;
-                        mold.enable = true;
-                        channel = "nightly";
-                        components = [ "rustc" "cargo" "clippy" "rustfmt" "rust-analyzer" "miri" "llvm-tools" ];
-                        # FIXME: I would love for this to be part of the Cargo.toml, and not the flake.
-                        rustflags = "--cfg tokio_unstable -Ctarget-feature=+bmi2 -Ctarget-feature=+bmi1";
-                    };
+            systems = [
+                "x86_64-linux"
+            ];
 
-                    languages.ruby = {
-                        enable = true;
-                        bundler.enable = true;
-                        package = pkgs.ruby_3_4;
-                    };
+            perSystem = { pkgs, system, ... }: let
+                rustpkg = (fenix.packages.${system}.fromManifestFile rust-manifest).defaultToolchain;
+            in {
+                devshells.default = {
+                    motd = ''Double double, toil and trouble.'';
 
-                    enterShell = ''
-                        mkdir -p .parsers
-                        rm .parsers/*
-                        ln -s "${pkgs.tree-sitter-grammars.tree-sitter-rust}/parser" .parsers/rust.so
-                        ln -s "${pkgs.tree-sitter-grammars.tree-sitter-rust}/queries" .parsers/rust_queries
-                    '';
-
-
-                    packages = with pkgs; let 
-                        ts = tree-sitter.withPlugins (p: [ p.tree-sitter-rust ] );
-                    in [
+                    packages = with pkgs; [
                         bacon
                         cargo-llvm-cov
                         cargo-mutants
                         cargo-nextest
-                        cargo-insta
+                        clang
                         cloc
                         gnuplot
                         imhex
                         just
+                        libcxx
                         linuxKernel.packages.linux_6_6.perf
-                        tree-sitter
-                        tree-sitter-grammars.tree-sitter-rust
-                        tokio-console
-                        ts
                         mold
                         perf-tools
-                        plantuml
-                        stockfish
+                        rustpkg
                     ];
-                }];
+
+                };
             };
-        });
-    };
+        };
 }
