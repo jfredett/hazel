@@ -46,6 +46,3 @@ impl<const BUF_SIZE: usize> WitchHazel<BUF_SIZE> {
         self.send(Box::new(msg)).await;
     }
 }
-
-
-
