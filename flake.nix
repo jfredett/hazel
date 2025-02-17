@@ -22,7 +22,7 @@
             ];
 
             perSystem = { pkgs, system, ... }: let
-                rustpkg = (fenix.packages.${system}.fromManifestFile rust-manifest).defaultToolchain;
+                rustpkg = (fenix.packages.${system}.fromManifestFile rust-manifest).completeToolchain;
             in {
                 devshells.default = {
                     motd = ''Double double, toil and trouble.'';
@@ -42,6 +42,7 @@
                         mold
                         perf-tools
                         rustpkg
+                        stockfish
                     ];
 
                 };
