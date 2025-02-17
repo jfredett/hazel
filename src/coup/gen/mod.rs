@@ -1,13 +1,13 @@
-use crate::engine::driver::Position;
+use crate::game::chess::position::Position;
 use crate::coup::rep::Move;
 
 
 mod pawn;
-mod bishop;
-mod knight;
-mod rook;
-mod queen;
-mod king;
+// mod bishop;
+// mod knight;
+// mod rook;
+// mod queen;
+// mod king;
 
 
 // What I think I need is an engine, ideally asynchronous, that takes a position specified w/ all
@@ -41,28 +41,28 @@ mod king;
 
 
 struct MoveGenerator {
-    position: Position,
+    // This should actually just be passed into the generate_moves, and MoveGen is just for holding
+    // caches.
     // TODO: Cache anything worth caching?
 }
 
 impl MoveGenerator {
     pub fn new(position: Position) -> Self {
-        Self { position }
+        Self { }
     }
 
-    pub fn generate_moves(&self) -> Vec<Move> {
+    pub fn generate_moves(&self, position: &Position) -> Vec<Move> {
         let mut moves = Vec::new();
 
-        // Check fr Early Exit conditions, e.g., check, etc.
-
+        // TODO: Check cache for this position
 
         // TODO: Paralellize?
-        moves.append(&mut { pawn::generate_moves(&self.position) });
-        moves.append(&mut { bishop::generate_moves(&self.position) });
-        moves.append(&mut { knight::generate_moves(&self.position) });
-        moves.append(&mut { rook::generate_moves(&self.position) });
-        moves.append(&mut { queen::generate_moves(&self.position) });
-        moves.append(&mut { king::generate_moves(&self.position) });
+        // moves.append(&mut { pawn::generate_moves(position) });
+        // moves.append(&mut { bishop::generate_moves(position) });
+        // moves.append(&mut { knight::generate_moves(position) });
+        // moves.append(&mut { rook::generate_moves(position) });
+        // moves.append(&mut { queen::generate_moves(position) });
+        // moves.append(&mut { king::generate_moves(position) });
         moves
     }
 }

@@ -12,14 +12,15 @@ use crate::notation::ben::BEN;
 use crate::notation::uci::UCI;
 use crate::types::witch::{MessageFor, Witch, WitchHandle};
 use crate::{Alter, Alteration};
+use crate::game::chess::position::Position;
 
-#[derive(Clone, Copy, PartialEq, Debug, Default)]
-pub enum State {
-    #[default] Idle,
-    Ready,
-    Pondering,
-    Quitting,
-}
+
+
+mod state;
+mod response;
+
+pub use state::*;
+pub use response::*;
 
 #[derive(Default, PartialEq, Clone, Debug)]
 pub struct Hazel {
@@ -38,45 +39,12 @@ pub struct Hazel {
     options: HashMap<String, Option<String>>
 }
 
-#[derive(Debug, PartialEq, Clone)]
-pub struct Position {
-    initial: BEN,
-    moves: Vec<Move>,
-}
-
-impl From<Position> for Vec<Alteration> {
-    fn from(pos: Position) -> Self {
-        let mut ret = pos.initial.compile();
-        let mut board = PieceBoard::from(pos.initial);
-        for m in pos.moves.iter() {
-            let alterations = m.compile(&board);
-            for a in alterations.iter() {
-                board.alter_mut(*a);
-            }
-            ret.extend(alterations);
-        }
-        ret
-    }
-}
-
-impl Position {
-    fn new(fen: impl Into<BEN>, moves: Vec<Move>) -> Self {
-        Self { initial: fen.into(), moves }
-    }
-}
-
 impl Hazel {
     pub fn is_ready(&self) -> bool {
         self.state == State::Ready
     }
 }
 
-#[derive(Clone, PartialEq, Debug, Default)]
-pub enum HazelResponse {
-    #[default] Silence,
-    UCIResponse(UCIMessage),
-    Debug(Hazel)
-}
 
 pub type WitchHazel<const BUF_SIZE: usize> = WitchHandle<BUF_SIZE, Hazel, HazelResponse>;
 

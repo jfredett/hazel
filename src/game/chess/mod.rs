@@ -2,10 +2,12 @@ pub mod action;
 pub mod castle_rights;
 pub mod delim;
 pub mod familiar;
+pub mod position;
 pub mod position_metadata;
 pub mod reason;
 pub mod variation;
 
+use position::*;
 use action::Action;
 
 use crate::coup::rep::Move;

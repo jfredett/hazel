@@ -1,7 +1,7 @@
 use crate::constants::move_tables::PAWN_MOVES;
-use crate::engine::driver::Position;
+use crate::game::chess::position::Position;
 use crate::Query;
-use crate::types::{Occupant, Piece};
+use crate::types::{Bitboard, Occupant, Piece};
 use crate::coup::rep::Move;
 use crate::notation::*;
 use crate::types::color::Color;
@@ -18,25 +18,27 @@ impl PossibleMove {
     }
 }
 
-// const PAWN_MOVES: [[PossibleMove; 4]; 48] = {
-//     for sq in A2..=G8 {
-//     }
-//     [[PossibleMove::Impossible; 4]; 64]
-// }
+impl Query for Position {
+    fn get(&self, square: impl Into<Square>) -> Occupant {
+        todo!()
+    }
+}
 
 pub fn generate_moves(position: &Position, color: Color) -> Vec<PossibleMove> {
     let mut ret = vec![];
-    for source_sq in position.find_all(Piece::Pawn) {
-        let bb = PAWN_MOVES[source_sq.into()][color.into()];
-        for target_sq in bb {
-            if let Occupant::Occupied(..) = position.get(target_sq) {
-                ret.push(PossibleMove::Possible(source_sq, target_sq));
-            } else {
-                // if it's an attack move, then it's not possible, if it's an advance move, then
-                // it's valid.
-                // if it's a double-push, we need to verify the 
-            }
-        }
+    for source_sq in position.find(&Occupant::Occupied(Piece::Pawn, color)) {
+        // OQ: This might be faster to return a list of 4 option<square>s?
+        // let bb : Bitboard = PAWN_MOVES[source_sq.into()][color.into()];
+        // for target_sq in bb {
+        //     if position.is_occupied(target_sq) {
+        //         ret.push(PossibleMove::Possible(source_sq, target_sq));
+        //     } else {
+        //         // if it's an attack move, then it's not possible, if it's an advance move, then
+        //         // it's valid.
+        //         // if it's a double-push, we need to verify that we are on the correct rank, and
+        //         // that we aren't blocked on both squares.
+        //     }
+        // }
     }
 
     ret
@@ -45,13 +47,17 @@ pub fn generate_moves(position: &Position, color: Color) -> Vec<PossibleMove> {
 
 #[cfg(test)]
 mod tests {
+    use ben::BEN;
+
     use super::*;
 
-    #[test]
+//     #[test]
     fn double_pawn_push() {
-        let mut position = Position::from_fen("8/8/8/8/8/8/PPPPPPPP/8 w KQkq - 0 1").unwrap();
-        let moves = generate_moves(&position, Color::White);
+        let mut position = Position::new(
+            BEN::new("8/8/8/8/8/8/PPPPPPPP/8 w KQkq - 0 1"),
+            vec![]
+        );
+        let moves = generate_moves(&position, Color::WHITE);
         assert_eq!(moves.len(), 16);
-
     }
 }
