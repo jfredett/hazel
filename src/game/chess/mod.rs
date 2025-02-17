@@ -119,7 +119,7 @@ mod tests {
             .apply_mut(&Action::Make(Move::new(D2, D4, MoveType::DOUBLE_PAWN)));
 
         let expected_fen = FEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 2");
-        let actual_fen = FEN::with_metadata(game.rep, game.metadata);
+        let actual_fen : FEN = FEN::from(game);
 
         similar_asserts::assert_eq!(actual_fen, expected_fen);
     }
@@ -132,7 +132,7 @@ mod tests {
             let ben = BEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR w KQkq d3 0 2");
             let game : ChessGame<PieceBoard> = ben.into();
             let expected_fen = FEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR w KQkq d3 0 2");
-            let actual_fen = FEN::with_metadata(game.rep, game.metadata);
+            let actual_fen = FEN::from(game);
 
             similar_asserts::assert_eq!(actual_fen.position(), expected_fen.position());
         }
@@ -142,7 +142,7 @@ mod tests {
             let fen = FEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR w KQkq d3 0 2");
             let game : ChessGame<PieceBoard> = fen.into();
             let expected_fen = FEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR w KQkq d3 0 2");
-            let actual_fen = FEN::with_metadata(game.rep, game.metadata);
+            let actual_fen = FEN::from(game);
 
             similar_asserts::assert_eq!(actual_fen.position(), expected_fen.position());
         }
@@ -193,4 +193,3 @@ mod tests {
         }
     }
 }
-

@@ -1,7 +1,7 @@
 use crate::{
-    notation::{*, fen::FEN},
-    types::Occupant,
-    util::charray::{Origin, Charray},
+    notation::{fen::FEN, *},
+    types::{pextboard::attacks_for, Color, Direction, Occupant, Piece},
+    util::charray::{Charray, Origin},
 };
 
 
@@ -67,6 +67,47 @@ use crate::{
 *
 * The metarep is responsible for keeping everything aligned and can run in it's own process that
 * others communicate to
+*
+*
+* More notes: 16-FEB-2025 0023
+*
+* I think I need this to work a bit like `messagefor` w/ Witch, but no async stuff. I want to
+* contain the logic local to each piece, because how a piece moves 'belongs' to the piece, and it
+* prevents the big, impossible to maintain move-logic function.
+*
+* However, for optimization, I need to do as much as possible in the representation, so that I can
+* use bitboards where it makes sense, etc.
+*
+* I think this really comes down to messages you send to `position`, which then calls the piece
+* code which also queries position. Position is responsible for finding the moves and mostly
+* returning square/occupant pairs in iterators. Ideally it mostly uses the iterator API to
+* manipulate the position, which should lend itself to `rayon` paralellization.
+*
+* So the movegen would then work like
+*
+*  MoveGenerator::generate_moves "Generate all legal moves for the position"
+*       Position -> pawn::generate_moves(position, color) "Generate all legal moves for all pawns of the given color in this position"
+*           Pawn::generate_moves(position, color, square) "For this pawn, find all it's legal moves"
+*               <- returns a list of squares and move metadata. The squares are the target squares,
+*                   the move metadata describes if it's a capture, promotion, EP, etc.
+*           ... n times
+*       Position -> bishop::generate_moves(position, color) "Generate all legal moves for all the bishops of the given color in this position"
+*       ...
+*
+*  That way the caching lives at the top layer in the movegen, the position can be pulled from a
+*  position cache in MG or from some other source (a PGN/whatever). it becomes the main
+*  representation of a position, internally it stores whatever representations it needs, and
+*  supports the more advanced query methods. I'll bake it in directly, but I do eventually want
+*  it's API to be hidden behind `Query` instead of directly being used.
+*
+*  To do all this, I think the plan is:
+*
+*  1. Extract Position out from it's current home to it's own file.
+*  2. Implement the Query methods below there, adding whatever representation caching makes sense.
+*  3. I think module-per-piece should be fine here, I don't need types, these already exist in the
+*     enum, and I can maybe have a generic `moves_for` on the enum that dispatches to the correct
+*     module.
+*
 */
 
 
@@ -84,6 +125,35 @@ pub trait Query {
 
     fn is_occupied(&self, square: impl Into<Square>) -> bool {
         self.get(square).is_occupied()
+    }
+
+    // NOTE: (Square, Occupant) is essentially 'placed piece'
+    //
+    fn find(&self, occ: &Occupant) -> impl Iterator<Item = (Square, Occupant)> {
+        Square::by_rank_and_file().filter(|s| self.get(*s) == *occ).map(|s| (s, *occ))
+    }
+
+    fn attacks_for(&self, piece: Piece, square: impl Into<Square>) -> impl Iterator<Item = (Square, Occupant)> {
+        vec![].into_iter()
+    }
+
+    fn non_attack_moves_for(&self, piece: Piece, square: impl Into<Square>) -> impl Iterator<Item = (Square, Occupant)> {
+        vec![].into_iter()
+    }
+
+    fn moves_for(&self, piece: Piece, square: impl Into<Square>) -> impl Iterator<Item = (Square, Occupant)> {
+        let sq = square.into();
+        self.attacks_for(piece, sq).chain(
+            self.non_attack_moves_for(piece, sq)
+        )
+    }
+
+    fn occupants_along(&self, start: impl Into<Square>, direction: Direction) -> impl Iterator<Item = (Square, Occupant)> {
+        vec![].into_iter()
+    }
+
+    fn occupied_squares(&self, color: Color) -> impl Iterator<Item = (Square, Occupant)> {
+        vec![].into_iter()
     }
 }
 
@@ -118,7 +188,7 @@ pub fn display_board(board: &impl Query) -> String {
     charray.to_string()
 }
 
-pub fn to_fen(board: &impl Query) -> FEN {
+pub fn to_fen_string(board: &impl Query) -> String {
     let mut f = String::default();
     let mut empty = 0;
 
@@ -144,8 +214,10 @@ pub fn to_fen(board: &impl Query) -> FEN {
     }
 
     f.pop(); // remove the last slash
-
-    FEN::with_default_metadata(&f)
+    f
+}
+pub fn to_fen(board: &impl Query) -> FEN {
+    FEN::with_default_metadata(&to_fen_string(board))
 }
 
 #[cfg(test)]

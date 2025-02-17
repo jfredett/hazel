@@ -1,9 +1,8 @@
-mod position;
 use std::fmt::{Debug, Display};
 
 use tracing::instrument;
 
-use crate::{board::PieceBoard, constants::{EMPTY_POSITION_FEN, START_POSITION_FEN}, interface::{Alter, Alteration, Query}};
+use crate::{board::PieceBoard, constants::{EMPTY_POSITION_FEN, START_POSITION_FEN}, interface::{Alter, Alteration, Query}, types::Piece};
 use crate::types::Color;
 use crate::notation::*;
 use crate::types::Occupant;
@@ -11,24 +10,22 @@ use crate::types::Occupant;
 pub use crate::game::chess::{castle_rights::CastleRights, position_metadata::PositionMetadata};
 
 
-use position::Position;
-
 #[derive(Clone)]
 pub struct FEN {
-    position: Position,
+    // FIXME: Don't love the `pub` here
+    pub compiled_position: Vec<Alteration>,
     metadata: PositionMetadata
 }
 
 impl Debug for FEN {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} {}", self.position, self.metadata)
+        write!(f, "{} {}", self.position(), self.metadata)
     }
 }
 
 impl PartialEq for FEN {
     fn eq(&self, other: &Self) -> bool {
-        self.position == other.position &&
-        self.metadata == other.metadata
+        self.position() == other.position()
     }
 }
 impl Eq for FEN {}
@@ -52,9 +49,7 @@ impl Alter for FEN {
     }
 
     fn alter_mut(&mut self, alteration: Alteration) -> &mut Self {
-        let mut pb = PieceBoard::from(self.clone());
-        pb.alter_mut(alteration);
-        self.position = pb.into();
+        self.compiled_position.push(alteration);
         self
     }
 }
@@ -70,28 +65,22 @@ impl FEN {
         Self::new(START_POSITION_FEN)
     }
 
-    pub fn position(&self) -> Position {
-        self.position.clone()
+    pub fn position(&self) -> String {
+        // This should return a fen-string
+        let board : PieceBoard = self.setup();
+        crate::interface::query::to_fen_string(&board)
     }
+
 
     /// Sometimes you just want to specify the position without all the metadata, this
     /// assumes you are describing a position with white-to-move, all castling rights, no en
     /// passant square.
     #[instrument]
     pub fn with_default_metadata(fen: &str) -> Self {
+        let compiled_position = FEN::compile(fen);
         Self {
-            position: Position::new(fen),
+            compiled_position,
             metadata: PositionMetadata::default(),
-        }
-    }
-
-    //FIXME: Probably this isn't the right level of visibility, and it's only needed for tests, but
-    //Position is a private struct so maybe it's fine. I don't know.
-    #[cfg(test)]
-    pub(crate) fn with_metadata(position: impl Into<Position>, metadata: PositionMetadata) -> Self {
-        Self {
-            position: position.into(),
-            metadata
         }
     }
 
@@ -106,62 +95,79 @@ impl FEN {
 
         let mut parts = fen.split_whitespace();
         let position_str = parts.next().unwrap();
-        let position = Position::new(position_str);
-
+        let compiled_position = Self::compile(position_str);
         metadata.parse(&mut parts);
 
         Self {
-            position,
+            compiled_position,
             metadata
         }
     }
 
-    #[instrument]
-    pub fn side_to_move(&self) -> Color {
-        self.metadata.side_to_move
-    }
+    #[instrument] pub fn side_to_move(&self) -> Color { self.metadata.side_to_move }
+    #[instrument] pub fn castling(&self) -> CastleRights { self.metadata.castling }
+    #[instrument] pub fn en_passant(&self) -> Option<Square> { self.metadata.en_passant }
+    #[instrument] pub fn halfmove_clock(&self) -> u8 { self.metadata.halfmove_clock }
+    #[instrument] pub fn fullmove_number(&self) -> u16 { self.metadata.fullmove_number }
 
-    #[instrument]
-    pub fn castling(&self) -> CastleRights {
-        self.metadata.castling
-    }
-
-    #[instrument]
-    pub fn en_passant(&self) -> Option<Square> {
-        self.metadata.en_passant
-    }
-
-    #[instrument]
-    pub fn halfmove_clock(&self) -> u8 {
-        self.metadata.halfmove_clock
-    }
-
-    #[instrument]
-    pub fn fullmove_number(&self) -> u16 {
-        self.metadata.fullmove_number
-    }
 
     #[instrument]
     pub fn setup<A>(&self) -> A where A : Alter + Default {
         let mut board = A::default();
-        for alteration in self.position.clone().into_iter() {
+        for alteration in self.compiled_position.clone() {
             board.alter_mut(alteration);
         }
         board
     }
 
-    pub fn compile(&self) -> Vec<Alteration> {
-        self.position.clone().into_iter().collect()
-    }
-
     pub fn metadata(&self) -> PositionMetadata {
         self.metadata
+    }
+
+    fn compile(fen: &str) -> Vec<Alteration> {
+        let mut alterations = Vec::new();
+        let mut cursor = Square::by_rank_and_file();
+        cursor.downward();
+        for c in fen.chars() {
+            if cursor.is_done() { break; }
+
+            match c {
+                '1'..='8' => {
+                    let skip = c.to_digit(10).unwrap() as usize;
+                    for _ in 0..skip { cursor.next(); }
+                }
+                '/' => {
+                    continue;
+                }
+                c => {
+                    let color = if c.is_uppercase() { Color::WHITE } else { Color::BLACK };
+                    let piece = match c.to_ascii_lowercase() {
+                        'p' => Piece::Pawn,
+                        'n' => Piece::Knight,
+                        'b' => Piece::Bishop,
+                        'r' => Piece::Rook,
+                        'q' => Piece::Queen,
+                        'k' => Piece::King,
+                        _ => {
+                            continue;
+                        },
+                    };
+                    let occupant = Occupant::Occupied(piece, color);
+                    alterations.push(Alteration::Place { square: cursor.current_square(), occupant } );
+
+                    cursor.next();
+                }
+            }
+
+        }
+
+        alterations
     }
 }
 
 impl Display for FEN {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} {}", self.position, self.metadata)
+        write!(f, "{} {}", self.position(), self.metadata)
     }
 }
 
@@ -172,7 +178,7 @@ pub fn setup<A : Alter + Default>(fen: &FEN) -> A {
 }
 
 pub fn setup_mut<A : Alter>(fen: &FEN, board: &mut A) {
-    for alteration in fen.position.clone().into_iter() {
+    for alteration in fen.compiled_position.clone() {
         board.alter_mut(alteration);
     }
 }
@@ -212,14 +218,14 @@ mod tests {
     #[test]
     fn compile_is_correct_for_empty_pos() {
         let fen = FEN::new(EMPTY_POSITION_FEN);
-        let alterations = fen.compile();
+        let alterations = fen.compiled_position;
         assert_eq!(alterations.len(), 0);
     }
 
     #[test]
     fn compile_is_correct_for_start_pos() {
         let fen = FEN::new(START_POSITION_FEN);
-        let alterations = fen.compile();
+        let alterations = fen.compiled_position;
         assert_eq!(alterations.len(), 32);
         assert_eq!(alterations, vec![
             Alteration::Place { square: A8, occupant: Occupant::black_rook() },

@@ -139,7 +139,7 @@ impl BEN {
 
     pub fn compile(&self) -> Vec<Alteration> {
         let f : FEN = self.into();
-        f.compile()
+        f.compiled_position
     }
 }
 
