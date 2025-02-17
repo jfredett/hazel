@@ -104,11 +104,21 @@ impl FEN {
         }
     }
 
-    #[instrument] pub fn side_to_move(&self) -> Color { self.metadata.side_to_move }
-    #[instrument] pub fn castling(&self) -> CastleRights { self.metadata.castling }
-    #[instrument] pub fn en_passant(&self) -> Option<Square> { self.metadata.en_passant }
-    #[instrument] pub fn halfmove_clock(&self) -> u8 { self.metadata.halfmove_clock }
-    #[instrument] pub fn fullmove_number(&self) -> u16 { self.metadata.fullmove_number }
+    #[instrument] pub fn side_to_move(&self) -> Color { 
+        self.metadata.side_to_move
+    }
+    #[instrument] pub fn castling(&self) -> CastleRights { 
+        self.metadata.castling
+    }
+    #[instrument] pub fn en_passant(&self) -> Option<Square> { 
+        self.metadata.en_passant
+    }
+    #[instrument] pub fn halfmove_clock(&self) -> u8 {
+        self.metadata.halfmove_clock
+    }
+    #[instrument] pub fn fullmove_number(&self) -> u16 {
+        self.metadata.fullmove_number
+    }
 
 
     #[instrument]
