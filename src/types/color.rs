@@ -46,8 +46,14 @@ impl Color {
         }
     }
 
-    /// DEPRECATED: 
-    pub fn pawn_rank(self) -> Bitboard {
+    pub fn pawn_rank(self) -> usize {
+        match self {
+            Color::WHITE => 2,
+            Color::BLACK => 7,
+        }
+    }
+
+    pub fn pawn_mask(self) -> Bitboard {
         match self {
             Color::WHITE => *RANK_2,
             Color::BLACK => *RANK_7,
@@ -127,8 +133,14 @@ mod tests {
 
     #[test]
     fn pawn_rank() {
-        assert_eq!(Color::WHITE.pawn_rank(), *RANK_2);
-        assert_eq!(Color::BLACK.pawn_rank(), *RANK_7);
+        assert_eq!(Color::WHITE.pawn_rank(), 2);
+        assert_eq!(Color::BLACK.pawn_rank(), 7);
+    }
+    
+    #[test]
+    fn pawn_mask() {
+        assert_eq!(Color::WHITE.pawn_mask(), *RANK_2);
+        assert_eq!(Color::BLACK.pawn_mask(), *RANK_7);
     }
 
     #[test]
