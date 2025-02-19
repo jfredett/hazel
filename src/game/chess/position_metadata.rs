@@ -272,7 +272,7 @@ mod tests {
             let color = Color::arbitrary(g);
             let ep_square = if should_ep {
                 let file = File::arbitrary(g);
-                
+
                 let sq = if color == Color::WHITE {
                     A6.set_file(file as usize)
                 } else {

@@ -21,11 +21,35 @@ impl Default for PieceBoard {
     }
 }
 
+pub struct OccupantIterator<Q> where Q : Query {
+    idx: RankFile,
+    // FIXME: this should probably be a RO reference
+    source: Q
+}
+
+impl<Q> Iterator for OccupantIterator<Q> where Q : Query {
+    type Item = (Square, Occupant);
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            let Some(sq) = self.idx.next() else { return None; };
+            if self.source.is_occupied(sq) { return Some((sq, self.source.get(sq))); }
+        }
+    }
+}
+
 impl PieceBoard {
     pub fn set(&mut self, square: impl Into<Square>, occupant: Occupant) {
         let sq = square.into();
 
         self.board[sq.index()] = occupant;
+    }
+
+    pub fn by_occupant(&self) -> OccupantIterator<PieceBoard> {
+        OccupantIterator {
+            source: self.clone(),
+            idx: Square::by_rank_and_file()
+        }
+
     }
 }
 
@@ -65,6 +89,7 @@ impl Alter for PieceBoard {
         self
     }
 }
+
 
 #[cfg(test)]
 mod tests {

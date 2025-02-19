@@ -1744,3 +1744,70 @@ be a port to Rust.
 I want to look at the `syn` crate over `treesitter`, as well. I have a feeling it's not going to work the way I want,
 because I still want to be able to generate diagrams even for incorrect/invalid syntax when possible, but it's
 definitely worth a peek.
+
+# 19-FEB-2025
+
+## 1027 - movegen
+
+I think I've figured out the right split for the move generator. The `Position` struct is going to be responsible for
+fully representing a position with every useful representation, lazily updated.
+
+A position is modified by a `move`, which is compiled to `alterations` and those alterations are tagged with metadata
+that allows them to be filtered by different subrepresentations. A good example is when calculating pawn moves.
+
+There are six ways a pawn can move.
+
+1. Push
+2. Double Push
+3. Capture
+4. Promotion
+5. Capture-Promotion
+6. En Passant
+
+It makes sense to try to calculate some of these in aggregate via bitboards (you can calculate all the pushes in very
+short order by a simple shift of a bitboard representing pawns of a given color, and a second representing all the
+blockers on the board). Others (en passant) might be easier in another representation since it's only ever a few squares
+to check.
+
+When describing moves as an alteration, we lose some data about the move, in particular what piece was moving, what
+color it was, etc. In order to efficiently create these representations, I want to really just _ignore_ a bunch of the
+alterations, in particular I only care about alterations affecting pawns, so I really only need to apply a subset of
+those alterations to the representation.
+
+This makes for a pretty efficient way to get bespoke representations for different optimizations. The path is something
+like:
+
+Describe a particular subrepresentation of the board, e.g., "Positions of all White Pawns", turn this into a filter over
+the set of alterations, which can then be cached, only updating the representation as new alterations meeting the filter
+criteria are encountered _and_ only then when asked.
+
+This scales nicely with the `Variation` structure, I can attach all the same metadata to the compiled result and just
+push a copy of the current representation when encountering a branch.
+
+Once we have the subrepresentation tagged, we can translate the bitboard operations _back_ to the predicates that form
+the filter, meaning a more complex representation can -- I think -- be built incrementally without having to repeat the
+underlying bitboard operations.
+
+If that works the way I think it will, it would be pretty cool. If you think of `positions of all the pawns` and
+`positions of all the white pieces` as two subrepresentations, we would find the alterations for the first by searching
+for any alteration involving any pawn. When a pawn is captured by a knight, the `remove` alteration would be tagged `pawn` because
+of the capture, but the `place` alteration would not be. Similarly, the second would be searching for any alteration
+involving any white piece. A move would have it's place/remove both tagged by the source color, on a capture the remove
+would be tagged with _both_ colors.
+
+When combining these bitboards, we might `pawn_locs & white_locs`, but logically this is the same as combining the above
+two predicates to look for any alteration tagged both _white_ and _pawn_. This will result in fewer total alterations,
+and so *should* be faster than either of the constituents.
+
+`Position` can then start to choose which caches it wants to keep, trying to minimize the amount of work it has to do to
+answer all the incoming queries.
+
+The path to this I think is something like:
+
+1. Build ad-hoc representations in Position's impl. These won't do any of this caching, they'll just build a set of
+   representations worth using.
+2. Once the movegenerator works, start to extract this Move -> Alteration -> Tagged Alteration -> Cached Alteration
+   Query idea. Simultaneously set up benchmarks calculating whatever people usually calculate for movegen.
+3. See if this nets out to good performance.
+
+
