@@ -41,6 +41,8 @@
                         linuxKernel.packages.linux_6_6.perf
                         mold
                         perf-tools
+                        plantuml
+                        timg
                         rustpkg
                         stockfish
                     ];
