@@ -14,7 +14,6 @@ use crate::coup::rep::Move;
 use crate::game::position_metadata::PositionMetadata;
 use crate::interface::{Alter, Query, Play};
 use crate::notation::ben::BEN;
-use crate::notation::fen::FEN;
 
 #[derive(Clone, Default)]
 pub struct ChessGame<T> where T: Alter + Query + Default + Clone {
@@ -28,26 +27,8 @@ impl<T> From<BEN> for ChessGame<T> where T : From<BEN> + Alter + Query + Default
         let rep = T::from(ben);
         ChessGame {
             rep,
-            metadata: PositionMetadata::default(),
+            metadata: ben.metadata(),
         }
-    }
-}
-
-impl<T> From<FEN> for ChessGame<T> where T : From<FEN> + Alter + Query + Default + Clone {
-    fn from(fen: FEN) -> Self {
-        let rep = T::from(fen.clone());
-        ChessGame {
-            rep,
-            metadata: fen.metadata(),
-        }
-    }
-}
-
-impl<T> From<ChessGame<T>> for FEN where T : Into<FEN> + Alter + Query + Default + Clone {
-    fn from(game: ChessGame<T>) -> Self {
-        let mut ret = game.rep.into();
-        ret.set_metadata(game.metadata);
-        ret
     }
 }
 
@@ -115,11 +96,11 @@ mod tests {
     #[test]
     fn correctly_calculates_position_after_several_moves() {
         let mut game : ChessGame<PieceBoard> = ChessGame::default();
-        game.apply_mut(&Action::Setup(FEN::new(START_POSITION_FEN).into()))
+        game.apply_mut(&Action::Setup(BEN::new(START_POSITION_FEN).into()))
             .apply_mut(&Action::Make(Move::new(D2, D4, MoveType::DOUBLE_PAWN)));
 
-        let expected_fen = FEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 2");
-        let actual_fen : FEN = FEN::from(game);
+        let expected_fen = BEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 2");
+        let actual_fen : BEN = BEN::from(game);
 
         similar_asserts::assert_eq!(actual_fen, expected_fen);
     }
@@ -131,42 +112,21 @@ mod tests {
         fn from_ben() {
             let ben = BEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR w KQkq d3 0 2");
             let game : ChessGame<PieceBoard> = ben.into();
-            let expected_fen = FEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR w KQkq d3 0 2");
-            let actual_fen = FEN::from(game);
+            let expected_fen = BEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR w KQkq d3 0 2");
+            let actual_fen = BEN::from(game);
 
-            similar_asserts::assert_eq!(actual_fen.position(), expected_fen.position());
-        }
-
-        #[test]
-        fn from_fen() {
-            let fen = FEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR w KQkq d3 0 2");
-            let game : ChessGame<PieceBoard> = fen.into();
-            let expected_fen = FEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR w KQkq d3 0 2");
-            let actual_fen = FEN::from(game);
-
-            similar_asserts::assert_eq!(actual_fen.position(), expected_fen.position());
+            similar_asserts::assert_eq!(actual_fen, expected_fen);
         }
 
         #[test]
         fn into_ben() {
             let mut game : ChessGame<PieceBoard> = ChessGame::default();
-            game.apply_mut(&Action::Setup(FEN::new(START_POSITION_FEN).into()));
+            game.apply_mut(&Action::Setup(BEN::new(START_POSITION_FEN).into()));
 
             let ben : BEN = game.clone().into();
             let expected_fen = BEN::new(START_POSITION_FEN);
 
             similar_asserts::assert_eq!(ben, expected_fen);
-        }
-
-        #[test]
-        fn into_fen() {
-            // Doing it this way exercises the non-mutable apply method
-            let game : ChessGame<PieceBoard> = ChessGame::default().apply(&Action::Setup(FEN::new(START_POSITION_FEN).into()));
-
-            let fen : FEN = game.clone().into();
-            let expected_fen = FEN::new(START_POSITION_FEN);
-
-            similar_asserts::assert_eq!(fen, expected_fen);
         }
     }
 
@@ -176,7 +136,7 @@ mod tests {
 
         #[test]
         fn play_applies_correctly() {
-            let game = ChessGame::<PieceBoard>::from(FEN::start_position());
+            let game = ChessGame::<PieceBoard>::from(BEN::start_position());
             let action = Action::Make(Move::new(D2, D4, MoveType::DOUBLE_PAWN));
             let new_game = game.apply(&action);
             let actual_ben : BEN = new_game.into();
@@ -185,7 +145,7 @@ mod tests {
 
         #[test]
         fn play_applies_mutably_correctly() {
-            let mut game = ChessGame::<PieceBoard>::from(FEN::start_position());
+            let mut game = ChessGame::<PieceBoard>::from(BEN::start_position());
             let action = Action::Make(Move::new(D2, D4, MoveType::DOUBLE_PAWN));
             game.apply_mut(&action);
             let actual_ben : BEN = game.into();

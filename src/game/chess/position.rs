@@ -70,7 +70,6 @@ impl Position {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::notation::fen::FEN;
 
     mod new {
         use super::*;
@@ -78,7 +77,7 @@ mod tests {
 
         #[test]
         fn correctly_caches_start_position() {
-            let pos = Position::new(FEN::start_position(), vec![]);
+            let pos = Position::new(BEN::start_position(), vec![]);
             assert_eq!(pos.alteration_cache, vec![
 
             ]);
@@ -92,7 +91,7 @@ mod tests {
 
         #[test]
         fn startpos() {
-            let pos = Position::new(FEN::start_position(), vec![]);
+            let pos = Position::new(BEN::start_position(), vec![]);
             assert_eq!(
                 pos.pawns_for(&Color::WHITE),
                 Color::WHITE.pawn_mask()

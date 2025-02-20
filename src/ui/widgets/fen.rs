@@ -9,6 +9,7 @@ use ratatui::buffer::Buffer;
 
 use crate::board::simple::PieceBoard;
 use crate::interface::query::to_fen;
+use crate::notation::ben::BEN;
 
 
 #[derive(Debug, Default)]
@@ -16,7 +17,7 @@ use crate::interface::query::to_fen;
 pub struct FEN {
     // TODO: This can probably be aliased so I don't have to use it's full legal name here, but I
     // am lazy and don't want to read the docs.
-    fen: crate::notation::fen::FEN,
+    fen: BEN,
     style: Style,
     alignment: Alignment
 }
@@ -34,7 +35,7 @@ impl From<PieceBoard> for FEN {
 }
 
 impl FEN {
-    pub fn new(fen: crate::notation::fen::FEN) -> Self {
+    pub fn new(fen: BEN) -> Self {
         Self {
             fen,
             style: Style::default(),
@@ -96,7 +97,7 @@ mod tests {
         buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
         let mut board = PieceBoard::default();
-        board.set_fen(&crate::notation::fen::FEN::new(START_POSITION_FEN));
+        board.set_fen(&BEN::new(START_POSITION_FEN));
 
         let fen_widget = &FEN::from(board);
         fen_widget.render(rect, &mut buffer);

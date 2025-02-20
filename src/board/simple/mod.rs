@@ -2,7 +2,6 @@ use crate::interface::{alter::Alter, alteration::Alteration, query::Query};
 use crate::constants::START_POSITION_FEN;
 use crate::types::Occupant;
 use crate::notation::*;
-use crate::notation::fen::*;
 
 use tracing::instrument;
 
@@ -60,12 +59,6 @@ impl Query for PieceBoard {
     }
 }
 
-impl From<PieceBoard> for FEN {
-    fn from(board: PieceBoard) -> Self {
-        crate::interface::query::to_fen(&board)
-    }
-}
-
 impl Alter for PieceBoard {
     #[instrument]
     fn alter(&self, alter: Alteration) -> PieceBoard {
@@ -97,13 +90,15 @@ mod tests {
     use super::*;
 
     mod get_set {
+        use ben::BEN;
+
         use super::*;
         use crate::notation::Square;
 
         #[test]
         pub fn gets_piece_correctly() {
             let mut board = PieceBoard::default();
-            board.set_fen(&FEN::new(START_POSITION_FEN));
+            board.set_fen(&BEN::new(START_POSITION_FEN));
             assert_eq!(board.get(A1), Occupant::white_rook());
             assert_eq!(board.get(H8), Occupant::black_rook());
             assert_eq!(board.get(D4), Occupant::empty());

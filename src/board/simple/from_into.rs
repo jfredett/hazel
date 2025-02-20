@@ -14,27 +14,13 @@ impl From<&BEN> for PieceBoard {
     }
 }
 
-impl From<FEN> for PieceBoard {
-    fn from(fen: FEN) -> Self {
-        fen::setup(&fen)
-    }
-}
-
-impl From<&FEN> for PieceBoard {
-    fn from(fen: &FEN) -> Self {
-        fen::setup(fen)
-    }
-}
-
 impl PieceBoard {
-    #[instrument]
     pub fn set_startpos(&mut self) {
-        self.set_fen(&FEN::new(START_POSITION_FEN))
+        self.set_fen(&BEN::start_position())
     }
 
-    #[instrument]
-    pub fn set_fen(&mut self, fen: &FEN) {
-        fen::setup_mut(fen, self);
+    pub fn set_fen(&mut self, fen: &impl Into<BEN>) {
+        todo!();
     }
 }
 
@@ -54,14 +40,14 @@ mod tests {
             let mut board = PieceBoard::default();
             board.set_startpos();
             let fen = query::to_fen(&board);
-            assert_eq!(fen, FEN::new(START_POSITION_FEN));
+            assert_eq!(fen, BEN::new(START_POSITION_FEN));
         }
 
         #[test]
         pub fn converts_empty_board_correctly() {
             let board = PieceBoard::default();
             let fen = query::to_fen(&board);
-            assert_eq!(fen, FEN::new(EMPTY_POSITION_FEN));
+            assert_eq!(fen, BEN::new(EMPTY_POSITION_FEN));
         }
 
         #[test]
@@ -82,7 +68,7 @@ mod tests {
 
         #[test]
         pub fn converts_from_borrowed_reference_correctly() {
-            let fen = FEN::new(START_POSITION_FEN);
+            let fen = BEN::new(START_POSITION_FEN);
             let mut board = PieceBoard::default();
             board.set_fen(&fen);
             let fen2 = query::to_fen(&board);

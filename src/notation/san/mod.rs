@@ -375,7 +375,7 @@ mod tests {
     use super::*;
 
     use crate::coup::rep::MoveType;
-    use crate::{board::PieceBoard, constants::START_POSITION_FEN, notation::fen::FEN};
+    use crate::{board::PieceBoard, constants::START_POSITION_FEN};
     use crate::notation::*;
     use crate::notation::uci::UCI;
     use crate::game::variation::Variation;
@@ -385,7 +385,7 @@ mod tests {
 
     #[test]
     fn new_works() {
-        let fen = FEN::new(START_POSITION_FEN);
+        let fen = BEN::new(START_POSITION_FEN);
         let ben = BEN::from(fen);
         let san = SAN::new(ben);
         assert_eq!(san.context, ben);
@@ -405,7 +405,7 @@ mod tests {
     macro_rules! assert_parses {
         ($input:expr, $expected:expr, $fen:expr, $moves:expr) => {
             let mut context = Variation::default();
-            context.setup(FEN::new($fen)).commit();
+            context.setup(BEN::new($fen)).commit();
             for m in $moves.iter().map(|m| UCI::try_from(*m).unwrap()) {
                 context.make(m.into());
             }
@@ -451,7 +451,6 @@ mod tests {
         }
 
         // NOTE: Subtle change in FEN below, removing the pawn.
-
         #[test]
         fn parses_non_capture_with_disambiguator() {
             assert_parses!("Qg1d4", Move::new(G1, D4, MoveType::QUIET), "k7/8/8/8/6Q1/8/8/K2Q2Q1 w - - 0 1");

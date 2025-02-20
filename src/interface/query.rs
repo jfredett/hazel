@@ -1,5 +1,7 @@
+use ben::BEN;
+
 use crate::{
-    notation::{fen::FEN, *},
+    notation::*,
     types::{pextboard::attacks_for, Color, Direction, Occupant, Piece},
     util::charray::{Charray, Origin},
 };
@@ -216,8 +218,8 @@ pub fn to_fen_string(board: &impl Query) -> String {
     f.pop(); // remove the last slash
     f
 }
-pub fn to_fen(board: &impl Query) -> FEN {
-    FEN::with_default_metadata(&to_fen_string(board))
+pub fn to_fen(board: &impl Query) -> BEN {
+    BEN::with_default_metadata(&to_fen_string(board))
 }
 
 #[cfg(test)]
@@ -264,7 +266,7 @@ mod tests {
     #[test]
     fn to_fen_test_kiwipete() {
         let mut p = PieceBoard::default();
-        p.set_fen(&FEN::new(POS2_KIWIPETE_FEN));
+        p.set_fen(&BEN::new(POS2_KIWIPETE_FEN));
 
         let actual = to_fen(&p);
         let expected = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";

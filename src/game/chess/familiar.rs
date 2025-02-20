@@ -131,7 +131,7 @@ impl<'a> Familiar<'a> {
 #[cfg(test)]
 mod tests {
 
-    use crate::{board::PieceBoard, constants::START_POSITION_FEN, coup::rep::{Move, MoveType}, game::{chess::PositionMetadata, variation::Variation, ChessGame}, notation::{fen::FEN, *}};
+    use crate::{board::PieceBoard, constants::START_POSITION_FEN, coup::rep::{Move, MoveType}, game::{chess::PositionMetadata, variation::Variation, ChessGame}, notation::*};
 
     use super::*;
 
@@ -236,7 +236,7 @@ mod tests {
             familiar.advance_by(3);
             familiar.rewind();
 
-            assert_eq!(familiar.rep::<ChessGame<PieceBoard>>().rep, FEN::new("rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2").into());
+            assert_eq!(familiar.rep::<ChessGame<PieceBoard>>().rep, BEN::new("rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2").into());
 
             let metadata : PositionMetadata = familiar.metadata::<ChessGame<PieceBoard>>();
 
@@ -255,7 +255,7 @@ mod tests {
             familiar.advance_by(3);
             familiar.rewind_to_start();
 
-            assert_eq!(familiar.rep::<ChessGame<PieceBoard>>().rep, FEN::new(EMPTY_POSITION_FEN).into());
+            assert_eq!(familiar.rep::<ChessGame<PieceBoard>>().rep, BEN::new(EMPTY_POSITION_FEN).into());
 
             let metadata : PositionMetadata = familiar.metadata::<ChessGame<PieceBoard>>();
 
@@ -320,7 +320,7 @@ mod tests {
             // corresponds to ply number, but the example game has variations so that is not reliable.
             familiar.advance_by(2);
 
-            assert_eq!(familiar.rep::<ChessGame<PieceBoard>>().rep, FEN::new("rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2").into());
+            assert_eq!(familiar.rep::<ChessGame<PieceBoard>>().rep, BEN::new("rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2").into());
 
             let metadata : PositionMetadata = familiar.metadata::<ChessGame<PieceBoard>>();
 
@@ -336,7 +336,7 @@ mod tests {
             // We advance _over_ the variation opening, but stop inside.
             familiar.advance_by(6);
 
-            assert_eq!(familiar.rep::<ChessGame<PieceBoard>>().rep, FEN::new("r1bqkbnr/ppp1pppp/2n5/3p4/3P1B2/8/PPP1PPPP/RN1QKBNR w KQkq - 2 3").into());
+            assert_eq!(familiar.rep::<ChessGame<PieceBoard>>().rep, BEN::new("r1bqkbnr/ppp1pppp/2n5/3p4/3P1B2/8/PPP1PPPP/RN1QKBNR w KQkq - 2 3").into());
 
             let metadata : PositionMetadata = familiar.metadata::<ChessGame<PieceBoard>>();
 
@@ -353,7 +353,7 @@ mod tests {
             familiar.advance_by(5);
             familiar.advance();
 
-            assert_eq!(familiar.rep::<ChessGame<PieceBoard>>().rep, FEN::new("r1bqkbnr/ppp1pppp/2n5/3p4/3P1B2/8/PPP1PPPP/RN1QKBNR w KQkq - 2 3").into());
+            assert_eq!(familiar.rep::<ChessGame<PieceBoard>>().rep, BEN::new("r1bqkbnr/ppp1pppp/2n5/3p4/3P1B2/8/PPP1PPPP/RN1QKBNR w KQkq - 2 3").into());
 
             let metadata : PositionMetadata = familiar.metadata::<ChessGame<PieceBoard>>();
 

@@ -1,4 +1,4 @@
-//! Binary FEN Notation
+//! Binary Encoding Notation
 //!
 //! 64, 4 bit nibbles encoding piece and color, placed in order from A1 to H8.
 //! Followed by all relevant positional information in 64/2 + 4 = 36 bytes.
@@ -13,8 +13,8 @@
 //! but this seemed the most natural way to do it to me, whether that's because I'm a genius or
 //! because I've seen it before, I don't know, but I'm very likely not a genius.
 
-use super::{fen::{PositionMetadata, FEN}, Square};
-use crate::{Alter, Alteration, Query, types::{Color, Occupant}};
+use super::Square;
+use crate::{engine::uci::START_POSITION_FEN, game::position_metadata::PositionMetadata, types::{Color, Occupant}, Alter, Alteration, Query};
 use std::fmt::{Debug, Formatter};
 
 mod from_into;
@@ -98,11 +98,22 @@ impl Debug for BEN {
     }
 }
 
+impl std::fmt::Display for BEN {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        // TODO: display a FEN for the position
+
+        write!(f, "")
+    }
+}
+
 
 impl BEN {
-    pub fn new(pos: &str) -> Self{
-        let f = FEN::new(pos);
-        f.into()
+    pub fn new(pos: &str) -> Self {
+        todo!()
+    }
+
+    pub fn start_position() -> Self {
+        Self::new(START_POSITION_FEN)
     }
 
     pub fn empty() -> Self {
@@ -112,11 +123,11 @@ impl BEN {
         }
     }
 
-    pub fn with_metadata(metadata: PositionMetadata) -> Self {
-        Self {
-            position: [0; 32],
-            metadata
-        }
+    // FIXME: This feels like a bug. Probably where-ever I use this is a bug.
+    pub fn with_default_metadata(fen: &str) -> Self {
+        let mut ret = Self::new(fen);
+        ret.set_metadata(PositionMetadata::default());
+        ret
     }
 
     pub fn metadata(&self) -> PositionMetadata {
@@ -138,8 +149,7 @@ impl BEN {
     }
 
     pub fn compile(&self) -> Vec<Alteration> {
-        let f : FEN = self.into();
-        f.compiled_position
+        todo!();
     }
 }
 
@@ -147,9 +157,8 @@ impl BEN {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::game::castle_rights::CastleRights;
     use crate::notation::*;
-    use crate::notation::fen::PositionMetadata;
-    use crate::notation::fen::CastleRights;
     use crate::types::Piece;
 
     #[quickcheck]
