@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use tracing::error;
 
 use crate::{engine::driver::{Hazel, HazelResponse}, types::witch::{MessageFor, Witch}};
 

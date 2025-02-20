@@ -14,7 +14,7 @@
 //! because I've seen it before, I don't know, but I'm very likely not a genius.
 
 use super::Square;
-use crate::{engine::uci::START_POSITION_FEN, game::position_metadata::PositionMetadata, types::{Color, Occupant}, Alter, Alteration, Query};
+use crate::{engine::uci::START_POSITION_FEN, game::position_metadata::PositionMetadata, query, types::{Color, Occupant, Piece}, Alter, Alteration, Query};
 use std::fmt::{Debug, Formatter};
 
 mod from_into;
@@ -74,19 +74,6 @@ impl Alter for BEN {
     }
 }
 
-pub fn setup<A : Alter + Default>(ben: &BEN) -> A {
-    let mut board = A::default();
-    setup_mut(ben, &mut board);
-    board
-}
-
-pub fn setup_mut<A : Alter>(ben: &BEN, board: &mut A) {
-    let alts = ben.compile();
-    for alteration in alts {
-        board.alter_mut(alteration);
-    }
-}
-
 impl Debug for BEN {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut s = String::from("0x");
@@ -109,7 +96,58 @@ impl std::fmt::Display for BEN {
 
 impl BEN {
     pub fn new(pos: &str) -> Self {
-        todo!()
+        let alterations = Self::compile(pos);
+        let mut ret = Self::empty();
+        for alter in alterations {
+            ret.alter_mut(alter);
+        }
+        ret
+    }
+
+    pub fn to_alterations<'a>(&'a self) -> impl Iterator<Item = Alteration> + use<'a> {
+        query::to_alterations(self)
+    }
+
+    // TODO: Move this to Position, Position is how Hazel creates new positions, and BENs are
+    // created therefrom, later we can optimize if creating BENs directly is worth it.
+    fn compile(fen: &str) -> impl Iterator<Item = Alteration> {
+        let mut alterations = Vec::new();
+        let mut cursor = Square::by_rank_and_file();
+        cursor.downward();
+        for c in fen.chars() {
+            if cursor.is_done() { break; }
+
+            match c {
+                '1'..='8' => {
+                    let skip = c.to_digit(10).unwrap() as usize;
+                    for _ in 0..skip { cursor.next(); }
+                }
+                '/' => {
+                    continue;
+                }
+                c => {
+                    let color = if c.is_uppercase() { Color::WHITE } else { Color::BLACK };
+                    let piece = match c.to_ascii_lowercase() {
+                        'p' => Piece::Pawn,
+                        'n' => Piece::Knight,
+                        'b' => Piece::Bishop,
+                        'r' => Piece::Rook,
+                        'q' => Piece::Queen,
+                        'k' => Piece::King,
+                        _ => {
+                            continue;
+                        },
+                    };
+                    let occupant = Occupant::Occupied(piece, color);
+                    alterations.push(Alteration::Place { square: cursor.current_square(), occupant } );
+
+                    cursor.next();
+                }
+            }
+
+        }
+
+        alterations.into_iter()
     }
 
     pub fn start_position() -> Self {
@@ -146,10 +184,6 @@ impl BEN {
 
     pub fn side_to_move(&self) -> Color {
         self.metadata.side_to_move
-    }
-
-    pub fn compile(&self) -> Vec<Alteration> {
-        todo!();
     }
 }
 

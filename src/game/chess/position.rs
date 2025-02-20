@@ -1,4 +1,4 @@
-use crate::{board::PieceBoard, coup::rep::Move, notation::ben::BEN, types::{Bitboard, Color, Occupant, Piece}, Alter, Alteration};
+use crate::{board::PieceBoard, coup::rep::Move, notation::ben::BEN, types::{Bitboard, Color, Piece}, Alter, Alteration};
 
 
 #[derive(Debug, PartialEq, Clone)]
@@ -21,8 +21,10 @@ pub struct Position {
 
 impl From<Position> for Vec<Alteration> {
     fn from(pos: Position) -> Self {
-        let mut ret = pos.initial.compile();
+        let mut ret : Vec<Alteration> = pos.initial.to_alterations().collect();
+
         let mut board = PieceBoard::from(pos.initial);
+
         for m in pos.moves.iter() {
             let alterations = m.compile(&board);
             for a in alterations.iter() {
@@ -40,7 +42,7 @@ impl Position {
     pub fn new(fen: impl Into<BEN>, moves: Vec<Move>) -> Self {
         let fen = fen.into();
         let mut board = PieceBoard::from(fen);
-        let mut alteration_cache = fen.compile();
+        let mut alteration_cache : Vec<Alteration> = fen.to_alterations().collect();
 
         for mov in &moves {
             let alterations = mov.compile(&board);

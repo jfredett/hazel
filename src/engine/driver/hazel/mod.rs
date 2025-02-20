@@ -1,8 +1,5 @@
 use std::collections::HashMap;
 
-use async_trait::async_trait;
-use tracing::error;
-
 use crate::engine::uci::UCIMessage;
 use crate::game::variation::Variation;
 use crate::types::witch::WitchHandle;

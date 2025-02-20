@@ -1,16 +1,20 @@
 use ben::BEN;
 
+use crate::alter::setup;
+
 use super::*;
 
 impl From<BEN> for PieceBoard {
     fn from(ben: BEN) -> Self {
-        ben::setup(&ben)
+        let alters = ben.to_alterations();
+        setup(alters)
     }
 }
 
 impl From<&BEN> for PieceBoard {
     fn from(ben: &BEN) -> Self {
-        ben::setup(ben)
+        let alters = ben.to_alterations();
+        setup(alters)
     }
 }
 

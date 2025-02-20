@@ -1,22 +1,9 @@
-use crate::constants::move_tables::PAWN_MOVES;
 use crate::game::chess::position::Position;
 use crate::Query;
-use crate::types::{Bitboard, Occupant, Piece};
+use crate::types::Occupant;
 use crate::coup::rep::{Move, MoveType};
 use crate::notation::*;
 use crate::types::color::Color;
-
-// this gets projected down to an Option<Move> in some context
-enum PossibleMove {
-    Impossible,
-    Possible(Square, Square)
-}
-
-impl PossibleMove {
-    pub fn reduce(&self, c: &impl Query) -> Option<Move> {
-        todo!();
-    }
-}
 
 impl Query for Position {
     fn get(&self, square: impl Into<Square>) -> Occupant {
@@ -43,22 +30,22 @@ pub fn double_pawn_moves(position: &Position, color: Color) -> impl Iterator<Ite
     })
 }
 
-pub fn quiet_pawn_moves(position: &Position, color: Color) -> impl Iterator<Item = Move> {
-    vec![Move::empty()].into_iter()
-}
+// pub fn quiet_pawn_moves(position: &Position, color: Color) -> impl Iterator<Item = Move> {
+//     vec![Move::empty()].into_iter()
+// }
 
-pub fn pawn_attacks(position: &Position, color: Color) -> impl Iterator<Item = Move> {
-    vec![Move::empty()].into_iter()
-}
+// pub fn pawn_attacks(position: &Position, color: Color) -> impl Iterator<Item = Move> {
+//     vec![Move::empty()].into_iter()
+// }
 
 
 
-// TODO: Return an iterator?
-pub fn generate_moves(position: &Position, color: Color) -> impl Iterator<Item = Move> {
-    double_pawn_moves(position, color).chain(
-    quiet_pawn_moves(position, color)).chain(
-    pawn_attacks(position, color))
-}
+// // TODO: Return an iterator?
+// pub fn generate_moves(position: &Position, color: Color) -> impl Iterator<Item = Move> {
+//     double_pawn_moves(position, color).chain(
+//     quiet_pawn_moves(position, color)).chain(
+//     pawn_attacks(position, color))
+// }
 
 
 #[cfg(test)]

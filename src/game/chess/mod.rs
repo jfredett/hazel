@@ -7,7 +7,6 @@ pub mod position_metadata;
 pub mod reason;
 pub mod variation;
 
-use position::*;
 use action::Action;
 
 use crate::coup::rep::Move;
@@ -59,7 +58,7 @@ impl<T> Play for ChessGame<T> where T: Alter + Query + Default + Clone {
     fn apply_mut(&mut self, action: &Action<Move, BEN>) -> &mut Self {
         match action {
             Action::Setup(fen) => {
-                let alts = fen.compile();
+                let alts = fen.to_alterations();
                 for a in alts {
                     self.rep.alter_mut(a);
                 }

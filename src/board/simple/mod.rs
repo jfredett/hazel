@@ -1,5 +1,4 @@
 use crate::interface::{alter::Alter, alteration::Alteration, query::Query};
-use crate::constants::START_POSITION_FEN;
 use crate::types::Occupant;
 use crate::notation::*;
 
@@ -98,7 +97,7 @@ mod tests {
         #[test]
         pub fn gets_piece_correctly() {
             let mut board = PieceBoard::default();
-            board.set_fen(&BEN::new(START_POSITION_FEN));
+            board.set_fen(&BEN::start_position());
             assert_eq!(board.get(A1), Occupant::white_rook());
             assert_eq!(board.get(H8), Occupant::black_rook());
             assert_eq!(board.get(D4), Occupant::empty());
