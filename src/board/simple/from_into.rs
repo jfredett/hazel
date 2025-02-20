@@ -20,11 +20,16 @@ impl From<&BEN> for PieceBoard {
 
 impl PieceBoard {
     pub fn set_startpos(&mut self) {
-        self.set_fen(&BEN::start_position())
+        self.set_fen(BEN::start_position())
     }
 
-    pub fn set_fen(&mut self, fen: &impl Into<BEN>) {
-        todo!();
+    pub fn set_fen(&mut self, fen: impl Into<BEN>) {
+        let mut alterations = vec![ Alteration::clear() ];
+        let new_setup = fen.into();
+        alterations.extend(new_setup.to_alterations());
+        for alter in alterations {
+            self.alter_mut(alter);
+        }
     }
 }
 
@@ -74,7 +79,7 @@ mod tests {
         pub fn converts_from_borrowed_reference_correctly() {
             let fen = BEN::new(START_POSITION_FEN);
             let mut board = PieceBoard::default();
-            board.set_fen(&fen);
+            board.set_fen(fen);
             let fen2 = query::to_fen(&board);
             assert_eq!(fen, fen2);
         }

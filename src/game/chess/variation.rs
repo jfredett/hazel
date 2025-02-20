@@ -267,7 +267,7 @@ mod tests {
                         }
                     },
                     Action::Setup(fen) => {
-                        board.set_fen(fen);
+                        board.set_fen(*fen);
                     },
                     Action::Make(mov) => {
                         metadata.update(mov, &board);

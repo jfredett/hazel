@@ -97,7 +97,7 @@ mod tests {
         buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
         let mut board = PieceBoard::default();
-        board.set_fen(&BEN::new(START_POSITION_FEN));
+        board.set_fen(BEN::new(START_POSITION_FEN));
 
         let fen_widget = &FEN::from(board);
         fen_widget.render(rect, &mut buffer);
