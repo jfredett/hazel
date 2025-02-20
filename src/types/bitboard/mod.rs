@@ -141,7 +141,7 @@ impl Bitboard {
     /// b.set(A1);
     /// b.set(A2);
     /// b.set(A3);
-    /// assert_eq!(b.all_set_indices(), vec![A1,A2,A3]);
+    /// assert_eq!(b.all_set_squares(), vec![A1,A2,A3]);
     /// ```
     pub fn all_set_squares(&self) -> Vec<Square> {
         self.into_iter().collect()
