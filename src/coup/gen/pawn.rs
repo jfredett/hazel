@@ -24,9 +24,15 @@ pub fn double_pawn_moves(position: &Position, color: Color) -> impl Iterator<Ite
     })
 }
 
-// pub fn quiet_pawn_moves(position: &Position, color: Color) -> impl Iterator<Item = Move> {
-//     vec![Move::empty()].into_iter()
-// }
+pub fn quiet_pawn_moves(position: &Position, color: Color) -> impl Iterator<Item = Move> {
+    let bb = position.pawns_for(&color) & !color.promotion_mask();
+    let blockers = position.all_blockers();
+    let advance = bb.shift(color.pawn_direction()) & !blockers;
+    advance.into_iter().map(move |target_sq| {
+        let source_sq = target_sq.backward(&color).expect("This should be impossible, good luck finding the bug, future me.");
+        Move::new(source_sq, target_sq, MoveType::QUIET)
+    })
+}
 
 // pub fn pawn_attacks(position: &Position, color: Color) -> impl Iterator<Item = Move> {
 //     vec![Move::empty()].into_iter()
@@ -45,6 +51,7 @@ pub fn double_pawn_moves(position: &Position, color: Color) -> impl Iterator<Ite
 #[cfg(test)]
 mod tests {
     use ben::BEN;
+    use crate::coup::rep::MoveType;
 
     use super::*;
 
@@ -54,13 +61,14 @@ mod tests {
             assert_finds_moves!($func_name, $fen, count = $expected_count, []);
         };
         ($func_name:ident, $fen:expr, count = $expected_count:expr, [ $($move:expr),* ]) => {
+            assert_finds_moves!($func_name, $fen, count = $expected_count, color = Color::WHITE, []);
+        };
+        ($func_name:ident, $fen:expr, count = $expected_count:expr, color = $color:expr, [ $($move:expr),* ]) => {
             let mut position = Position::new(
                 BEN::new($fen),
                 vec![]
             );
-            let moves : Vec<Move> = $func_name(&position, Color::WHITE).collect();
-
-            tracing::debug!("{:?}", moves);
+            let moves : Vec<Move> = $func_name(&position, $color).collect();
 
             assert_eq!(moves.len(), $expected_count);
 
@@ -70,13 +78,38 @@ mod tests {
         };
     }
 
+    mod quiet_pawn {
+        use super::*;
+
+        #[test]
+        fn single_pawn_push() {
+            assert_finds_moves!(
+                quiet_pawn_moves,
+                "8/8/8/8/8/8/3P4/8 w KQkq - 0 1",
+                count = 1,
+                [ Move::new(D2, D3, MoveType::QUIET) ]
+            );
+        }
+
+        #[test]
+        fn does_not_capture_promotion_pushes() {
+            assert_finds_moves!(
+                quiet_pawn_moves,
+                "8/8/8/8/8/8/3p4/8 b KQkq - 0 1",
+                count = 0,
+                color = Color::BLACK,
+                [ ]
+            );
+
+        }
+
+    }
+
     mod double_pawn {
-        use crate::coup::rep::MoveType;
 
         use super::*;
 
         #[test]
-        #[tracing_test::traced_test]
         fn double_pawn_push() {
             assert_finds_moves!(
                 double_pawn_moves,

@@ -46,6 +46,16 @@ impl Color {
         }
     }
 
+    /// a mask for the promotion rank
+    pub fn promotion_rank(self) -> usize {
+        (!self).pawn_rank()
+    }
+
+    /// a mask for the promotion rank
+    pub fn promotion_mask(self) -> Bitboard {
+        (!self).pawn_mask()
+    }
+
     pub fn pawn_rank(self) -> usize {
         match self {
             Color::WHITE => 1,
@@ -57,13 +67,6 @@ impl Color {
         match self {
             Color::WHITE => *RANK_2,
             Color::BLACK => *RANK_7,
-        }
-    }
-
-    pub fn promotion_rank(self) -> Bitboard {
-        match self {
-            Color::WHITE => *RANK_8,
-            Color::BLACK => *RANK_1,
         }
     }
 
@@ -145,8 +148,8 @@ mod tests {
 
     #[test]
     fn promotion_rank() {
-        assert_eq!(Color::WHITE.promotion_rank(), *RANK_8);
-        assert_eq!(Color::BLACK.promotion_rank(), *RANK_1);
+        assert_eq!(Color::WHITE.promotion_rank(), 6);
+        assert_eq!(Color::BLACK.promotion_rank(), 1);
     }
 
     #[test]
