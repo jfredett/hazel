@@ -40,7 +40,7 @@ mod tests {
         assert_eq!(format!("{:?}", action), "Make(a1 (00) -> a2 (08) (QUIET) [0o000200])");
 
         let action : Action<Move, BEN> = Action::Setup(BEN::new(START_POSITION_FEN));
-        assert_eq!(format!("{:?}", action), "Setup(0x42356324111111110000000000000000000000000000000077777777a89bc98a)");
+        assert_eq!(format!("{:?}", action), "Setup(0x42356324111111110000000000000000000000000000000077777777a89bc98a:w KQkq - 0 1)");
 
         let action : Action<Move, BEN> = Action::Variation(Delim::Start);
         assert_eq!(format!("{:?}", action), "Variation(Start)");

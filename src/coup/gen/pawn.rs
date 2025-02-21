@@ -5,12 +5,6 @@ use crate::coup::rep::{Move, MoveType};
 use crate::notation::*;
 use crate::types::color::Color;
 
-impl Query for Position {
-    fn get(&self, square: impl Into<Square>) -> Occupant {
-        todo!()
-    }
-}
-
 /*
 *
 * something like a 'MoveQuery' object which takes a position and a square, and returns a classified

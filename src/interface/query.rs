@@ -1,7 +1,7 @@
 use ben::BEN;
 
 use crate::{
-    constants::File, notation::*, types::Occupant, util::charray::{Charray, Origin}
+    constants::File, game::position_metadata::PositionMetadata, notation::*, types::Occupant, util::charray::{Charray, Origin}
 };
 
 use super::Alteration;
@@ -11,6 +11,11 @@ use super::Alteration;
 /// h8.
 pub trait Query {
     fn get(&self, square: impl Into<Square>) -> Occupant;
+    /// not every Query implementer will have metadata, that's okay, but if we have it we want to
+    /// be able to use it.
+    fn metadata(&self) -> Option<PositionMetadata> {
+        None
+    }
 
     fn is_empty(&self, square: impl Into<Square>) -> bool {
         self.get(square).is_empty()
@@ -52,7 +57,7 @@ pub fn display_board(board: &impl Query) -> String {
     charray.to_string()
 }
 
-pub fn to_fen_string(board: &impl Query) -> String {
+pub fn to_fen_position(board: &impl Query) -> String {
     let mut f = String::default();
     let mut empty = 0;
 
@@ -82,24 +87,24 @@ pub fn to_fen_string(board: &impl Query) -> String {
 }
 
 pub fn to_alterations<'a, Q>(board: &'a Q) -> impl Iterator<Item = Alteration> + use<'a, Q> where Q : Query {
-    Square::by_rank_and_file()
+    // this should do 'clear' and 'assert(metadata)', query should require metadata query
+    // functions? maybe optional?
+    
+    let mut ret = vec![ Alteration::Clear];
+
+    if let Some(metadata) = board.metadata() {
+        ret.push(Alteration::Assert(metadata));
+    }
+
+    ret.extend(
+        Square::by_rank_and_file()
            .filter(|s| board.is_occupied(s))
            .map(|s| Alteration::place(s, board.get(s)) )
+    );
+
+    ret.into_iter()
 }
 
-pub fn to_fen_position<Q>(board: &Q) -> String where Q : Query{
-    let mut s = String::default();
-    todo!()
-
-    // for sq in Square::fenwise() {
-    //     if sq.file().into() == File::H {
-            
-
-    //     }
-    // }
-
-    // s
-}
 
 #[cfg(test)]
 mod tests {
@@ -131,44 +136,47 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    #[test]
-    fn to_fen_test() {
-        let mut p = PieceBoard::default();
-        p.set_startpos();
+    mod to_fen_position {
+        use super::*;
 
-        let actual = to_fen_position(&p);
-        let expected = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+        #[test]
+        fn to_fen_test() {
+            let mut p = PieceBoard::default();
+            p.set_startpos();
 
-        assert_eq!(format!("{}", actual), expected);
-    }
+            let actual = to_fen_position(&p);
+            let expected = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 
-    #[test]
-    fn to_fen_test_kiwipete() {
-        let mut p = PieceBoard::default();
-        p.set_fen(BEN::new(POS2_KIWIPETE_FEN));
+            assert_eq!(format!("{}", actual), expected);
+        }
 
-        let actual = to_fen_position(&p);
-        let expected = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
+        #[test]
+        fn to_fen_test_kiwipete() {
+            let mut p = PieceBoard::default();
+            p.set_fen(BEN::new(POS2_KIWIPETE_FEN));
 
-        assert_eq!(format!("{}", actual), expected);
-    }
+            let actual = to_fen_position(&p);
+            let expected = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R";
 
-    #[test]
-    fn is_empty() {
-        let mut p = PieceBoard::default();
-        p.set_startpos();
+            assert_eq!(format!("{}", actual), expected);
+        }
 
-        assert!(p.is_empty(A3));
-        assert!(!p.is_empty(A2));
-    }
+        #[test]
+        fn is_empty() {
+            let mut p = PieceBoard::default();
+            p.set_startpos();
 
-    #[test]
-    fn is_occupied() {
-        let mut p = PieceBoard::default();
-        p.set_startpos();
+            assert!(p.is_empty(A3));
+            assert!(!p.is_empty(A2));
+        }
 
-        assert!(!p.is_occupied(A3));
-        assert!(p.is_occupied(A2));
+        #[test]
+        fn is_occupied() {
+            let mut p = PieceBoard::default();
+            p.set_startpos();
+
+            assert!(!p.is_occupied(A3));
+            assert!(p.is_occupied(A2));
+        }
     }
 }
-

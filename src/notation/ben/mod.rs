@@ -36,6 +36,10 @@ impl Query for BEN {
         };
         Occupant::from(occupant_nibble)
     }
+
+    fn metadata(&self) -> Option<PositionMetadata> {
+        Some(self.metadata)
+    }
 }
 
 impl Alter for BEN {
@@ -67,6 +71,7 @@ impl Alter for BEN {
                 }
             },
             Alteration::Clear => { self.position = [0; 32]; },
+            Alteration::Assert(metadata) => { self.metadata = metadata; },
             _ => { }
         }
 
@@ -80,7 +85,7 @@ impl Debug for BEN {
         for byte in self.position.iter() {
             s.push_str(&format!("{:02x}", byte));
         }
-        s.push_str(":");
+        s.push(':');
         s.push_str(&format!("{}", self.metadata));
 
         write!(f, "{}", s)
@@ -89,9 +94,7 @@ impl Debug for BEN {
 
 impl std::fmt::Display for BEN {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        // TODO: display a FEN for the position
-
-        write!(f, "")
+        write!(f, "{} {}", query::to_fen_position(self), self.metadata)
     }
 }
 
@@ -101,6 +104,7 @@ impl BEN {
         let alterations = Self::compile(pos);
         let mut ret = Self::empty();
         for alter in alterations {
+            tracing::debug!("{:?}", alter);
             ret.alter_mut(alter);
         }
         ret
@@ -112,11 +116,16 @@ impl BEN {
 
     // TODO: Move this to Position, Position is how Hazel creates new positions, and BENs are
     // created therefrom, later we can optimize if creating BENs directly is worth it.
+    // TODO: Nom.
     fn compile(fen: &str) -> impl Iterator<Item = Alteration> {
-        let mut alterations = Vec::new();
+        let mut alterations = vec![];
         let mut cursor = Square::by_rank_and_file();
         cursor.downward();
-        for c in fen.chars() {
+        let mut chunks = fen.split_whitespace();
+
+        let configuration = chunks.next().expect("Invalid position configuration");
+
+        for c in configuration.chars() {
             if cursor.is_done() { break; }
 
             match c {
@@ -146,8 +155,14 @@ impl BEN {
                     cursor.next();
                 }
             }
-
         }
+
+        let mut metadata = PositionMetadata::default();
+        tracing::debug!("{:?}", chunks);
+        metadata.parse(&mut chunks);
+        alterations.push(Alteration::Assert(metadata));
+
+        // metadata parsing please
 
         alterations.into_iter()
     }

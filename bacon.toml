@@ -24,12 +24,6 @@ command = [
 need_stdout = false
 
 
-[jobs.nextest]
-command = [
-    "cargo", "nextest", "run", "--color", "always"
-]
-
-
 # Run clippy on all targets
 # To disable some lints, you may change the job this way:
 #    [jobs.clippy-all]

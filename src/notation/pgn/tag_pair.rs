@@ -61,7 +61,6 @@ mod tests {
 
 
         #[test]
-        #[tracing_test::traced_test]
         fn parses_tagpairs() {
             let input = r#"[Event "F/S Return Match"]
 [Site "Belgrade, Serbia JUG"]

@@ -108,7 +108,6 @@ mod tests {
         use super::*;
 
         #[test]
-        #[tracing_test::traced_test]
         fn imports_from_pgn_with_no_variations_and_halts() {
             let pgn = PGN::load("tests/fixtures/no-variations-and-halts.pgn").unwrap();
 
@@ -116,7 +115,6 @@ mod tests {
         }
 
         #[test]
-        #[tracing_test::traced_test]
         fn imports_from_pgn_with_no_variations_and_halt() {
             let pgn = PGN::load("tests/fixtures/no-variations-and-no-halt.pgn").unwrap();
 
@@ -124,7 +122,6 @@ mod tests {
         }
 
         #[test]
-        #[tracing_test::traced_test]
         fn imports_from_pgn_with_variations_and_no_halt() {
             let pgn = PGN::load("tests/fixtures/with-variations-no-halt.pgn").unwrap();
 
@@ -132,7 +129,6 @@ mod tests {
         }
 
         #[test]
-        #[tracing_test::traced_test]
         fn imports_from_pgn_with_variations_and_halt() {
             let pgn = PGN::load("tests/fixtures/with-variations-halts.pgn").unwrap();
 
@@ -140,7 +136,6 @@ mod tests {
         }
 
         #[test]
-        #[tracing_test::traced_test]
         fn imports_from_pgn_with_nested_variations_and_no_halt() {
             let pgn = PGN::load("tests/fixtures/with-nested-variations-no-halt.pgn").unwrap();
 
@@ -148,7 +143,6 @@ mod tests {
         }
 
         #[test]
-        #[tracing_test::traced_test]
         fn imports_from_pgn_with_nested_variations_and_halt() {
             let pgn = PGN::load("tests/fixtures/with-nested-variations-halts.pgn").unwrap();
 

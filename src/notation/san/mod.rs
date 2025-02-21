@@ -429,7 +429,6 @@ mod tests {
             assert_parses!("Nf3", Move::new(G1, F3, MoveType::QUIET));
         }
 
-        #[tracing_test::traced_test]
         #[test]
         fn parses_san_piece_capture() {
             assert_parses!("Qxd4", Move::new(D1, D4, MoveType::CAPTURE), "8/8/8/8/3p4/8/8/3Q4 w - - 0 1");
@@ -470,13 +469,11 @@ mod tests {
     mod pawn_captures {
         use super::*;
 
-        #[tracing_test::traced_test]
         #[test]
         fn parses_simple_pawn_capture() {
             assert_parses!("axb4", Move::new(A3, B4, MoveType::CAPTURE), "8/8/8/8/1p6/P7/8/8 w - - 0 1");
         }
 
-        #[tracing_test::traced_test]
         #[test]
         fn parses_pawn_capture_with_disambiguator() {
             // FIXME: I don't think this is a valid fen that would generate this move notation
@@ -497,13 +494,11 @@ mod tests {
     mod pawn_pushes {
         use super::*;
 
-        #[tracing_test::traced_test]
         #[test]
         fn parses_pawn_double_push() {
             assert_parses!("e4", Move::new(E2, E4, MoveType::DOUBLE_PAWN));
         }
 
-        #[tracing_test::traced_test]
         #[test]
         fn parses_pawn_push() {
             assert_parses!("e3", Move::new(E2, E3, MoveType::QUIET));

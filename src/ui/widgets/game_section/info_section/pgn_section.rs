@@ -92,7 +92,6 @@ mod tests {
     }
 
     #[test]
-    #[tracing_test::traced_test]
     fn renders_as_expected() {
         let rect = Rect::new(0, 0, 64, 16);
         let mut buffer = Buffer::empty(rect);

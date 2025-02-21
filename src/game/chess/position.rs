@@ -1,4 +1,4 @@
-use crate::{board::PieceBoard, coup::rep::Move, notation::ben::BEN, types::{Bitboard, Color, Piece}, Alter, Alteration};
+use crate::{board::PieceBoard, coup::rep::Move, notation::{ben::BEN, Square}, types::{Bitboard, Color, Occupant, Piece}, Alter, Alteration, Query};
 
 use super::position_metadata::PositionMetadata;
 
@@ -39,6 +39,13 @@ impl From<Position> for Vec<Alteration> {
         ret
     }
 }
+
+impl Query for Position {
+    fn get(&self, square: impl Into<Square>) -> Occupant {
+        self.board.get(square)
+    }
+}
+
 
 // TODO: this'll implement play at some point
 

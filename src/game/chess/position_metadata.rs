@@ -110,6 +110,7 @@ impl PositionMetadata {
             }
         };
 
+        tracing::debug!("{:?}", en_passant);
         let en_passant = match en_passant {
             Some("-") => None,
             Some(square) => { 

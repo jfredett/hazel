@@ -53,7 +53,8 @@ pub fn slow_attacks(pos: Bitboard, occupancy: Bitboard, dirs: [Direction; 4]) ->
                 break 'next_dir;
             }
 
-            try_move.all_set_squares().into_iter().map(|s| out.set(s));
+            let mov = try_move.all_set_squares()[0];
+            out.set(mov);
 
             if !(try_move & occupancy).is_empty() {
                 break 'next_dir;

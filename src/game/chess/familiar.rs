@@ -236,7 +236,7 @@ mod tests {
             familiar.advance_by(3);
             familiar.rewind();
 
-            let ben = BEN::new("rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2");
+            let ben = BEN::new("rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq d6 0 2");
             let mut expected_board = PieceBoard::default();
             expected_board.set_fen(ben);
 
@@ -328,7 +328,7 @@ mod tests {
             // corresponds to ply number, but the example game has variations so that is not reliable.
             familiar.advance_by(2);
 
-            let ben = BEN::new("rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2");
+            let ben = BEN::new("rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq d6 0 2");
             let mut expected_board = PieceBoard::default();
             expected_board.set_fen(ben);
 

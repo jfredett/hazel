@@ -239,7 +239,6 @@ mod tests {
             }
 
             #[test]
-            #[tracing_test::traced_test]
             fn imports_from_pgn_with_variations_and_no_halt() {
                 let (input, tokens) = PGNToken::tokenize_file("tests/fixtures/with-variations-no-halt.pgn").unwrap();
                 let expected = [
@@ -439,7 +438,6 @@ mod tests {
         use super::*;
 
         #[test]
-        #[tracing_test::traced_test]
         fn parses_turn() {
             let (input, token) = PGNToken::turn("1. ").unwrap();
             assert_eq!(input, "");
@@ -502,7 +500,6 @@ mod tests {
         use super::*;
 
         #[test]
-        #[tracing_test::traced_test]
         fn parses_halt() {
             let (input, token) = PGNToken::halt("1-0 ").unwrap();
             assert_eq!(input, "");
