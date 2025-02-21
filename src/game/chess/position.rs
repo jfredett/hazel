@@ -69,6 +69,14 @@ impl Position {
         Self { initial: fen.into(), moves, metadata, board, alteration_cache }
     }
 
+    pub fn all_pieces_of(&self, color: &Color) -> Bitboard {
+        let mut bb = Bitboard::empty();
+        for (sq, _) in self.board.by_occupant().filter(|(_, o)| o.color().unwrap() == *color) {
+            bb.set(sq);
+        }
+        bb
+    }
+
 
     pub fn pawns_for(&self, color: &Color) -> Bitboard {
         let mut bb = Bitboard::empty();
