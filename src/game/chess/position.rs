@@ -93,14 +93,62 @@ mod tests {
     use super::*;
 
     mod new {
+        use crate::game::castle_rights::CastleRights;
+
         use super::*;
 
 
         #[test]
         fn correctly_caches_start_position() {
             let pos = Position::new(BEN::start_position(), vec![]);
-            assert_eq!(pos.alteration_cache, vec![
+            use crate::notation::*;
 
+            assert_eq!(pos.alteration_cache, vec![
+                Alteration::Clear,
+                Alteration::Assert(PositionMetadata {
+                    side_to_move: Color::WHITE,
+                    castling: CastleRights {
+                        white_short: true,
+                        white_long: true,
+                        black_short: true,
+                        black_long: true
+                    }, 
+                    en_passant: None,
+                    halfmove_clock: 0,
+                    fullmove_number: 1
+                }),
+                Alteration::place(A1, Occupant::white_rook()),
+                Alteration::place(B1, Occupant::white_knight()),
+                Alteration::place(C1, Occupant::white_bishop()),
+                Alteration::place(D1, Occupant::white_queen()),
+                Alteration::place(E1, Occupant::white_king()),
+                Alteration::place(F1, Occupant::white_bishop()),
+                Alteration::place(G1, Occupant::white_knight()),
+                Alteration::place(H1, Occupant::white_rook()),
+                Alteration::place(A2, Occupant::white_pawn()),
+                Alteration::place(B2, Occupant::white_pawn()),
+                Alteration::place(C2, Occupant::white_pawn()),
+                Alteration::place(D2, Occupant::white_pawn()),
+                Alteration::place(E2, Occupant::white_pawn()),
+                Alteration::place(F2, Occupant::white_pawn()),
+                Alteration::place(G2, Occupant::white_pawn()),
+                Alteration::place(H2, Occupant::white_pawn()),
+                Alteration::place(A7, Occupant::black_pawn()),
+                Alteration::place(B7, Occupant::black_pawn()),
+                Alteration::place(C7, Occupant::black_pawn()),
+                Alteration::place(D7, Occupant::black_pawn()),
+                Alteration::place(E7, Occupant::black_pawn()),
+                Alteration::place(F7, Occupant::black_pawn()),
+                Alteration::place(G7, Occupant::black_pawn()),
+                Alteration::place(H7, Occupant::black_pawn()),
+                Alteration::place(A8, Occupant::black_rook()),
+                Alteration::place(B8, Occupant::black_knight()),
+                Alteration::place(C8, Occupant::black_bishop()),
+                Alteration::place(D8, Occupant::black_queen()),
+                Alteration::place(E8, Occupant::black_king()),
+                Alteration::place(F8, Occupant::black_bishop()),
+                Alteration::place(G8, Occupant::black_knight()),
+                Alteration::place(H8, Occupant::black_rook()),
             ]);
 
         }
