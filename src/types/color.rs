@@ -48,8 +48,8 @@ impl Color {
 
     pub fn pawn_rank(self) -> usize {
         match self {
-            Color::WHITE => 2,
-            Color::BLACK => 7,
+            Color::WHITE => 1,
+            Color::BLACK => 6,
         }
     }
 
@@ -133,8 +133,8 @@ mod tests {
 
     #[test]
     fn pawn_rank() {
-        assert_eq!(Color::WHITE.pawn_rank(), 2);
-        assert_eq!(Color::BLACK.pawn_rank(), 7);
+        assert_eq!(Color::WHITE.pawn_rank(), 1);
+        assert_eq!(Color::BLACK.pawn_rank(), 6);
     }
     
     #[test]

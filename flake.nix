@@ -6,7 +6,7 @@
         flake-parts.url = "github:hercules-ci/flake-parts";
 
         rust-manifest = {
-            url = "https://static.rust-lang.org/dist/2025-02-20/channel-rust-nightly.toml";
+            url = "https://static.rust-lang.org/dist/2025-02-12/channel-rust-nightly.toml";
             flake = false;
         };
     };

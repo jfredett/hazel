@@ -14,7 +14,7 @@ use crate::types::color::Color;
 
 // TODO: These are all probably pre-calculateable.
 pub fn double_pawn_moves(position: &Position, color: Color) -> impl Iterator<Item = Move> {
-    let bb = position.pawns_for(&color);
+    let bb = position.pawns_for(&color) & color.pawn_mask();
     let blockers = position.all_blockers();
     let first_advance = bb.shift(color.pawn_direction()) & !blockers; // advance all pawns by 1, mask off anyone who runs into a blocker
     let second_advance = first_advance.shift(color.pawn_direction()) & !blockers; // advance again, masking out blockers
@@ -59,6 +59,9 @@ mod tests {
                 vec![]
             );
             let moves : Vec<Move> = $func_name(&position, Color::WHITE).collect();
+
+            tracing::debug!("{:?}", moves);
+
             assert_eq!(moves.len(), $expected_count);
 
             for expected_move in [ $($move),* ] {
@@ -73,6 +76,7 @@ mod tests {
         use super::*;
 
         #[test]
+        #[tracing_test::traced_test]
         fn double_pawn_push() {
             assert_finds_moves!(
                 double_pawn_moves,
