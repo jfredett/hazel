@@ -2,10 +2,10 @@ use crate::interface::{alter::Alter, alteration::Alteration, query::Query};
 use crate::types::Occupant;
 use crate::notation::*;
 
+use ben::BEN;
 use tracing::instrument;
 
 pub mod display_debug;
-pub mod from_into;
 
 
 #[derive(Clone, Copy, PartialEq)]
@@ -36,6 +36,7 @@ impl<Q> Iterator for OccupantIterator<Q> where Q : Query {
 }
 
 impl PieceBoard {
+    /// Set the given square to the provided occupant
     pub fn set(&mut self, square: impl Into<Square>, occupant: Occupant) {
         let sq = square.into();
 
@@ -48,6 +49,24 @@ impl PieceBoard {
             idx: Square::by_rank_and_file()
         }
 
+    }
+
+    pub fn set_startpos(&mut self) {
+        self.set_position(BEN::start_position())
+    }
+
+    pub fn set_position(&mut self, fen: impl Into<BEN>) {
+        self.set_fen(fen)
+    }
+
+    // DEPRECATED, use set_position instead
+    pub fn set_fen(&mut self, fen: impl Into<BEN>) {
+        let mut alterations = vec![ Alteration::clear() ];
+        let new_setup = fen.into();
+        alterations.extend(new_setup.to_alterations());
+        for alter in alterations {
+            self.alter_mut(alter);
+        }
     }
 }
 

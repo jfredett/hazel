@@ -33,7 +33,8 @@ impl GameSectionLayout<'_> {
     // There are a set of UI traits that I should probably build independently of the engine, this
     // would be one of them.
     pub fn new(pgn: PGN) -> Self {
-        let board : PieceBoard = pgn.current_position().into();
+        let mut board = PieceBoard::default();
+        board.set_position(pgn.current_position());
         Self {
             info_section: InfoSection::new(pgn),
             board_section: BoardSection::from(board),

@@ -1,11 +1,14 @@
 use crate::{board::PieceBoard, coup::rep::Move, notation::ben::BEN, types::{Bitboard, Color, Piece}, Alter, Alteration};
 
+use super::position_metadata::PositionMetadata;
+
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Position {
     // necessaries
     pub initial: BEN,
     pub moves: Vec<Move>,
+    metadata: PositionMetadata,
     // caches
 
     // Alteration Cache should be by piece and color, so I can selectively reconstruct bitboards
@@ -23,7 +26,8 @@ impl From<Position> for Vec<Alteration> {
     fn from(pos: Position) -> Self {
         let mut ret : Vec<Alteration> = pos.initial.to_alterations().collect();
 
-        let mut board = PieceBoard::from(pos.initial);
+        let mut board = PieceBoard::default();
+        board.set_position(pos.initial);
 
         for m in pos.moves.iter() {
             let alterations = m.compile(&board);
@@ -41,7 +45,10 @@ impl From<Position> for Vec<Alteration> {
 impl Position {
     pub fn new(fen: impl Into<BEN>, moves: Vec<Move>) -> Self {
         let fen = fen.into();
-        let mut board = PieceBoard::from(fen);
+        let mut board = PieceBoard::default();
+        board.set_position(fen);
+
+        let mut metadata = PositionMetadata::default();
         let mut alteration_cache : Vec<Alteration> = fen.to_alterations().collect();
 
         for mov in &moves {
@@ -50,8 +57,9 @@ impl Position {
                 alteration_cache.push(alteration);
                 board.alter_mut(alteration);
             }
+            metadata.update(mov, &board);
         }
-        Self { initial: fen.into(), moves, board, alteration_cache }
+        Self { initial: fen.into(), moves, metadata, board, alteration_cache }
     }
 
 
@@ -64,7 +72,11 @@ impl Position {
     }
 
     pub fn all_blockers(&self) -> Bitboard {
-        todo!()
+        let mut bb = Bitboard::empty();
+        for (sq, _) in self.board.by_occupant().filter(|(_, o)| o.is_occupied()) {
+            bb.set(sq);
+        }
+        bb
     }
 }
 

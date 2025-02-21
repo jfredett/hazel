@@ -21,23 +21,6 @@ pub struct ChessGame<T> where T: Alter + Query + Default + Clone {
     pub metadata: PositionMetadata,
 }
 
-impl<T> From<BEN> for ChessGame<T> where T : From<BEN> + Alter + Query + Default + Clone {
-    fn from(ben: BEN) -> Self {
-        let rep = T::from(ben);
-        ChessGame {
-            rep,
-            metadata: ben.metadata(),
-        }
-    }
-}
-
-impl<T> From<ChessGame<T>> for BEN where T : Into<BEN> + Alter + Query + Default + Clone {
-    fn from(game: ChessGame<T>) -> Self {
-        let mut ret = game.rep.into();
-        ret.set_metadata(game.metadata);
-        ret
-    }
-}
 
 /*
 * In this design, ChessGame can only roll _forward_, the unplay trait would require a bunch more

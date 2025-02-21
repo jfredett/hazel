@@ -250,6 +250,19 @@ mod tests {
         // first one I think is correct, but remains to be seen.
         //
         // This test, for now, should cover the variation case in for now.
+        //
+        // 20-FEB-2025 1151:
+        //
+        // I think this is almost right, the section at the bottom replicates the
+        // From<ChessGame<Q>> impl for BEN, and I think that points to this structure below
+        // actually being the `Position` structure, and `ChessGame` is a structure that creates
+        // `Positions` from it's `Variation`.
+        //
+        // ChessGame holds a variation and it's many contained games
+        // A Familiar from ChessGame finds a Position (which mostly just holds the alteration
+        // caches and computes representations)
+        // A Position can naturally then create BEN as needed.
+        //
         let line = game.log.cursor(|cursor| {
             let mut board = PieceBoard::default();
             let mut metadata = PositionMetadata::default();
@@ -279,7 +292,8 @@ mod tests {
             }
 
             // Now board and metadata are caught up, so we just ask board to write it's fen
-            let mut ret = BEN::from(board);
+            // TODO: Unify this with the From<ChessGame<Q>> impl somehow
+            let mut ret : BEN = alter::setup(query::to_alterations(&board));
             ret.set_metadata(metadata);
             ret
         });

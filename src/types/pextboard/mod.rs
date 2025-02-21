@@ -52,8 +52,9 @@ pub fn slow_attacks(pos: Bitboard, occupancy: Bitboard, dirs: [Direction; 4]) ->
             if try_move.is_empty() {
                 break 'next_dir;
             }
-            let mov = try_move.all_set_indices()[0];
-            out.set(Square::new(mov));
+
+            try_move.all_set_squares().into_iter().map(|s| out.set(s));
+
             if !(try_move & occupancy).is_empty() {
                 break 'next_dir;
             }
@@ -183,7 +184,7 @@ impl<const SIZE: usize> PEXTBoard<SIZE> {
         F: Fn(Bitboard, Bitboard) -> Bitboard,
     {
         let pos = Bitboard::from_index(sq);
-        let blocker_indexes = nominal_attacks.all_set_indices();
+        let blocker_indexes : Vec<usize> = nominal_attacks.all_set_squares().into_iter().map(|e| e.index()).collect();
         let mask_count = blocker_indexes.len();
         let mut out = vec![];
 

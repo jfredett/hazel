@@ -1,9 +1,7 @@
 use ben::BEN;
 
 use crate::{
-    notation::*,
-    types::Occupant,
-    util::charray::{Charray, Origin},
+    constants::File, notation::*, types::Occupant, util::charray::{Charray, Origin}
 };
 
 use super::Alteration;
@@ -89,8 +87,18 @@ pub fn to_alterations<'a, Q>(board: &'a Q) -> impl Iterator<Item = Alteration> +
            .map(|s| Alteration::place(s, board.get(s)) )
 }
 
-pub fn to_fen(board: &impl Query) -> BEN {
-    BEN::with_default_metadata(&to_fen_string(board))
+pub fn to_fen_position<Q>(board: &Q) -> String where Q : Query{
+    let mut s = String::default();
+    todo!()
+
+    // for sq in Square::fenwise() {
+    //     if sq.file().into() == File::H {
+            
+
+    //     }
+    // }
+
+    // s
 }
 
 #[cfg(test)]
@@ -128,7 +136,7 @@ mod tests {
         let mut p = PieceBoard::default();
         p.set_startpos();
 
-        let actual = to_fen(&p);
+        let actual = to_fen_position(&p);
         let expected = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
         assert_eq!(format!("{}", actual), expected);
@@ -139,7 +147,7 @@ mod tests {
         let mut p = PieceBoard::default();
         p.set_fen(BEN::new(POS2_KIWIPETE_FEN));
 
-        let actual = to_fen(&p);
+        let actual = to_fen_position(&p);
         let expected = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
 
         assert_eq!(format!("{}", actual), expected);

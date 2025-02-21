@@ -236,11 +236,15 @@ mod tests {
             familiar.advance_by(3);
             familiar.rewind();
 
-            assert_eq!(familiar.rep::<ChessGame<PieceBoard>>().rep, BEN::new("rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2").into());
+            let ben = BEN::new("rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2");
+            let mut expected_board = PieceBoard::default();
+            expected_board.set_fen(ben);
+
+            assert_eq!(familiar.rep::<ChessGame<PieceBoard>>().rep, expected_board);
 
             let metadata : PositionMetadata = familiar.metadata::<ChessGame<PieceBoard>>();
 
-            assert_eq!(metadata.fullmove_number, 2);
+            assert_eq!(metadata, ben.metadata());
         }
 
         #[test]
@@ -255,11 +259,15 @@ mod tests {
             familiar.advance_by(3);
             familiar.rewind_to_start();
 
-            assert_eq!(familiar.rep::<ChessGame<PieceBoard>>().rep, BEN::new(EMPTY_POSITION_FEN).into());
+            let ben = BEN::new(EMPTY_POSITION_FEN);
+            let mut expected_board = PieceBoard::default();
+            expected_board.set_fen(ben);
+
+            assert_eq!(familiar.rep::<ChessGame<PieceBoard>>().rep, expected_board);
 
             let metadata : PositionMetadata = familiar.metadata::<ChessGame<PieceBoard>>();
 
-            assert_eq!(metadata.fullmove_number, 1);
+            assert_eq!(metadata, ben.metadata());
         }
 
         #[test]
@@ -320,11 +328,15 @@ mod tests {
             // corresponds to ply number, but the example game has variations so that is not reliable.
             familiar.advance_by(2);
 
-            assert_eq!(familiar.rep::<ChessGame<PieceBoard>>().rep, BEN::new("rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2").into());
+            let ben = BEN::new("rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2");
+            let mut expected_board = PieceBoard::default();
+            expected_board.set_fen(ben);
+
+            assert_eq!(familiar.rep::<ChessGame<PieceBoard>>().rep, expected_board);
 
             let metadata : PositionMetadata = familiar.metadata::<ChessGame<PieceBoard>>();
 
-            assert_eq!(metadata.fullmove_number, 2);
+            assert_eq!(metadata, ben.metadata());
         }
 
         #[test]
@@ -336,11 +348,13 @@ mod tests {
             // We advance _over_ the variation opening, but stop inside.
             familiar.advance_by(6);
 
-            assert_eq!(familiar.rep::<ChessGame<PieceBoard>>().rep, BEN::new("r1bqkbnr/ppp1pppp/2n5/3p4/3P1B2/8/PPP1PPPP/RN1QKBNR w KQkq - 2 3").into());
+            let ben = BEN::new("r1bqkbnr/ppp1pppp/2n5/3p4/3P1B2/8/PPP1PPPP/RN1QKBNR w KQkq - 2 3");
+            let mut expected_board = PieceBoard::default();
+            expected_board.set_fen(ben);
 
             let metadata : PositionMetadata = familiar.metadata::<ChessGame<PieceBoard>>();
 
-            assert_eq!(metadata.fullmove_number, 3);
+            assert_eq!(metadata, ben.metadata());
         }
 
         #[test]
@@ -353,11 +367,13 @@ mod tests {
             familiar.advance_by(5);
             familiar.advance();
 
-            assert_eq!(familiar.rep::<ChessGame<PieceBoard>>().rep, BEN::new("r1bqkbnr/ppp1pppp/2n5/3p4/3P1B2/8/PPP1PPPP/RN1QKBNR w KQkq - 2 3").into());
+            let ben = BEN::new("r1bqkbnr/ppp1pppp/2n5/3p4/3P1B2/8/PPP1PPPP/RN1QKBNR w KQkq - 2 3");
+            let mut expected_board = PieceBoard::default();
+            expected_board.set_fen(ben);
 
             let metadata : PositionMetadata = familiar.metadata::<ChessGame<PieceBoard>>();
 
-            assert_eq!(metadata.fullmove_number, 3);
+            assert_eq!(metadata, ben.metadata());
         }
     }
 

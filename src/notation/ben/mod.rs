@@ -80,6 +80,8 @@ impl Debug for BEN {
         for byte in self.position.iter() {
             s.push_str(&format!("{:02x}", byte));
         }
+        s.push_str(":");
+        s.push_str(&format!("{}", self.metadata));
 
         write!(f, "{}", s)
     }

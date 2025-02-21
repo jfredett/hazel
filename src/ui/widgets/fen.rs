@@ -7,31 +7,15 @@ use tracing::{debug, instrument};
 
 use ratatui::buffer::Buffer;
 
-use crate::board::simple::PieceBoard;
-use crate::interface::query::to_fen;
 use crate::notation::ben::BEN;
 
 
 #[derive(Debug, Default)]
 #[allow(clippy::upper_case_acronyms)]
 pub struct FEN {
-    // TODO: This can probably be aliased so I don't have to use it's full legal name here, but I
-    // am lazy and don't want to read the docs.
     fen: BEN,
     style: Style,
     alignment: Alignment
-}
-
-impl From<&PieceBoard> for FEN {
-    fn from(board: &PieceBoard) -> Self {
-        Self::new(to_fen(board))
-    }
-}
-
-impl From<PieceBoard> for FEN {
-    fn from(board: PieceBoard) -> Self {
-        Self::new(to_fen(&board))
-    }
 }
 
 impl FEN {
@@ -69,6 +53,7 @@ impl Widget for &FEN {
 #[cfg(test)]
 mod tests {
     use crate::constants::START_POSITION_FEN;
+    use crate::board::simple::PieceBoard;
 
     use super::*;
 
@@ -77,9 +62,8 @@ mod tests {
         let rect = Rect::new(0, 0, 64, 1);
         let mut buffer = Buffer::empty(rect);
         buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
-        let board = PieceBoard::default();
 
-        let fen_widget = &FEN::from(board);
+        let fen_widget = &FEN::new(BEN::empty());
         fen_widget.render(rect, &mut buffer);
 
         let mut expected = Buffer::with_lines(vec![
@@ -96,10 +80,7 @@ mod tests {
         let mut buffer = Buffer::empty(rect);
         buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
-        let mut board = PieceBoard::default();
-        board.set_fen(BEN::new(START_POSITION_FEN));
-
-        let fen_widget = &FEN::from(board);
+        let fen_widget = &FEN::new(BEN::new(START_POSITION_FEN));
         fen_widget.render(rect, &mut buffer);
 
         let mut expected = Buffer::with_lines(vec![

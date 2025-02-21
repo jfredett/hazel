@@ -116,24 +116,6 @@ impl Bitboard {
 
     /// Return a vector containing all the indices which are set
     ///
-    /// TODO: Replace this with an iterator that progressively pops the least set bit, should be quicker.
-    ///
-    /// ```
-    /// # use hazel::types::Bitboard;
-    /// # use hazel::notation::*;
-    /// let mut b = Bitboard::empty();
-    /// b.set(A1);
-    /// b.set(A2);
-    /// b.set(A3);
-    /// assert_eq!(b.all_set_indices(), vec![A1.index(),A2.index(),A3.index()]);
-    /// ```
-    pub fn all_set_indices(&self) -> Vec<usize> {
-        tracing::warn!("Bitboard#all_set_indices is deprecated, use #all_set_squares");
-        self.all_set_squares().into_iter().map(|e| e.into()).collect()
-    }
-
-    /// Return a vector containing all the indices which are set
-    ///
     /// ```
     /// # use hazel::types::Bitboard;
     /// # use hazel::notation::*;
