@@ -649,10 +649,8 @@ mod tests {
         if piece == Piece::King { return true; }
         if piece == Piece::Knight { return true; }
 
-        let square = sq.0;
-
         // this is a bitboard set with all the moves for a given piece
-        let bbmoves = pextboard::attacks_for(piece, square, Bitboard::empty());
+        let bbmoves = pextboard::attacks_for(piece, sq, Bitboard::empty());
 
         sq.moves_for(&piece, &color).all(|x| bbmoves.is_set(x))
     }

@@ -1,3 +1,4 @@
+use hazel::notation::Square;
 use hazel::types::Bitboard;
 use hazel::types::Piece;
 use hazel::types::pextboard;
@@ -9,9 +10,9 @@ fn main() {
     let mut v = [Bitboard::empty(); 10];
     for i in 0..COUNT {
         let bb_in = rand::random::<u64>();
-        let sq = rand::random::<u8>() % 64;
+        let sq = Square::new(rand::random::<usize>() % 64);
         let blocks: Bitboard = Bitboard::from(bb_in);
 
-        v[i % 10] = pextboard::attacks_for(Piece::Rook, sq as usize, blocks);
+        v[i % 10] = pextboard::attacks_for(Piece::Rook, sq, blocks);
     }
 }

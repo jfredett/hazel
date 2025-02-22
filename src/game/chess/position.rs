@@ -1,4 +1,4 @@
-use crate::{board::PieceBoard, constants::move_tables::{KING_ATTACKS, KNIGHT_MOVES}, coup::rep::Move, notation::{ben::BEN, Square}, types::{Bitboard, Color, Direction, Occupant, Piece}, Alter, Alteration, Query};
+use crate::{board::PieceBoard, constants::move_tables::{KING_ATTACKS, KNIGHT_MOVES}, coup::rep::Move, notation::{ben::BEN, Square}, types::{pextboard, Bitboard, Color, Direction, Occupant, Piece}, Alter, Alteration, Query};
 
 use super::position_metadata::PositionMetadata;
 
@@ -165,7 +165,11 @@ impl Position {
     }
 
     pub fn our_bishop_attacks(&self) -> Bitboard {
-        todo!()
+        let blockers = self.all_blockers();
+        self.find(|(_, occ)| { *occ == Occupant::Occupied(Piece::Bishop, self.hero()) })
+            .into_iter()
+            .map(|sq| { pextboard::attacks_for(Piece::Bishop, sq, blockers) })
+            .fold(Bitboard::empty(), |acc, e| acc | e)
     }
 
     pub fn our_rook_attacks(&self) -> Bitboard {
@@ -215,7 +219,11 @@ impl Position {
     }
 
     pub fn their_bishop_attacks(&self) -> Bitboard {
-        todo!()
+        let blockers = self.all_blockers();
+        self.find(|(_, occ)| { *occ == Occupant::Occupied(Piece::Bishop, self.villain()) })
+            .into_iter()
+            .map(|sq| { pextboard::attacks_for(Piece::Bishop, sq, blockers) })
+            .fold(Bitboard::empty(), |acc, e| acc | e)
     }
 
     pub fn their_rook_attacks(&self) -> Bitboard {
@@ -419,7 +427,27 @@ mod tests {
     }
 
     mod bishop {
+        use super::*;
 
+        mod attacks {
+            use crate::bitboard;
+
+            use super::*;
+
+            #[test]
+            fn light_square() {
+                let pos = Position::new(BEN::new("8/1b6/8/8/8/1B6/8/8 w - - 0 1"), vec![]);
+                assert_eq!(pos.our_bishop_attacks(), bitboard!(A4, A2, C4, C2, D1, D5, E6, F7, G8));
+                assert_eq!(pos.their_bishop_attacks(),  bitboard!(A8, A6, C8, C6, D5, E4, F3, G2, H1));
+            }
+
+            #[test]
+            fn dark_square() {
+                let pos = Position::new(BEN::new("8/2b5/8/8/8/2B5/8/8 w - - 0 1"), vec![]);
+                assert_eq!(pos.our_bishop_attacks(),  bitboard!(B2, D2, A1, E1, B4, A5, D4, E5, F6, G7, H8));
+                assert_eq!(pos.their_bishop_attacks(), bitboard!(B8, D8, B6, A5, D6, E5, F4, G3, H2));
+            }
+        }
     }
 
     mod rook {

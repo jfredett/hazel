@@ -269,7 +269,7 @@ impl SAN {
         match self.source_piece.unwrap() {
             Piece::Rook | Piece::Bishop | Piece::Queen => {
                 for source_sq in possible_source_squares {
-                    let attacks = pextboard::attacks_for(self.source_piece.unwrap(), source_sq.into(), blocks);
+                    let attacks = pextboard::attacks_for(self.source_piece.unwrap(), *source_sq, blocks);
                     if attacks.is_set(self.target_sq.unwrap()) {
                         return Ok(*source_sq);
                     }

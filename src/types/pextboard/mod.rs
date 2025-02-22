@@ -81,8 +81,8 @@ pub fn slow_rook_attacks(rook_pos: Bitboard, occupancy: Bitboard) -> Bitboard {
     )
 }
 
-pub fn attacks_for(piece: Piece, sq: usize, blocks: Bitboard) -> Bitboard {
-    let pos = Bitboard::from_index(sq);
+pub fn attacks_for(piece: Piece, sq: Square, blocks: Bitboard) -> Bitboard {
+    let pos = Bitboard::from(sq);
     match piece {
         Piece::Rook => ROOK_PEXTBOARD._attacks_for(Piece::Rook, pos, blocks),
         Piece::Bishop => BISHOP_PEXTBOARD._attacks_for(Piece::Bishop, pos, blocks),
