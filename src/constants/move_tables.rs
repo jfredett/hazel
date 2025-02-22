@@ -5,6 +5,9 @@ use crate::notation::*;
 
 lazy_static! {
     /// A lookup table to convert a knight on a given index -> it's bitboard of moves
+    // NOTE: 32k is all it takes to store a bitboard->bitboard map of all pairs and singles of
+    // knights and their respective moves, probably worth doing to avoid the loop in
+    // #*_knight_attacks in position
     pub static ref KNIGHT_MOVES: [Bitboard; 64] = {
         let mut out : [Bitboard; 64] = [Bitboard::empty(); 64];
         for i in 0..64 {
@@ -26,6 +29,8 @@ lazy_static! {
     };
 
     /// A lookup table to convert a pawn on a given index -> it's bitboard of moves
+    // FIXME: This overcomputes, I really want this as moves per color and movetype and position, I
+    // think.
     pub static ref PAWN_MOVES: [[Bitboard; 64]; 2] = {
         let mut white_out = [Bitboard::empty(); 64];
         let mut black_out = [Bitboard::empty(); 64];
@@ -74,4 +79,22 @@ lazy_static! {
         [ white_out, black_out ]
     };
 
+    // FIXME: BitOps aren't const yet, so this is as close as I could get
+    pub static ref KING_ATTACKS : [Bitboard; 64] = {
+        let mut arr = [Bitboard::empty(); 64];
+        for idx in 0..64 {
+
+            let mut bb = Bitboard::empty();
+            let sq = Square::new(idx);
+            bb.set(sq);
+
+            bb = bb.shift(Direction::N) | bb.shift(Direction::NE) | bb.shift(Direction::E) | bb.shift(Direction::SE) |
+                 bb.shift(Direction::S) | bb.shift(Direction::SW) | bb.shift(Direction::W) | bb.shift(Direction::NW);
+
+            bb.unset(sq);
+
+            arr[idx] = bb;
+        }
+        arr
+    };
 }

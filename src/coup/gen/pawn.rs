@@ -5,12 +5,8 @@ use crate::coup::rep::{Move, MoveType};
 use crate::notation::*;
 use crate::types::color::Color;
 
-/*
-*
-* something like a 'MoveQuery' object which takes a position and a square, and returns a classified
-* grouping of possible moves
-*/
 
+// TODO: Remove the `color` parameter from all of these, it should come from the position metadata
 
 /// Finds all double-pawn pushes.
 pub fn double_pawn_moves(position: &Position, color: Color) -> impl Iterator<Item = Move> {

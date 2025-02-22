@@ -1,4 +1,6 @@
-use crate::types::Color;
+use std::slice::SliceIndex;
+
+use crate::types::{Bitboard, Color};
 
 mod constants;
 mod display_debug;
@@ -51,7 +53,6 @@ impl Square {
         self.rank() == 0 || self.rank() == 7
     }
 }
-
 
 #[cfg(test)]
 mod tests {
