@@ -39,8 +39,9 @@ pub fn quiet_pawn_moves(position: &Position, color: Color) -> impl Iterator<Item
 pub fn pawn_attacks(position: &Position, color: Color) -> impl Iterator<Item = Move> {
     let bb = position.pawns_for(&color) & !color.promotion_mask();
     let enemies = position.all_pieces_of(&!color);
-    let east_attacks = bb.shift(color.pawn_direction()).shift(Direction::E) & enemies;
-    let west_attacks = bb.shift(color.pawn_direction()).shift(Direction::W) & enemies;
+    let advance = bb.shift(color.pawn_direction());
+    let east_attacks = advance.shift(Direction::E) & enemies;
+    let west_attacks = advance.shift(Direction::W) & enemies;
 
     dbg!(position.board);
     dbg!(east_attacks);
@@ -100,10 +101,32 @@ pub fn promotions(position: &Position, color: Color) -> impl Iterator<Item = Mov
     })
 }
 
-// promotions
-// promotion_captures
+pub fn promotion_captures(position: &Position, color: Color) -> impl Iterator<Item = Move> {
+    let pawns = position.pawns_for(&color) & color.promotion_mask();
+    let enemies = position.all_pieces_of(&!color);
+    let advance = pawns.shift(color.pawn_direction());
+    let east_attacks = advance.shift(Direction::E) & enemies;
+    let west_attacks = advance.shift(Direction::W) & enemies;
+    
+    const promotion_options : [MoveType; 4] = [
+        MoveType::PROMOTION_CAPTURE_ROOK,
+        MoveType::PROMOTION_CAPTURE_QUEEN,
+        MoveType::PROMOTION_CAPTURE_KNIGHT,
+        MoveType::PROMOTION_CAPTURE_BISHOP
+    ];
 
-
+    east_attacks.into_iter().flat_map(move |target_sq| {
+        let source_sq = target_sq.shift((!color).pawn_direction()).unwrap().shift(Direction::W).unwrap();
+        promotion_options.map(|opt|
+            Move::new(source_sq, target_sq, opt)
+        )
+    }).chain(west_attacks.into_iter().flat_map(move |target_sq| {
+        let source_sq = target_sq.shift((!color).pawn_direction()).unwrap().shift(Direction::E).unwrap();
+        promotion_options.map(|opt|
+            Move::new(source_sq, target_sq, opt)
+        )
+    }))
+}
 
 // pub fn generate_moves(position: &Position, color: Color) -> impl Iterator<Item = Move> {
 //     double_pawn_moves(position, color).chain(
@@ -140,6 +163,24 @@ mod tests {
 
             similar_asserts::assert_eq!(moves, expected_moves);
         };
+    }
+
+    mod promotion_captures {
+        use super::*;
+
+
+        #[test]
+        fn finds_promotions() {
+            assert_finds_moves!(
+                promotion_captures,
+                "p1p5/1P6/8/8/8/8/8/8 b KQkq d3 0 1",
+                [ Move::new(B7, A8, MoveType::PROMOTION_CAPTURE_KNIGHT) , Move::new(B7, C8, MoveType::PROMOTION_CAPTURE_KNIGHT),
+                  Move::new(B7, A8, MoveType::PROMOTION_CAPTURE_ROOK)   , Move::new(B7, C8, MoveType::PROMOTION_CAPTURE_ROOK),
+                  Move::new(B7, A8, MoveType::PROMOTION_CAPTURE_BISHOP) , Move::new(B7, C8, MoveType::PROMOTION_CAPTURE_BISHOP),
+                  Move::new(B7, A8, MoveType::PROMOTION_CAPTURE_QUEEN)  , Move::new(B7, C8, MoveType::PROMOTION_CAPTURE_QUEEN) 
+                ]
+            );
+        }
     }
 
 
