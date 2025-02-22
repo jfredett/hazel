@@ -150,7 +150,11 @@ impl Position {
     // functions have been specifically encoding movement rules, maybe that's the line?
 
     pub fn our_king_moves(&self) -> Bitboard {
-        KING_ATTACKS[self.our_king().index()] & self.enemies()
+        KING_ATTACKS[self.our_king().index()] & !self.friendlies()
+    }
+
+    pub fn our_king_attacks(&self) -> Bitboard {
+        self.our_king_moves() & self.enemies()
     }
 
     pub fn our_king(&self) -> Square {
@@ -218,7 +222,11 @@ impl Position {
     // ### THE VILLAIN'S HENCHMEN, MOVES, AND SO ON ### //
 
     pub fn their_king_moves(&self) -> Bitboard {
-        KING_ATTACKS[self.their_king().index()] & self.friendlies()
+        KING_ATTACKS[self.their_king().index()] & !self.enemies()
+    }
+
+    pub fn their_king_attacks(&self) -> Bitboard {
+        self.their_king_moves() & self.friendlies()
     }
 
     pub fn their_king(&self) -> Square {
@@ -449,21 +457,21 @@ mod tests {
     mod king {
         use super::*;
 
-        mod moves {
+        mod attacks {
             use super::*;
 
             #[test]
             fn white() {
                 let pos = Position::new(BEN::new("8/8/1k6/P1P1p3/3K4/8/8/8 w - - 0 1"), vec![]);
-                assert_eq!(pos.our_king_moves(), Bitboard::from(E5));
-                assert_eq!(pos.their_king_moves(),  Bitboard::from(A5) | Bitboard::from(C5));
+                assert_eq!(pos.our_king_attacks(), Bitboard::from(E5));
+                assert_eq!(pos.their_king_attacks(),  Bitboard::from(A5) | Bitboard::from(C5));
             }
 
             #[test]
             fn black() {
                 let pos = Position::new(BEN::new("8/8/1k6/P1P1p3/3K4/8/8/8 b - - 0 1"), vec![]);
-                assert_eq!(pos.our_king_moves(),  Bitboard::from(A5) | Bitboard::from(C5));
-                assert_eq!(pos.their_king_moves(), Bitboard::from(E5));
+                assert_eq!(pos.our_king_attacks(),  Bitboard::from(A5) | Bitboard::from(C5));
+                assert_eq!(pos.their_king_attacks(), Bitboard::from(E5));
             }
         }
     }
