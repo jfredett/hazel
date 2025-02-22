@@ -5,7 +5,7 @@ use crate::coup::rep::Move;
 mod pawn;
 mod check;
 // mod bishop;
-// mod knight;
+mod knight;
 // mod rook;
 // mod queen;
 mod king;

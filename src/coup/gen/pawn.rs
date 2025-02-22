@@ -39,10 +39,6 @@ pub fn pawn_attacks(position: &Position, color: Color) -> impl Iterator<Item = M
     let east_attacks = advance.shift(Direction::E) & enemies;
     let west_attacks = advance.shift(Direction::W) & enemies;
 
-    dbg!(position.board);
-    dbg!(east_attacks);
-    dbg!(west_attacks);
-
     // FIXME: this might could be better, IDK. The unwraps should never fail since we slid things
     // to get there, and we're just unsliding, but I don't love this implementation
     east_attacks.into_iter().map(move |target_sq| {
@@ -57,6 +53,7 @@ pub fn pawn_attacks(position: &Position, color: Color) -> impl Iterator<Item = M
 pub fn en_passant(position: &Position, color: Color) -> impl Iterator<Item = Move> {
     let mut ret = vec![];
 
+    // TODO: is this just `self.our_pawn_attacks() & bitboard!(ep_square)`?
 
     if let Some(ep_square) = position.metadata().unwrap().en_passant {
 

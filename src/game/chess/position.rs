@@ -20,6 +20,8 @@ pub struct Position {
 // adding a move should lazily update cached representations, we might get several moves at once.
 // We also need to be able to un-apply moves from the alteration cache piecemeal.
 //
+// TODO: 22-FEB-2025 - Refactor the heck out of the 'slow' versions of these methods and figure out
+// where they should really be living. Lots of duplication to reduce here.
 //
 
 impl Query for Position {
@@ -70,14 +72,6 @@ impl Position {
     // FIXME: the searches are super inefficient and very ugly. A better world is possible, you
     // just have to build it yourself.
 
-    pub fn our_king(&self) -> Square {
-        let res = self.find(|(sq, occ)| {
-            *occ == Occupant::Occupied(Piece::King, self.hero())
-        }).all_set_squares();
-        assert_eq!(res.len(), 1);
-        res[0]
-    }
-
     pub fn find(&self, pred: impl Fn(&(Square, Occupant)) -> bool) -> Bitboard {
         let mut bb = Bitboard::empty();
         for (sq, _) in self.board.by_occupant().filter(pred) {
@@ -86,13 +80,6 @@ impl Position {
         bb
     }
 
-    pub fn their_king(&self) -> Square {
-        let res = self.find(|(sq, occ)| {
-            *occ == Occupant::Occupied(Piece::King, self.villain())
-        }).all_set_squares();
-        assert_eq!(res.len(), 1);
-        res[0]
-    }
 
     pub fn all_pieces_of(&self, color: &Color) -> Bitboard {
         self.find(|(sq, occ)| {
@@ -114,6 +101,35 @@ impl Position {
         })
     }
 
+    pub fn knights_for(&self, color: &Color) -> Bitboard {
+        self.find(|(sq, occ)| {
+            *occ == Occupant::Occupied(Piece::Knight, *color)
+        })
+    }
+
+    pub fn rooks_for(&self, color: &Color) -> Bitboard {
+        self.find(|(sq, occ)| {
+            *occ == Occupant::Occupied(Piece::Rook, *color)
+        })
+    }
+
+    pub fn bishops_for(&self, color: &Color) -> Bitboard {
+        self.find(|(sq, occ)| {
+            *occ == Occupant::Occupied(Piece::Bishop, *color)
+        })
+    }
+
+    pub fn queens_for(&self, color: &Color) -> Bitboard {
+        self.find(|(sq, occ)| {
+            *occ == Occupant::Occupied(Piece::Queen, *color)
+        })
+    }
+
+    pub fn pawn_attacks_for(&self, color: &Color) -> Bitboard {
+        let advance = self.pawns_for(color).shift(color.pawn_direction());
+        advance.shift(Direction::E) | advance.shift(Direction::W)
+    }
+
     pub fn all_blockers(&self) -> Bitboard {
         self.find(|(sq, occ)| { occ.is_occupied() })
     }
@@ -126,16 +142,25 @@ impl Position {
         self.all_pieces_of(&self.villain())
     }
 
+
+    // ### OUR HERO'S MOVES, ATTACKS, AND THE LIKE ### //
+
     // OQ: How should I sort these? Position so far has been 'find the pieces on the board', but it
     // also needs to know about attacks to some extent to calculate other usefuls. So far these
     // functions have been specifically encoding movement rules, maybe that's the line?
-    pub fn our_king_attacks(&self) -> Bitboard {
+
+    pub fn our_king_moves(&self) -> Bitboard {
         KING_ATTACKS[self.our_king().index()] & self.enemies()
     }
 
-    pub fn their_king_attacks(&self) -> Bitboard {
-        KING_ATTACKS[self.their_king().index()] & self.friendlies()
+    pub fn our_king(&self) -> Square {
+        let res = self.find(|(sq, occ)| {
+            *occ == Occupant::Occupied(Piece::King, self.hero())
+        }).all_set_squares();
+        assert_eq!(res.len(), 1);
+        res[0]
     }
+
 
     /// a bitboard showing the location of all our pawns
     pub fn our_pawns(&self) -> Bitboard {
@@ -149,13 +174,15 @@ impl Position {
 
     /// all squares attacked by at least one of our pawns
     pub fn our_pawn_attacks(&self) -> Bitboard {
-        let advance = self.our_pawns().shift(self.our_pawn_direction());
-        advance.shift(Direction::E) | advance.shift(Direction::W)
-
+        self.pawn_attacks_for(&self.hero())
     }
 
+    /// Bitboard showing the location of all our knights
+    pub fn our_knights(&self) -> Bitboard {
+        self.knights_for(&self.hero())
+    }
 
-    pub fn our_knight_attacks(&self) -> Bitboard {
+    pub fn our_knight_moves(&self) -> Bitboard {
         let friendlies = self.friendlies();
 
         self.find(|(_, occ)| { *occ == Occupant::Occupied(Piece::Knight, self.hero()) })
@@ -164,41 +191,44 @@ impl Position {
             .fold(Bitboard::empty(), |acc, e| acc | e)
     }
 
-    pub fn our_bishop_attacks(&self) -> Bitboard {
-        let blockers = self.all_blockers();
-        self.find(|(_, occ)| { *occ == Occupant::Occupied(Piece::Bishop, self.hero()) })
-            .into_iter()
-            .map(|sq| { pextboard::attacks_for(Piece::Bishop, sq, blockers) })
-            .fold(Bitboard::empty(), |acc, e| acc | e)
+    pub fn our_bishop_moves(&self) -> Bitboard {
+        self.slide_attacks_for(Piece::Bishop, self.hero())
     }
 
-    pub fn our_rook_attacks(&self) -> Bitboard {
-        let blockers = self.all_blockers();
-        self.find(|(_, occ)| { *occ == Occupant::Occupied(Piece::Rook, self.hero()) })
-            .into_iter()
-            .map(|sq| { pextboard::attacks_for(Piece::Rook, sq, blockers) })
-            .fold(Bitboard::empty(), |acc, e| acc | e)
+    pub fn our_rook_moves(&self) -> Bitboard {
+        self.slide_attacks_for(Piece::Rook, self.hero())
     }
 
-    pub fn our_queen_attacks(&self) -> Bitboard {
-        let blockers = self.all_blockers();
-        self.find(|(_, occ)| { *occ == Occupant::Occupied(Piece::Queen, self.hero()) })
-            .into_iter()
-            .map(|sq| { pextboard::attacks_for(Piece::Queen, sq, blockers) })
-            .fold(Bitboard::empty(), |acc, e| acc | e)
+    pub fn our_queen_moves(&self) -> Bitboard {
+        self.slide_attacks_for(Piece::Queen, self.hero())
     }
 
     /// The set of all squares we attack, does not include our pieces positions, nor does it
     /// account for contested squares, nor does it count the number of attackers attacking a
     /// particular square.
     pub fn our_reach(&self) -> Bitboard {
-        self.our_king_attacks() |
+        self.our_king_moves() |
         self.our_pawn_attacks() |
-        self.our_knight_attacks() |
-        self.our_bishop_attacks() |
-        self.our_rook_attacks() |
-        self.our_queen_attacks()
+        self.our_knight_moves() |
+        self.our_bishop_moves() |
+        self.our_rook_moves() |
+        self.our_queen_moves()
     }
+
+    // ### THE VILLAIN'S HENCHMEN, MOVES, AND SO ON ### //
+
+    pub fn their_king_moves(&self) -> Bitboard {
+        KING_ATTACKS[self.their_king().index()] & self.friendlies()
+    }
+
+    pub fn their_king(&self) -> Square {
+        let res = self.find(|(sq, occ)| {
+            *occ == Occupant::Occupied(Piece::King, self.villain())
+        }).all_set_squares();
+        assert_eq!(res.len(), 1);
+        res[0]
+    }
+
 
     /// a bitboard showing the location of all their pawns
     pub fn their_pawns(&self) -> Bitboard {
@@ -218,7 +248,7 @@ impl Position {
     }
 
     /// all squares attacked by at least one of their knights
-    pub fn their_knight_attacks(&self) -> Bitboard {
+    pub fn their_knight_moves(&self) -> Bitboard {
         let enemies = self.enemies();
         self.find(|(_, occ)| { *occ == Occupant::Occupied(Piece::Knight, self.villain()) })
             .into_iter()
@@ -226,37 +256,33 @@ impl Position {
             .fold(Bitboard::empty(), |acc, e| acc | e)
     }
 
-    pub fn their_bishop_attacks(&self) -> Bitboard {
-        let blockers = self.all_blockers();
-        self.find(|(_, occ)| { *occ == Occupant::Occupied(Piece::Bishop, self.villain()) })
-            .into_iter()
-            .map(|sq| { pextboard::attacks_for(Piece::Bishop, sq, blockers) })
-            .fold(Bitboard::empty(), |acc, e| acc | e)
+    pub fn their_bishop_moves(&self) -> Bitboard {
+        self.slide_attacks_for(Piece::Bishop, self.villain())
     }
 
-    pub fn their_rook_attacks(&self) -> Bitboard {
-        let blockers = self.all_blockers();
-        self.find(|(_, occ)| { *occ == Occupant::Occupied(Piece::Rook, self.villain()) })
-            .into_iter()
-            .map(|sq| { pextboard::attacks_for(Piece::Rook, sq, blockers) })
-            .fold(Bitboard::empty(), |acc, e| acc | e)
+    pub fn their_rook_moves(&self) -> Bitboard {
+        self.slide_attacks_for(Piece::Rook, self.villain())
     }
 
-    pub fn their_queen_attacks(&self) -> Bitboard {
+    pub fn their_queen_moves(&self) -> Bitboard {
+        self.slide_attacks_for(Piece::Queen, self.villain())
+    }
+
+    fn slide_attacks_for(&self, piece: Piece , color: Color) -> Bitboard {
         let blockers = self.all_blockers();
-        self.find(|(_, occ)| { *occ == Occupant::Occupied(Piece::Queen, self.villain()) })
+        self.find(|(_, occ)| { *occ == Occupant::Occupied(piece, color) })
             .into_iter()
-            .map(|sq| { pextboard::attacks_for(Piece::Queen, sq, blockers) })
+            .map(|sq| { pextboard::attacks_for(piece, sq, blockers) })
             .fold(Bitboard::empty(), |acc, e| acc | e)
     }
 
     pub fn their_reach(&self) -> Bitboard {
-        self.their_king_attacks() |
+        self.their_king_moves() |
         self.their_pawn_attacks() |
-        self.their_knight_attacks() |
-        self.their_bishop_attacks() |
-        self.their_rook_attacks() |
-        self.their_queen_attacks()
+        self.their_knight_moves() |
+        self.their_bishop_moves() |
+        self.their_rook_moves() |
+        self.their_queen_moves()
     }
 }
 
@@ -401,21 +427,21 @@ mod tests {
 
     mod knights {
         use super::*;
-        mod attacks {
+        mod moves {
             use super::*;
 
             #[test]
             fn startpos_white() {
                 let pos = Position::new(BEN::start_position(), vec![]);
                 let expected = Bitboard::from(C3) | Bitboard::from(A3) | Bitboard::from(F3) | Bitboard::from(H3);
-                assert_eq!(pos.our_knight_attacks(), expected);
+                assert_eq!(pos.our_knight_moves(), expected);
             }
 
             #[test]
             fn startpos_black() {
                 let pos = Position::new(BEN::start_position(), vec![]);
                 let expected = Bitboard::from(C6) | Bitboard::from(A6) | Bitboard::from(F6) | Bitboard::from(H6);
-                assert_eq!(pos.their_knight_attacks(), expected);
+                assert_eq!(pos.their_knight_moves(), expected);
             }
         }
     }
@@ -423,21 +449,21 @@ mod tests {
     mod king {
         use super::*;
 
-        mod attacks {
+        mod moves {
             use super::*;
 
             #[test]
             fn white() {
                 let pos = Position::new(BEN::new("8/8/1k6/P1P1p3/3K4/8/8/8 w - - 0 1"), vec![]);
-                assert_eq!(pos.our_king_attacks(), Bitboard::from(E5));
-                assert_eq!(pos.their_king_attacks(),  Bitboard::from(A5) | Bitboard::from(C5));
+                assert_eq!(pos.our_king_moves(), Bitboard::from(E5));
+                assert_eq!(pos.their_king_moves(),  Bitboard::from(A5) | Bitboard::from(C5));
             }
 
             #[test]
             fn black() {
                 let pos = Position::new(BEN::new("8/8/1k6/P1P1p3/3K4/8/8/8 b - - 0 1"), vec![]);
-                assert_eq!(pos.our_king_attacks(),  Bitboard::from(A5) | Bitboard::from(C5));
-                assert_eq!(pos.their_king_attacks(), Bitboard::from(E5));
+                assert_eq!(pos.our_king_moves(),  Bitboard::from(A5) | Bitboard::from(C5));
+                assert_eq!(pos.their_king_moves(), Bitboard::from(E5));
             }
         }
     }
@@ -445,7 +471,7 @@ mod tests {
     mod bishop {
         use super::*;
 
-        mod attacks {
+        mod moves {
             use crate::bitboard;
 
             use super::*;
@@ -453,22 +479,22 @@ mod tests {
             #[test]
             fn light_square() {
                 let pos = Position::new(BEN::new("8/1b6/8/8/8/1B6/8/8 w - - 0 1"), vec![]);
-                assert_eq!(pos.our_bishop_attacks(), bitboard!(A4, A2, C4, C2, D1, D5, E6, F7, G8));
-                assert_eq!(pos.their_bishop_attacks(),  bitboard!(A8, A6, C8, C6, D5, E4, F3, G2, H1));
+                assert_eq!(pos.our_bishop_moves(), bitboard!(A4, A2, C4, C2, D1, D5, E6, F7, G8));
+                assert_eq!(pos.their_bishop_moves(),  bitboard!(A8, A6, C8, C6, D5, E4, F3, G2, H1));
             }
 
             #[test]
             fn dark_square() {
                 let pos = Position::new(BEN::new("8/2b5/8/8/8/2B5/8/8 w - - 0 1"), vec![]);
-                assert_eq!(pos.our_bishop_attacks(),  bitboard!(B2, D2, A1, E1, B4, A5, D4, E5, F6, G7, H8));
-                assert_eq!(pos.their_bishop_attacks(), bitboard!(B8, D8, B6, A5, D6, E5, F4, G3, H2));
+                assert_eq!(pos.our_bishop_moves(),  bitboard!(B2, D2, A1, E1, B4, A5, D4, E5, F6, G7, H8));
+                assert_eq!(pos.their_bishop_moves(), bitboard!(B8, D8, B6, A5, D6, E5, F4, G3, H2));
             }
 
             #[test]
             fn with_blocker() {
                 let pos = Position::new(BEN::new("8/2b5/8/4B3/8/8/8/8 w - - 0 1"), vec![]);
-                assert_eq!(pos.our_bishop_attacks(),  bitboard!(C7, D6, F6, G7, H8, D4, C3, B2, A1, F4, G3, H2));
-                assert_eq!(pos.their_bishop_attacks(), bitboard!(B8, B6, D8, D6, E5, A5));
+                assert_eq!(pos.our_bishop_moves(),  bitboard!(C7, D6, F6, G7, H8, D4, C3, B2, A1, F4, G3, H2));
+                assert_eq!(pos.their_bishop_moves(), bitboard!(B8, B6, D8, D6, E5, A5));
             }
         }
     }
@@ -477,23 +503,23 @@ mod tests {
     mod rook {
         use super::*;
 
-        mod attacks {
+        mod moves {
 
             use super::*;
 
             #[test]
             fn open_files() {
                 let pos = Position::new(BEN::new("8/2r5/8/4R3/8/8/8/8 w - - 0 1"), vec![]);
-                assert_eq!(pos.our_rook_attacks(), *RANK_5 ^ *E_FILE);
-                assert_eq!(pos.their_rook_attacks(),  *RANK_7 ^ *C_FILE);
+                assert_eq!(pos.our_rook_moves(), *RANK_5 ^ *E_FILE);
+                assert_eq!(pos.their_rook_moves(),  *RANK_7 ^ *C_FILE);
             }
 
 
             #[test]
             fn with_blocker() {
                 let pos = Position::new(BEN::new("8/1P1r1p2/8/8/1p1R1P2/8/8/8 w - - 0 1"), vec![]);
-                assert_eq!(pos.our_rook_attacks(),  (*RANK_4 ^ *D_FILE) & !bitboard!(A4, D8, G4, H4));
-                assert_eq!(pos.their_rook_attacks(), bitboard!(D8, B7, C7, E7, F7, D6, D5, D4));
+                assert_eq!(pos.our_rook_moves(),  (*RANK_4 ^ *D_FILE) & !bitboard!(A4, D8, G4, H4));
+                assert_eq!(pos.their_rook_moves(), bitboard!(D8, B7, C7, E7, F7, D6, D5, D4));
             }
         }
 
@@ -501,23 +527,23 @@ mod tests {
 
     mod queen {
         use super::*;
-        mod attacks {
+        mod moves {
 
             use super::*;
 
             #[test]
             fn open_files() {
                 let pos = Position::new(BEN::new("8/2q5/8/4Q3/8/8/8/8 w - - 0 1"), vec![]);
-                assert_eq!(pos.our_queen_attacks(), (*RANK_5 ^ *E_FILE) | (*A1_H8_DIAG ^ *B8_H2_DIAG) & !bitboard!(B8));
-                assert_eq!(pos.their_queen_attacks(),  (*RANK_7 ^ *C_FILE) | bitboard!(B8, D8, B6, D6, A5, E5));
+                assert_eq!(pos.our_queen_moves(), (*RANK_5 ^ *E_FILE) | (*A1_H8_DIAG ^ *B8_H2_DIAG) & !bitboard!(B8));
+                assert_eq!(pos.their_queen_moves(),  (*RANK_7 ^ *C_FILE) | bitboard!(B8, D8, B6, D6, A5, E5));
             }
 
 
             #[test]
             fn with_blocker() {
                 let pos = Position::new(BEN::new("8/1P1q1p2/8/8/1p1Q1P2/8/8/8 w - - 0 1"), vec![]);
-                assert_eq!(pos.our_queen_attacks(), ((*RANK_4 ^ *D_FILE) | (*A1_H8_DIAG ^ *A7_G1_DIAG)) & !bitboard!(D8,A4, G4, H4));
-                assert_eq!(pos.their_queen_attacks(), bitboard!(A4, B5, B7, C6, C7, C8, D4, D5, D6, D8, E6, E7, E8, F5, F7, G4, H3));
+                assert_eq!(pos.our_queen_moves(), ((*RANK_4 ^ *D_FILE) | (*A1_H8_DIAG ^ *A7_G1_DIAG)) & !bitboard!(D8,A4, G4, H4));
+                assert_eq!(pos.their_queen_moves(), bitboard!(A4, B5, B7, C6, C7, C8, D4, D5, D6, D8, E6, E7, E8, F5, F7, G4, H3));
             }
         }
 
