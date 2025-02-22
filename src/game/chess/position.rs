@@ -181,7 +181,11 @@ impl Position {
     }
 
     pub fn our_queen_attacks(&self) -> Bitboard {
-        todo!()
+        let blockers = self.all_blockers();
+        self.find(|(_, occ)| { *occ == Occupant::Occupied(Piece::Queen, self.hero()) })
+            .into_iter()
+            .map(|sq| { pextboard::attacks_for(Piece::Queen, sq, blockers) })
+            .fold(Bitboard::empty(), |acc, e| acc | e)
     }
 
     /// The set of all squares we attack, does not include our pieces positions, nor does it
@@ -239,7 +243,11 @@ impl Position {
     }
 
     pub fn their_queen_attacks(&self) -> Bitboard {
-        todo!()
+        let blockers = self.all_blockers();
+        self.find(|(_, occ)| { *occ == Occupant::Occupied(Piece::Queen, self.villain()) })
+            .into_iter()
+            .map(|sq| { pextboard::attacks_for(Piece::Queen, sq, blockers) })
+            .fold(Bitboard::empty(), |acc, e| acc | e)
     }
 
     pub fn their_reach(&self) -> Bitboard {
@@ -465,11 +473,11 @@ mod tests {
         }
     }
 
+    use crate::{bitboard, constants::*};
     mod rook {
         use super::*;
 
         mod attacks {
-            use crate::{bitboard, constants::{C_FILE, D_FILE, E_FILE, RANK_4, RANK_5, RANK_7}};
 
             use super::*;
 
@@ -492,6 +500,26 @@ mod tests {
     }
 
     mod queen {
+        use super::*;
+        mod attacks {
+
+            use super::*;
+
+            #[test]
+            fn open_files() {
+                let pos = Position::new(BEN::new("8/2q5/8/4Q3/8/8/8/8 w - - 0 1"), vec![]);
+                assert_eq!(pos.our_queen_attacks(), (*RANK_5 ^ *E_FILE) | (*A1_H8_DIAG ^ *B8_H2_DIAG) & !bitboard!(B8));
+                assert_eq!(pos.their_queen_attacks(),  (*RANK_7 ^ *C_FILE) | bitboard!(B8, D8, B6, D6, A5, E5));
+            }
+
+
+            #[test]
+            fn with_blocker() {
+                let pos = Position::new(BEN::new("8/1P1q1p2/8/8/1p1Q1P2/8/8/8 w - - 0 1"), vec![]);
+                assert_eq!(pos.our_queen_attacks(), ((*RANK_4 ^ *D_FILE) | (*A1_H8_DIAG ^ *A7_G1_DIAG)) & !bitboard!(D8,A4, G4, H4));
+                assert_eq!(pos.their_queen_attacks(), bitboard!(A4, B5, B7, C6, C7, C8, D4, D5, D6, D8, E6, E7, E8, F5, F7, G4, H3));
+            }
+        }
 
     }
 
