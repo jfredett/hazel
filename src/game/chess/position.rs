@@ -173,7 +173,11 @@ impl Position {
     }
 
     pub fn our_rook_attacks(&self) -> Bitboard {
-        todo!()
+        let blockers = self.all_blockers();
+        self.find(|(_, occ)| { *occ == Occupant::Occupied(Piece::Rook, self.hero()) })
+            .into_iter()
+            .map(|sq| { pextboard::attacks_for(Piece::Rook, sq, blockers) })
+            .fold(Bitboard::empty(), |acc, e| acc | e)
     }
 
     pub fn our_queen_attacks(&self) -> Bitboard {
@@ -227,7 +231,11 @@ impl Position {
     }
 
     pub fn their_rook_attacks(&self) -> Bitboard {
-        todo!()
+        let blockers = self.all_blockers();
+        self.find(|(_, occ)| { *occ == Occupant::Occupied(Piece::Rook, self.villain()) })
+            .into_iter()
+            .map(|sq| { pextboard::attacks_for(Piece::Rook, sq, blockers) })
+            .fold(Bitboard::empty(), |acc, e| acc | e)
     }
 
     pub fn their_queen_attacks(&self) -> Bitboard {
@@ -458,6 +466,28 @@ mod tests {
     }
 
     mod rook {
+        use super::*;
+
+        mod attacks {
+            use crate::{bitboard, constants::{C_FILE, D_FILE, E_FILE, RANK_4, RANK_5, RANK_7}};
+
+            use super::*;
+
+            #[test]
+            fn open_files() {
+                let pos = Position::new(BEN::new("8/2r5/8/4R3/8/8/8/8 w - - 0 1"), vec![]);
+                assert_eq!(pos.our_rook_attacks(), *RANK_5 ^ *E_FILE);
+                assert_eq!(pos.their_rook_attacks(),  *RANK_7 ^ *C_FILE);
+            }
+
+
+            #[test]
+            fn with_blocker() {
+                let pos = Position::new(BEN::new("8/1P1r1p2/8/8/1p1R1P2/8/8/8 w - - 0 1"), vec![]);
+                assert_eq!(pos.our_rook_attacks(),  (*RANK_4 ^ *D_FILE) & !bitboard!(A4, D8, G4, H4));
+                assert_eq!(pos.their_rook_attacks(), bitboard!(D8, B7, C7, E7, F7, D6, D5, D4));
+            }
+        }
 
     }
 
