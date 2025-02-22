@@ -447,6 +447,13 @@ mod tests {
                 assert_eq!(pos.our_bishop_attacks(),  bitboard!(B2, D2, A1, E1, B4, A5, D4, E5, F6, G7, H8));
                 assert_eq!(pos.their_bishop_attacks(), bitboard!(B8, D8, B6, A5, D6, E5, F4, G3, H2));
             }
+
+            #[test]
+            fn with_blocker() {
+                let pos = Position::new(BEN::new("8/2b5/8/4B3/8/8/8/8 w - - 0 1"), vec![]);
+                assert_eq!(pos.our_bishop_attacks(),  bitboard!(C7, D6, F6, G7, H8, D4, C3, B2, A1, F4, G3, H2));
+                assert_eq!(pos.their_bishop_attacks(), bitboard!(B8, B6, D8, D6, E5, A5));
+            }
         }
     }
 
