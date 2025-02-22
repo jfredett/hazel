@@ -13,7 +13,7 @@ pub struct Position {
 
     // Alteration Cache should be by piece and color, so I can selectively reconstruct bitboards
     // from the alterations.
-    board: PieceBoard,
+    pub(crate) board: PieceBoard,
     pub(crate) alteration_cache: Vec<Alteration>
 }
 
@@ -22,27 +22,13 @@ pub struct Position {
 //
 //
 
-impl From<Position> for Vec<Alteration> {
-    fn from(pos: Position) -> Self {
-        let mut ret : Vec<Alteration> = pos.initial.to_alterations().collect();
-
-        let mut board = PieceBoard::default();
-        board.set_position(pos.initial);
-
-        for m in pos.moves.iter() {
-            let alterations = m.compile(&board);
-            for a in alterations.iter() {
-                board.alter_mut(*a);
-            }
-            ret.extend(alterations);
-        }
-        ret
-    }
-}
-
 impl Query for Position {
     fn get(&self, square: impl Into<Square>) -> Occupant {
         self.board.get(square)
+    }
+
+    fn metadata(&self) -> Option<PositionMetadata> {
+        Some(self.metadata)
     }
 }
 
@@ -55,7 +41,7 @@ impl Position {
         let mut board = PieceBoard::default();
         board.set_position(fen);
 
-        let mut metadata = PositionMetadata::default();
+        let mut metadata = fen.metadata();
         let mut alteration_cache : Vec<Alteration> = fen.to_alterations().collect();
 
         for mov in &moves {

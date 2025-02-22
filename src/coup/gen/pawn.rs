@@ -1,6 +1,6 @@
 use crate::game::chess::position::Position;
 use crate::Query;
-use crate::types::{Direction, Occupant};
+use crate::types::{Direction, Occupant, Piece};
 use crate::coup::rep::{Move, MoveType};
 use crate::notation::*;
 use crate::types::color::Color;
@@ -42,6 +42,10 @@ pub fn pawn_attacks(position: &Position, color: Color) -> impl Iterator<Item = M
     let east_attacks = bb.shift(color.pawn_direction()).shift(Direction::E) & enemies;
     let west_attacks = bb.shift(color.pawn_direction()).shift(Direction::W) & enemies;
 
+    dbg!(position.board);
+    dbg!(east_attacks);
+    dbg!(west_attacks);
+
     // FIXME: this might could be better, IDK. The unwraps should never fail since we slid things
     // to get there, and we're just unsliding, but I don't love this implementation
     east_attacks.into_iter().map(move |target_sq| {
@@ -53,11 +57,54 @@ pub fn pawn_attacks(position: &Position, color: Color) -> impl Iterator<Item = M
     }))
 }
 
+pub fn en_passant(position: &Position, color: Color) -> impl Iterator<Item = Move> {
+    let mut ret = vec![];
 
-// en_passant?
+
+    if let Some(ep_square) = position.metadata().unwrap().en_passant {
+
+        if let Some(sq) = ep_square.left_oblique(&!color) {
+            if position.get(sq) == Occupant::Occupied(Piece::Pawn, color) {
+               ret.push(Move::new(sq, ep_square, MoveType::EP_CAPTURE));
+            }
+        }
+
+        if let Some(sq) = ep_square.right_oblique(&!color) {
+            if position.get(sq) == Occupant::Occupied(Piece::Pawn, color) {
+               ret.push(Move::new(sq, ep_square, MoveType::EP_CAPTURE));
+            }
+        }
+    }
+
+    ret.into_iter()
+}
 
 
-// // TODO: Return an iterator?
+pub fn promotions(position: &Position, color: Color) -> impl Iterator<Item = Move> {
+    let pawns = position.pawns_for(&color) & color.promotion_mask();
+    let pawns = pawns.shift(color.pawn_direction()) & !position.all_blockers();
+
+    const promotion_options : [MoveType; 4] = [
+        MoveType::PROMOTION_ROOK,
+        MoveType::PROMOTION_QUEEN,
+        MoveType::PROMOTION_KNIGHT,
+        MoveType::PROMOTION_BISHOP
+    ];
+
+
+    pawns.into_iter().flat_map(move |target_sq| {
+        let source_sq = target_sq.shift((!color).pawn_direction()).unwrap();
+        promotion_options.map(|opt|
+            Move::new(source_sq, target_sq, opt)
+        )
+    })
+}
+
+// promotions
+// promotion_captures
+
+
+
 // pub fn generate_moves(position: &Position, color: Color) -> impl Iterator<Item = Move> {
 //     double_pawn_moves(position, color).chain(
 //     quiet_pawn_moves(position, color)).chain(
@@ -88,8 +135,57 @@ mod tests {
             let mut moves : Vec<Move> = $func_name(&position, $color).collect();
             let mut expected_moves : Vec<Move> = vec![$($move),*];
 
-            similar_asserts::assert_eq!(moves.sort(), expected_moves.sort());
+            moves.sort();
+            expected_moves.sort();
+
+            similar_asserts::assert_eq!(moves, expected_moves);
         };
+    }
+
+
+    mod promotions {
+        use super::*;
+
+        #[test]
+        fn finds_promotions() {
+            assert_finds_moves!(
+                promotions,
+                "8/P7/8/8/8/8/8/8 b KQkq d3 0 1",
+                [ Move::new(A7, A8, MoveType::PROMOTION_KNIGHT),
+                  Move::new(A7, A8, MoveType::PROMOTION_ROOK),
+                  Move::new(A7, A8, MoveType::PROMOTION_BISHOP),
+                  Move::new(A7, A8, MoveType::PROMOTION_QUEEN) ]
+            );
+        }
+    }
+
+    mod en_passant {
+        use super::*;
+
+
+        #[test]
+        fn finds_en_passant() {
+            assert_finds_moves!(
+                en_passant,
+                "rnbqkbnr/pp1p1ppp/8/8/2pPp3/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1",
+                color = Color::BLACK,
+                [ Move::new(C4, D3, MoveType::EP_CAPTURE),
+                  Move::new(E4, D3, MoveType::EP_CAPTURE)
+                ]
+            );
+        }
+
+        #[test]
+        fn finds_single_en_passant() {
+            assert_finds_moves!(
+                en_passant,
+                "rnbqkbnr/pp1p1ppp/8/8/3Pp3/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1",
+                color = Color::BLACK,
+                [ Move::new(E4, D3, MoveType::EP_CAPTURE) ]
+            );
+        }
+
+
     }
 
     mod pawn_attacks {
@@ -111,7 +207,7 @@ mod tests {
         fn pawn_attacks_west() {
             assert_finds_moves!(
                 pawn_attacks,
-                "8/8/8/8/8/2p6/3P4/8 w KQkq - 0 1",
+                "8/8/8/8/8/2p5/3P4/8 w KQkq - 0 1",
                 [ Move::new(D2, C3, MoveType::CAPTURE) ]
             );
         }
