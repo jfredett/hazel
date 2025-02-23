@@ -4,6 +4,7 @@ use crate::coup::rep::Move;
 
 mod pawn;
 mod check;
+mod slider;
 // mod bishop;
 mod knight;
 // mod rook;
