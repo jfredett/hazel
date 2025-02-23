@@ -13,7 +13,7 @@ use crate::interface::Query;
 use crate::constants::File;
 use crate::coup::rep::Move;
 use crate::game::chess::castle_rights::CastleRights;
-use crate::notation::*;
+use crate::{notation::*, Alter, Alteration};
 use crate::types::{Color, Occupant, Piece};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -33,6 +33,23 @@ pub struct PositionMetadata {
     // CCCCEEEE HHHHHHSx FFFFFFFF FFFFFFFF
 }
 
+
+impl Alter for PositionMetadata {
+    fn alter(&self, alteration: Alteration) -> Self {
+        let mut copy = self.clone();
+        copy.alter_mut(alteration);
+        copy
+    }
+
+    fn alter_mut(&mut self, alteration: Alteration) -> &mut Self {
+        match alteration {
+            Alteration::Assert(new_metadata) => *self = new_metadata,
+            Alteration::Clear => *self = Self::default(),
+            _ => {}
+        }
+        self
+    }
+}
 
 impl Default for PositionMetadata {
     fn default() -> Self {
@@ -110,7 +127,6 @@ impl PositionMetadata {
             }
         };
 
-        tracing::debug!("{:?}", en_passant);
         let en_passant = match en_passant {
             Some("-") => None,
             Some(square) => { 
@@ -135,6 +151,7 @@ impl PositionMetadata {
     pub fn update(&mut self, mov: &Move, board: &impl Query) {
         // Clear the EP square, we'll re-set it if necessary later.
         self.en_passant = None;
+
 
         if self.side_to_move == Color::WHITE {
             self.fullmove_number += 1;

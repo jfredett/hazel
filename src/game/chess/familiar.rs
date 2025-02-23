@@ -24,7 +24,6 @@ impl<'a> Familiar<'a> {
     }
 
     pub fn current_move(&self) -> Option<Move> {
-        tracing::debug!("current_move {:?}", self.movesheet().current_move());
         let movesheet = self.movesheet();
         movesheet.current_move()
     }

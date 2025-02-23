@@ -9,7 +9,8 @@ use crate::types::color::Color;
 // TODO: Remove the `color` parameter from all of these, it should come from the position metadata
 
 /// Finds all double-pawn pushes.
-pub fn double_pawn_moves(position: &Position, color: Color) -> impl Iterator<Item = Move> {
+pub fn double_pawn_moves(position: &Position) -> impl Iterator<Item = Move> {
+    let color = position.hero();
     let bb = position.pawns_for(&color) & color.pawn_mask();
     let blockers = position.all_blockers();
     let first_advance = bb.shift(color.pawn_direction()) & !blockers; // advance all pawns by 1, mask off anyone who runs into a blocker
@@ -21,7 +22,8 @@ pub fn double_pawn_moves(position: &Position, color: Color) -> impl Iterator<Ite
 }
 
 /// Finds all "normal" pawn moves, does not find promotions or double moves
-pub fn quiet_pawn_moves(position: &Position, color: Color) -> impl Iterator<Item = Move> {
+pub fn quiet_pawn_moves(position: &Position) -> impl Iterator<Item = Move> {
+    let color = position.hero();
     let bb = position.pawns_for(&color) & !color.promotion_mask();
     let blockers = position.all_blockers();
     let advance = bb.shift(color.pawn_direction()) & !blockers;
@@ -32,7 +34,8 @@ pub fn quiet_pawn_moves(position: &Position, color: Color) -> impl Iterator<Item
 }
 
 /// Finds all "normal" pawn attacks, does not find promotion captures
-pub fn pawn_attacks(position: &Position, color: Color) -> impl Iterator<Item = Move> {
+pub fn pawn_attacks(position: &Position) -> impl Iterator<Item = Move> {
+    let color = position.hero();
     let bb = position.pawns_for(&color) & !color.promotion_mask();
     let enemies = position.all_pieces_of(&!color);
     let advance = bb.shift(color.pawn_direction());
@@ -50,13 +53,12 @@ pub fn pawn_attacks(position: &Position, color: Color) -> impl Iterator<Item = M
     }))
 }
 
-pub fn en_passant(position: &Position, color: Color) -> impl Iterator<Item = Move> {
-    let mut ret = vec![];
-
+pub fn en_passant(position: &Position) -> impl Iterator<Item = Move> {
     // TODO: is this just `self.our_pawn_attacks() & bitboard!(ep_square)`?
 
-    if let Some(ep_square) = position.metadata().unwrap().en_passant {
-
+    let mut ret = vec![];
+    if let Some(ep_square) = position.metadata().en_passant {
+        let color = position.hero();
         if let Some(sq) = ep_square.left_oblique(&!color) {
             if position.get(sq) == Occupant::Occupied(Piece::Pawn, color) {
                ret.push(Move::new(sq, ep_square, MoveType::EP_CAPTURE));
@@ -74,7 +76,8 @@ pub fn en_passant(position: &Position, color: Color) -> impl Iterator<Item = Mov
 }
 
 
-pub fn promotions(position: &Position, color: Color) -> impl Iterator<Item = Move> {
+pub fn promotions(position: &Position) -> impl Iterator<Item = Move> {
+    let color = position.hero();
     let pawns = position.pawns_for(&color) & color.promotion_mask();
     let pawns = pawns.shift(color.pawn_direction()) & !position.all_blockers();
 
@@ -94,7 +97,8 @@ pub fn promotions(position: &Position, color: Color) -> impl Iterator<Item = Mov
     })
 }
 
-pub fn promotion_captures(position: &Position, color: Color) -> impl Iterator<Item = Move> {
+pub fn promotion_captures(position: &Position) -> impl Iterator<Item = Move> {
+    let color = position.hero();
     let pawns = position.pawns_for(&color) & color.promotion_mask();
     let enemies = position.all_pieces_of(&!color);
     let advance = pawns.shift(color.pawn_direction());
@@ -121,11 +125,14 @@ pub fn promotion_captures(position: &Position, color: Color) -> impl Iterator<It
     }))
 }
 
-// pub fn generate_moves(position: &Position, color: Color) -> impl Iterator<Item = Move> {
-//     double_pawn_moves(position, color).chain(
-//     quiet_pawn_moves(position, color)).chain(
-//     pawn_attacks(position, color))
-// }
+pub fn generate_moves(position: &Position) -> impl Iterator<Item = Move> {
+    double_pawn_moves(position).chain(
+    quiet_pawn_moves(position)).chain(
+    pawn_attacks(position)).chain(
+    promotions(position)).chain(
+    promotion_captures(position)).chain(
+    en_passant(position))
+}
 
 
 #[cfg(test)]
@@ -137,18 +144,12 @@ mod tests {
 
     #[macro_export]
     macro_rules! assert_finds_moves {
-        ($func_name:ident, $fen:expr) => {
-            assert_finds_moves!($func_name, $fen, color = Color::WHITE, []);
-        };
         ($func_name:ident, $fen:expr, [ $($move:expr),* ]) => {
-            assert_finds_moves!($func_name, $fen, color = Color::WHITE, [ $($move),* ]);
-        };
-        ($func_name:ident, $fen:expr, color = $color:expr, [ $($move:expr),* ]) => {
             let mut position = Position::new(
                 BEN::new($fen),
                 vec![]
             );
-            let mut moves : Vec<Move> = $func_name(&position, $color).collect();
+            let mut moves : Vec<Move> = $func_name(&position).collect();
             let mut expected_moves : Vec<Move> = vec![$($move),*];
 
             moves.sort();
@@ -166,7 +167,7 @@ mod tests {
         fn finds_promotions() {
             assert_finds_moves!(
                 promotion_captures,
-                "p1p5/1P6/8/8/8/8/8/8 b KQkq d3 0 1",
+                "p1p5/1P6/8/8/8/8/8/8 w KQkq d3 0 1",
                 [ Move::new(B7, A8, MoveType::PROMOTION_CAPTURE_KNIGHT) , Move::new(B7, C8, MoveType::PROMOTION_CAPTURE_KNIGHT),
                   Move::new(B7, A8, MoveType::PROMOTION_CAPTURE_ROOK)   , Move::new(B7, C8, MoveType::PROMOTION_CAPTURE_ROOK),
                   Move::new(B7, A8, MoveType::PROMOTION_CAPTURE_BISHOP) , Move::new(B7, C8, MoveType::PROMOTION_CAPTURE_BISHOP),
@@ -184,7 +185,7 @@ mod tests {
         fn finds_promotions() {
             assert_finds_moves!(
                 promotions,
-                "8/P7/8/8/8/8/8/8 b KQkq d3 0 1",
+                "8/P7/8/8/8/8/8/8 w KQkq d3 0 1",
                 [ Move::new(A7, A8, MoveType::PROMOTION_KNIGHT),
                   Move::new(A7, A8, MoveType::PROMOTION_ROOK),
                   Move::new(A7, A8, MoveType::PROMOTION_BISHOP),
@@ -198,11 +199,11 @@ mod tests {
 
 
         #[test]
+        #[tracing_test::traced_test]
         fn finds_en_passant() {
             assert_finds_moves!(
                 en_passant,
                 "rnbqkbnr/pp1p1ppp/8/8/2pPp3/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1",
-                color = Color::BLACK,
                 [ Move::new(C4, D3, MoveType::EP_CAPTURE),
                   Move::new(E4, D3, MoveType::EP_CAPTURE)
                 ]
@@ -214,7 +215,6 @@ mod tests {
             assert_finds_moves!(
                 en_passant,
                 "rnbqkbnr/pp1p1ppp/8/8/3Pp3/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1",
-                color = Color::BLACK,
                 [ Move::new(E4, D3, MoveType::EP_CAPTURE) ]
             );
         }
@@ -274,7 +274,6 @@ mod tests {
             assert_finds_moves!(
                 quiet_pawn_moves,
                 "8/8/8/8/8/8/3p4/8 b KQkq - 0 1",
-                color = Color::BLACK,
                 [ ]
             );
 

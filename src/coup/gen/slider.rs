@@ -1,21 +1,21 @@
 
 use crate::{coup::rep::{Move, MoveType}, game::position::Position, notation::Square, types::{pextboard, Bitboard, Direction, Occupant, Piece}};
 
-mod bishop {
+pub mod bishop {
     use super::*;
     pub fn generate_moves(position: &Position) -> impl Iterator<Item = Move> {
         generate_slider_moves(position, Piece::Bishop)
     }
 }
 
-mod rook {
+pub mod rook {
     use super::*;
     pub fn generate_moves(position: &Position) -> impl Iterator<Item = Move> {
         generate_slider_moves(position, Piece::Rook)
     }
 }
 
-mod queen {
+pub mod queen {
     use super::*;
     pub fn generate_moves(position: &Position) -> impl Iterator<Item = Move> {
         generate_slider_moves(position, Piece::Queen)

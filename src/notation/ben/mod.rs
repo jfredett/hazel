@@ -37,7 +37,7 @@ impl Query for BEN {
         Occupant::from(occupant_nibble)
     }
 
-    fn metadata(&self) -> Option<PositionMetadata> {
+    fn try_metadata(&self) -> Option<PositionMetadata> {
         Some(self.metadata)
     }
 }
@@ -104,7 +104,6 @@ impl BEN {
         let alterations = Self::compile(pos);
         let mut ret = Self::empty();
         for alter in alterations {
-            tracing::debug!("{:?}", alter);
             ret.alter_mut(alter);
         }
         ret
@@ -158,7 +157,6 @@ impl BEN {
         }
 
         let mut metadata = PositionMetadata::default();
-        tracing::debug!("{:?}", chunks);
         metadata.parse(&mut chunks);
         alterations.push(Alteration::Assert(metadata));
 

@@ -62,7 +62,6 @@ impl PGNSection {
         let text = s.chunks(2).enumerate().map(|(idx, chunk)| {
             format!("{:2}. {}", idx + 1, chunk.join(" "))
         }).collect::<Vec<String>>().join("\n");
-        tracing::debug!("Rendering: {:?}", text);
 
         Text::styled(text, Style::default()).render(area, buf);
     }

@@ -9,5 +9,3 @@ pub trait Play where Self: Clone {
 
     fn apply_mut(&mut self, action: &Action<Move, BEN>) -> &mut Self;
 }
-
-

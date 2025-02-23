@@ -1,4 +1,4 @@
-use crate::{board::PieceBoard, constants::move_tables::{KING_ATTACKS, KNIGHT_MOVES}, coup::rep::Move, notation::{ben::BEN, Square}, types::{pextboard, Bitboard, Color, Direction, Occupant, Piece}, Alter, Alteration, Query};
+use crate::{board::PieceBoard, constants::move_tables::{KING_ATTACKS, KNIGHT_MOVES}, coup::rep::Move, notation::{ben::BEN, Square}, types::{pextboard, Bitboard, Color, Direction, Occupant, Piece}, Alter, Alteration, Play, Query};
 
 use super::position_metadata::PositionMetadata;
 
@@ -8,13 +8,15 @@ pub struct Position {
     // necessaries
     pub initial: BEN,
     pub moves: Vec<Move>,
-    metadata: PositionMetadata,
     // caches
 
     // Alteration Cache should be by piece and color, so I can selectively reconstruct bitboards
     // from the alterations.
-    pub(crate) board: PieceBoard,
-    pub(crate) alteration_cache: Vec<Alteration>
+    // The cache itself should live on a movegenerator, to which we should inject at run-time,
+    // since the movegen might be running in separate threads with thread-local caches, or even on
+    // different machines.
+    // Caches can be stored by zobrist, eventually I can have a metacache that can allow
+    // cross-thread cache lookups
 }
 
 // adding a move should lazily update cached representations, we might get several moves at once.
@@ -26,42 +28,63 @@ pub struct Position {
 
 impl Query for Position {
     fn get(&self, square: impl Into<Square>) -> Occupant {
-        self.board.get(square)
+        self.board().get(square)
     }
 
-    fn metadata(&self) -> Option<PositionMetadata> {
-        Some(self.metadata)
+    fn try_metadata(&self) -> Option<PositionMetadata> {
+        Some(self.metadata())
     }
 }
 
 
-// TODO: this'll implement play at some point
-
 impl Position {
     pub fn new(fen: impl Into<BEN>, moves: Vec<Move>) -> Self {
         let fen = fen.into();
-        let mut board = PieceBoard::default();
-        board.set_position(fen);
 
-        let mut metadata = fen.metadata();
+        let mut metadata_cache = fen.metadata();
         let mut alteration_cache : Vec<Alteration> = fen.to_alterations().collect();
 
-        for mov in &moves {
+        Self { initial: fen.into(), moves }
+    }
+
+
+    pub fn board(&self) -> PieceBoard {
+        self.current_boardstate().0
+    }
+
+    pub fn metadata(&self) -> PositionMetadata {
+        self.current_boardstate().1
+    }
+
+    pub fn current_boardstate(&self) -> (PieceBoard, PositionMetadata) {
+        let mut board = PieceBoard::default();
+        let mut meta = self.initial.metadata();
+
+        board.set_position(self.initial);
+
+        for mov in &self.moves {
             let alterations = mov.compile(&board);
+            meta.update(mov, &board);
             for alteration in alterations {
-                alteration_cache.push(alteration);
                 board.alter_mut(alteration);
             }
-            metadata.update(mov, &board);
         }
-        Self { initial: fen.into(), moves, metadata, board, alteration_cache }
+
+        (board, meta)
+    }
+
+    pub fn make(&mut self, mov: Move) {
+        self.moves.push(mov);
+        // everything is computed on-demand, no cache yet, so this is all that's needed.
+    }
+
+    pub fn unmake(&mut self) {
+        self.moves.pop();
     }
 
     #[inline(always)]
     pub fn hero(&self) -> Color {
-        // FIXME: Unwrap is safe because it's a quirk of query, this always has metadata. Probably query
-        // shouldn't work this way.
-        self.metadata().unwrap().side_to_move
+        self.metadata().side_to_move
     }
 
     #[inline(always)]
@@ -74,7 +97,7 @@ impl Position {
 
     pub fn find(&self, pred: impl Fn(&(Square, Occupant)) -> bool) -> Bitboard {
         let mut bb = Bitboard::empty();
-        for (sq, _) in self.board.by_occupant().filter(pred) {
+        for (sq, _) in self.board().by_occupant().filter(pred) {
             bb.set(sq);
         }
         bb
@@ -303,65 +326,43 @@ mod tests {
     // This ties to a move to, e.g., rstest or some other framework.
     use super::*;
     use crate::notation::*;
+    use crate::coup::rep::MoveType;
 
-    mod new {
-        use crate::game::castle_rights::CastleRights;
-
+    mod gamestate {
         use super::*;
 
-
         #[test]
-        fn correctly_caches_start_position() {
-            let pos = Position::new(BEN::start_position(), vec![]);
+        fn kiwi() {
+            let kiwi = BEN::new(POS2_KIWIPETE_FEN);
+            let mut pb = PieceBoard::default();
+            pb.set_position(kiwi);
 
-            assert_eq!(pos.alteration_cache, vec![
-                Alteration::Clear,
-                Alteration::Assert(PositionMetadata {
-                    side_to_move: Color::WHITE,
-                    castling: CastleRights {
-                        white_short: true,
-                        white_long: true,
-                        black_short: true,
-                        black_long: true
-                    }, 
-                    en_passant: None,
-                    halfmove_clock: 0,
-                    fullmove_number: 1
-                }),
-                Alteration::place(A1, Occupant::white_rook()),
-                Alteration::place(B1, Occupant::white_knight()),
-                Alteration::place(C1, Occupant::white_bishop()),
-                Alteration::place(D1, Occupant::white_queen()),
-                Alteration::place(E1, Occupant::white_king()),
-                Alteration::place(F1, Occupant::white_bishop()),
-                Alteration::place(G1, Occupant::white_knight()),
-                Alteration::place(H1, Occupant::white_rook()),
-                Alteration::place(A2, Occupant::white_pawn()),
-                Alteration::place(B2, Occupant::white_pawn()),
-                Alteration::place(C2, Occupant::white_pawn()),
-                Alteration::place(D2, Occupant::white_pawn()),
-                Alteration::place(E2, Occupant::white_pawn()),
-                Alteration::place(F2, Occupant::white_pawn()),
-                Alteration::place(G2, Occupant::white_pawn()),
-                Alteration::place(H2, Occupant::white_pawn()),
-                Alteration::place(A7, Occupant::black_pawn()),
-                Alteration::place(B7, Occupant::black_pawn()),
-                Alteration::place(C7, Occupant::black_pawn()),
-                Alteration::place(D7, Occupant::black_pawn()),
-                Alteration::place(E7, Occupant::black_pawn()),
-                Alteration::place(F7, Occupant::black_pawn()),
-                Alteration::place(G7, Occupant::black_pawn()),
-                Alteration::place(H7, Occupant::black_pawn()),
-                Alteration::place(A8, Occupant::black_rook()),
-                Alteration::place(B8, Occupant::black_knight()),
-                Alteration::place(C8, Occupant::black_bishop()),
-                Alteration::place(D8, Occupant::black_queen()),
-                Alteration::place(E8, Occupant::black_king()),
-                Alteration::place(F8, Occupant::black_bishop()),
-                Alteration::place(G8, Occupant::black_knight()),
-                Alteration::place(H8, Occupant::black_rook()),
-            ]);
+            let position = Position::new(kiwi, vec![]);
 
+            assert_eq!(position.board(), pb);
+            assert_eq!(position.metadata(), kiwi.metadata());
+        }
+
+        // #[test] // I entered the moves wrong, I don't know where.
+        fn d4() {
+            let start = BEN::start_position();
+            let target = BEN::new("rnbqk2r/pp2bppp/2p1pn2/3p4/3P1B2/3BPN2/PPP2PPP/RN1Q1RK1 b kq - 1 6");
+            let moves = vec![
+                Move::new(D2, D4, MoveType::DOUBLE_PAWN), Move::new(D7, D5, MoveType::DOUBLE_PAWN),
+                Move::new(C1, F4, MoveType::QUIET), Move::new(E7, E6, MoveType::QUIET),
+                Move::new(E2, E3, MoveType::QUIET), Move::new(G8, F6, MoveType::QUIET),
+                Move::new(G1, F3, MoveType::QUIET), Move::new(F8, E7, MoveType::QUIET),
+                Move::new(F1, D3, MoveType::QUIET), Move::new(C7, C6, MoveType::QUIET),
+                Move::short_castle(Color::WHITE)
+            ];
+
+            let mut pb = PieceBoard::default();
+            pb.set_position(target);
+
+            let position = Position::new(start, moves);
+
+            assert_eq!(position.board(), pb);
+            assert_eq!(position.metadata(), start.metadata());
         }
     }
 

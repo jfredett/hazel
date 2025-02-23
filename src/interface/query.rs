@@ -13,7 +13,7 @@ pub trait Query {
     fn get(&self, square: impl Into<Square>) -> Occupant;
     /// not every Query implementer will have metadata, that's okay, but if we have it we want to
     /// be able to use it.
-    fn metadata(&self) -> Option<PositionMetadata> {
+    fn try_metadata(&self) -> Option<PositionMetadata> {
         None
     }
 
@@ -92,7 +92,7 @@ pub fn to_alterations<'a, Q>(board: &'a Q) -> impl Iterator<Item = Alteration> +
     
     let mut ret = vec![ Alteration::Clear];
 
-    if let Some(metadata) = board.metadata() {
+    if let Some(metadata) = board.try_metadata() {
         ret.push(Alteration::Assert(metadata));
     }
 
