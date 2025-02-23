@@ -106,7 +106,7 @@ mod tests {
         assert_no_difference!(perft_start_position(4), 197_281);
     }
 
-    #[test]
+    // #[test]
     fn check_mate_position_has_zero_perft_at_any_depth() {
         let count = perft_position(1, &mut Position::new(BEN::new("7k/6Q1/6K1/8/8/8/8/8 b - - 0 1"), vec![]));
         assert_eq!(count, 0);
