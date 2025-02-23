@@ -62,7 +62,6 @@ impl PGNSection {
         let text = s.chunks(2).enumerate().map(|(idx, chunk)| {
             format!("{:2}. {}", idx + 1, chunk.join(" "))
         }).collect::<Vec<String>>().join("\n");
-        tracing::debug!("Rendering: {:?}", text);
 
         Text::styled(text, Style::default()).render(area, buf);
     }
@@ -92,7 +91,6 @@ mod tests {
     }
 
     #[test]
-    #[tracing_test::traced_test]
     fn renders_as_expected() {
         let rect = Rect::new(0, 0, 64, 16);
         let mut buffer = Buffer::empty(rect);

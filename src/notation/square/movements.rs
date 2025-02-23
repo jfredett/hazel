@@ -1,10 +1,25 @@
 use std::vec::IntoIter;
 
-use crate::types::Piece;
+use crate::types::{Direction, Piece};
 
 use super::*;
 
 impl Square {
+    pub const fn shift(&self, dir: Direction) -> Option<Self> {
+        match dir {
+            Direction::N => self.up(),
+            Direction::E => self.starboard(),
+            Direction::S => self.down(),
+            Direction::W => self.port(),
+            Direction::NE => self.starboard_bow(),
+            Direction::NW => self.port_bow(),
+            Direction::SE => self.starboard_quarter(),
+            Direction::SW => self.port_quarter()
+        }
+    }
+
+
+
     /// # Absolute Movements
     /// These movements always move from the perspective of the White player, but aren't tied to
     /// any color, so 'up' always means 'increase the rank', etc.
@@ -634,10 +649,8 @@ mod tests {
         if piece == Piece::King { return true; }
         if piece == Piece::Knight { return true; }
 
-        let square = sq.0;
-
         // this is a bitboard set with all the moves for a given piece
-        let bbmoves = pextboard::attacks_for(piece, square, Bitboard::empty());
+        let bbmoves = pextboard::attacks_for(piece, sq, Bitboard::empty());
 
         sq.moves_for(&piece, &color).all(|x| bbmoves.is_set(x))
     }

@@ -1,4 +1,4 @@
-//! Binary FEN Notation
+//! Binary Encoding Notation
 //!
 //! 64, 4 bit nibbles encoding piece and color, placed in order from A1 to H8.
 //! Followed by all relevant positional information in 64/2 + 4 = 36 bytes.
@@ -13,8 +13,8 @@
 //! but this seemed the most natural way to do it to me, whether that's because I'm a genius or
 //! because I've seen it before, I don't know, but I'm very likely not a genius.
 
-use super::{fen::{PositionMetadata, FEN}, Square};
-use crate::{Alter, Alteration, Query, types::{Color, Occupant}};
+use super::Square;
+use crate::{engine::uci::START_POSITION_FEN, game::position_metadata::PositionMetadata, query, types::{Color, Occupant, Piece}, Alter, Alteration, Query};
 use std::fmt::{Debug, Formatter};
 
 mod from_into;
@@ -35,6 +35,10 @@ impl Query for BEN {
             self.position[byte_index] & 0b00001111
         };
         Occupant::from(occupant_nibble)
+    }
+
+    fn try_metadata(&self) -> Option<PositionMetadata> {
+        Some(self.metadata)
     }
 }
 
@@ -67,23 +71,11 @@ impl Alter for BEN {
                 }
             },
             Alteration::Clear => { self.position = [0; 32]; },
+            Alteration::Assert(metadata) => { self.metadata = metadata; },
             _ => { }
         }
 
         self
-    }
-}
-
-pub fn setup<A : Alter + Default>(ben: &BEN) -> A {
-    let mut board = A::default();
-    setup_mut(ben, &mut board);
-    board
-}
-
-pub fn setup_mut<A : Alter>(ben: &BEN, board: &mut A) {
-    let alts = ben.compile();
-    for alteration in alts {
-        board.alter_mut(alteration);
     }
 }
 
@@ -93,16 +85,88 @@ impl Debug for BEN {
         for byte in self.position.iter() {
             s.push_str(&format!("{:02x}", byte));
         }
+        s.push(':');
+        s.push_str(&format!("{}", self.metadata));
 
         write!(f, "{}", s)
     }
 }
 
+impl std::fmt::Display for BEN {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} {}", query::to_fen_position(self), self.metadata)
+    }
+}
+
 
 impl BEN {
-    pub fn new(pos: &str) -> Self{
-        let f = FEN::new(pos);
-        f.into()
+    pub fn new(pos: &str) -> Self {
+        let alterations = Self::compile(pos);
+        let mut ret = Self::empty();
+        for alter in alterations {
+            ret.alter_mut(alter);
+        }
+        ret
+    }
+
+    pub fn to_alterations<'a>(&'a self) -> impl Iterator<Item = Alteration> + use<'a> {
+        query::to_alterations(self)
+    }
+
+    // TODO: Move this to Position, Position is how Hazel creates new positions, and BENs are
+    // created therefrom, later we can optimize if creating BENs directly is worth it.
+    // TODO: Nom.
+    fn compile(fen: &str) -> impl Iterator<Item = Alteration> {
+        let mut alterations = vec![];
+        let mut cursor = Square::by_rank_and_file();
+        cursor.downward();
+        let mut chunks = fen.split_whitespace();
+
+        let configuration = chunks.next().expect("Invalid position configuration");
+
+        for c in configuration.chars() {
+            if cursor.is_done() { break; }
+
+            match c {
+                '1'..='8' => {
+                    let skip = c.to_digit(10).unwrap() as usize;
+                    for _ in 0..skip { cursor.next(); }
+                }
+                '/' => {
+                    continue;
+                }
+                c => {
+                    let color = if c.is_uppercase() { Color::WHITE } else { Color::BLACK };
+                    let piece = match c.to_ascii_lowercase() {
+                        'p' => Piece::Pawn,
+                        'n' => Piece::Knight,
+                        'b' => Piece::Bishop,
+                        'r' => Piece::Rook,
+                        'q' => Piece::Queen,
+                        'k' => Piece::King,
+                        _ => {
+                            continue;
+                        },
+                    };
+                    let occupant = Occupant::Occupied(piece, color);
+                    alterations.push(Alteration::Place { square: cursor.current_square(), occupant } );
+
+                    cursor.next();
+                }
+            }
+        }
+
+        let mut metadata = PositionMetadata::default();
+        metadata.parse(&mut chunks);
+        alterations.push(Alteration::Assert(metadata));
+
+        // metadata parsing please
+
+        alterations.into_iter()
+    }
+
+    pub fn start_position() -> Self {
+        Self::new(START_POSITION_FEN)
     }
 
     pub fn empty() -> Self {
@@ -112,11 +176,11 @@ impl BEN {
         }
     }
 
-    pub fn with_metadata(metadata: PositionMetadata) -> Self {
-        Self {
-            position: [0; 32],
-            metadata
-        }
+    // FIXME: This feels like a bug. Probably where-ever I use this is a bug.
+    pub fn with_default_metadata(fen: &str) -> Self {
+        let mut ret = Self::new(fen);
+        ret.set_metadata(PositionMetadata::default());
+        ret
     }
 
     pub fn metadata(&self) -> PositionMetadata {
@@ -136,20 +200,14 @@ impl BEN {
     pub fn side_to_move(&self) -> Color {
         self.metadata.side_to_move
     }
-
-    pub fn compile(&self) -> Vec<Alteration> {
-        let f : FEN = self.into();
-        f.compile()
-    }
 }
 
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::game::castle_rights::CastleRights;
     use crate::notation::*;
-    use crate::notation::fen::PositionMetadata;
-    use crate::notation::fen::CastleRights;
     use crate::types::Piece;
 
     #[quickcheck]

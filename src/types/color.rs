@@ -46,18 +46,27 @@ impl Color {
         }
     }
 
-    /// DEPRECATED: 
-    pub fn pawn_rank(self) -> Bitboard {
+    /// a mask for the promotion rank
+    pub fn promotion_rank(self) -> usize {
+        (!self).pawn_rank()
+    }
+
+    /// a mask for the promotion rank
+    pub fn promotion_mask(self) -> Bitboard {
+        (!self).pawn_mask()
+    }
+
+    pub fn pawn_rank(self) -> usize {
         match self {
-            Color::WHITE => *RANK_2,
-            Color::BLACK => *RANK_7,
+            Color::WHITE => 1,
+            Color::BLACK => 6,
         }
     }
 
-    pub fn promotion_rank(self) -> Bitboard {
+    pub fn pawn_mask(self) -> Bitboard {
         match self {
-            Color::WHITE => *RANK_8,
-            Color::BLACK => *RANK_1,
+            Color::WHITE => *RANK_2,
+            Color::BLACK => *RANK_7,
         }
     }
 
@@ -127,14 +136,20 @@ mod tests {
 
     #[test]
     fn pawn_rank() {
-        assert_eq!(Color::WHITE.pawn_rank(), *RANK_2);
-        assert_eq!(Color::BLACK.pawn_rank(), *RANK_7);
+        assert_eq!(Color::WHITE.pawn_rank(), 1);
+        assert_eq!(Color::BLACK.pawn_rank(), 6);
+    }
+    
+    #[test]
+    fn pawn_mask() {
+        assert_eq!(Color::WHITE.pawn_mask(), *RANK_2);
+        assert_eq!(Color::BLACK.pawn_mask(), *RANK_7);
     }
 
     #[test]
     fn promotion_rank() {
-        assert_eq!(Color::WHITE.promotion_rank(), *RANK_8);
-        assert_eq!(Color::BLACK.promotion_rank(), *RANK_1);
+        assert_eq!(Color::WHITE.promotion_rank(), 6);
+        assert_eq!(Color::BLACK.promotion_rank(), 1);
     }
 
     #[test]

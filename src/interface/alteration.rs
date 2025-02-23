@@ -1,7 +1,6 @@
 use std::fmt::Debug;
 
-use fen::PositionMetadata;
-
+use crate::game::position_metadata::PositionMetadata;
 use crate::types::Occupant;
 use crate::notation::*;
 

@@ -1,62 +1,53 @@
 {
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    fenix.url = "github:nix-community/fenix";
-    devenv.url = "github:cachix/devenv";
-    bugstalker.url = "github:godzie44/BugStalker";
-  };
+    inputs = {
+        nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+        fenix.url = "github:nix-community/fenix";
+        devshell.url = "github:numtide/devshell";
+        flake-parts.url = "github:hercules-ci/flake-parts";
 
-  outputs = { self, nixpkgs, bugstalker, devenv, fenix, ... } @ inputs:
-    let
-      systems = [ "x86_64-linux" "i686-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
-      forAllSystems = f: builtins.listToAttrs (map (name: { inherit name; value = f name; }) systems);
-    in
-      {
-      packages.x86_64-linux.devenv-up = self.devShells.x86_64-linux.default.config.procfileScript;
-      devShells = forAllSystems
-        (system: let
-          pkgs = import nixpkgs { inherit system; };
-        in {
-          default = devenv.lib.mkShell {
-            inherit inputs pkgs;
-
-            modules = [{
-              languages.rust = {
-                enable = true;
-                mold.enable = true;
-                channel = "nightly";
-                components = [ "rustc" "cargo" "clippy" "rustfmt" "rust-analyzer" "miri" "llvm-tools" ];
-                # FIXME: I would love for this to be part of the Cargo.toml, and not the flake.
-                rustflags = "--cfg tokio_unstable -Ctarget-feature=+bmi2 -Ctarget-feature=+bmi1";
-              };
-
-              # enterShell = ''
-              #   jq '.["parser-directories"][0] = "${pkgs.tree-sitter-grammars.tree-sitter-rust}"' .treesitter-config.json.template > .treesitter-config.json
-              # '';
-
-
-              packages = with pkgs; let 
-                ts = tree-sitter.withPlugins (p: [ p.tree-sitter-rust ] );
-              in [
-                bacon
-                cargo-llvm-cov
-                cargo-mutants
-                cargo-nextest
-                cargo-insta
-                cloc
-                gnuplot
-                imhex
-                just
-                linuxKernel.packages.linux_6_6.perf
-                tree-sitter
-                tokio-console
-                ts
-                mold
-                perf-tools
-                stockfish
-              ];
-            }];
-          };
-        });
+        rust-manifest = {
+            url = "https://static.rust-lang.org/dist/2025-02-12/channel-rust-nightly.toml";
+            flake = false;
+        };
     };
+
+    outputs = { self, nixpkgs, fenix, rust-manifest, devshell, flake-parts, ... } @ inputs:
+        flake-parts.lib.mkFlake { inherit inputs; } {
+            imports = [
+                devshell.flakeModule
+            ];
+
+            systems = [
+                "x86_64-linux"
+            ];
+
+            perSystem = { pkgs, system, ... }: let
+                rustpkg = (fenix.packages.${system}.fromManifestFile rust-manifest).completeToolchain;
+            in {
+                devshells.default = {
+                    motd = ''Double double, toil and trouble.'';
+
+                    packages = with pkgs; [
+                        bacon
+                        cargo-llvm-cov
+                        cargo-mutants
+                        cargo-nextest
+                        clang
+                        cloc
+                        gnuplot
+                        imhex
+                        just
+                        libcxx
+                        linuxKernel.packages.linux_6_6.perf
+                        mold
+                        perf-tools
+                        plantuml
+                        timg
+                        rustpkg
+                        stockfish
+                    ];
+
+                };
+            };
+        };
 }

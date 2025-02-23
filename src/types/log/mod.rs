@@ -188,7 +188,6 @@ mod tests {
     }
 
     #[test]
-    #[tracing_test::traced_test]
     fn is_empty() {
         let mut log = Log::<i32>::start();
         assert!(log.is_empty());

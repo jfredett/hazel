@@ -116,8 +116,6 @@ impl Bitboard {
 
     /// Return a vector containing all the indices which are set
     ///
-    /// TODO: Replace this with an iterator that progressively pops the least set bit, should be quicker.
-    ///
     /// ```
     /// # use hazel::types::Bitboard;
     /// # use hazel::notation::*;
@@ -125,11 +123,9 @@ impl Bitboard {
     /// b.set(A1);
     /// b.set(A2);
     /// b.set(A3);
-    /// assert_eq!(b.all_set_indices(), vec![A1.index(),A2.index(),A3.index()]);
+    /// assert_eq!(b.all_set_squares(), vec![A1,A2,A3]);
     /// ```
-    ///
-    /// TODO: Replace return value with `Square` objects
-    pub fn all_set_indices(&self) -> Vec<usize> {
+    pub fn all_set_squares(&self) -> Vec<Square> {
         self.into_iter().collect()
     }
 
@@ -149,6 +145,7 @@ impl Bitboard {
         self.0 &= !(1 << square.into().index());
     }
 
+    // TODO: usize -> Square
     /// Logically 'moves' a piece from the 'from' square to the 'to' square
     pub fn move_piece(&mut self, from: usize, to: usize) {
         self.unset(Square::new(from));

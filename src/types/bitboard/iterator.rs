@@ -4,13 +4,31 @@ pub struct IndexIterator {
     source: Bitboard,
 }
 
-impl IntoIterator for Bitboard {
-    type Item = usize;
+pub struct SquareIterator {
+    source: Bitboard,
+}
 
-    type IntoIter = IndexIterator;
+impl IntoIterator for Bitboard {
+    type Item = Square;
+
+    type IntoIter = SquareIterator;
 
     fn into_iter(self) -> Self::IntoIter {
-        IndexIterator { source: self }
+        SquareIterator { source: self }
+    }
+}
+
+impl Iterator for SquareIterator {
+    type Item = Square;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.source.is_empty() {
+            None
+        } else {
+            let sq = Square::new(self.source.first_index());
+            self.source.unset(sq);
+            Some(sq)
+        }
     }
 }
 
@@ -28,6 +46,14 @@ impl Iterator for IndexIterator {
     }
 }
 
+impl Bitboard {
+    pub fn index_iterator(&self) -> IndexIterator {
+        IndexIterator {
+            source: *self
+        }
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -37,6 +63,14 @@ mod tests {
     fn bitboard_iterator() {
         let b = Bitboard::from(0x0000000000000001u64);
         let mut iter = b.into_iter();
+        assert_eq!(iter.next(), Some(A1));
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn bitboard_index_iterator() {
+        let b = Bitboard::from(0x0000000000000001u64);
+        let mut iter = b.index_iterator();
         assert_eq!(iter.next(), Some(0));
         assert_eq!(iter.next(), None);
     }

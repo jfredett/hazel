@@ -74,7 +74,7 @@ mod tests {
             if bb.is_empty() {
                 return true;
             }
-            bb.all_set_indices()[0] == bb.first_index()
+            bb.all_set_squares()[0].index() == bb.first_index()
         }
     }
 }

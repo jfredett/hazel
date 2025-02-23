@@ -16,3 +16,12 @@ pub trait Alter where Self: Sized {
 //
 //
 // All Query are IntoAlter, except they're missing Metadata. This IntoAlter doesn't quite capture what I want it to mean, that it is a vector that ensures there is a metadata set.
+
+
+pub fn setup<A>(alterations: impl Iterator<Item = Alteration>) -> A where A : Alter + Default {
+    let mut ret = A::default();
+    for alter in alterations {
+        ret.alter_mut(alter);
+    }
+    ret
+}

@@ -1,6 +1,6 @@
 use crate::notation::ben::BEN;
 use crate::types::log::Log;
-use crate::{board::PieceBoard, coup::rep::Move, notation::fen::FEN};
+use crate::{board::PieceBoard, coup::rep::Move};
 use crate::types::log::cursor::Cursor;
 
 use super::action::Action;
@@ -53,7 +53,7 @@ impl Variation {
     }
 
     pub fn new_game(&mut self) -> &mut Self {
-        self.setup(FEN::start_position())
+        self.setup(BEN::start_position())
     }
 
     pub fn halt(&mut self, state: Reason) -> &mut Self {
@@ -113,11 +113,16 @@ impl Variation {
     // This will ensure during parsing PGNs that the correct context is maintained, since we always
     // want to calculate the shortest path to the variation at the tip of the log during that
     // process.
-    pub fn current_position(&mut self) -> FEN {
+    //
+    // TODO: This should return a proper Position, not a BEN, but Position didn't exist until
+    // recently.
+    pub fn current_position(&mut self) -> BEN {
         let mut fam = self.familiar();
         fam.advance_to_end();
         // TODO: Replace this with a generic 'FastRep' type alias that is optimized for this case
-        fam.rep::<ChessGame<PieceBoard>>().clone().into()
+        let rep : ChessGame<PieceBoard> = fam.rep::<ChessGame<PieceBoard>>().clone();
+        let fen : BEN = rep.into();
+        fen
     }
 
     pub(crate) fn get_cursor(&self) -> Cursor<Action<Move, BEN>> {
@@ -161,20 +166,20 @@ mod tests {
     fn fen_correct_after_one_move_from_start_pos() {
         let mut game = Variation::default();
         game.new_game()
-            .setup(FEN::start_position())
+            .setup(BEN::start_position())
             .make(Move::new(D2, D4, MoveType::DOUBLE_PAWN))
             .commit();
 
         let actual_fen = game.current_position();
 
-        assert_eq!(actual_fen, FEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 2"));
+        assert_eq!(actual_fen, BEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 2"));
     }
 
     #[test]
     fn fen_correct_after_castling() {
         let mut game = Variation::default();
         game.new_game()
-            .setup(FEN::start_position())
+            .setup(BEN::start_position())
             .make(Move::new(E2, E4, MoveType::DOUBLE_PAWN))
             .make(Move::new(E7, E5, MoveType::DOUBLE_PAWN))
             .make(Move::new(G1, F3, MoveType::QUIET))
@@ -186,14 +191,14 @@ mod tests {
 
         let actual_fen = game.current_position();
 
-        assert_eq!(actual_fen, FEN::new("r1bqkb1r/pppp1ppp/2n2n2/4p3/4P3/5N2/PPPPBPPP/RNBQ1RK1 b kq - 5 5"));
+        assert_eq!(actual_fen, BEN::new("r1bqkb1r/pppp1ppp/2n2n2/4p3/4P3/5N2/PPPPBPPP/RNBQ1RK1 b kq - 5 5"));
     }
 
     #[test]
     fn fen_correct_mainline_position_when_variation_present() {
         let mut game = Variation::default();
         game.new_game()
-            .setup(FEN::start_position())
+            .setup(BEN::start_position())
             .make(Move::new(E2, E4, MoveType::DOUBLE_PAWN))
             .commit()
             .variation(|v| {
@@ -209,14 +214,14 @@ mod tests {
         let actual_fen = game.current_position();
 
 
-        assert_eq!(actual_fen, FEN::new("r1bqkb1r/pppp1ppp/2n2n2/4p3/4P3/5N2/PPPPBPPP/RNBQ1RK1 b kq - 5 5"));
+        assert_eq!(actual_fen, BEN::new("r1bqkb1r/pppp1ppp/2n2n2/4p3/4P3/5N2/PPPPBPPP/RNBQ1RK1 b kq - 5 5"));
     }
 
     #[test]
     fn a_cursor_can_follow_a_variation() {
         let mut game = Variation::default();
         game.new_game()
-            .setup(FEN::start_position())
+            .setup(BEN::start_position())
             .commit()
             .variation(|v| {
                 v.make(Move::new(D2, D4, MoveType::DOUBLE_PAWN)).commit();
@@ -245,6 +250,19 @@ mod tests {
         // first one I think is correct, but remains to be seen.
         //
         // This test, for now, should cover the variation case in for now.
+        //
+        // 20-FEB-2025 1151:
+        //
+        // I think this is almost right, the section at the bottom replicates the
+        // From<ChessGame<Q>> impl for BEN, and I think that points to this structure below
+        // actually being the `Position` structure, and `ChessGame` is a structure that creates
+        // `Positions` from it's `Variation`.
+        //
+        // ChessGame holds a variation and it's many contained games
+        // A Familiar from ChessGame finds a Position (which mostly just holds the alteration
+        // caches and computes representations)
+        // A Position can naturally then create BEN as needed.
+        //
         let line = game.log.cursor(|cursor| {
             let mut board = PieceBoard::default();
             let mut metadata = PositionMetadata::default();
@@ -262,8 +280,7 @@ mod tests {
                         }
                     },
                     Action::Setup(fen) => {
-                        let f : FEN = fen.into();
-                        board.set_fen(&f);
+                        board.set_fen(*fen);
                     },
                     Action::Make(mov) => {
                         metadata.update(mov, &board);
@@ -275,12 +292,13 @@ mod tests {
             }
 
             // Now board and metadata are caught up, so we just ask board to write it's fen
-            let mut ret = FEN::from(board);
+            // TODO: Unify this with the From<ChessGame<Q>> impl somehow
+            let mut ret : BEN = alter::setup(query::to_alterations(&board));
             ret.set_metadata(metadata);
             ret
         });
 
 
-        assert_eq!(line, FEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 2"));
+        assert_eq!(line, BEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 2"));
     }
 }

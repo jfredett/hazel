@@ -269,7 +269,7 @@ impl SAN {
         match self.source_piece.unwrap() {
             Piece::Rook | Piece::Bishop | Piece::Queen => {
                 for source_sq in possible_source_squares {
-                    let attacks = pextboard::attacks_for(self.source_piece.unwrap(), source_sq.into(), blocks);
+                    let attacks = pextboard::attacks_for(self.source_piece.unwrap(), *source_sq, blocks);
                     if attacks.is_set(self.target_sq.unwrap()) {
                         return Ok(*source_sq);
                     }
@@ -375,7 +375,7 @@ mod tests {
     use super::*;
 
     use crate::coup::rep::MoveType;
-    use crate::{board::PieceBoard, constants::START_POSITION_FEN, notation::fen::FEN};
+    use crate::{board::PieceBoard, constants::START_POSITION_FEN};
     use crate::notation::*;
     use crate::notation::uci::UCI;
     use crate::game::variation::Variation;
@@ -385,7 +385,7 @@ mod tests {
 
     #[test]
     fn new_works() {
-        let fen = FEN::new(START_POSITION_FEN);
+        let fen = BEN::new(START_POSITION_FEN);
         let ben = BEN::from(fen);
         let san = SAN::new(ben);
         assert_eq!(san.context, ben);
@@ -404,13 +404,13 @@ mod tests {
 
     macro_rules! assert_parses {
         ($input:expr, $expected:expr, $fen:expr, $moves:expr) => {
-        let mut context = Variation::default();
-        context.setup(FEN::new($fen)).commit();
-        for m in $moves.iter().map(|m| UCI::try_from(*m).unwrap()) {
-        context.make(m.into());
-        }
-        let (_, san) = SAN::parse($input, context.current_position()).unwrap();
-        assert_eq!(Move::try_from(san).unwrap(), $expected);
+            let mut context = Variation::default();
+            context.setup(BEN::new($fen)).commit();
+            for m in $moves.iter().map(|m| UCI::try_from(*m).unwrap()) {
+                context.make(m.into());
+            }
+            let (_, san) = SAN::parse($input, context.current_position()).unwrap();
+            assert_eq!(Move::try_from(san).unwrap(), $expected);
     };
         ($input:expr, $expected:expr, $fen:expr) => {
             assert_parses!($input, $expected, $fen, Vec::<&str>::new());
@@ -429,7 +429,6 @@ mod tests {
             assert_parses!("Nf3", Move::new(G1, F3, MoveType::QUIET));
         }
 
-        #[tracing_test::traced_test]
         #[test]
         fn parses_san_piece_capture() {
             assert_parses!("Qxd4", Move::new(D1, D4, MoveType::CAPTURE), "8/8/8/8/3p4/8/8/3Q4 w - - 0 1");
@@ -451,7 +450,6 @@ mod tests {
         }
 
         // NOTE: Subtle change in FEN below, removing the pawn.
-
         #[test]
         fn parses_non_capture_with_disambiguator() {
             assert_parses!("Qg1d4", Move::new(G1, D4, MoveType::QUIET), "k7/8/8/8/6Q1/8/8/K2Q2Q1 w - - 0 1");
@@ -471,13 +469,11 @@ mod tests {
     mod pawn_captures {
         use super::*;
 
-        #[tracing_test::traced_test]
         #[test]
         fn parses_simple_pawn_capture() {
             assert_parses!("axb4", Move::new(A3, B4, MoveType::CAPTURE), "8/8/8/8/1p6/P7/8/8 w - - 0 1");
         }
 
-        #[tracing_test::traced_test]
         #[test]
         fn parses_pawn_capture_with_disambiguator() {
             // FIXME: I don't think this is a valid fen that would generate this move notation
@@ -498,13 +494,11 @@ mod tests {
     mod pawn_pushes {
         use super::*;
 
-        #[tracing_test::traced_test]
         #[test]
         fn parses_pawn_double_push() {
             assert_parses!("e4", Move::new(E2, E4, MoveType::DOUBLE_PAWN));
         }
 
-        #[tracing_test::traced_test]
         #[test]
         fn parses_pawn_push() {
             assert_parses!("e3", Move::new(E2, E3, MoveType::QUIET));

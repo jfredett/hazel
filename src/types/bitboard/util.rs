@@ -13,6 +13,7 @@ impl Bitboard {
     }
 }
 
+
 #[cfg(test)]
 mod test {
     use super::*;

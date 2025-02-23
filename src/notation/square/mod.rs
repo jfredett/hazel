@@ -1,4 +1,6 @@
-use crate::types::Color;
+use std::slice::SliceIndex;
+
+use crate::types::{Bitboard, Color};
 
 mod constants;
 mod display_debug;
@@ -20,14 +22,12 @@ impl Square {
         Self(index)
     }
 
-    pub const fn set_rank(&mut self, rank: usize) -> Self {
-        self.0 = rank * 8 + self.file();
-        *self
+    pub const fn set_rank(&self, rank: usize) -> Self {
+        Self(rank * 8 + self.file())
     }
 
-    pub const fn set_file(&mut self, file: usize) -> Self {
-        self.0 = self.rank() * 8 + file;
-        *self
+    pub const fn set_file(&self, file: usize) -> Self {
+        Self(self.rank() * 8 + file)
     }
 
     pub const fn index(&self) -> usize {
@@ -53,7 +53,6 @@ impl Square {
         self.rank() == 0 || self.rank() == 7
     }
 }
-
 
 #[cfg(test)]
 mod tests {

@@ -1,3 +1,4 @@
+#![allow(warnings, unused)]
 #![feature(stmt_expr_attributes,assert_matches,const_trait_impl,const_for,associated_type_defaults)]
 // The Squares being consts means that sometimes when I use them as a reference, I trigger this
 // warning. I generally don't mind the temporary value being created, and in fact want it (see the
