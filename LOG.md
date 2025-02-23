@@ -1811,3 +1811,18 @@ The path to this I think is something like:
 3. See if this nets out to good performance.
 
 
+# 23-FEB-2025
+
+## 0034 - movegen
+
+Hazel once again correctly calculates the number of moves up to depth 3 from the starting position.
+
+She's still missing a bunch of rules (castling, checking for pins, etc), but the way I break this up is much better now,
+and I think it will be much easier to extend. Once I got going I was able to whip out most of the generators quite
+quickly from the old code.
+
+The generator is _extremely_ slow right now. Well over 3 minutes to fail perft 4. I think the initial fix may be to huck
+`rayon` at it so I can get the accuracy down, but I may do some caching if the mood strikes.
+
+See you on the next branch.
+
