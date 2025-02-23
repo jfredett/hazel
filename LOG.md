@@ -1826,3 +1826,42 @@ The generator is _extremely_ slow right now. Well over 3 minutes to fail perft 4
 
 See you on the next branch.
 
+## 1132 - atm
+
+Why ATM?
+
+Because it's all about managing the Cache.
+
+This is going to focus on building some caching into the movegenerator, to hopefully speed us up a bit. I am going to
+avoid adding more rule implementation till after I've got the caching in place.
+
+The main bit of trickiness is going to be hiding the mutable bits so that `Position` transparently uses or populates the
+cache, while the caller only sees the immutable interface -- from their perspective `Position` is just a data object.
+
+I have a basic idea of how to do this. First, setting up some kind of `Zobrist` style hashing (or maybe BCH, I have a
+lot of reading to do) is obvious. Once I have that it should make the `unmake` step a lot faster (since it won't be
+recalculating from scratch each time.
+
+I'm not sure if I'm going to try setting up benchmarks just yet, but it would make it a bit easier to measure
+improvements. I think for now I can just go with wall time, bringing everything up to, say, `perft 5` to within a couple
+minutes would be ideal.
+
+Once I've got something relatively quick, I can finish the implementation for accuracy, then come back to refactor tests
+and add proper benchmarks.
+
+The cache itself will live on the MoveGenerator, and `Position` will have a borrowed reference to the `ATM`, which
+itself has a borrowed, mutable reference to the MoveGen. This _immutable_ reference will centralize all the cache
+retrieve/populate operations, so that multiple `Position` instances ask a single `ATM` for items from the
+`MoveGenerator` cache, and the `ATM` either populates or retrieves those items for the `Position`. This *should* mean
+that `Position` stays this fully immutable looking thing and `MoveGenerator` does all the mutation over time. Since
+`MoveGenerator` is eventually going to be wrapped up in a `Witch` and sent off to live on a thread, this means
+thread-local cache with an immutable interface for the caller, which would be pretty sweet.
+
+I've never tried to do anything like this in Rust, the closest I've come is the `Cursor` stuff on what I've come to
+think of as my "Log-unstructured-messy-tree" datastructure.
+
+It's on the list for a rewrite too.
+
+Anyway, this is the plan, it remains to see if it survives contact.
+
+
