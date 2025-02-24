@@ -47,7 +47,6 @@ impl Position {
         Self { initial: fen.into(), moves }
     }
 
-
     pub fn board(&self) -> PieceBoard {
         self.current_boardstate().0
     }

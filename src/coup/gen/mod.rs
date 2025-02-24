@@ -3,11 +3,12 @@ use crate::coup::rep::Move;
 use tracing::*;
 
 
-mod pawn;
+mod cache;
 mod check;
-mod slider;
-mod knight;
 mod king;
+mod knight;
+mod pawn;
+mod slider;
 
 #[derive(Debug)]
 struct MoveGenerator {
