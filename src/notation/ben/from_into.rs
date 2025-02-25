@@ -1,4 +1,4 @@
-use crate::{alter, board::PieceBoard, game::ChessGame};
+use crate::{alter, game::ChessGame};
 
 use super::*;
 
@@ -13,7 +13,7 @@ impl<Q> From<ChessGame<Q>> for BEN where Q : Query + Alter + Default + Clone {
 
 impl<T> From<BEN> for ChessGame<T> where T :  Alter + Query + Default + Clone {
     fn from(ben: BEN) -> Self {
-        let mut rep = alter::setup(ben.to_alterations());
+        let rep = alter::setup(ben.to_alterations());
 
         ChessGame {
             rep,

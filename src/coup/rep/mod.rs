@@ -20,7 +20,7 @@
 
 
 use crate::interface::{Alteration, Query};
-use crate::{notation::*, query};
+use crate::notation::*;
 use crate::types::{Color, Piece, Occupant};
 use crate::constants::File;
 
