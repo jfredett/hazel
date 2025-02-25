@@ -3,7 +3,7 @@ use std::ops::Not;
 
 use crate::types::Bitboard;
 use crate::types::Direction;
-use crate::constants::{RANK_1, RANK_2, RANK_7, RANK_8};
+use crate::constants::{RANK_2, RANK_7};
 
 use serde::{Deserialize, Serialize};
 

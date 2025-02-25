@@ -1,4 +1,4 @@
-use crate::{coup::rep::{Move, MoveType}, game::position::Position, notation::Square, types::{Bitboard, Direction}};
+use crate::{coup::rep::{Move, MoveType}, game::position::Position};
 
 pub fn generate_moves(position: &Position) -> impl Iterator<Item = Move> {
     // assumes we aren't in check, captures assume piece is not protected.
