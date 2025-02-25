@@ -69,9 +69,13 @@ mod tests {
         ($a:expr, $b:expr) => {
             if $a != $b {
                 if $a > $b {
-                    println!("Actual undercounts Expected by: {} - {} = {}", $a, $b, $a - $b);
+                    // FIXME: This might not quite be aligned, but the other side of the branch works on my
+                    // terminal at least
+                    println!("                               Actual - Expected = Overcount");
+                    println!("Actual undercounts Expected by: {:>6} - {:>8} = {:>9}", $a, $b, $a - $b);
                 } else {
-                    println!("Actual overcounts Expected by: {} - {} = {}", $b, $a, $b - $a);
+                    println!("                                Expected - Actual = Undercount");
+                    println!("Actual undercounts Expected by: {:>8} - {:>6} = {:>10}", $b, $a, $b - $a);
                 }
                 assert!(false);
             } else {
@@ -105,7 +109,7 @@ mod tests {
         assert_no_difference!(perft_start_position(3), 8_902);
     }
 
-    // #[test]
+    #[test]
     fn perft_4() {
         assert_no_difference!(perft_start_position(4), 197_281);
     }
