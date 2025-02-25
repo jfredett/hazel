@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 
-use crate::{board::PieceBoard, constants::move_tables::{KING_ATTACKS, KNIGHT_MOVES}, coup::rep::Move, notation::{ben::BEN, Square}, types::{pextboard, Bitboard, Color, Direction, Occupant, Piece}, Alter, Query};
+use crate::{board::PieceBoard, constants::move_tables::{KING_ATTACKS, KNIGHT_MOVES}, coup::rep::Move, notation::{ben::BEN, Square}, types::{pextboard, Bitboard, Color, Direction, Occupant, Piece}, Alter, Alteration, Query};
 
 use super::position_metadata::PositionMetadata;
 use crate::coup::gen::cache::Cache;
@@ -14,12 +14,12 @@ pub struct Position {
     // caches
 
     // this should actually be an ATM, and the cache lives on Movegen?
-    state_cache: Cache<(PieceBoard, PositionMetadata)>
+    state_cache: Cache<(PieceBoard, PositionMetadata, Vec<Alteration>)>
 }
 
 impl Clone for Position {
     fn clone(&self) -> Self {
-        Position::new(self.initial.clone(), self.moves.clone())
+        Position::new(self.initial, self.moves.clone())
     }
 }
 
@@ -58,36 +58,42 @@ impl Position {
     pub fn new(fen: impl Into<BEN>, moves: Vec<Move>) -> Self {
         let fen = fen.into();
 
-        Self { initial: fen.into(), moves, state_cache: Cache::new(Self::calculate_boardstate) }
+        Self { initial: fen, moves, state_cache: Cache::new(Self::calculate_boardstate) }
     }
 
     pub fn board(&self) -> PieceBoard {
+        //self.state_cache.get(self).0
         self.current_boardstate().0
     }
 
     pub fn metadata(&self) -> PositionMetadata {
+        //self.state_cache.get(self).1
         self.current_boardstate().1
     }
 
-    pub fn current_boardstate(&self) -> (PieceBoard, PositionMetadata) {
-        Self::calculate_boardstate(self)
+    pub fn current_boardstate(&self) -> (PieceBoard, PositionMetadata, Vec<Alteration>) {
+        self.state_cache.get(self)
     }
 
-    fn calculate_boardstate(position: &Position) -> (PieceBoard, PositionMetadata) {
+    fn calculate_boardstate(position: &Position) -> (PieceBoard, PositionMetadata, Vec<Alteration>) {
         let mut board = PieceBoard::default();
         let mut meta = position.initial.metadata();
+        let mut out_alterations : Vec<Alteration> = position.initial.to_alterations().collect();
 
         board.set_position(position.initial);
 
         for mov in &position.moves {
             let alterations = mov.compile(&board);
+
             meta.update(mov, &board);
-            for alteration in alterations {
-                board.alter_mut(alteration);
+            for alteration in &alterations {
+                out_alterations.push(*alteration);
+                board.alter_mut(*alteration);
             }
+
         }
 
-        (board, meta)
+        (board, meta, out_alterations)
     }
 
 
