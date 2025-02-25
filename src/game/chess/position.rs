@@ -1,22 +1,40 @@
-use crate::{board::PieceBoard, constants::move_tables::{KING_ATTACKS, KNIGHT_MOVES}, coup::rep::Move, notation::{ben::BEN, Square}, types::{pextboard, Bitboard, Color, Direction, Occupant, Piece}, Alter, Alteration, Play, Query};
+use std::fmt::Debug;
+
+
+use crate::{board::PieceBoard, constants::move_tables::{KING_ATTACKS, KNIGHT_MOVES}, coup::rep::Move, notation::{ben::BEN, Square}, types::{pextboard, Bitboard, Color, Direction, Occupant, Piece}, Alter, Query};
 
 use super::position_metadata::PositionMetadata;
+use crate::coup::gen::cache::Cache;
 
 
-#[derive(Debug, PartialEq, Clone)]
 pub struct Position {
     // necessaries
     pub initial: BEN,
     pub moves: Vec<Move>,
     // caches
 
-    // Alteration Cache should be by piece and color, so I can selectively reconstruct bitboards
-    // from the alterations.
-    // The cache itself should live on a movegenerator, to which we should inject at run-time,
-    // since the movegen might be running in separate threads with thread-local caches, or even on
-    // different machines.
-    // Caches can be stored by zobrist, eventually I can have a metacache that can allow
-    // cross-thread cache lookups
+    // this should actually be an ATM, and the cache lives on Movegen?
+    state_cache: Cache<(PieceBoard, PositionMetadata)>
+}
+
+impl Clone for Position {
+    fn clone(&self) -> Self {
+        Position::new(self.initial.clone(), self.moves.clone())
+    }
+}
+
+impl PartialEq for Position {
+    fn eq(&self, other: &Self) -> bool {
+        // Eventually this might just compare zobrists to start?
+        self.initial == other.initial && self.moves == other.moves
+    }
+}
+
+impl Debug for Position {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "{:?}", self.initial);
+        writeln!(f, "{:?}", self.moves)
+    }
 }
 
 // adding a move should lazily update cached representations, we might get several moves at once.
@@ -36,15 +54,11 @@ impl Query for Position {
     }
 }
 
-
 impl Position {
     pub fn new(fen: impl Into<BEN>, moves: Vec<Move>) -> Self {
         let fen = fen.into();
 
-        let mut metadata_cache = fen.metadata();
-        let mut alteration_cache : Vec<Alteration> = fen.to_alterations().collect();
-
-        Self { initial: fen.into(), moves }
+        Self { initial: fen.into(), moves, state_cache: Cache::new(Self::calculate_boardstate) }
     }
 
     pub fn board(&self) -> PieceBoard {
@@ -56,12 +70,16 @@ impl Position {
     }
 
     pub fn current_boardstate(&self) -> (PieceBoard, PositionMetadata) {
+        Self::calculate_boardstate(self)
+    }
+
+    fn calculate_boardstate(position: &Position) -> (PieceBoard, PositionMetadata) {
         let mut board = PieceBoard::default();
-        let mut meta = self.initial.metadata();
+        let mut meta = position.initial.metadata();
 
-        board.set_position(self.initial);
+        board.set_position(position.initial);
 
-        for mov in &self.moves {
+        for mov in &position.moves {
             let alterations = mov.compile(&board);
             meta.update(mov, &board);
             for alteration in alterations {
@@ -71,6 +89,7 @@ impl Position {
 
         (board, meta)
     }
+
 
     pub fn make(&mut self, mov: Move) {
         self.moves.push(mov);
@@ -104,45 +123,37 @@ impl Position {
 
 
     pub fn all_pieces_of(&self, color: &Color) -> Bitboard {
-        self.find(|(sq, occ)| {
+        self.find(|(_sq, occ)| {
             occ.color() == Some(*color)
         })
     }
 
-    pub fn intervention_squares(&self) -> Bitboard {
-        todo!()
-    }
-
-    pub fn all_attacked_squares(&self, color: &Color) -> Bitboard {
-        todo!()
-    }
-
     pub fn pawns_for(&self, color: &Color) -> Bitboard {
-        self.find(|(sq, occ)| {
+        self.find(|(_sq, occ)| {
             *occ == Occupant::Occupied(Piece::Pawn, *color)
         })
     }
 
     pub fn knights_for(&self, color: &Color) -> Bitboard {
-        self.find(|(sq, occ)| {
+        self.find(|(_sq, occ)| {
             *occ == Occupant::Occupied(Piece::Knight, *color)
         })
     }
 
     pub fn rooks_for(&self, color: &Color) -> Bitboard {
-        self.find(|(sq, occ)| {
+        self.find(|(_sq, occ)| {
             *occ == Occupant::Occupied(Piece::Rook, *color)
         })
     }
 
     pub fn bishops_for(&self, color: &Color) -> Bitboard {
-        self.find(|(sq, occ)| {
+        self.find(|(_sq, occ)| {
             *occ == Occupant::Occupied(Piece::Bishop, *color)
         })
     }
 
     pub fn queens_for(&self, color: &Color) -> Bitboard {
-        self.find(|(sq, occ)| {
+        self.find(|(_sq, occ)| {
             *occ == Occupant::Occupied(Piece::Queen, *color)
         })
     }
@@ -153,7 +164,7 @@ impl Position {
     }
 
     pub fn all_blockers(&self) -> Bitboard {
-        self.find(|(sq, occ)| { occ.is_occupied() })
+        self.find(|(_sq, occ)| { occ.is_occupied() })
     }
 
     pub fn friendlies(&self) -> Bitboard {
@@ -163,6 +174,52 @@ impl Position {
     pub fn enemies(&self) -> Bitboard {
         self.all_pieces_of(&self.villain())
     }
+
+    pub fn our_checks(&self) -> Bitboard {
+        let blockers = self.all_blockers();
+        let potential_attackers = self.enemies();
+        // To calculate all the squares from which a piece of a given type might give a check to
+        // our king. Consider:
+        //
+        // 8 . . . . . . . .
+        // 7 . . . . . . . .
+        // 6 . . . . R . . .
+        // 5 . . . . . . . .
+        // 4 . . k . . . . .
+        // 3 . . . . . . . .
+        // 2 . . . . . . . .
+        // 1 . . . . . . . .
+        //   a b c d e f g h
+        //
+        // In this board, the critical check squares are:
+        //
+        // 1. All of the C file
+        // 2. All of the 4 rank
+        // 3. the A2-G8 diag
+        // 4. the A6-F1 diag
+        // 5. A3, A6, B2, B7, D2, D7, E3, E6 - the knight-moves around the king.
+        //
+        // In order for the king to be checked, a piece of the correct type must be present on the
+        // correct square, this calculates all the valid check squares,
+        self.our_assassin_squares(Piece::Bishop) |
+        self.our_assassin_squares(Piece::Queen) |
+        self.our_assassin_squares(Piece::Knight) |
+        self.our_assassin_squares(Piece::Pawn)
+    }
+
+    pub fn our_assassin_squares(&self, piece: Piece) -> Bitboard {
+        let blockers = self.all_blockers();
+        let mask = match piece {
+            Piece::Knight => self.their_knight_moves(),
+            Piece::Bishop => self.their_bishop_moves() | self.their_queen_moves(),
+            Piece::Rook => self.their_rook_moves() | self.their_queen_moves(),
+            Piece::Queen => self.their_queen_moves(),
+            Piece::Pawn => { Bitboard::empty() /* TODO: Implement this for real */ }
+            Piece::King => { Bitboard::empty() /* Kings can't check kings. */ }
+        };
+        pextboard::attacks_for(piece, self.our_king(), blockers) & mask
+    }
+
 
 
     // ### OUR HERO'S MOVES, ATTACKS, AND THE LIKE ### //
@@ -180,7 +237,7 @@ impl Position {
     }
 
     pub fn our_king(&self) -> Square {
-        let res = self.find(|(sq, occ)| {
+        let res = self.find(|(_sq, occ)| {
             *occ == Occupant::Occupied(Piece::King, self.hero())
         }).all_set_squares();
         assert_eq!(res.len(), 1);
@@ -252,7 +309,7 @@ impl Position {
     }
 
     pub fn their_king(&self) -> Square {
-        let res = self.find(|(sq, occ)| {
+        let res = self.find(|(_sq, occ)| {
             *occ == Occupant::Occupied(Piece::King, self.villain())
         }).all_set_squares();
         assert_eq!(res.len(), 1);

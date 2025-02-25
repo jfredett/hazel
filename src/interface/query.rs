@@ -1,7 +1,5 @@
-use ben::BEN;
-
 use crate::{
-    constants::File, game::position_metadata::PositionMetadata, notation::*, types::Occupant, util::charray::{Charray, Origin}
+    game::position_metadata::PositionMetadata, notation::*, types::Occupant, util::charray::{Charray, Origin}
 };
 
 use super::Alteration;
@@ -137,6 +135,8 @@ mod tests {
     }
 
     mod to_fen_position {
+        use crate::notation::ben::BEN;
+
         use super::*;
 
         #[test]

@@ -1,9 +1,10 @@
 use crate::game::chess::position::Position;
 use crate::coup::rep::Move;
-use tracing::*;
 
 
-mod cache;
+// TODO: Move this somewhere better, probably types?
+pub mod cache;
+
 mod check;
 mod king;
 mod knight;
@@ -23,9 +24,11 @@ impl MoveGenerator {
     }
 
     pub fn generate_moves(&self, position: &Position) -> impl Iterator<Item = Move> {
-        // TODO: Check cache for this position
-
         // TODO: Determine if we are in check
+        if check::is_in_check(&position) {
+            todo!();
+        }
+
 
         // TODO: Generate moves (maybe in parallel?
         pawn::generate_moves(position).chain(

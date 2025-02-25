@@ -1,5 +1,5 @@
 
-use crate::{coup::rep::{Move, MoveType}, game::position::Position, notation::Square, types::{pextboard, Bitboard, Direction, Occupant, Piece}};
+use crate::{coup::rep::{Move, MoveType}, game::position::Position, types::{pextboard, Occupant, Piece}};
 
 pub mod bishop {
     use super::*;
@@ -23,7 +23,7 @@ pub mod queen {
 }
 
 fn generate_slider_moves(position: &Position, piece: Piece) -> impl Iterator<Item = Move> {
-    let pieces = position.find(|(sq, occ)| *occ == Occupant::Occupied(piece, position.hero()));
+    let pieces = position.find(|(_sq, occ)| *occ == Occupant::Occupied(piece, position.hero()));
     let blockers = position.all_blockers();
     let enemies = position.enemies();
     let friendlies = position.friendlies();
