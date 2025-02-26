@@ -13,8 +13,8 @@ pub struct ZobristTable<const SEED: u64>;
 // * 6 piece types
 // * 2 colors
 // + 1 flag for when it's black's turn
-const ZOBRIST_SEED : u64 = 0x10062021_18092010 ^ 0x01081987_19051987;
 const ZOBRIST_TABLE_SIZE : usize = 1 + (2 * 6 * 64);
+const ZOBRIST_SEED : u64 = 0x10062021_18092010 ^ 0x01081987_19051987;
 
 type HazelZobrist = ZobristTable<ZOBRIST_SEED>;
 
@@ -35,7 +35,7 @@ impl<const SEED: u64> ZobristTable<SEED> {
         table
 
     };
-    
+
     pub const fn random(depth: u64) -> u64 {
         // adapted from https://en.wikipedia.org/wiki/Xorshift
         let mut x = SEED;
@@ -68,39 +68,21 @@ impl<const SEED: u64> ZobristTable<SEED> {
     }
 
     /// A convenience function.
-    pub const fn black_to_move_mask(&self) -> u64 {
+    pub const fn black_to_move_mask() -> u64 {
         Self::TABLE[ZOBRIST_TABLE_SIZE - 1]
-    }
-
-    pub const fn table(&self) -> &'static [u64] {
-        &Self::TABLE
-    }
-
-    pub fn initialize_at_rt() -> Self {
-        // seed the table
-        let mut idx = 0;
-        while idx < ZOBRIST_TABLE_SIZE {
-            dbg!("Here");
-            // It doesn't matter what these are, they're random, we just need both functions to map
-            // down to the idx.
-            Self::TABLE[idx] = Self::random(idx as u64);
-            idx += 1;
-        }
-
-        // Technically this could be anything, because these items exist at compile time.
-        ZobristTable
-    }
-    pub const fn initialize() -> Self {
-        ZobristTable
     }
 }
 
 
 // this can be calculated on any `query`able, I think.
-#[derive(Eq, Hash, PartialEq, Ord, PartialOrd, Clone, Copy, Debug)]
+#[derive(Eq, Hash, PartialEq, Ord, PartialOrd, Clone, Copy)]
 pub struct Zobrist(u64);
 
-pub(crate) const ZOBRIST_TABLE: ZobristTable<ZOBRIST_SEED> = ZobristTable::initialize();
+impl Debug for Zobrist {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Z|{:#04x}|", self.0)
+    }
+}
 
 impl Zobrist {
     pub fn new(position: &Position) -> Zobrist {
@@ -123,7 +105,7 @@ impl Zobrist {
                 Alteration::Remove { square: sq, occupant: Occupant::Occupied(piece, color) } => { HazelZobrist::zobrist_mask_for(*sq, *color, *piece) } // xor in the occupant
                 Alteration::Assert(metadata) => {
                     if metadata.side_to_move.is_black() {
-                        ZOBRIST_TABLE.black_to_move_mask()
+                        HazelZobrist::black_to_move_mask()
                     } else {
                         // do nothing
                         0
@@ -133,10 +115,10 @@ impl Zobrist {
                 _ => { continue } // nothing else matters, we don't care about metadata
             };
 
-            tracing::debug!("\n\nalter is: <{:?}>\ndelta is: {:#04x},\nzob is {:#04x}", alter, delta, self.0);
+            tracing::debug!("\n\nalter is: <{:?}>\ndelta is: {:#04x},\nzob is {:?}", alter, delta, self);
             // doesn't account for side-to-move. Or any other metadata for that matter
             self.0 ^= delta;
-            tracing::debug!("\nzob updates to: {:#04x}\n", self.0);
+            tracing::debug!("\nzob updates to: {:?}\n", self);
         }
         self
     }
@@ -176,13 +158,6 @@ mod tests {
         }
 
         #[quickcheck]
-        fn random_returns_random_values_at_rt(depth1: u64, depth2: u64) -> bool {
-            if depth1 == depth2 { return true; }
-            if depth1 > 1024 || depth2 > 1024 { return true; }
-            HazelZobrist::random(depth1) != HazelZobrist::random(depth2)
-        }
-
-        #[quickcheck]
         fn depth_for_works(sq: Square, color: Color, piece: Piece) -> bool {
             let depth = HazelZobrist::depth_for(sq, color, piece) as usize;
             // NOTE: Depth only maps from [0, (ZTS-1)], the `ZTS`th spot is for the side-to-move
@@ -199,11 +174,12 @@ mod tests {
                 false
             } else { true }
         }
-
     }
 
     mod zobrist {
-        use crate::types::{color::COLORS, piece::PIECES};
+        use quickcheck::{Arbitrary, Gen};
+
+        use crate::{game::position_metadata::PositionMetadata, types::{color::COLORS, piece::PIECES}};
 
         use super::*;
 
@@ -270,5 +246,46 @@ mod tests {
 
             assert_eq!(p1.zobrist(), p2.zobrist());
         }
+
+        impl Arbitrary for Alteration {
+            fn arbitrary(g: &mut Gen) -> Alteration {
+                let variant : usize = usize::arbitrary(g) % 6;
+
+                match variant {
+                    0 => Alteration::Place { square: Square::arbitrary(g), occupant: Occupant::arbitrary(g) },
+                    1 => Alteration::Remove { square: Square::arbitrary(g), occupant: Occupant::arbitrary(g) },
+                    2 => Alteration::Assert(PositionMetadata::arbitrary(g)),
+                    3 => Self::Clear,
+                    4 => Self::StartTurn,
+                    5 => Self::Lit(u8::arbitrary(g)),
+                    _ => { unreachable!(); }
+                }
+            }
+        }
+
+        #[quickcheck]
+        fn zobrist_update_is_idempotent(alteration: Alteration, alteration2: Alteration) -> bool {
+            let mut z1 = Zobrist::empty();
+            let mut z2 = Zobrist::empty();
+            z1.update(&[alteration2]);
+            z2.update(&[alteration2]);
+
+
+            z1.update(&[alteration, alteration]);
+
+            z1 != Zobrist::empty() && z2 != Zobrist::empty() && z1 == z2
+        }
+
+        // #[test]
+        // fn zobrist_update_is_idempotent() {
+        //     let variation_1 = vec![
+        //         Move::new(D2, D4, MoveType::QUIET),
+        //         Move::new(D7, D5, MoveType::QUIET),
+        //         Move::new(C1, F4, MoveType::QUIET),
+        //         Move::new(G8, F6, MoveType::QUIET),
+        //     ];
+        //     let p1 = Zobrist::new(&Position::new(BEN::start_position(), variation_1));
+
+        // }
     }
 }

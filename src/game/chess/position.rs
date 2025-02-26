@@ -171,7 +171,7 @@ impl Position {
                 match alterations.pop() {
                     Some(Alteration::StartTurn) => { break; }
                     Some(alter) => { unmove.push(alter); }
-                    None => { break; }
+                    None => { panic!("trying to unmake with no moves"); }
                 }
             }
         }
@@ -288,6 +288,7 @@ impl Position {
         // In order for the king to be checked, a piece of the correct type must be present on the
         // correct square, this calculates all the valid check squares,
         self.our_assassin_squares(Piece::Bishop) |
+        self.our_assassin_squares(Piece::Rook) |
         self.our_assassin_squares(Piece::Queen) |
         self.our_assassin_squares(Piece::Knight) |
         self.our_assassin_squares(Piece::Pawn)
@@ -320,9 +321,6 @@ impl Position {
         pextboard::attacks_for(piece, self.our_king(), blockers) & mask
     }
 
-
-
-
     // ### OUR HERO'S MOVES, ATTACKS, AND THE LIKE ### //
 
     // OQ: How should I sort these? Position so far has been 'find the pieces on the board', but it
@@ -344,7 +342,6 @@ impl Position {
         assert_eq!(res.len(), 1);
         res[0]
     }
-
 
     /// a bitboard showing the location of all our pawns
     pub fn our_pawns(&self) -> Bitboard {
