@@ -263,6 +263,11 @@ mod tests {
         // caches and computes representations)
         // A Position can naturally then create BEN as needed.
         //
+        // 26-FEB-2025 0916
+        //
+        // Position is almost ready for this, and should simplify this quite a lot. I think the
+        // `chessgame` object can drop entirely as a result, should also centralize the metadata
+        // update into `Position`.
         let line = game.log.cursor(|cursor| {
             let mut board = PieceBoard::default();
             let mut metadata = PositionMetadata::default();

@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 
 use crate::game::position_metadata::PositionMetadata;
 use crate::types::Occupant;
@@ -15,6 +15,19 @@ pub enum Alteration {
 }
 
 impl Debug for Alteration {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Place { square, occupant } => write!(f, "Place {} @ {}", occupant, square),
+            Self::Remove { square, occupant } => write!(f, "Remove {} @ {}", occupant, square),
+            Self::Assert(metadata) => write!(f, "Assert {:?}", metadata),
+            Self::Clear => write!(f, "Clear"),
+            Self::StartTurn => write!(f, "StartTurn"),
+            Self::Lit(byte) => write!(f, "Lit({:x})", byte)
+        }
+    }
+}
+
+impl Display for Alteration {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Place { square, occupant } => write!(f, "Place {} @ {}", occupant, square),
