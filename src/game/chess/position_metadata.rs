@@ -13,6 +13,7 @@ use crate::interface::Query;
 use crate::constants::File;
 use crate::coup::rep::Move;
 use crate::game::chess::castle_rights::CastleRights;
+use crate::query::display_board;
 use crate::{notation::*, Alter, Alteration};
 use crate::types::{Color, Occupant, Piece};
 
@@ -36,7 +37,7 @@ pub struct PositionMetadata {
 
 impl Alter for PositionMetadata {
     fn alter(&self, alteration: Alteration) -> Self {
-        let mut copy = self.clone();
+        let mut copy = *self;
         copy.alter_mut(alteration);
         copy
     }
@@ -129,12 +130,8 @@ impl PositionMetadata {
 
         let en_passant = match en_passant {
             Some("-") => None,
-            Some(square) => { 
-                let sq = Square::try_from(square);
-                match sq {
-                    Ok(sq) => Some(sq),
-                    Err(_) => None,
-                }
+            Some(square) => {
+                Square::try_from(square).ok()
             },
             None => panic!("Invalid en passant square"),
         };
@@ -161,7 +158,7 @@ impl PositionMetadata {
         // rely on the color of the piece being moved, rather than reasoning about the side-to-move
         // or delaying it till the end.
 
-        let Occupant::Occupied(piece, color) = board.get(mov.source()) else { panic!("Move has no source piece"); };
+        let Occupant::Occupied(piece, color) = board.get(mov.source()) else { panic!("Move has no source piece: {:?}\n on: \n{}", mov, display_board(board)); };
 
 
         if mov.is_capture() || piece == Piece::Pawn {

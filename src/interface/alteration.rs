@@ -9,6 +9,7 @@ pub enum Alteration {
     Place { square: Square, occupant: Occupant },
     Remove { square: Square, occupant: Occupant },
     Assert(PositionMetadata),
+    StartTurn,
     Lit(u8),
     Clear,
 }
@@ -20,6 +21,7 @@ impl Debug for Alteration {
             Self::Remove { square, occupant } => write!(f, "Remove {} @ {}", occupant, square),
             Self::Assert(metadata) => write!(f, "Assert {:?}", metadata),
             Self::Clear => write!(f, "Clear"),
+            Self::StartTurn => write!(f, "StartTurn"),
             Self::Lit(byte) => write!(f, "Lit({:x})", byte)
         }
     }

@@ -102,7 +102,7 @@ pub fn promotion_captures(position: &Position) -> impl Iterator<Item = Move> {
     let advance = pawns.shift(color.pawn_direction());
     let east_attacks = advance.shift(Direction::E) & enemies;
     let west_attacks = advance.shift(Direction::W) & enemies;
-    
+
     const PROMOTION_OPTIONS : [MoveType; 4] = [
         MoveType::PROMOTION_CAPTURE_ROOK,
         MoveType::PROMOTION_CAPTURE_QUEEN,

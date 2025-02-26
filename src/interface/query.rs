@@ -84,7 +84,7 @@ pub fn to_fen_position(board: &impl Query) -> String {
     f
 }
 
-pub fn to_alterations<'a, Q>(board: &'a Q) -> impl Iterator<Item = Alteration> + use<'a, Q> where Q : Query {
+pub fn to_alterations<Q>(board: &Q) -> impl Iterator<Item = Alteration> where Q : Query {
     // this should do 'clear' and 'assert(metadata)', query should require metadata query
     // functions? maybe optional?
     
