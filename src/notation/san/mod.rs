@@ -385,8 +385,7 @@ mod tests {
 
     #[test]
     fn new_works() {
-        let fen = BEN::new(START_POSITION_FEN);
-        let ben = BEN::from(fen);
+        let ben = BEN::new(START_POSITION_FEN);
         let san = SAN::new(ben);
         assert_eq!(san.context, ben);
         assert_eq!(san.source_piece, None);

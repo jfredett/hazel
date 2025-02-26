@@ -23,20 +23,19 @@ impl MoveGenerator {
         Self { }
     }
 
-    pub fn generate_moves(&self, position: &Position) -> impl Iterator<Item = Move> {
+    pub fn generate_moves(&self, position: &Position) -> Vec<Move> {
         // TODO: Determine if we are in check
-        if check::is_in_check(&position) {
-            todo!();
+        if check::is_in_check(position) {
+            return check::generate_moves(position).collect();
         }
 
-
-        // TODO: Generate moves (maybe in parallel?
+        // TODO: in parallel?
         pawn::generate_moves(position).chain(
         knight::generate_moves(position)).chain(
         slider::bishop::generate_moves(position)).chain(
         slider::rook::generate_moves(position)).chain(
         slider::queen::generate_moves(position)).chain(
-        king::generate_moves(position))
+        king::generate_moves(position)).collect()
     }
 
     pub fn perft(&self, depth: usize, position: &mut Position) -> usize {
@@ -48,6 +47,10 @@ impl MoveGenerator {
         for mov in movs {
 
             position.make(mov);
+
+            if depth == 1 {
+                tracing::debug!("position: {}", crate::query::to_fen_position(&position.clone()));
+            }
 
             count += self.perft(depth - 1, position);
 
@@ -94,7 +97,6 @@ mod tests {
     }
 
     #[test]
-    #[tracing_test::traced_test]
     fn perft_1() {
         assert_no_difference!(perft_start_position(1), 20);
     }
@@ -105,16 +107,18 @@ mod tests {
     }
 
     #[test]
+    #[tracing_test::traced_test]
     fn perft_3() {
         assert_no_difference!(perft_start_position(3), 8_902);
     }
 
-    #[test]
+    //#[test]
+    #[tracing_test::traced_test]
     fn perft_4() {
         assert_no_difference!(perft_start_position(4), 197_281);
     }
 
-    // #[test]
+    #[test]
     fn check_mate_position_has_zero_perft_at_any_depth() {
         let count = perft_position(1, &mut Position::new(BEN::new("7k/6Q1/6K1/8/8/8/8/8 b - - 0 1"), vec![]));
         assert_eq!(count, 0);

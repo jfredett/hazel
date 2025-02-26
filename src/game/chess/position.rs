@@ -1,7 +1,8 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, sync::RwLock};
 
 
 use crate::{board::PieceBoard, constants::move_tables::{KING_ATTACKS, KNIGHT_MOVES}, coup::rep::Move, notation::{ben::BEN, Square}, types::{pextboard, Bitboard, Color, Direction, Occupant, Piece}, Alter, Alteration, Query};
+use crate::types::zobrist::Zobrist;
 
 use super::position_metadata::PositionMetadata;
 use crate::coup::gen::cache::Cache;
@@ -12,6 +13,7 @@ pub struct Position {
     pub initial: BEN,
     pub moves: Vec<Move>,
     // caches
+    zobrist: RwLock<Zobrist>,
 
     // this should actually be an ATM, and the cache lives on Movegen?
     state_cache: Cache<(PieceBoard, PositionMetadata, Vec<Alteration>)>
@@ -33,7 +35,8 @@ impl PartialEq for Position {
 impl Debug for Position {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "{:?}", self.initial);
-        writeln!(f, "{:?}", self.moves)
+        writeln!(f, "{:?}", self.moves);
+        writeln!(f, "{:?}", self.zobrist())
     }
 }
 
@@ -57,25 +60,59 @@ impl Query for Position {
 impl Position {
     pub fn new(fen: impl Into<BEN>, moves: Vec<Move>) -> Self {
         let fen = fen.into();
+        // BUG: constructing this is a nightmare.
+        //
+        // I have to build the position and it's RWLock, but add the moves one-by-one, and build
+        // the cache. I expect there will only be a few total positions, and the cache should
+        // eventually have a proper cache object, the only locally cached thing should be the
+        // Zobrist, I suppose I could wrap it in an optional, or maybe push the mutability _into_
+        // zobrist?
+        //
+        //
+        let mut ret = Self {
+            initial: fen,
+            moves: vec![],
+            state_cache: Cache::new(Self::calculate_boardstate),
+            // this is a dummy
+            zobrist: RwLock::new(Zobrist::empty())
+        };
+        for mov in moves {
+            ret.make(mov);
+        }
 
-        Self { initial: fen, moves, state_cache: Cache::new(Self::calculate_boardstate) }
+        let zobrist = Zobrist::new(&ret);
+
+        ret.zobrist = RwLock::new(zobrist);
+
+        ret
+    }
+
+    pub fn zobrist(&self) -> Zobrist {
+        *self.zobrist.read().unwrap()
     }
 
     pub fn board(&self) -> PieceBoard {
-        //self.state_cache.get(self).0
         self.current_boardstate().0
     }
 
     pub fn metadata(&self) -> PositionMetadata {
-        //self.state_cache.get(self).1
         self.current_boardstate().1
     }
 
+    pub fn cached_alterations(&self) -> Vec<Alteration> {
+        self.current_boardstate().2
+    }
+
     pub fn current_boardstate(&self) -> (PieceBoard, PositionMetadata, Vec<Alteration>) {
+        // FIXME: Current bug is definitely somewhere in the caching logic. Turning it off yields
+        // a 900x slowdown w/ the alteration caching.
+        //
+        // I suspect we may be hitting a cache collision somewhere, or maybe I should embed the
+        // metadata into the cache, also need to check side-to-move calculation
         self.state_cache.get(self)
     }
 
-    fn calculate_boardstate(position: &Position) -> (PieceBoard, PositionMetadata, Vec<Alteration>) {
+    pub fn calculate_boardstate(position: &Position) -> (PieceBoard, PositionMetadata, Vec<Alteration>) {
         let mut board = PieceBoard::default();
         let mut meta = position.initial.metadata();
         let mut out_alterations : Vec<Alteration> = position.initial.to_alterations().collect();
@@ -85,7 +122,12 @@ impl Position {
         for mov in &position.moves {
             let alterations = mov.compile(&board);
 
+            out_alterations.push(Alteration::StartTurn);
+
             meta.update(mov, &board);
+
+            out_alterations.push(Alteration::Assert(meta));
+
             for alteration in &alterations {
                 out_alterations.push(*alteration);
                 board.alter_mut(*alteration);
@@ -98,12 +140,50 @@ impl Position {
 
 
     pub fn make(&mut self, mov: Move) {
+        let new_alterations = mov.compile(&self.board());
+        let mut z = self.zobrist.write().unwrap();
+
+        z.update(&new_alterations);
+
         self.moves.push(mov);
         // everything is computed on-demand, no cache yet, so this is all that's needed.
     }
 
     pub fn unmake(&mut self) {
+        // BUG: This is probably where my issue is w/ perft3 and zobrist, I'm not correctly
+        // reverting the change here.
+        // In the calculate boardstate I add end-turn markers, I think the procedure is grab the
+        // current cache of alterations, grab the slice from the current EOT marker to the
+        // previous, invert them and apply them to the zobrist, then we can check cache for the 
+        // position, and build it if it isn't there.
+        
+        // We want to check cache first, and if we miss, we don't mind building, so we want to find
+        // the zobrist corresponding to the state where the last move hasn't applied.
+        //
+        // When we cache the alterations, we include turn markers. We can just pop off the
+        // alteration stack until we hit one.
+        let mut unmove = vec![];
+
+        { // we're going to scope this to prevent any kind of leakage, we're going to hit cache
+          // twice w/ different keys
+            let mut alterations = self.cached_alterations();
+            loop {
+                match alterations.pop() {
+                    Some(Alteration::StartTurn) => { break; }
+                    Some(alter) => { unmove.push(alter); }
+                    None => { break; }
+                }
+            }
+        }
+
+        // We now have all the necessaries to de-zobrist ourselves. Since XOR is it's own inverse,
+        // We can just run these again. Order doesn't matter either, since XOR commutes.
+        let mut z = self.zobrist.write().unwrap();
+        z.update(&unmove);
+        
+        // Now our zobrist points to the prior position. We can finally pop the move from the stack
         self.moves.pop();
+        // and check cache will happen the next time we need it automatically
     }
 
     #[inline(always)]
@@ -213,6 +293,8 @@ impl Position {
         self.our_assassin_squares(Piece::Pawn)
     }
 
+
+    /// Squares from which our king may be checked
     pub fn our_assassin_squares(&self, piece: Piece) -> Bitboard {
         let blockers = self.all_blockers();
         let mask = match piece {
@@ -220,11 +302,24 @@ impl Position {
             Piece::Bishop => self.their_bishop_moves() | self.their_queen_moves(),
             Piece::Rook => self.their_rook_moves() | self.their_queen_moves(),
             Piece::Queen => self.their_queen_moves(),
-            Piece::Pawn => { Bitboard::empty() /* TODO: Implement this for real */ }
+            Piece::Pawn => { 
+                let their_pawn_quiet_moves = self.their_pawn_advances() | self.their_pawn_double_advances();
+                let their_pawn_captures = self.their_pawn_attacks() & self.friendlies();
+
+                let their_pawn_moves = their_pawn_quiet_moves | their_pawn_captures;
+
+                let their_threatened_squares = their_pawn_moves.shift(self.their_pawn_direction());
+
+                // promotion checks
+                // capture promotion checks
+                
+                their_threatened_squares.shift(Direction::E) | their_threatened_squares.shift(Direction::W)
+            }
             Piece::King => { Bitboard::empty() /* Kings can't check kings. */ }
         };
         pextboard::attacks_for(piece, self.our_king(), blockers) & mask
     }
+
 
 
 
@@ -264,6 +359,25 @@ impl Position {
     /// all squares attacked by at least one of our pawns
     pub fn our_pawn_attacks(&self) -> Bitboard {
         self.pawn_attacks_for(&self.hero())
+    }
+
+    pub fn our_pawn_advances(&self) -> Bitboard {
+        let blockers = self.all_blockers();
+        self.pawns_for(&self.hero()).shift(self.our_pawn_direction()) & !blockers
+    }
+
+    pub fn our_first_rank_pawns(&self) -> Bitboard {
+        self.pawns_for(&self.hero()) & self.our_pawn_rank()
+    }
+
+    pub fn our_pawn_rank(&self) -> Bitboard {
+        self.hero().pawn_mask()
+    }
+
+    pub fn our_pawn_double_advances(&self) -> Bitboard {
+        let blockers = self.all_blockers();
+        let first_advance = self.our_first_rank_pawns().shift(self.our_pawn_direction()) & !blockers;
+        first_advance.shift(self.our_pawn_direction()) &!blockers
     }
 
     /// Bitboard showing the location of all our knights
@@ -338,6 +452,25 @@ impl Position {
         let advance = self.their_pawns().shift(self.their_pawn_direction());
         advance.shift(Direction::E) | advance.shift(Direction::W)
 
+    }
+
+    pub fn their_pawn_advances(&self) -> Bitboard {
+        let blockers = self.all_blockers();
+        self.pawns_for(&self.villain()).shift(self.their_pawn_direction()) & !blockers
+    }
+
+    pub fn their_first_rank_pawns(&self) -> Bitboard {
+        self.pawns_for(&self.villain()) & self.their_pawn_rank()
+    }
+
+    pub fn their_pawn_rank(&self) -> Bitboard {
+        self.villain().pawn_mask()
+    }
+
+    pub fn their_pawn_double_advances(&self) -> Bitboard {
+        let blockers = self.all_blockers();
+        let first_advance = self.their_first_rank_pawns().shift(self.their_pawn_direction()) & !blockers;
+        first_advance.shift(self.their_pawn_direction()) &!blockers
     }
 
     /// all squares attacked by at least one of their knights

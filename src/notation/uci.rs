@@ -58,8 +58,8 @@ impl TryFrom<&str> for UCI {
             return Err(());
         }
 
-        let source = Square::try_from(value[0..2].as_bytes()).map_err(|_| ())?;
-        let target = Square::try_from(value[2..4].as_bytes()).map_err(|_| ())?;
+        let source = Square::try_from(&value.as_bytes()[0..2]).map_err(|_| ())?;
+        let target = Square::try_from(&value.as_bytes()[2..4]).map_err(|_| ())?;
 
         let promotion_piece = match value.get(4..5) {
             Some("q") => Some(Piece::Queen),

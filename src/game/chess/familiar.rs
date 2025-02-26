@@ -134,7 +134,7 @@ mod tests {
 
     use super::*;
 
-    pub(in self) fn example_game() -> Variation {
+    fn example_game() -> Variation {
         let mut log = Variation::default();
         log.new_game()
             .make(Move::new(D2, D4, MoveType::DOUBLE_PAWN))

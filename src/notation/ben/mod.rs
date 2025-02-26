@@ -109,7 +109,7 @@ impl BEN {
         ret
     }
 
-    pub fn to_alterations<'a>(&'a self) -> impl Iterator<Item = Alteration> + use<'a> {
+    pub fn to_alterations(&self) -> impl Iterator<Item = Alteration> {
         query::to_alterations(self)
     }
 
