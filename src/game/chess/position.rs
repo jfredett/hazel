@@ -1,7 +1,9 @@
 use std::{fmt::Debug, sync::RwLock};
 
 
-use crate::{board::PieceBoard, constants::move_tables::{KING_ATTACKS, KNIGHT_MOVES}, coup::rep::Move, notation::{ben::BEN, Square}, types::{pextboard, Bitboard, Color, Direction, Occupant, Piece}, Alter, Alteration, Query};
+use tracing::Metadata;
+
+use crate::{board::PieceBoard, constants::move_tables::{KING_ATTACKS, KNIGHT_MOVES}, coup::{gen::cache::ATM, rep::Move}, notation::{ben::BEN, Square}, types::{pextboard, Bitboard, Color, Direction, Occupant, Piece}, Alter, Alteration, Query};
 use crate::types::zobrist::Zobrist;
 
 use super::position_metadata::PositionMetadata;
@@ -14,14 +16,42 @@ pub struct Position {
     pub moves: Vec<Move>,
     // caches
     zobrist: RwLock<Zobrist>,
+    inner: RwLock<InnerPosition>,
 
-    // this should actually be an ATM, and the cache lives on Movegen?
-    state_cache: Cache<(PieceBoard, PositionMetadata, Vec<Alteration>)>
+    // this should live on movegen?
+    atm: ATM<'static, InnerPosition>
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct InnerPosition {
+    pub board: PieceBoard,
+    pub cached_alterations: Vec<Alteration>,
+    pub metadata: PositionMetadata,
+}
+
+impl InnerPosition {
+    pub fn new(board: PieceBoard, metadata: PositionMetadata, cached_alterations: Vec<Alteration>) -> Self {
+        InnerPosition {
+            board,
+            metadata,
+            cached_alterations
+        }
+    }
 }
 
 impl Clone for Position {
     fn clone(&self) -> Self {
-        Position::new(self.initial, self.moves.clone())
+        // FIXME: Ideally we'd actually just keep a reference to this cached thing instead of copying it
+        // all over creation
+        let new_inner = self.inner.read().unwrap().clone();
+
+        Position {
+            initial: self.initial,
+            moves: self.moves.clone(),
+            zobrist: RwLock::new(self.zobrist()),
+            inner: RwLock::new(new_inner),
+            atm: self.atm
+        }
     }
 }
 
@@ -57,32 +87,34 @@ impl Query for Position {
     }
 }
 
+lazy_static!(
+
+    pub static ref PositionCache : Cache<InnerPosition> = Cache::new();
+
+);
+
 impl Position {
     pub fn new(fen: impl Into<BEN>, moves: Vec<Move>) -> Self {
         let fen = fen.into();
-        // BUG: constructing this is a nightmare.
-        //
-        // I have to build the position and it's RWLock, but add the moves one-by-one, and build
-        // the cache. I expect there will only be a few total positions, and the cache should
-        // eventually have a proper cache object, the only locally cached thing should be the
-        // Zobrist, I suppose I could wrap it in an optional, or maybe push the mutability _into_
-        // zobrist?
-        //
-        //
+
+        let initial_alterations : Vec<Alteration> = fen.to_alterations().collect();
+        let initial_zobrist = Zobrist::from(initial_alterations.as_slice());
+        tracing::debug!("Initial Zobrist Calculation");
+        let mut board = PieceBoard::default();
+        board.set_fen(fen);
+
         let mut ret = Self {
             initial: fen,
             moves: vec![],
-            state_cache: Cache::new(Self::calculate_boardstate),
-            // this is a dummy
-            zobrist: RwLock::new(Zobrist::empty())
+            zobrist: RwLock::new(initial_zobrist),
+            inner: RwLock::new(InnerPosition::new(board, fen.metadata(), initial_alterations)),
+            atm: PositionCache.atm()
         };
+
+        tracing::debug!("Zobrist update as moves are made");
         for mov in moves {
             ret.make(mov);
         }
-
-        let zobrist = Zobrist::new(&ret);
-
-        ret.zobrist = RwLock::new(zobrist);
 
         ret
     }
@@ -91,82 +123,77 @@ impl Position {
         *self.zobrist.read().unwrap()
     }
 
-    pub fn board(&self) -> PieceBoard {
-        self.current_boardstate().0
+    pub fn metadata(&self) -> PositionMetadata {
+        self.inner.read().unwrap().metadata
     }
 
-    pub fn metadata(&self) -> PositionMetadata {
-        self.current_boardstate().1
+    pub fn board(&self) -> PieceBoard {
+        self.inner.read().unwrap().board
     }
 
     pub fn cached_alterations(&self) -> Vec<Alteration> {
-        self.current_boardstate().2
+        // FIXME: Don't clone
+        self.inner.read().unwrap().clone().cached_alterations
     }
-
-    pub fn current_boardstate(&self) -> (PieceBoard, PositionMetadata, Vec<Alteration>) {
-        // FIXME: Current bug is definitely somewhere in the caching logic. Turning it off yields
-        // a 900x slowdown w/ the alteration caching.
-        //
-        // I suspect we may be hitting a cache collision somewhere, or maybe I should embed the
-        // metadata into the cache, also need to check side-to-move calculation
-        self.state_cache.get(self)
-    }
-
-    pub fn calculate_boardstate(position: &Position) -> (PieceBoard, PositionMetadata, Vec<Alteration>) {
-        let mut board = PieceBoard::default();
-        let mut meta = position.initial.metadata();
-        let mut out_alterations : Vec<Alteration> = position.initial.to_alterations().collect();
-
-        board.set_position(position.initial);
-
-        for mov in &position.moves {
-            let alterations = mov.compile(&board);
-
-            out_alterations.push(Alteration::StartTurn);
-
-            meta.update(mov, &board);
-
-            out_alterations.push(Alteration::Assert(meta));
-
-            for alteration in &alterations {
-                out_alterations.push(*alteration);
-                board.alter_mut(*alteration);
-            }
-
-        }
-
-        (board, meta, out_alterations)
-    }
-
 
     pub fn make(&mut self, mov: Move) {
-        let new_alterations = mov.compile(&self.board());
-        let mut z = self.zobrist.write().unwrap();
+        tracing::debug!("#make(mov: {:?})", mov);
 
-        z.update(&new_alterations);
+        let new_alterations;
+        let mut new_zobrist;
+
+        {  // scoped to drop the lock as soon as possible.
+            let mut inner = self.inner.read().unwrap();
+
+            new_alterations = mov.compile(&inner.board);
+
+            let mut z = self.zobrist.write().unwrap();
+            z.update(&new_alterations);
+            new_zobrist = *z;
+        }
+
+        match self.atm.get(new_zobrist) {
+            Some(cached_inner) => {
+                self.inner.replace(cached_inner.clone());
+            },
+            None => {
+                // need to re-acquire the lock here.
+                let mut inner = self.inner.write().unwrap();
+                inner.cached_alterations.push(Alteration::StartTurn);
+
+                let metadata_assertion = Alteration::Assert(inner.metadata);
+                inner.cached_alterations.push(metadata_assertion);
+
+                let board = inner.board;
+                inner.metadata.update(&mov, &board);
+
+                for alter in new_alterations {
+                    inner.cached_alterations.push(alter);
+                    inner.board.alter_mut(alter);
+                }
+
+                self.atm.set(new_zobrist, inner.clone());
+            },
+        }
+
 
         self.moves.push(mov);
-        // everything is computed on-demand, no cache yet, so this is all that's needed.
     }
 
     pub fn unmake(&mut self) {
-        // BUG: This is probably where my issue is w/ perft3 and zobrist, I'm not correctly
-        // reverting the change here.
-        // In the calculate boardstate I add end-turn markers, I think the procedure is grab the
-        // current cache of alterations, grab the slice from the current EOT marker to the
-        // previous, invert them and apply them to the zobrist, then we can check cache for the 
-        // position, and build it if it isn't there.
-        
+        tracing::debug!("#unmake()");
         // We want to check cache first, and if we miss, we don't mind building, so we want to find
         // the zobrist corresponding to the state where the last move hasn't applied.
         //
         // When we cache the alterations, we include turn markers. We can just pop off the
         // alteration stack until we hit one.
         let mut unmove = vec![];
+        let alteration_len;
 
         { // we're going to scope this to prevent any kind of leakage, we're going to hit cache
           // twice w/ different keys
-            let mut alterations = self.cached_alterations();
+            let mut alterations = self.cached_alterations().to_vec();
+            alteration_len = alterations.len(); // we might need this later, might as well grab it now.
             loop {
                 match alterations.pop() {
                     Some(Alteration::StartTurn) => { break; }
@@ -175,14 +202,42 @@ impl Position {
                 }
             }
         }
-
         // We now have all the necessaries to de-zobrist ourselves. Since XOR is it's own inverse,
         // We can just run these again. Order doesn't matter either, since XOR commutes.
-        let mut z = self.zobrist.write().unwrap();
-        z.update(&unmove);
-        
-        // Now our zobrist points to the prior position. We can finally pop the move from the stack
-        self.moves.pop();
+        let mut new_zobrist = self.zobrist.write().unwrap();
+        new_zobrist.update(&unmove);
+
+        match self.atm.get(*new_zobrist) {
+            Some(cached_inner) => {
+                self.inner.replace(cached_inner.clone());
+            },
+            None => {
+                // lock for writing
+                let mut inner = self.inner.write().unwrap();
+
+                // need to just burn off the same number of alterations from cache, we were working
+                // with a copy before.
+                // FIXME: I'm not sure this is the best way to do this.
+
+                inner.cached_alterations.truncate(alteration_len - unmove.len());
+                for alter in unmove {
+                    // unapply each alteration
+                    inner.board.alter_mut(alter.inverse());
+                }
+
+                // not ideal, but oh well
+                let alterations = inner.cached_alterations.clone();
+
+                for alter in alterations.into_iter().rev() {
+                    if let Alteration::Assert(last_meta) = alter {
+                        inner.metadata = last_meta;
+                        break;
+                    }
+                }
+
+                self.atm.set(*new_zobrist, inner.clone());
+            }
+        }
         // and check cache will happen the next time we need it automatically
     }
 
@@ -206,7 +261,6 @@ impl Position {
         }
         bb
     }
-
 
     pub fn all_pieces_of(&self, color: &Color) -> Bitboard {
         self.find(|(_sq, occ)| {
@@ -520,8 +574,56 @@ mod tests {
     use crate::notation::*;
     use crate::coup::rep::MoveType;
 
+
+    mod make_unmake {
+        use super::*;
+
+        #[test]
+        #[tracing_test::traced_test]
+        fn make_unmake() {
+            let start = BEN::start_position();
+            let moves = vec![
+                Move::new(D2, D4, MoveType::DOUBLE_PAWN), Move::new(D7, D5, MoveType::DOUBLE_PAWN),
+                Move::new(C1, F4, MoveType::QUIET), Move::new(E7, E6, MoveType::QUIET)
+            ];
+
+            let mut p = Position::new(start, moves);
+            let z_prior = p.zobrist();
+            let m = Move::new(E2, E3, MoveType::QUIET);
+
+            let alter_cache_prior = p.cached_alterations().clone();
+            p.make(m);
+            let z_mid = p.zobrist();
+            let alter_cache_mid = p.cached_alterations().clone();
+            p.unmake();
+            let z_post = p.zobrist();
+            let alter_cache_post = p.cached_alterations().clone();
+
+            use crate::types::zobrist::HazelZobrist;
+
+
+            similar_asserts::assert_eq!(alter_cache_prior, alter_cache_post);
+
+            let diff = z_prior ^ z_post;
+            let mut depth = 0;
+            for entry in HazelZobrist::TABLE {
+                if entry == diff.inner() {
+                    dbg!(entry);
+                    dbg!(diff);
+                    dbg!(depth); // this is 768, indicating it's the side-to-move marker that's got the issue
+                    assert!(false);
+                }
+                depth += 1;
+            }
+
+            assert_ne!(z_prior, z_mid);
+            assert_eq!(z_prior, z_post);
+        }
+    }
+
     mod gamestate {
         use super::*;
+
 
         #[test]
         fn kiwi() {

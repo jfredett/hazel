@@ -1,5 +1,5 @@
 use crate::{
-    game::position_metadata::PositionMetadata, notation::*, types::Occupant, util::charray::{Charray, Origin}
+    game::position_metadata::PositionMetadata, notation::*, types::{zobrist::Zobrist, Occupant}, util::charray::{Charray, Origin}
 };
 
 use super::Alteration;
@@ -90,15 +90,16 @@ pub fn to_alterations<Q>(board: &Q) -> impl Iterator<Item = Alteration> where Q 
     
     let mut ret = vec![ Alteration::Clear];
 
-    if let Some(metadata) = board.try_metadata() {
-        ret.push(Alteration::Assert(metadata));
-    }
 
     ret.extend(
         Square::by_rank_and_file()
            .filter(|s| board.is_occupied(s))
            .map(|s| Alteration::place(s, board.get(s)) )
     );
+
+    if let Some(metadata) = board.try_metadata() {
+        ret.push(Alteration::Assert(metadata));
+    }
 
     ret.into_iter()
 }
