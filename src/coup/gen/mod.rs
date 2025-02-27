@@ -47,14 +47,20 @@ impl MoveGenerator {
         for mov in movs {
 
             position.make(mov);
+            tracing::debug!("making mov: {}", mov);
 
             if depth == 1 {
-                tracing::debug!("position: {}", crate::query::to_fen_position(&position.clone()));
+                tracing::debug!("position {:?}: {} {}", position.zobrist(), crate::query::to_fen_position(&position.clone()), position.metadata());
             }
 
             count += self.perft(depth - 1, position);
 
+            tracing::debug!("unmaking mov: {}", mov);
             position.unmake();
+
+            if depth == 1 {
+                tracing::debug!("position {:?} after unmake: {} {}", position.zobrist(), crate::query::to_fen_position(&position.clone()), position.metadata());
+            }
         }
 
         count
@@ -106,8 +112,8 @@ mod tests {
         assert_no_difference!(perft_start_position(2), 400);
     }
 
-    #[test]
     #[tracing_test::traced_test]
+    #[test]
     fn perft_3() {
         assert_no_difference!(perft_start_position(3), 8_902);
     }

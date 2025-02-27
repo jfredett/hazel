@@ -1865,3 +1865,42 @@ It's on the list for a rewrite too.
 Anyway, this is the plan, it remains to see if it survives contact.
 
 
+# 27-FEB-2025
+
+## 0017 - atm
+
+My initial idea was to build something like the `Cursor` struct with `ATM`, and have a sort of type-agnostic cache, that
+I could then have each method use. The cache would be transparent to the caller, you ask for the board, you get it, if
+it's cached you pull it from there, if it's not you build it right then and cache it. More like memoization/transparent
+caching.
+
+That's not a great way to do this, with `make` and `unmake` in particular, I have a lot of opportunity for incremental
+updates and minimizing halfply-to-halfply work, so it makes sense to do opportunistic caching during this process, and
+manage when cache is updated more directly.
+
+Right now that cache is a HashMap, but there are smarter structures for this, and memory will be a concern quickly if I
+keep all positions.
+
+So I've opted for a much simpler global cache, centralizing all the cache logic in `Position` for now. Ideally the
+eventual model will be something like:
+
+* `Position` provides an API to talk about the position, it builds it's methods out of methods provided by
+`PositionInner`. It provides the pleasant API for implementing, e.g., movegen.
+
+* `PositionInner` provides the bitboard caclulation and has more memoization-adjacent caching via RwLocked bitboards,
+I'll probably build some custom wrapper around bitboard for that, not sure. Ideally most of the math gets pushed back
+here, and this can be a site for optimization of board querys.
+
+The `PositionInner` should ultimately ideally be `Copy`, just a big pile of bitboards and the like.
+
+I currently have the Alteration cached there as well, but I think I'd prefer that to be first-class on Position, since
+most of my incremental opportunities involve tooling around a Log of Alterations.
+
+To wit, another thing I've been sorely missing has been a good structure for a collection of alterations, and I realized
+as I was writing this that I have the perfect thing already built, that little `Log` structure backing `Variation` would
+work perfectly here, and it's `transaction` feature (which is moreso named for it's aspiration than it's actuality) may
+see some use.
+
+Finally, I'm pretty sure `ChessGame` is going to get factored away and replaced with `Position`, and I think that will
+net out to a much nicer flow than is currently there.
+

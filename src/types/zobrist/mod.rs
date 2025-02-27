@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::RwLock, fmt::Debug};
 
-use crate::{game::position::Position, notation::Square, types::{Bitboard, Color, Occupant, Piece}, Alteration};
+use crate::{game::position::Position, notation::Square, query, types::{Bitboard, Color, Occupant, Piece}, Alteration, Query};
 use crate::notation::*;
 
 pub struct ZobristTable<const SEED: u64>;
@@ -16,11 +16,19 @@ pub struct ZobristTable<const SEED: u64>;
 const ZOBRIST_TABLE_SIZE : usize = 1 + (2 * 6 * 64);
 const ZOBRIST_SEED : u64 = 0x10062021_18092010 ^ 0x01081987_19051987;
 
-type HazelZobrist = ZobristTable<ZOBRIST_SEED>;
+pub type HazelZobrist = ZobristTable<ZOBRIST_SEED>;
+
+impl std::ops::BitXor<Self> for Zobrist {
+    type Output = Zobrist;
+
+    fn bitxor(self, other: Zobrist) -> Self::Output {
+        Zobrist(self.0 ^ other.0)
+    }
+}
 
 impl<const SEED: u64> ZobristTable<SEED> {
 
-    const TABLE : [u64; ZOBRIST_TABLE_SIZE] = {
+    pub const TABLE : [u64; ZOBRIST_TABLE_SIZE] = {
         // seed the table
         let mut idx = 0;
         let mut table = [0; ZOBRIST_TABLE_SIZE];
@@ -84,26 +92,42 @@ impl Debug for Zobrist {
     }
 }
 
-impl Zobrist {
-    pub fn new(position: &Position) -> Zobrist {
-        let (_, _, alterations) = Position::calculate_boardstate(position);
-        *Zobrist(0).update(&alterations)
+impl From<&[Alteration]> for Zobrist {
+    fn from(alterations: &[Alteration]) -> Zobrist {
+        *Zobrist::empty().update(&alterations)
     }
+}
+
+impl Zobrist {
+    #[cfg(test)]
+    pub fn inner(&self) -> u64 { self.0 }
 
     pub fn empty() -> Zobrist {
         Zobrist(0)
     }
 
+    pub fn new(query: &impl Query) -> Zobrist {
+        let alterations : Vec<Alteration> = query::to_alterations(query).collect();
+        Zobrist::from(alterations.as_slice())
+    }
+
     pub fn update(&mut self, alterations: &[Alteration]) -> &mut Self {
-        tracing::debug!("updating zobrist");
-
         for alter in alterations {
-
-
             let delta = match alter {
-                Alteration::Place { square: sq, occupant: Occupant::Occupied(piece, color) } => { HazelZobrist::zobrist_mask_for(*sq, *color, *piece) } // xor in the occupant
-                Alteration::Remove { square: sq, occupant: Occupant::Occupied(piece, color) } => { HazelZobrist::zobrist_mask_for(*sq, *color, *piece) } // xor in the occupant
+                Alteration::Place { square: sq, occupant: Occupant::Occupied(piece, color) } => {
+                    tracing::debug!("Placing {:?} {:?} {:?}", *sq, *color, *piece);
+                    HazelZobrist::zobrist_mask_for(*sq, *color, *piece)
+                },
+                Alteration::Remove { square: sq, occupant: Occupant::Occupied(piece, color) } => {
+                    tracing::debug!("Removing {:?} {:?} {:?}", *sq, *color, *piece);
+                    HazelZobrist::zobrist_mask_for(*sq, *color, *piece)
+                },
+                Alteration::StartTurn => {
+                    tracing::debug!("Start Turn");
+                    continue;
+                }
                 Alteration::Assert(metadata) => {
+                    tracing::debug!("Side-To-Move is {:?}", metadata.side_to_move);
                     if metadata.side_to_move.is_black() {
                         HazelZobrist::black_to_move_mask()
                     } else {
@@ -115,10 +139,10 @@ impl Zobrist {
                 _ => { continue } // nothing else matters, we don't care about metadata
             };
 
-            tracing::debug!("\n\nalter is: <{:?}>\ndelta is: {:#04x},\nzob is {:?}", alter, delta, self);
+            //tracing::debug!("\n\nalter is: <{:?}>\ndelta is: {:#04x},\nzob is {:?}", alter, delta, self);
             // doesn't account for side-to-move. Or any other metadata for that matter
             self.0 ^= delta;
-            tracing::debug!("\nzob updates to: {:?}\n", self);
+            //tracing::debug!("\nzob updates to: {:?}\n", self);
         }
         self
     }
@@ -146,7 +170,7 @@ mod tests {
         }
 
         #[test]
-        fn zobrist_table_is_not_all_distinct() {
+        fn zobrist_table_is_all_distinct() {
             let table = HazelZobrist::TABLE;
             for i in 0..ZOBRIST_TABLE_SIZE {
                 for j in 0..i {
@@ -247,13 +271,16 @@ mod tests {
             assert_eq!(p1.zobrist(), p2.zobrist());
         }
 
+
         impl Arbitrary for Alteration {
             fn arbitrary(g: &mut Gen) -> Alteration {
                 let variant : usize = usize::arbitrary(g) % 6;
 
+                let occupant = Occupant::Occupied(Piece::arbitrary(g), Color::arbitrary(g));
+
                 match variant {
-                    0 => Alteration::Place { square: Square::arbitrary(g), occupant: Occupant::arbitrary(g) },
-                    1 => Alteration::Remove { square: Square::arbitrary(g), occupant: Occupant::arbitrary(g) },
+                    0 => Alteration::Place { square: Square::arbitrary(g), occupant },
+                    1 => Alteration::Remove { square: Square::arbitrary(g), occupant },
                     2 => Alteration::Assert(PositionMetadata::arbitrary(g)),
                     3 => Self::Clear,
                     4 => Self::StartTurn,
@@ -265,27 +292,25 @@ mod tests {
 
         #[quickcheck]
         fn zobrist_update_is_idempotent(alteration: Alteration, alteration2: Alteration) -> bool {
+            // this is mostly to allow the non-zero checking later, which makes sure we are
+            // primarily testing interesting cases/disallow a potential null solution state
+            if alteration == Alteration::Clear || alteration2 == Alteration::Clear { return true; }
             let mut z1 = Zobrist::empty();
             let mut z2 = Zobrist::empty();
             z1.update(&[alteration2]);
             z2.update(&[alteration2]);
 
+            if z1 == Zobrist::empty() { return true; }
 
             z1.update(&[alteration, alteration]);
 
-            z1 != Zobrist::empty() && z2 != Zobrist::empty() && z1 == z2
+            if z1 != Zobrist::empty() && z2 != Zobrist::empty() && z1 == z2 {
+                true
+            } else {
+                dbg!(z1, z2);
+                false
+            }
+
         }
-
-        // #[test]
-        // fn zobrist_update_is_idempotent() {
-        //     let variation_1 = vec![
-        //         Move::new(D2, D4, MoveType::QUIET),
-        //         Move::new(D7, D5, MoveType::QUIET),
-        //         Move::new(C1, F4, MoveType::QUIET),
-        //         Move::new(G8, F6, MoveType::QUIET),
-        //     ];
-        //     let p1 = Zobrist::new(&Position::new(BEN::start_position(), variation_1));
-
-        // }
     }
 }

@@ -19,6 +19,8 @@ impl Debug for Alteration {
         match self {
             Self::Place { square, occupant } => write!(f, "Place {} @ {}", occupant, square),
             Self::Remove { square, occupant } => write!(f, "Remove {} @ {}", occupant, square),
+            // it'd be ideal if this dropped a flag with _how to change_ the metadata, not just a
+            // copy of the metadata.
             Self::Assert(metadata) => write!(f, "Assert {:?}", metadata),
             Self::Clear => write!(f, "Clear"),
             Self::StartTurn => write!(f, "StartTurn"),
