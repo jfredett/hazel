@@ -47,19 +47,29 @@ impl MoveGenerator {
         for mov in movs {
 
             position.make(mov);
-            tracing::debug!("making mov: {}", mov);
 
             if depth == 1 {
-                tracing::debug!("position {:?}: {} {}", position.zobrist(), crate::query::to_fen_position(&position.clone()), position.metadata());
+                tracing::debug!("after-make {:?}: {} {}\n\n{}\n{:?}", 
+                    position.zobrist(),
+                    crate::query::to_fen_position(&position.clone()),
+                    position.metadata(),
+                    crate::query::display_board(&position.board()),
+                    position.cached_alterations()
+                );
             }
 
             count += self.perft(depth - 1, position);
 
-            tracing::debug!("unmaking mov: {}", mov);
             position.unmake();
 
             if depth == 1 {
-                tracing::debug!("position {:?} after unmake: {} {}", position.zobrist(), crate::query::to_fen_position(&position.clone()), position.metadata());
+                tracing::debug!("after-unmake {:?}: {} {}\n\n{}\n{:?}",
+                    position.zobrist(),
+                    crate::query::to_fen_position(&position.clone()),
+                    position.metadata(),
+                    crate::query::display_board(&position.board()),
+                    position.cached_alterations()
+                );
             }
         }
 

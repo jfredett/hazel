@@ -1,18 +1,47 @@
 use std::fmt::{Debug, Display};
 
+
+use crate::constants::File;
+use crate::game::castle_rights::CastleRights;
 use crate::game::position_metadata::PositionMetadata;
-use crate::types::Occupant;
+use crate::types::{Color, Occupant};
 use crate::notation::*;
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum Alteration {
     Place { square: Square, occupant: Occupant },
     Remove { square: Square, occupant: Occupant },
-    Assert(PositionMetadata),
-    StartTurn,
+    Assert(MetadataAssertion),
     Lit(u8),
     Clear,
 }
+
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum MetadataAssertion {
+    CastleRights(CastleRights),
+    EnPassant(File),
+    StartTurn(Color),
+    FiftyMoveCount(u8),
+    FullMoveCount(u16),
+
+}
+
+#[cfg(test)]
+impl quickcheck::Arbitrary for MetadataAssertion {
+    fn arbitrary(g: &mut quickcheck::Gen) -> MetadataAssertion {
+        let variant = usize::arbitrary(g) % 5;
+        match variant {
+            0 => { MetadataAssertion::CastleRights(CastleRights::arbitrary(g)) },
+            1 => { MetadataAssertion::EnPassant(File::arbitrary(g)) },
+            2 => { MetadataAssertion::StartTurn(Color::arbitrary(g)) },
+            3 => { MetadataAssertion::FiftyMoveCount(u8::arbitrary(g) % 50) },
+            4 => { MetadataAssertion::FullMoveCount(u16::arbitrary(g)) },
+            _ => { unreachable!(); }
+        }
+    }
+}
+
+
 
 impl Debug for Alteration {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -21,9 +50,8 @@ impl Debug for Alteration {
             Self::Remove { square, occupant } => write!(f, "Remove {} @ {}", occupant, square),
             // it'd be ideal if this dropped a flag with _how to change_ the metadata, not just a
             // copy of the metadata.
-            Self::Assert(metadata) => write!(f, "Assert {:?}", metadata),
+            Self::Assert(metadata) => write!(f, "Assert <{:?}>", metadata),
             Self::Clear => write!(f, "Clear"),
-            Self::StartTurn => write!(f, "StartTurn"),
             Self::Lit(byte) => write!(f, "Lit({:x})", byte)
         }
     }
@@ -34,9 +62,8 @@ impl Display for Alteration {
         match self {
             Self::Place { square, occupant } => write!(f, "Place {} @ {}", occupant, square),
             Self::Remove { square, occupant } => write!(f, "Remove {} @ {}", occupant, square),
-            Self::Assert(metadata) => write!(f, "Assert {:?}", metadata),
+            Self::Assert(metadata) => write!(f, "Assert <{:?}>", metadata),
             Self::Clear => write!(f, "Clear"),
-            Self::StartTurn => write!(f, "StartTurn"),
             Self::Lit(byte) => write!(f, "Lit({:x})", byte)
         }
     }
@@ -109,6 +136,14 @@ mod tests {
         let remove = Alteration::remove(A1, Occupant::black_king());
         assert_eq!(place.inverse(), remove);
         assert_eq!(remove.inverse(), place);
+    }
+
+    #[quickcheck]
+    fn inverse_arb(sq: Square, occ: Occupant) -> bool {
+        let place = Alteration::place(sq, occ);
+        let remove = Alteration::remove(sq, occ);
+
+        place.inverse() == remove && remove.inverse() == place
     }
 
     #[test]

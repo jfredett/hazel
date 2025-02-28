@@ -71,7 +71,7 @@ impl Alter for BEN {
                 }
             },
             Alteration::Clear => { self.position = [0; 32]; },
-            Alteration::Assert(metadata) => { self.metadata = metadata; },
+            Alteration::Assert(_) => { self.metadata.alter_mut(alter); },
             _ => { }
         }
 
@@ -113,8 +113,7 @@ impl BEN {
         query::to_alterations(self)
     }
 
-    // TODO: Move this to Position, Position is how Hazel creates new positions, and BENs are
-    // created therefrom, later we can optimize if creating BENs directly is worth it.
+    // TODO: Move this to it's own function, it should produce a _Log_ of alteratons
     // TODO: Nom.
     fn compile(fen: &str) -> impl Iterator<Item = Alteration> {
         let mut alterations = vec![];
@@ -158,9 +157,8 @@ impl BEN {
 
         let mut metadata = PositionMetadata::default();
         metadata.parse(&mut chunks);
-        alterations.push(Alteration::Assert(metadata));
-
-        // metadata parsing please
+        let metadata_alterations : Vec<Alteration> = metadata.into();
+        alterations.extend(metadata_alterations);
 
         alterations.into_iter()
     }
