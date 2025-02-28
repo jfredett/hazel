@@ -3,7 +3,7 @@ use std::{fmt::Debug, sync::RwLock};
 
 use tracing::Metadata;
 
-use crate::{board::PieceBoard, constants::move_tables::{KING_ATTACKS, KNIGHT_MOVES}, coup::{gen::cache::ATM, rep::Move}, notation::{ben::BEN, Square}, types::{pextboard, Bitboard, Color, Direction, Occupant, Piece}, Alter, Alteration, Query};
+use crate::{alteration::MetadataAssertion, board::PieceBoard, constants::move_tables::{KING_ATTACKS, KNIGHT_MOVES}, coup::{gen::cache::ATM, rep::Move}, notation::{ben::BEN, Square}, types::{pextboard, Bitboard, Color, Direction, Occupant, Piece}, Alter, Alteration, Query};
 use crate::types::zobrist::Zobrist;
 
 use super::position_metadata::PositionMetadata;
@@ -146,6 +146,7 @@ impl Position {
             let mut inner = self.inner.read().unwrap();
 
             new_alterations = mov.compile(&inner.board);
+            // this is not accounting for the side-to-move?
 
             let mut z = self.zobrist.write().unwrap();
             z.update(&new_alterations);
@@ -159,10 +160,9 @@ impl Position {
             None => {
                 // need to re-acquire the lock here.
                 let mut inner = self.inner.write().unwrap();
-                inner.cached_alterations.push(Alteration::StartTurn);
 
-                let metadata_assertion = Alteration::Assert(inner.metadata);
-                inner.cached_alterations.push(metadata_assertion);
+                let metadata_assertions : Vec<Alteration> = inner.metadata.into();
+                inner.cached_alterations.extend(metadata_assertions);
 
                 let board = inner.board;
                 inner.metadata.update(&mov, &board);
@@ -189,15 +189,19 @@ impl Position {
         // alteration stack until we hit one.
         let mut unmove = vec![];
         let alteration_len;
+        let mut pop_count = 0;
 
         { // we're going to scope this to prevent any kind of leakage, we're going to hit cache
           // twice w/ different keys
             let mut alterations = self.cached_alterations().to_vec();
             alteration_len = alterations.len(); // we might need this later, might as well grab it now.
             loop {
+                pop_count += 1;
                 match alterations.pop() {
-                    Some(Alteration::StartTurn) => { break; }
-                    Some(alter) => { unmove.push(alter); }
+                    Some(Alteration::Assert(MetadataAssertion::StartTurn(_))) => { break; }
+                    // NOTE: Technically the #inverse is unnecessary, it's definitely slower, but
+                    // it makes the logs easier to read.
+                    Some(alter) => { unmove.push(alter.inverse()); }
                     None => { panic!("trying to unmake with no moves"); }
                 }
             }
@@ -218,27 +222,23 @@ impl Position {
                 // need to just burn off the same number of alterations from cache, we were working
                 // with a copy before.
                 // FIXME: I'm not sure this is the best way to do this.
+                // I think this is where my current bug is 0051 27-feb-2025 jgf
 
-                inner.cached_alterations.truncate(alteration_len - unmove.len());
-                for alter in unmove {
-                    // unapply each alteration
-                    inner.board.alter_mut(alter.inverse());
+                // NOTE: Unmoves are inverted above when we gather them
+                inner.cached_alterations.truncate(alteration_len - pop_count);
+                for inverse_alter in unmove {
+                    inner.board.alter_mut(inverse_alter);
+                    inner.metadata.alter_mut(inverse_alter);
                 }
 
                 // not ideal, but oh well
                 let alterations = inner.cached_alterations.clone();
 
-                for alter in alterations.into_iter().rev() {
-                    if let Alteration::Assert(last_meta) = alter {
-                        inner.metadata = last_meta;
-                        break;
-                    }
-                }
-
                 self.atm.set(*new_zobrist, inner.clone());
             }
         }
-        // and check cache will happen the next time we need it automatically
+
+        self.moves.pop();
     }
 
     #[inline(always)]
@@ -618,6 +618,42 @@ mod tests {
 
             assert_ne!(z_prior, z_mid);
             assert_eq!(z_prior, z_post);
+        }
+
+        #[test]
+        #[tracing_test::traced_test]
+        fn unwinding_black_second_move_repro() {
+            let movs = vec![
+                Move::new(A2, A4, MoveType::DOUBLE_PAWN),
+                Move::new(A7, A5, MoveType::DOUBLE_PAWN),
+                Move::new(B2, B4, MoveType::DOUBLE_PAWN)
+            ];
+
+            let mut p = Position::new(BEN::start_position(), movs);
+            let p_prior = p.clone();
+
+            p.make(Move::new(B7, B5, MoveType::DOUBLE_PAWN));
+
+            p.unmake();
+
+            similar_asserts::assert_eq!(p_prior, p);
+        }
+
+        #[test]
+        #[tracing_test::traced_test]
+        fn perft_unwind_bug_repro() {
+            let movs = vec![
+                Move::new(A2, A4, MoveType::DOUBLE_PAWN),
+                Move::new(A7, A5, MoveType::DOUBLE_PAWN),
+            ];
+            let mut p = Position::new(BEN::start_position(), movs);
+
+
+            p.make(Move::new(B2, B4, MoveType::DOUBLE_PAWN));
+            let p_prior = p.clone();
+            p.unmake();
+
+            similar_asserts::assert_eq!(p_prior, p);
         }
     }
 

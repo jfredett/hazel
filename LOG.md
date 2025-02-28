@@ -1904,3 +1904,74 @@ see some use.
 Finally, I'm pretty sure `ChessGame` is going to get factored away and replaced with `Position`, and I think that will
 net out to a much nicer flow than is currently there.
 
+# 27-FEB-2025
+
+## 2354 - atm
+
+make/unmake is such a drag, but I think the issue may be on the side of the `cached_alterations` (and more general
+alteration system). I'm currently just using a `Vec`, but it makes sense to have something closer to `Log`, except I
+don't want all the transaction stuff. Log initially was intended for branching trees of moves, this is something a bit
+simpler, and probably finite/ring-buffer-ish.
+
+I also sort of want to change how metadata is tracked, right now I have to `Assert` the whole metadata into the
+alteration stream (though technically it shouldn't be needed), ideally I would only flag when events happen that alter
+the metadata state; that would also make it easier to unwind (since I just update the `PositionMetadata` incrementally),
+but it unifies the whole system. This also makes zobrist-ing these guys pretty easy (and very amenable to SIMD
+calculation of the zobrist later).
+
+Ultimately what I want to do when doing `make/unmake` is something like:
+
+```
+make(mov):
+    push the move onto the stack
+    compile the move to alterations
+    apply each alteration to the zobrist of this position.
+    check cache:
+        if hit, load the contents
+        if miss,
+            use current contents and incrementally update the position,
+            populate the cache
+
+unmake:
+    unwind alterations until and including the previous START_TURN
+        apply each alteration to update the zobrist of the position
+    pop the move off the list
+    check cache for this position
+        if hit, copy contents.
+        if miss, populate the cache
+```
+
+In both cases, the `Move` is more of a convenience representation for the less compact but much simpler `Alteration`,
+which specifies how to update specific squares, and how metadata updates. In the current model I just dump all 4 bytes
+of `PositionMetadata` into the stream, but I'd prefer if things were a bit more incremental. Turns are already counted,
+but I need flags for at least:
+
+1. Losing Castle Rights (4 bits)
+2. Which is the EP file (if any, it's 3 bits for the file, absence can indicate no EP)
+3. 50 move rule reset (1 bit)
+
+We can calculate movecount and side-to-move from the pre-existing `StartTurn` variant.
+
+Eventually I want to be able to encode this to a bytestream, so it's handy to keep aligned to bytes. For now they can
+just be full variants, but eventually this will be represented as a bytestream that can be stored and gamestates
+recovered without any need to rule checking or any more advanced understanding of chess.
+
+Ideally the `make/unmake` will eventually only store partial alteration tapes, especially if they're finite, when we hit
+some threshold we can take the current zobrist (even in the middle of a partially-applied turn) and clear our buffer and
+continue. Essentially allowing us to `zobrist` whole alteration buffers in and out of cache.
+
+The structure I'm using now (a `Vec<Alteration>`) doesn't have the ability to seek around, and ultimately I need to seek
+through and do something on each alteration, so the whole thing is much more turing-machine than stack machine. The
+latter of which is how I've been considering it so far, but it's inconvenient since it's not a lot of stack bookkeeping
+and manually updating state.
+
+The `Log` datastructure is what I want, but I want to tweak how it works. I'm going to calculate two `Zobrist` values --
+one is the current actual position up to a `StartTurn` marker, this is the 'real' zobrist of the legal chess position.
+The other is a zobrist of the sum of all instructions in the buffer. When the buffer is filled, this zobrist is used to
+cache the state and then clear the cache, that hash is also stored in the tape as the 'previous' state, so unwinding is
+always possible. This hash can be computed incrementally along with the other hash. Once in cache, it may be possible to
+connect hashes together so that more chunks can be served from cache, but I've missed my exit.
+
+This `Tape` structure is really just responsible for managing the alterations, the `Position` will compile moves to it,
+and maintain it's own cache based on the zobrist it calculates.
+

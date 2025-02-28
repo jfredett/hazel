@@ -56,6 +56,13 @@ impl Color {
         (!self).pawn_mask()
     }
 
+    pub fn en_passant_rank(self) -> usize {
+        match self {
+            Color::WHITE => 5,
+            Color::BLACK => 2,
+        }
+    }
+
     pub fn pawn_rank(self) -> usize {
         match self {
             Color::WHITE => 1,

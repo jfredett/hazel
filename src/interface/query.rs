@@ -85,11 +85,7 @@ pub fn to_fen_position(board: &impl Query) -> String {
 }
 
 pub fn to_alterations<Q>(board: &Q) -> impl Iterator<Item = Alteration> where Q : Query {
-    // this should do 'clear' and 'assert(metadata)', query should require metadata query
-    // functions? maybe optional?
-    
     let mut ret = vec![ Alteration::Clear];
-
 
     ret.extend(
         Square::by_rank_and_file()
@@ -98,7 +94,8 @@ pub fn to_alterations<Q>(board: &Q) -> impl Iterator<Item = Alteration> where Q 
     );
 
     if let Some(metadata) = board.try_metadata() {
-        ret.push(Alteration::Assert(metadata));
+        let metadata_asserts : Vec<Alteration> = metadata.into();
+        ret.extend(metadata_asserts);
     }
 
     ret.into_iter()

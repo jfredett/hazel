@@ -1,7 +1,8 @@
 use std::{collections::HashMap, sync::RwLock, fmt::Debug};
 
-use crate::{game::position::Position, notation::Square, query, types::{Bitboard, Color, Occupant, Piece}, Alteration, Query};
+use crate::{alteration::MetadataAssertion, game::position::Position, notation::Square, query, types::{Bitboard, Color, Occupant, Piece}, Alteration, Query};
 use crate::notation::*;
+use crate::interface::Alter;
 
 pub struct ZobristTable<const SEED: u64>;
 
@@ -92,11 +93,60 @@ impl Debug for Zobrist {
     }
 }
 
+
+// this should probably be killed
 impl From<&[Alteration]> for Zobrist {
     fn from(alterations: &[Alteration]) -> Zobrist {
         *Zobrist::empty().update(&alterations)
     }
 }
+
+
+impl Alter for Zobrist {
+    fn alter(&self, alteration: Alteration) -> Self {
+        let mut ret = *self;
+        *ret.alter_mut(alteration)
+    }
+
+    fn alter_mut(&mut self, alteration: Alteration) -> &mut Self {
+        let delta = match alteration {
+            Alteration::Place { square: sq, occupant: Occupant::Occupied(piece, color) } => {
+                tracing::trace!("Placing {:?} {:?} {:?}", sq, color, piece);
+                HazelZobrist::zobrist_mask_for(sq, color, piece)
+            },
+            Alteration::Remove { square: sq, occupant: Occupant::Occupied(piece, color) } => {
+                tracing::trace!("Removing {:?} {:?} {:?}", sq, color, piece);
+                HazelZobrist::zobrist_mask_for(sq, color, piece)
+            },
+            Alteration::Assert(MetadataAssertion::StartTurn(m)) => {
+                tracing::trace!("Start Turn: to move = {:?}", m);
+                // NOTE: I think this might be better to do as `white_to_move` and we just apply it every
+                // turn, incrementally this will work out to turning it on and off in
+                // correspondence with white-to-move, and dodges the off-by-one + branch that would
+                // be required
+                HazelZobrist::black_to_move_mask()
+            },
+            // Alteration::Assert(metadata) => {
+            //     tracing::trace!("Side-To-Move is {:?}", metadata.side_to_move);
+            //     if metadata.side_to_move.is_black() {
+            //         // do nothing
+            //         0
+            //     } else {
+            //         // undo the startturn's black-to-move masking
+            //         HazelZobrist::black_to_move_mask()
+            //     }
+            // },
+            _ => { 0 }
+        };
+        self.0 ^= delta;
+        self
+    }
+}
+
+// pub fn zobrist_for(q: &impl Query) -> Zobrist {
+
+// }
+
 
 impl Zobrist {
     #[cfg(test)]
@@ -111,38 +161,11 @@ impl Zobrist {
         Zobrist::from(alterations.as_slice())
     }
 
+
+    // deprecate?
     pub fn update(&mut self, alterations: &[Alteration]) -> &mut Self {
         for alter in alterations {
-            let delta = match alter {
-                Alteration::Place { square: sq, occupant: Occupant::Occupied(piece, color) } => {
-                    tracing::debug!("Placing {:?} {:?} {:?}", *sq, *color, *piece);
-                    HazelZobrist::zobrist_mask_for(*sq, *color, *piece)
-                },
-                Alteration::Remove { square: sq, occupant: Occupant::Occupied(piece, color) } => {
-                    tracing::debug!("Removing {:?} {:?} {:?}", *sq, *color, *piece);
-                    HazelZobrist::zobrist_mask_for(*sq, *color, *piece)
-                },
-                Alteration::StartTurn => {
-                    tracing::debug!("Start Turn");
-                    continue;
-                }
-                Alteration::Assert(metadata) => {
-                    tracing::debug!("Side-To-Move is {:?}", metadata.side_to_move);
-                    if metadata.side_to_move.is_black() {
-                        HazelZobrist::black_to_move_mask()
-                    } else {
-                        // do nothing
-                        0
-                    }
-                }
-                Alteration::Clear => { (*self) = Zobrist(0); continue; } // set to the zobrist of the empty board.
-                _ => { continue } // nothing else matters, we don't care about metadata
-            };
-
-            //tracing::debug!("\n\nalter is: <{:?}>\ndelta is: {:#04x},\nzob is {:?}", alter, delta, self);
-            // doesn't account for side-to-move. Or any other metadata for that matter
-            self.0 ^= delta;
-            //tracing::debug!("\nzob updates to: {:?}\n", self);
+            self.alter_mut(*alter);
         }
         self
     }
@@ -274,17 +297,16 @@ mod tests {
 
         impl Arbitrary for Alteration {
             fn arbitrary(g: &mut Gen) -> Alteration {
-                let variant : usize = usize::arbitrary(g) % 6;
+                let variant : usize = usize::arbitrary(g) % 5;
 
                 let occupant = Occupant::Occupied(Piece::arbitrary(g), Color::arbitrary(g));
 
                 match variant {
-                    0 => Alteration::Place { square: Square::arbitrary(g), occupant },
-                    1 => Alteration::Remove { square: Square::arbitrary(g), occupant },
-                    2 => Alteration::Assert(PositionMetadata::arbitrary(g)),
+                    0 => Self::Place { square: Square::arbitrary(g), occupant },
+                    1 => Self::Remove { square: Square::arbitrary(g), occupant },
+                    2 => Self::Assert(MetadataAssertion::arbitrary(g)),
                     3 => Self::Clear,
-                    4 => Self::StartTurn,
-                    5 => Self::Lit(u8::arbitrary(g)),
+                    4 => Self::Lit(u8::arbitrary(g)),
                     _ => { unreachable!(); }
                 }
             }

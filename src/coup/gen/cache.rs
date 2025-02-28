@@ -23,7 +23,6 @@ impl<E> Cache<E> where E : Clone + Debug + PartialEq {
         // TODO: Feature flag this or something, it should be excluded from a 'real' version of the
         // engine, but present for debugging.
         {
-            tracing::debug!("checking for collision");
             let storage = self.storage.read().unwrap();
             if storage.contains_key(&zobrist) {
                 tracing::debug!("Potential Collision!");
@@ -33,9 +32,7 @@ impl<E> Cache<E> where E : Clone + Debug + PartialEq {
                 }
             }
         }
-        tracing::debug!("locking storage");
         let mut storage = self.storage.write().unwrap();
-        tracing::debug!("depositing");
         storage.insert(zobrist, entry);
     }
 
