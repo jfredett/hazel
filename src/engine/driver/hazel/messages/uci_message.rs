@@ -43,25 +43,28 @@ impl<const BUF_SIZE: usize> MessageFor<Witch<BUF_SIZE, Hazel, HazelResponse>> fo
                 // TODO: push position onto the variation in place (creating a variation if necessary),
                 // end the game as an abort.
 
-                if witch.state.position.is_some() {
-                    let pos = witch.state.position.clone().unwrap();
-                    let init = pos.initial;
-                    witch.state.game.setup(init);
-                    for m in pos.moves.iter() {
-                        witch.state.game.make(*m);
-                    }
-                    // TODO: Calculate the endgame if it's a checkmate, otherwise it's an abort
-                    // for now, just going to say it's an abort.
-                    witch.state.game.halt(Reason::Aborted);
-                    witch.state.game.commit();
-                }
+                // FIXME: This is all kinda wrong now.
+                //
+                // if witch.state.position.is_some() {
+                //     let pos = witch.state.position.clone().unwrap();
+                //     let init = pos.initial;
+                //     witch.state.game.setup(init);
+                //     for m in pos.moves.iter() {
+                //         witch.state.game.make(*m);
+                //     }
+                //     // TODO: Calculate the endgame if it's a checkmate, otherwise it's an abort
+                //     // for now, just going to say it's an abort.
+                //     witch.state.game.halt(Reason::Aborted);
+                //     witch.state.game.commit();
+                // }
 
-                witch.state.position = None;
+                // witch.state.position = None;
             },
             UCIMessage::Position(fen, moves) => {
                 let moves = moves.iter().map(|m| UCI::try_from(m).unwrap().into()).collect();
                 let ben = BEN::new(fen);
-                witch.state.position = Some(Position::new(ben, moves));
+
+                witch.state.position = Some(Position::with_moves(ben, moves));
             },
             UCIMessage::Go(_) => {
                 // for now, we will just statically 'search' by replying with a 'bestmove' based on

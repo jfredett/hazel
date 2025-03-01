@@ -49,12 +49,11 @@ impl MoveGenerator {
             position.make(mov);
 
             if depth == 1 {
-                tracing::debug!("after-make {:?}: {} {}\n\n{}\n{:?}", 
+                tracing::debug!("after-make {:?}: {} {}\n\n{}", 
                     position.zobrist(),
                     crate::query::to_fen_position(&position.clone()),
                     position.metadata(),
                     crate::query::display_board(&position.board()),
-                    position.cached_alterations()
                 );
             }
 
@@ -63,12 +62,11 @@ impl MoveGenerator {
             position.unmake();
 
             if depth == 1 {
-                tracing::debug!("after-unmake {:?}: {} {}\n\n{}\n{:?}",
+                tracing::debug!("after-unmake {:?}: {} {}\n\n{}",
                     position.zobrist(),
                     crate::query::to_fen_position(&position.clone()),
                     position.metadata(),
                     crate::query::display_board(&position.board()),
-                    position.cached_alterations()
                 );
             }
         }
@@ -109,7 +107,7 @@ mod tests {
     }
 
     fn perft_start_position(depth: usize) -> usize {
-        perft_position(depth, &mut Position::new(BEN::start_position(), vec![]))
+        perft_position(depth, &mut Position::new(BEN::start_position()))
     }
 
     #[test]
@@ -136,7 +134,7 @@ mod tests {
 
     #[test]
     fn check_mate_position_has_zero_perft_at_any_depth() {
-        let count = perft_position(1, &mut Position::new(BEN::new("7k/6Q1/6K1/8/8/8/8/8 b - - 0 1"), vec![]));
+        let count = perft_position(1, &mut Position::new(BEN::new("7k/6Q1/6K1/8/8/8/8/8 b - - 0 1")));
         assert_eq!(count, 0);
 
     }

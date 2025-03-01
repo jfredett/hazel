@@ -232,7 +232,7 @@ mod tests {
 
         #[test]
         fn zobrist_is_nonzero() {
-            let p = Position::new(BEN::start_position(), vec![]);
+            let p = Position::new(BEN::start_position());
             assert_ne!(p.zobrist(), Zobrist::empty());
         }
 
@@ -261,15 +261,15 @@ mod tests {
 
         #[test]
         fn zobrist_is_different_after_a_move_is_made() {
-            let p1 = Position::new(BEN::start_position(), vec![]);
-            let p2 = Position::new(BEN::start_position(), vec![Move::new(D2, D4, MoveType::QUIET)]);
+            let p1 = Position::new(BEN::start_position());
+            let p2 = Position::with_moves(BEN::start_position(), vec![Move::new(D2, D4, MoveType::QUIET)]);
             assert_ne!(p1.zobrist(), p2.zobrist());
         }
 
         #[test]
         fn zobrist_is_same_for_same_position() {
-            let p1 = Position::new(BEN::start_position(), vec![]);
-            let p2 = Position::new(BEN::start_position(), vec![]);
+            let p1 = Position::new(BEN::start_position());
+            let p2 = Position::new(BEN::start_position());
 
             assert_eq!(p1.zobrist(), p2.zobrist());
         }
@@ -288,8 +288,8 @@ mod tests {
                 Move::new(C1, F4, MoveType::QUIET),
                 Move::new(D7, D5, MoveType::QUIET),
             ];
-            let p1 = Position::new(BEN::start_position(), variation_1);
-            let p2 = Position::new(BEN::start_position(), variation_2);
+            let p1 = Position::with_moves(BEN::start_position(), variation_1);
+            let p2 = Position::with_moves(BEN::start_position(), variation_2);
 
             assert_eq!(p1.zobrist(), p2.zobrist());
         }

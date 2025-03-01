@@ -1975,3 +1975,49 @@ connect hashes together so that more chunks can be served from cache, but I've m
 This `Tape` structure is really just responsible for managing the alterations, the `Position` will compile moves to it,
 and maintain it's own cache based on the zobrist it calculates.
 
+# 28-FEB-2025
+
+## 1836 - atm
+
+I'm starting to think about `Log`, `Tape`, `Cursor` and `Familiar` and I think I'm honing in on the API I want.
+
+I'm essentially dealing with two APIs.
+
+1. A 'thing what moves through a file' API, i.e Cursor/Familiar, both of which have file-like APIs to non-file things.
+2. A 'thing what stores variants of some enum', i.e., Log or Tape.
+
+A familiar in particular accrues state as it goes, while a cursor is a 'stateless' familiar.
+
+Realistically I don't care about the #2 thing as much as the #1. #2 is just for storing data and should be 'pretty dumb'
+most of the time, however, I do need to store it somewhere so that I can run my familiar over it to accrue whatever
+state it likes. Ultimately a familiar is a type:
+
+```rust
+struct Familiar<'a, F, E, S> where E : Invertible {
+    state: S,
+    source: &'a F<E>,
+    update: fn(&mut S, E)
+}
+```
+
+As the familiar is advanced or retreated, the update function is called with the `E` (entry) item or it's inverse if
+retreating. The `F` here is some arbitrary container, I don't think I can actually specify a type function as a type
+parameter but practically that's a nonissue since this is almost always either `Vec` (as in `Log` or a finite array (in
+the case of `Tape`). This parent structure is responsible for updating/writing things to the log, the familiar is
+responsible for interpreting it's contents and producing whatever items we like on demand.
+
+I think I want to extend this a bit, since familiars may be 'left behind' over time, they are responsible for
+incrementally updating themselves. When a cache-out happens (for `Tape`), their states should also be caught up, cached
+off, and put in the 'initial' state.
+
+These familiars are initially going to be useful for calculating various zobrist hashes of things for which we can
+zobrist. In particular, the `Tape` backend is made of `Alteration`s, which ultimately it what implements the zobrist
+hashing, so a familiar which is maintaining a hash as I edit the storage makes sense.
+
+Similarly, it makes sense to keep track of the hash at the position of the write head. Since we can just have a Familiar
+copy that when the need arises.
+
+I'm just tossing a function pointer in the above, but I suspect that should be some kind of trait. My thought was this
+is not really intended to be called outside the context of the familiar, and it's possible I'll want to build these
+dynamically, especially since these generic familiars will be able to interact with the existing `Variation` structure
+and the `Position` structure as well.

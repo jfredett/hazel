@@ -64,7 +64,7 @@ mod tests {
     fn cache_test() {
         let cache = Cache::new();
 
-        let p = Position::new(BEN::start_position(), vec![]);
+        let p = Position::new(BEN::start_position());
 
         assert_eq!(cache.raw_storage().values().len(), 0);
         cache.get(p.zobrist());

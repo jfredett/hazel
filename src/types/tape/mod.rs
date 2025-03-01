@@ -5,14 +5,28 @@ use crate::Alteration;
 use crate::types::zobrist::Zobrist;
 
 
+pub struct TapeFamiliar<'a, const SIZE: usize, S> {
+    tape: &'a Tape<SIZE>,
+    position: usize,
+    state: S,
+    update: fn(&mut S, Alteration)
+}
+
+// struct ZobristFamiliar<'a, const SIZE: usize> = TapeFamiliar<'a,  SIZE>;
+
+// impl<const SIZE: usize, S, 'a> TapeFamiliar<'a, SIZE, S> {
 
 
+// }
+
+#[derive(Clone)]
 pub struct Tape<const SIZE: usize> {
     data: [Entry; SIZE],
     /// A hash corresponding to the last time we saw 
-    position_hash: Zobrist,
-    tape_hash: Zobrist,
-    head_hash: Zobrist,
+    pub position_hash: Zobrist, // hash up to the last StartTurn
+    tape_hash: Zobrist, // hash of the whole tape
+    head_hash: Zobrist, // hash up to the current head, from 
+    // this is the write head, I might need a familiar for the proceed/unwind stuff?
     head: usize
 }
 
@@ -33,36 +47,9 @@ impl<const SIZE: usize> Tape<SIZE> {
         }
     }
 
-
-    pub fn proceed(&mut self, procedure: &fn(Alteration) -> ProceedToken) {
-        let mut should_proceed = ProceedToken::Continue;
-        while should_proceed == ProceedToken::Continue {
-            match self.read_direct() {
-                Entry::EOT => { return; }
-                Entry::Noop => { continue; }
-                Entry::Instruction(alter) => {
-                    should_proceed = procedure(alter);
-                    self.step_forward();
-                }
-            }
-        }
-    }
-
-    pub fn unwind(&mut self, procedure: &fn(Alteration) -> ProceedToken) {
-        let mut should_proceed = ProceedToken::Continue;
-        while should_proceed == ProceedToken::Continue {
-            if self.at_bot() {
-                return;
-            }
-
-            match self.read_direct() {
-                Entry::EOT => { continue; }
-                Entry::Noop => { continue; }
-                Entry::Instruction(alter) => {
-                    should_proceed = procedure(alter.inverse());
-                    self.step_backward();
-                }
-            }
+    pub fn write_all(&mut self, alterations: &[Alteration]) {
+        for alter in alterations {
+            self.write(*alter);
         }
     }
 
@@ -88,8 +75,6 @@ impl<const SIZE: usize> Tape<SIZE> {
 
 
     // ## THIS SECTION NEEDS TO MAINTAIN ALL THE HASHES INCREMENTALLY ## //
-    
-
 
     pub fn write(&mut self, alter: Alteration) {
         let current_instruction = self.read();
@@ -98,7 +83,7 @@ impl<const SIZE: usize> Tape<SIZE> {
         // update zobrists to add new instruction
 
         // write the instruction to the tape
-        self.data[self.head] = Entry::Instruction(alter);
+        self.write_direct(Entry::Instruction(alter));
         self.step_forward();
 
         // if we're at the EOT, bump it forward

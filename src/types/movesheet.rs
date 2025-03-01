@@ -3,7 +3,7 @@ use crate::{board::PieceBoard, constants::START_POSITION_FEN, coup::rep::Move, g
 #[derive(Clone, Debug)]
 pub enum MoveSheetEntry {
     Move(Move),
-    Branch 
+    Branch
 }
 
 #[derive(Clone, Default, Debug)]

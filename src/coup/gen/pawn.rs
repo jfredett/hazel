@@ -148,10 +148,7 @@ mod tests {
     #[macro_export]
     macro_rules! assert_finds_moves {
         ($func_name:ident, $fen:expr, [ $($move:expr),* ]) => {
-            let mut position = Position::new(
-                BEN::new($fen),
-                vec![]
-            );
+            let mut position = Position::new(BEN::new($fen));
             let mut moves : Vec<Move> = $func_name(&position).collect();
             let mut expected_moves : Vec<Move> = vec![$($move),*];
 
