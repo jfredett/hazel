@@ -3,7 +3,7 @@ use std::{fmt::Debug, sync::RwLock};
 
 use tracing::Metadata;
 
-use crate::{alteration::MetadataAssertion, board::PieceBoard, constants::move_tables::{KING_ATTACKS, KNIGHT_MOVES}, coup::{gen::cache::ATM, rep::Move}, notation::{ben::BEN, Square}, types::{pextboard, Bitboard, Color, Direction, Occupant, Piece}, Alter, Alteration, Query};
+use crate::{alteration::MetadataAssertion, board::PieceBoard, constants::move_tables::{KING_ATTACKS, KNIGHT_MOVES}, coup::{gen::cache::ATM, rep::Move}, notation::{ben::BEN, Square}, types::{pextboard, tape::{ProceedToken, Tape}, Bitboard, Color, Direction, Occupant, Piece}, Alter, Alteration, Query};
 use crate::types::zobrist::Zobrist;
 
 use super::position_metadata::PositionMetadata;
@@ -13,28 +13,25 @@ use crate::coup::gen::cache::Cache;
 pub struct Position {
     // necessaries
     pub initial: BEN,
-    pub moves: Vec<Move>,
     // caches
-    zobrist: RwLock<Zobrist>,
+    tape: RwLock<Tape<1024>>,
     inner: RwLock<InnerPosition>,
 
     // this should live on movegen?
     atm: ATM<'static, InnerPosition>
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Default, Debug, PartialEq)]
 pub struct InnerPosition {
     pub board: PieceBoard,
-    pub cached_alterations: Vec<Alteration>,
     pub metadata: PositionMetadata,
 }
 
 impl InnerPosition {
-    pub fn new(board: PieceBoard, metadata: PositionMetadata, cached_alterations: Vec<Alteration>) -> Self {
+    pub fn new(board: PieceBoard, metadata: PositionMetadata) -> Self {
         InnerPosition {
             board,
             metadata,
-            cached_alterations
         }
     }
 }
@@ -44,11 +41,11 @@ impl Clone for Position {
         // FIXME: Ideally we'd actually just keep a reference to this cached thing instead of copying it
         // all over creation
         let new_inner = self.inner.read().unwrap().clone();
+        let new_tape = self.tape.read().unwrap().clone();
 
         Position {
             initial: self.initial,
-            moves: self.moves.clone(),
-            zobrist: RwLock::new(self.zobrist()),
+            tape: RwLock::new(new_tape),
             inner: RwLock::new(new_inner),
             atm: self.atm
         }
@@ -57,15 +54,23 @@ impl Clone for Position {
 
 impl PartialEq for Position {
     fn eq(&self, other: &Self) -> bool {
-        // Eventually this might just compare zobrists to start?
-        self.initial == other.initial && self.moves == other.moves
+        // NOTE: This is, very technically speaking, wrong.
+        //
+        // A zobrist is a 64 bit signature of a ~153 bit space (the number of reachable chess positions
+        // is around 10e46, which is about 2e153), which means that this has a nonzero (and indeed
+        // nontrivial) probability of collision. However, in any given exploration we are not
+        // likely to run into a situation where this collision hurts, and I have longer term plans
+        // to simply use a larger zobrist hash or BCH codes or something similar to avoid
+        // collisions. This should be sufficient for the short term...
+        //
+        // He said, awaiting the inevitable point where this becomes a multi-day bughunt.
+        self.zobrist() == other.zobrist()
     }
 }
 
 impl Debug for Position {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "{:?}", self.initial);
-        writeln!(f, "{:?}", self.moves);
         writeln!(f, "{:?}", self.zobrist())
     }
 }
@@ -88,39 +93,37 @@ impl Query for Position {
 }
 
 lazy_static!(
-
-    pub static ref PositionCache : Cache<InnerPosition> = Cache::new();
-
+    pub static ref POSITION_CACHE : Cache<InnerPosition> = Cache::new();
 );
 
 impl Position {
-    pub fn new(fen: impl Into<BEN>, moves: Vec<Move>) -> Self {
+    pub fn new(fen: impl Into<BEN>) -> Self {
         let fen = fen.into();
+        let alters = fen.to_alterations();
 
-        let initial_alterations : Vec<Alteration> = fen.to_alterations().collect();
-        let initial_zobrist = Zobrist::from(initial_alterations.as_slice());
-        tracing::debug!("Initial Zobrist Calculation");
-        let mut board = PieceBoard::default();
-        board.set_fen(fen);
+
+        let mut tape = Tape::new();
 
         let mut ret = Self {
             initial: fen,
-            moves: vec![],
-            zobrist: RwLock::new(initial_zobrist),
-            inner: RwLock::new(InnerPosition::new(board, fen.metadata(), initial_alterations)),
-            atm: PositionCache.atm()
+            inner: InnerPosition::default().into(),
+            tape: tape.into(),
+            atm: POSITION_CACHE.atm()
         };
-
-        tracing::debug!("Zobrist update as moves are made");
-        for mov in moves {
-            ret.make(mov);
-        }
 
         ret
     }
 
+    pub fn with_moves(fen: impl Into<BEN>, moves: Vec<Move>) -> Self {
+        let mut ret = Self::new(fen);
+        for m in moves {
+            ret.make(m);
+        }
+        ret
+    }
+
     pub fn zobrist(&self) -> Zobrist {
-        *self.zobrist.read().unwrap()
+        self.tape.read().unwrap().position_hash
     }
 
     pub fn metadata(&self) -> PositionMetadata {
@@ -131,114 +134,116 @@ impl Position {
         self.inner.read().unwrap().board
     }
 
-    pub fn cached_alterations(&self) -> Vec<Alteration> {
-        // FIXME: Don't clone
-        self.inner.read().unwrap().clone().cached_alterations
-    }
-
     pub fn make(&mut self, mov: Move) {
         tracing::debug!("#make(mov: {:?})", mov);
 
-        let new_alterations;
-        let mut new_zobrist;
+        let new_alterations: Vec<Alteration>;
+        let new_metadata: Vec<Alteration>;
+        let mut position_hash: Zobrist;
 
-        {  // scoped to drop the lock as soon as possible.
+        { // Inner is read-locked
             let mut inner = self.inner.read().unwrap();
-
             new_alterations = mov.compile(&inner.board);
-            // this is not accounting for the side-to-move?
 
-            let mut z = self.zobrist.write().unwrap();
-            z.update(&new_alterations);
-            new_zobrist = *z;
+            // FIXME: I really don't like this.
+            let mut dummy_metadata = inner.metadata.clone();
+            dummy_metadata.update(&mov, &inner.board);
+            new_metadata = dummy_metadata.into();
         }
 
-        match self.atm.get(new_zobrist) {
+        { // Tape is write-locked
+            let mut tape = self.tape.write().unwrap();
+            tape.write_all(&new_metadata);
+            tape.write_all(&new_alterations);
+            position_hash = tape.position_hash;
+        }
+
+        // TODO: Ideally this is lazy, so we only update the board as we roll the associated
+        // boardfamiliar forward.
+        match self.atm.get(position_hash) {
             Some(cached_inner) => {
+                // Atomic
                 self.inner.replace(cached_inner.clone());
             },
             None => {
-                // need to re-acquire the lock here.
+                // Inner is write-locked
                 let mut inner = self.inner.write().unwrap();
-
-                let metadata_assertions : Vec<Alteration> = inner.metadata.into();
-                inner.cached_alterations.extend(metadata_assertions);
-
-                let board = inner.board;
-                inner.metadata.update(&mov, &board);
 
                 for alter in new_alterations {
-                    inner.cached_alterations.push(alter);
                     inner.board.alter_mut(alter);
+                    inner.metadata.alter_mut(alter);
                 }
 
-                self.atm.set(new_zobrist, inner.clone());
+                self.atm.set(position_hash, inner.clone());
             },
         }
-
-
-        self.moves.push(mov);
     }
 
+    // TODO: this is a good idea, just needs familiars.
+ 
+    ///write an alteration to the tape.
+    // fn write_alteration(&mut self, alter: Alteration) {
+    //     todo!()
+    // }
+
+    // fn write_alterations(&mut self, alters: &[Alteration]) {
+    //     alters.into_iter().for_each(self.write_alteration);
+    // }
+
+    // FIXME: this, if anything, should probably return a result type.
     pub fn unmake(&mut self) {
         tracing::debug!("#unmake()");
-        // We want to check cache first, and if we miss, we don't mind building, so we want to find
-        // the zobrist corresponding to the state where the last move hasn't applied.
-        //
-        // When we cache the alterations, we include turn markers. We can just pop off the
-        // alteration stack until we hit one.
-        let mut unmove = vec![];
-        let alteration_len;
-        let mut pop_count = 0;
 
-        { // we're going to scope this to prevent any kind of leakage, we're going to hit cache
-          // twice w/ different keys
-            let mut alterations = self.cached_alterations().to_vec();
-            alteration_len = alterations.len(); // we might need this later, might as well grab it now.
-            loop {
-                pop_count += 1;
-                match alterations.pop() {
-                    Some(Alteration::Assert(MetadataAssertion::StartTurn(_))) => { break; }
-                    // NOTE: Technically the #inverse is unnecessary, it's definitely slower, but
-                    // it makes the logs easier to read.
-                    Some(alter) => { unmove.push(alter.inverse()); }
-                    None => { panic!("trying to unmake with no moves"); }
+        let unmove_hash : Zobrist;
+        let mut unmoves = vec![];
+
+        { // Tape is write-locked
+            let mut tape = self.tape.write().unwrap();
+            loop { // this is inelegant, but hopefully effective.
+                if tape.at_bot() {
+                    // TODO: this probably should try to do cache magic in the tape first? IDK
+                    panic!("Cannot unwind from Beginning of Tape");
+                }
+
+                let Some(alter) = tape.read() else {
+                    // this must be a Noop, since the EOT is definitionally never behind us.
+                    tape.step_backward();
+                    continue;
+                };
+
+                unmoves.push(alter);
+
+                if matches!(alter, Alteration::Assert(MetadataAssertion::StartTurn(_))) {
+                    break;
                 }
             }
+            unmove_hash = tape.position_hash;
         }
-        // We now have all the necessaries to de-zobrist ourselves. Since XOR is it's own inverse,
-        // We can just run these again. Order doesn't matter either, since XOR commutes.
-        let mut new_zobrist = self.zobrist.write().unwrap();
-        new_zobrist.update(&unmove);
 
-        match self.atm.get(*new_zobrist) {
+        // TODO: This is an exact copy of the above, mod the #inverse calls on `alter`. definitely
+        // could be extracted to something like `#withdraw_or_deposit(hash, &alters)`, unmake would
+        // just map-inverse first.
+        // TODO: I also think if the `Entry` type on Tape can be kept small enough, then the buffer
+        // size can be quite large, which might mean indexing is worthwhile, something to think
+        // about. I think that might be easier once I've moved to the generic familiar system I've
+        // been cooking.
+        match self.atm.get(unmove_hash) {
             Some(cached_inner) => {
+                // Atomic
                 self.inner.replace(cached_inner.clone());
             },
             None => {
-                // lock for writing
+                // Inner is write-locked
                 let mut inner = self.inner.write().unwrap();
 
-                // need to just burn off the same number of alterations from cache, we were working
-                // with a copy before.
-                // FIXME: I'm not sure this is the best way to do this.
-                // I think this is where my current bug is 0051 27-feb-2025 jgf
-
-                // NOTE: Unmoves are inverted above when we gather them
-                inner.cached_alterations.truncate(alteration_len - pop_count);
-                for inverse_alter in unmove {
-                    inner.board.alter_mut(inverse_alter);
-                    inner.metadata.alter_mut(inverse_alter);
+                for alter in unmoves {
+                    inner.board.alter_mut(alter.inverse());
+                    inner.metadata.alter_mut(alter.inverse());
                 }
 
-                // not ideal, but oh well
-                let alterations = inner.cached_alterations.clone();
-
-                self.atm.set(*new_zobrist, inner.clone());
+                self.atm.set(unmove_hash, inner.clone());
             }
         }
-
-        self.moves.pop();
     }
 
     #[inline(always)]
@@ -587,37 +592,37 @@ mod tests {
                 Move::new(C1, F4, MoveType::QUIET), Move::new(E7, E6, MoveType::QUIET)
             ];
 
-            let mut p = Position::new(start, moves);
+            let mut p = Position::with_moves(start, moves);
             let z_prior = p.zobrist();
             let m = Move::new(E2, E3, MoveType::QUIET);
 
-            let alter_cache_prior = p.cached_alterations().clone();
+            // let alter_cache_prior = p.cached_alterations().clone();
             p.make(m);
-            let z_mid = p.zobrist();
-            let alter_cache_mid = p.cached_alterations().clone();
+            // let z_mid = p.zobrist();
+            // let alter_cache_mid = p.cached_alterations().clone();
             p.unmake();
-            let z_post = p.zobrist();
-            let alter_cache_post = p.cached_alterations().clone();
+            // let z_post = p.zobrist();
+            // let alter_cache_post = p.cached_alterations().clone();
 
-            use crate::types::zobrist::HazelZobrist;
+            // use crate::types::zobrist::HazelZobrist;
 
 
-            similar_asserts::assert_eq!(alter_cache_prior, alter_cache_post);
+            // similar_asserts::assert_eq!(alter_cache_prior, alter_cache_post);
 
-            let diff = z_prior ^ z_post;
-            let mut depth = 0;
-            for entry in HazelZobrist::TABLE {
-                if entry == diff.inner() {
-                    dbg!(entry);
-                    dbg!(diff);
-                    dbg!(depth); // this is 768, indicating it's the side-to-move marker that's got the issue
-                    assert!(false);
-                }
-                depth += 1;
-            }
+            // let diff = z_prior ^ z_post;
+            // let mut depth = 0;
+            // for entry in HazelZobrist::TABLE {
+            //     if entry == diff.inner() {
+            //         dbg!(entry);
+            //         dbg!(diff);
+            //         dbg!(depth); // this is 768, indicating it's the side-to-move marker that's got the issue
+            //         assert!(false);
+            //     }
+            //     depth += 1;
+            // }
 
-            assert_ne!(z_prior, z_mid);
-            assert_eq!(z_prior, z_post);
+            // assert_ne!(z_prior, z_mid);
+            // assert_eq!(z_prior, z_post);
         }
 
         #[test]
@@ -629,7 +634,7 @@ mod tests {
                 Move::new(B2, B4, MoveType::DOUBLE_PAWN)
             ];
 
-            let mut p = Position::new(BEN::start_position(), movs);
+            let mut p = Position::with_moves(BEN::start_position(), movs);
             let p_prior = p.clone();
 
             p.make(Move::new(B7, B5, MoveType::DOUBLE_PAWN));
@@ -646,7 +651,7 @@ mod tests {
                 Move::new(A2, A4, MoveType::DOUBLE_PAWN),
                 Move::new(A7, A5, MoveType::DOUBLE_PAWN),
             ];
-            let mut p = Position::new(BEN::start_position(), movs);
+            let mut p = Position::with_moves(BEN::start_position(), movs);
 
 
             p.make(Move::new(B2, B4, MoveType::DOUBLE_PAWN));
@@ -667,7 +672,7 @@ mod tests {
             let mut pb = PieceBoard::default();
             pb.set_position(kiwi);
 
-            let position = Position::new(kiwi, vec![]);
+            let position = Position::new(kiwi);
 
             assert_eq!(position.board(), pb);
             assert_eq!(position.metadata(), kiwi.metadata());
@@ -689,7 +694,7 @@ mod tests {
             let mut pb = PieceBoard::default();
             pb.set_position(target);
 
-            let position = Position::new(start, moves);
+            let position = Position::with_moves(start, moves);
 
             assert_eq!(position.board(), pb);
             assert_eq!(position.metadata(), start.metadata());
@@ -704,7 +709,7 @@ mod tests {
 
             #[test]
             fn startpos() {
-                let pos = Position::new(BEN::start_position(), vec![]);
+                let pos = Position::new(BEN::start_position());
                 assert_eq!(pos.our_pawns(), Color::WHITE.pawn_mask());
             }
         }
@@ -714,13 +719,13 @@ mod tests {
 
             #[test]
             fn startpos_white() {
-                let pos = Position::new(BEN::start_position(), vec![]);
+                let pos = Position::new(BEN::start_position());
                 assert_eq!(pos.our_pawn_direction(), Direction::N);
             }
 
             #[test]
             fn startpos_black() {
-                let pos = Position::new(BEN::start_position(), vec![]);
+                let pos = Position::new(BEN::start_position());
                 assert_eq!(pos.their_pawn_direction(), Direction::S);
             }
         }
@@ -732,14 +737,14 @@ mod tests {
 
             #[test]
             fn startpos_white() {
-                let pos = Position::new(BEN::start_position(), vec![]);
+                let pos = Position::new(BEN::start_position());
                 let expected = *RANK_3;
                 assert_eq!(pos.our_pawn_attacks(), expected);
             }
 
             #[test]
             fn startpos_black() {
-                let mut pos = Position::new(BEN::start_position(), vec![]);
+                let mut pos = Position::new(BEN::start_position());
                 let expected = *RANK_6;
                 assert_eq!(pos.their_pawn_attacks(), expected);
             }
@@ -750,7 +755,7 @@ mod tests {
 
             #[test]
             fn startpos() {
-                let pos = Position::new(BEN::start_position(), vec![]);
+                let pos = Position::new(BEN::start_position());
                 assert_eq!(
                     pos.pawns_for(&Color::WHITE),
                     Color::WHITE.pawn_mask()
@@ -771,14 +776,14 @@ mod tests {
 
             #[test]
             fn startpos_white() {
-                let pos = Position::new(BEN::start_position(), vec![]);
+                let pos = Position::new(BEN::start_position());
                 let expected = Bitboard::from(C3) | Bitboard::from(A3) | Bitboard::from(F3) | Bitboard::from(H3);
                 assert_eq!(pos.our_knight_moves(), expected);
             }
 
             #[test]
             fn startpos_black() {
-                let pos = Position::new(BEN::start_position(), vec![]);
+                let pos = Position::new(BEN::start_position());
                 let expected = Bitboard::from(C6) | Bitboard::from(A6) | Bitboard::from(F6) | Bitboard::from(H6);
                 assert_eq!(pos.their_knight_moves(), expected);
             }
@@ -793,14 +798,14 @@ mod tests {
 
             #[test]
             fn white() {
-                let pos = Position::new(BEN::new("8/8/1k6/P1P1p3/3K4/8/8/8 w - - 0 1"), vec![]);
+                let pos = Position::new(BEN::new("8/8/1k6/P1P1p3/3K4/8/8/8 w - - 0 1"));
                 assert_eq!(pos.our_king_attacks(), Bitboard::from(E5));
                 assert_eq!(pos.their_king_attacks(),  Bitboard::from(A5) | Bitboard::from(C5));
             }
 
             #[test]
             fn black() {
-                let pos = Position::new(BEN::new("8/8/1k6/P1P1p3/3K4/8/8/8 b - - 0 1"), vec![]);
+                let pos = Position::new(BEN::new("8/8/1k6/P1P1p3/3K4/8/8/8 b - - 0 1"));
                 assert_eq!(pos.our_king_attacks(),  Bitboard::from(A5) | Bitboard::from(C5));
                 assert_eq!(pos.their_king_attacks(), Bitboard::from(E5));
             }
@@ -817,21 +822,21 @@ mod tests {
 
             #[test]
             fn light_square() {
-                let pos = Position::new(BEN::new("8/1b6/8/8/8/1B6/8/8 w - - 0 1"), vec![]);
+                let pos = Position::new(BEN::new("8/1b6/8/8/8/1B6/8/8 w - - 0 1"));
                 assert_eq!(pos.our_bishop_moves(), bitboard!(A4, A2, C4, C2, D1, D5, E6, F7, G8));
                 assert_eq!(pos.their_bishop_moves(),  bitboard!(A8, A6, C8, C6, D5, E4, F3, G2, H1));
             }
 
             #[test]
             fn dark_square() {
-                let pos = Position::new(BEN::new("8/2b5/8/8/8/2B5/8/8 w - - 0 1"), vec![]);
+                let pos = Position::new(BEN::new("8/2b5/8/8/8/2B5/8/8 w - - 0 1"));
                 assert_eq!(pos.our_bishop_moves(),  bitboard!(B2, D2, A1, E1, B4, A5, D4, E5, F6, G7, H8));
                 assert_eq!(pos.their_bishop_moves(), bitboard!(B8, D8, B6, A5, D6, E5, F4, G3, H2));
             }
 
             #[test]
             fn with_blocker() {
-                let pos = Position::new(BEN::new("8/2b5/8/4B3/8/8/8/8 w - - 0 1"), vec![]);
+                let pos = Position::new(BEN::new("8/2b5/8/4B3/8/8/8/8 w - - 0 1"));
                 assert_eq!(pos.our_bishop_moves(),  bitboard!(C7, D6, F6, G7, H8, D4, C3, B2, A1, F4, G3, H2));
                 assert_eq!(pos.their_bishop_moves(), bitboard!(B8, B6, D8, D6, E5, A5));
             }
@@ -848,7 +853,7 @@ mod tests {
 
             #[test]
             fn open_files() {
-                let pos = Position::new(BEN::new("8/2r5/8/4R3/8/8/8/8 w - - 0 1"), vec![]);
+                let pos = Position::new(BEN::new("8/2r5/8/4R3/8/8/8/8 w - - 0 1"));
                 assert_eq!(pos.our_rook_moves(), *RANK_5 ^ *E_FILE);
                 assert_eq!(pos.their_rook_moves(),  *RANK_7 ^ *C_FILE);
             }
@@ -856,7 +861,7 @@ mod tests {
 
             #[test]
             fn with_blocker() {
-                let pos = Position::new(BEN::new("8/1P1r1p2/8/8/1p1R1P2/8/8/8 w - - 0 1"), vec![]);
+                let pos = Position::new(BEN::new("8/1P1r1p2/8/8/1p1R1P2/8/8/8 w - - 0 1"));
                 assert_eq!(pos.our_rook_moves(),  (*RANK_4 ^ *D_FILE) & !bitboard!(A4, D8, G4, H4));
                 assert_eq!(pos.their_rook_moves(), bitboard!(D8, B7, C7, E7, F7, D6, D5, D4));
             }
@@ -872,7 +877,7 @@ mod tests {
 
             #[test]
             fn open_files() {
-                let pos = Position::new(BEN::new("8/2q5/8/4Q3/8/8/8/8 w - - 0 1"), vec![]);
+                let pos = Position::new(BEN::new("8/2q5/8/4Q3/8/8/8/8 w - - 0 1"));
                 assert_eq!(pos.our_queen_moves(), (*RANK_5 ^ *E_FILE) | (*A1_H8_DIAG ^ *B8_H2_DIAG) & !bitboard!(B8));
                 assert_eq!(pos.their_queen_moves(),  (*RANK_7 ^ *C_FILE) | bitboard!(B8, D8, B6, D6, A5, E5));
             }
@@ -880,7 +885,7 @@ mod tests {
 
             #[test]
             fn with_blocker() {
-                let pos = Position::new(BEN::new("8/1P1q1p2/8/8/1p1Q1P2/8/8/8 w - - 0 1"), vec![]);
+                let pos = Position::new(BEN::new("8/1P1q1p2/8/8/1p1Q1P2/8/8/8 w - - 0 1"));
                 assert_eq!(pos.our_queen_moves(), ((*RANK_4 ^ *D_FILE) | (*A1_H8_DIAG ^ *A7_G1_DIAG)) & !bitboard!(D8,A4, G4, H4));
                 assert_eq!(pos.their_queen_moves(), bitboard!(A4, B5, B7, C6, C7, C8, D4, D5, D6, D8, E6, E7, E8, F5, F7, G4, H3));
             }

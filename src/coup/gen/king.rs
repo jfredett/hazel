@@ -22,7 +22,7 @@ mod tests {
 
     #[test]
     fn test_position() {
-        let position = Position::new(BEN::new("3k1b2/8/8/2p1P3/3K4/2p1P3/8/8 w - - 0 1"), vec![]);
+        let position = Position::new(BEN::new("3k1b2/8/8/2p1P3/3K4/2p1P3/8/8 w - - 0 1"));
         let moves = generate_moves(&position);
         similar_asserts::assert_eq!(moves.collect::<Vec<Move>>(), vec![
             Move::new(D4, C3, MoveType::CAPTURE),
