@@ -172,7 +172,6 @@ impl MoveType {
 
 #[cfg(test)]
 mod tests {
-
     use super::*;
 
     #[test]
@@ -292,4 +291,3 @@ mod tests {
         }
     }
 }
-
