@@ -49,7 +49,7 @@ impl<const SEED: u64> ZobristTable<SEED> {
         // adapted from https://en.wikipedia.org/wiki/Xorshift
         let mut x = SEED;
         let mut times = 0; // this ensures we always do at least some number of iterations and do not return the seed at depth 0.
-        while times < (depth + 1) {
+        while times < (depth + 16) {
             x ^= x << 13;
             x ^= x >> 7;
             x ^= x << 17;
@@ -77,7 +77,7 @@ impl<const SEED: u64> ZobristTable<SEED> {
     }
 
     /// A convenience function.
-    pub const fn black_to_move_mask() -> u64 {
+    pub const fn side_to_move_mask() -> u64 {
         Self::TABLE[ZOBRIST_TABLE_SIZE - 1]
     }
 }
@@ -87,9 +87,15 @@ impl<const SEED: u64> ZobristTable<SEED> {
 #[derive(Eq, Hash, PartialEq, Ord, PartialOrd, Clone, Copy)]
 pub struct Zobrist(u64);
 
+impl Default for Zobrist {
+    fn default() -> Self {
+        Zobrist::empty()
+    }
+}
+
 impl Debug for Zobrist {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Z|{:#04x}|", self.0)
+        write!(f, "Z|{:>#018X}|", self.0)
     }
 }
 
@@ -98,6 +104,12 @@ impl Debug for Zobrist {
 impl From<&[Alteration]> for Zobrist {
     fn from(alterations: &[Alteration]) -> Zobrist {
         *Zobrist::empty().update(&alterations)
+    }
+}
+
+impl From<u64> for Zobrist {
+    fn from(v: u64) -> Zobrist {
+        Zobrist(v)
     }
 }
 
@@ -111,20 +123,20 @@ impl Alter for Zobrist {
     fn alter_mut(&mut self, alteration: Alteration) -> &mut Self {
         let delta = match alteration {
             Alteration::Place { square: sq, occupant: Occupant::Occupied(piece, color) } => {
-                tracing::trace!("Placing {:?} {:?} {:?}", sq, color, piece);
                 HazelZobrist::zobrist_mask_for(sq, color, piece)
             },
             Alteration::Remove { square: sq, occupant: Occupant::Occupied(piece, color) } => {
-                tracing::trace!("Removing {:?} {:?} {:?}", sq, color, piece);
                 HazelZobrist::zobrist_mask_for(sq, color, piece)
             },
+            Alteration::InitialMetadata(m) => {
+                if m.side_to_move.is_black() {
+                    HazelZobrist::side_to_move_mask()
+                } else {
+                    0
+                }
+            },
             Alteration::Assert(MetadataAssertion::StartTurn(m)) => {
-                tracing::trace!("Start Turn: to move = {:?}", m);
-                // NOTE: I think this might be better to do as `white_to_move` and we just apply it every
-                // turn, incrementally this will work out to turning it on and off in
-                // correspondence with white-to-move, and dodges the off-by-one + branch that would
-                // be required
-                HazelZobrist::black_to_move_mask()
+                HazelZobrist::side_to_move_mask()
             },
             // Alteration::Assert(metadata) => {
             //     tracing::trace!("Side-To-Move is {:?}", metadata.side_to_move);
@@ -161,15 +173,13 @@ impl Zobrist {
         Zobrist::from(alterations.as_slice())
     }
 
-
-    // deprecate?
+    // Deprecate.
     pub fn update(&mut self, alterations: &[Alteration]) -> &mut Self {
         for alter in alterations {
             self.alter_mut(*alter);
         }
         self
     }
-
 }
 
 #[cfg(test)]
@@ -231,6 +241,7 @@ mod tests {
         use super::*;
 
         #[test]
+        #[tracing_test::traced_test]
         fn zobrist_is_nonzero() {
             let p = Position::new(BEN::start_position());
             assert_ne!(p.zobrist(), Zobrist::empty());
@@ -275,6 +286,7 @@ mod tests {
         }
 
         #[test]
+        #[tracing_test::traced_test]
         fn zobrist_is_same_for_transposition() {
             let variation_1 = vec![
                 Move::new(D2, D4, MoveType::QUIET),

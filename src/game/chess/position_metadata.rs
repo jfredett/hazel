@@ -45,6 +45,7 @@ impl From<PositionMetadata> for Vec<Alteration> {
         }
         ret.push(Alteration::Assert(MetadataAssertion::FiftyMoveCount(pm.halfmove_clock)));
         ret.push(Alteration::Assert(MetadataAssertion::FullMoveCount(pm.fullmove_number)));
+        ret.push(Alteration::Assert(MetadataAssertion::EndTurn));
         ret
     }
 }
@@ -58,6 +59,9 @@ impl Alter for PositionMetadata {
 
     fn alter_mut(&mut self, alteration: Alteration) -> &mut Self {
         match alteration {
+            Alteration::InitialMetadata(metadata) => {
+                *self = metadata;
+            },
             Alteration::Assert(new_metadata) => {
                 // TODO: this probably boils down to something that could be done with bit magic
 
@@ -70,6 +74,7 @@ impl Alter for PositionMetadata {
                     MetadataAssertion::EnPassant(file) => self.en_passant = { Some(Square::from((self.side_to_move.en_passant_rank(), file))) },
                     MetadataAssertion::FullMoveCount(count) => self.fullmove_number = count,
                     MetadataAssertion::FiftyMoveCount(count) => self.halfmove_clock = count,
+                    MetadataAssertion::EndTurn => { }
                 }
             },
             Alteration::Clear => *self = Self::default(),
