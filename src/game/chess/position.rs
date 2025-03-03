@@ -14,7 +14,8 @@ pub struct Position {
     // necessaries
     pub initial: BEN,
     // caches
-    tape: RwLock<Tape<1024>>,
+    // FIXME: pub only for testing.
+    pub tape: RwLock<Tape<1024>>,
     inner: RwLock<InnerPosition>,
 
     // this should live on movegen?
@@ -56,12 +57,16 @@ impl PartialEq for Position {
     fn eq(&self, other: &Self) -> bool {
         // NOTE: This is, very technically speaking, wrong.
         //
-        // A zobrist is a 64 bit signature of a ~153 bit space (the number of reachable chess positions
-        // is around 10e46, which is about 2e153), which means that this has a nonzero (and indeed
-        // nontrivial) probability of collision. However, in any given exploration we are not
-        // likely to run into a situation where this collision hurts, and I have longer term plans
-        // to simply use a larger zobrist hash or BCH codes or something similar to avoid
-        // collisions. This should be sufficient for the short term...
+        // A zobrist is a 64 bit signature of a ~153 (19bytes + 1 bit) bit space (the number of
+        // reachable chess positions is around 10e46, which is about 2e153), which means that this
+        // has a nonzero (and indeed nontrivial) probability of collision. However, in any given
+        // exploration we are not likely to run into a situation where this collision hurts, and I
+        // have longer term plans to simply use a larger zobrist hash or BCH codes or something
+        // similar to avoid collisions.
+        //
+        // For reference, a BEN is 36 bytes, or about 50% efficient. This is 8 bytes (200%
+        // efficient) but with a nonzero, small error rate. BCH codes add a few bytes to lower that
+        // error rate, but this should be sufficient for the short term...
         //
         // He said, awaiting the inevitable point where this becomes a multi-day bughunt.
         self.zobrist() == other.zobrist()
@@ -71,7 +76,8 @@ impl PartialEq for Position {
 impl Debug for Position {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "{:?}", self.initial);
-        writeln!(f, "{:?}", self.zobrist())
+        writeln!(f, "{:?}", self.zobrist());
+        writeln!(f, "{:?}", self.tape)
     }
 }
 
@@ -99,14 +105,20 @@ lazy_static!(
 impl Position {
     pub fn new(fen: impl Into<BEN>) -> Self {
         let fen = fen.into();
-        let alters = fen.to_alterations();
+        let alters : Vec<Alteration> = fen.to_alterations().collect();
 
-
+        let mut inner = InnerPosition::default();
         let mut tape = Tape::new();
+        tape.write_all(&alters);
+
+        for alter in alters {
+            inner.board.alter_mut(alter);
+            inner.metadata.alter_mut(alter);
+        }
 
         let mut ret = Self {
             initial: fen,
-            inner: InnerPosition::default().into(),
+            inner: inner.into(),
             tape: tape.into(),
             atm: POSITION_CACHE.atm()
         };
@@ -123,7 +135,7 @@ impl Position {
     }
 
     pub fn zobrist(&self) -> Zobrist {
-        self.tape.read().unwrap().position_hash
+        self.tape.read().unwrap().position_hash()
     }
 
     pub fn metadata(&self) -> PositionMetadata {
@@ -134,6 +146,44 @@ impl Position {
         self.inner.read().unwrap().board
     }
 
+    // FIXME: BUG: This is the current bug.
+    //
+    // The way I update metadata sucks, frankly, the way I track it kind of sucks too. it is
+    // sensitive to order in a way I dislike, and ideally it should be compiled to alterations
+    // alongside the move, so the `compile` would change to a full boardstate.
+    //
+    // I also want the alteration stream to be more sparse -- if, e.g., castlerights don't change,
+    // we shouldn't bother printing them to the tape.
+    //
+    // I think the plan is to make the `compile` api a `mov.compile(&board, &metadata) ->
+    // vec<alterations>` that encompases the whole turn. That gets written to tape, and that's
+    // that.
+    //
+    // I do need to account for one other thing -- rewinding then writing to tape will invalidate
+    // the tape proceeding from the overwritten section, there is currently no way to detect that,
+    // so perhaps `tape` should be 'rewind only'? I might mark `step_forward` unsafe for this
+    // reason.
+    //
+    // I haven't decided if that would be sinful or not. Technically it would be undefined
+    // behavior, so it makes sense, but I could easily clear-on-first-write (even just logically by
+    // maintaining some high-water-mark or something.
+    //
+    // I think changing it to have a little sublanguage could work, something like:
+    //
+    // Turn(Color)
+    //    Assert(CastleRights(KQkq)) // asserts that this should be the current state of the system, available for any metadata assertion
+    //    //... more asserts
+    //    Remove P @ d2
+    //    Place P @ d4
+    //    Inform MoveType DOUBLE_PAWN // set this key in the metadata structure
+    //    Inform EnPassant A
+    //    Inform HalfMoveReset // a pawn move means reset this clock
+    // End
+    //
+    // For debugging, we could take those asserts as if they were `informs`, it is a check that
+    // verifies the previous metadata state. We can later optimize them out (or just skip them)
+    // when running the 'real' engine.
+    // That could also allow for a similar `Setup` tag, for the setup phase.
     pub fn make(&mut self, mov: Move) {
         tracing::debug!("#make(mov: {:?})", mov);
 
@@ -153,9 +203,11 @@ impl Position {
 
         { // Tape is write-locked
             let mut tape = self.tape.write().unwrap();
-            tape.write_all(&new_metadata);
+            // NOTE: Order matters, metadata must be written second, because we use `update` above
+            // instead of `alter` right now.
             tape.write_all(&new_alterations);
-            position_hash = tape.position_hash;
+            tape.write_all(&new_metadata);
+            position_hash = tape.position_hash();
         }
 
         // TODO: Ideally this is lazy, so we only update the board as we roll the associated
@@ -197,27 +249,32 @@ impl Position {
         let unmove_hash : Zobrist;
         let mut unmoves = vec![];
 
+        let mut bailout = 0;
+
         { // Tape is write-locked
             let mut tape = self.tape.write().unwrap();
             loop { // this is inelegant, but hopefully effective.
+
                 if tape.at_bot() {
                     // TODO: this probably should try to do cache magic in the tape first? IDK
                     panic!("Cannot unwind from Beginning of Tape");
                 }
 
-                let Some(alter) = tape.read() else {
-                    // this must be a Noop, since the EOT is definitionally never behind us.
-                    tape.step_backward();
-                    continue;
-                };
+                if let Some(alter) = tape.read() {
+                    unmoves.push(alter);
 
-                unmoves.push(alter);
+                    if matches!(alter, Alteration::InitialMetadata(_)) {
+                        break;
+                    }
 
-                if matches!(alter, Alteration::Assert(MetadataAssertion::StartTurn(_))) {
-                    break;
+                    if matches!(alter, Alteration::Assert(MetadataAssertion::StartTurn(_))) {
+                        break;
+                    }
                 }
+
+                tape.step_backward();
             }
-            unmove_hash = tape.position_hash;
+            unmove_hash = tape.position_hash();
         }
 
         // TODO: This is an exact copy of the above, mod the #inverse calls on `alter`. definitely
@@ -237,8 +294,8 @@ impl Position {
                 let mut inner = self.inner.write().unwrap();
 
                 for alter in unmoves {
-                    inner.board.alter_mut(alter.inverse());
                     inner.metadata.alter_mut(alter.inverse());
+                    inner.board.alter_mut(alter.inverse());
                 }
 
                 self.atm.set(unmove_hash, inner.clone());
@@ -362,7 +419,7 @@ impl Position {
             Piece::Bishop => self.their_bishop_moves() | self.their_queen_moves(),
             Piece::Rook => self.their_rook_moves() | self.their_queen_moves(),
             Piece::Queen => self.their_queen_moves(),
-            Piece::Pawn => { 
+            Piece::Pawn => {
                 let their_pawn_quiet_moves = self.their_pawn_advances() | self.their_pawn_double_advances();
                 let their_pawn_captures = self.their_pawn_attacks() & self.friendlies();
 
@@ -372,7 +429,7 @@ impl Position {
 
                 // promotion checks
                 // capture promotion checks
-                
+
                 their_threatened_squares.shift(Direction::E) | their_threatened_squares.shift(Direction::W)
             }
             Piece::King => { Bitboard::empty() /* Kings can't check kings. */ }
@@ -596,33 +653,8 @@ mod tests {
             let z_prior = p.zobrist();
             let m = Move::new(E2, E3, MoveType::QUIET);
 
-            // let alter_cache_prior = p.cached_alterations().clone();
             p.make(m);
-            // let z_mid = p.zobrist();
-            // let alter_cache_mid = p.cached_alterations().clone();
             p.unmake();
-            // let z_post = p.zobrist();
-            // let alter_cache_post = p.cached_alterations().clone();
-
-            // use crate::types::zobrist::HazelZobrist;
-
-
-            // similar_asserts::assert_eq!(alter_cache_prior, alter_cache_post);
-
-            // let diff = z_prior ^ z_post;
-            // let mut depth = 0;
-            // for entry in HazelZobrist::TABLE {
-            //     if entry == diff.inner() {
-            //         dbg!(entry);
-            //         dbg!(diff);
-            //         dbg!(depth); // this is 768, indicating it's the side-to-move marker that's got the issue
-            //         assert!(false);
-            //     }
-            //     depth += 1;
-            // }
-
-            // assert_ne!(z_prior, z_mid);
-            // assert_eq!(z_prior, z_post);
         }
 
         #[test]
@@ -641,7 +673,9 @@ mod tests {
 
             p.unmake();
 
-            similar_asserts::assert_eq!(p_prior, p);
+            tracing::debug!("p_prior\n{:?}\n\n p_after:\n{:?}\n\n", p_prior, p);
+
+            assert_eq!(p_prior, p);
         }
 
         #[test]
@@ -658,7 +692,7 @@ mod tests {
             let p_prior = p.clone();
             p.unmake();
 
-            similar_asserts::assert_eq!(p_prior, p);
+            assert_eq!(p_prior, p);
         }
     }
 

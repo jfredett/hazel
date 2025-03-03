@@ -49,11 +49,12 @@ impl MoveGenerator {
             position.make(mov);
 
             if depth == 1 {
-                tracing::debug!("after-make {:?}: {} {}\n\n{}", 
+                tracing::debug!("after-make {:?}: {} {}\n\n{}\n{:?}",
                     position.zobrist(),
                     crate::query::to_fen_position(&position.clone()),
                     position.metadata(),
                     crate::query::display_board(&position.board()),
+                    position.tape
                 );
             }
 
@@ -62,11 +63,12 @@ impl MoveGenerator {
             position.unmake();
 
             if depth == 1 {
-                tracing::debug!("after-unmake {:?}: {} {}\n\n{}",
+                tracing::debug!("after-unmake {:?}: {} {}\n\n{}\n{:?}",
                     position.zobrist(),
                     crate::query::to_fen_position(&position.clone()),
                     position.metadata(),
                     crate::query::display_board(&position.board()),
+                    position.tape
                 );
             }
         }
@@ -111,6 +113,7 @@ mod tests {
     }
 
     #[test]
+    #[tracing_test::traced_test]
     fn perft_1() {
         assert_no_difference!(perft_start_position(1), 20);
     }
