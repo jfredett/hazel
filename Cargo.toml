@@ -36,7 +36,7 @@ tokio-util = { version = "0.7.13", features = ["io"] }
 const-str = "0.6.2"
 mutants = "0.0.3"
 nom = "7.1.3"
-similar-asserts = "1.6.1"
+similar-asserts = "1.7.0"
 insta = "1.42.1"
 async-trait = "0.1.86"
 console-subscriber = "0.4.1"
