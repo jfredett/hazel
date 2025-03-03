@@ -3,7 +3,7 @@ use std::ops::Not;
 
 use crate::types::Bitboard;
 use crate::types::Direction;
-use crate::constants::{RANK_1, RANK_2, RANK_7, RANK_8};
+use crate::constants::{RANK_2, RANK_7};
 
 use serde::{Deserialize, Serialize};
 
@@ -54,6 +54,13 @@ impl Color {
     /// a mask for the promotion rank
     pub fn promotion_mask(self) -> Bitboard {
         (!self).pawn_mask()
+    }
+
+    pub fn en_passant_rank(self) -> usize {
+        match self {
+            Color::WHITE => 5,
+            Color::BLACK => 2,
+        }
     }
 
     pub fn pawn_rank(self) -> usize {

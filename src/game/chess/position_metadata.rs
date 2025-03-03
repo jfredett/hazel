@@ -6,17 +6,19 @@
 // src/game/<other-abstract-game>/impl
 //
 // etc
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 use std::str::SplitWhitespace;
 
+use crate::alteration::MetadataAssertion;
 use crate::interface::Query;
 use crate::constants::File;
 use crate::coup::rep::Move;
 use crate::game::chess::castle_rights::CastleRights;
+use crate::query::display_board;
 use crate::{notation::*, Alter, Alteration};
 use crate::types::{Color, Occupant, Piece};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct PositionMetadata {
     /// Color of the Current Player
     pub side_to_move: Color, // u1
@@ -33,17 +35,48 @@ pub struct PositionMetadata {
     // CCCCEEEE HHHHHHSx FFFFFFFF FFFFFFFF
 }
 
+impl From<PositionMetadata> for Vec<Alteration> {
+    fn from(pm: PositionMetadata) -> Vec<Alteration> {
+        let mut ret = vec![];
+        ret.push(Alteration::Assert(MetadataAssertion::StartTurn(pm.side_to_move)));
+        ret.push(Alteration::Assert(MetadataAssertion::CastleRights(pm.castling)));
+        if let Some(ep) = pm.en_passant {
+            ret.push(Alteration::Assert(MetadataAssertion::EnPassant(ep.file().into())));
+        }
+        ret.push(Alteration::Assert(MetadataAssertion::FiftyMoveCount(pm.halfmove_clock)));
+        ret.push(Alteration::Assert(MetadataAssertion::FullMoveCount(pm.fullmove_number)));
+        ret.push(Alteration::Assert(MetadataAssertion::EndTurn));
+        ret
+    }
+}
 
 impl Alter for PositionMetadata {
     fn alter(&self, alteration: Alteration) -> Self {
-        let mut copy = self.clone();
+        let mut copy = *self;
         copy.alter_mut(alteration);
         copy
     }
 
     fn alter_mut(&mut self, alteration: Alteration) -> &mut Self {
         match alteration {
-            Alteration::Assert(new_metadata) => *self = new_metadata,
+            Alteration::InitialMetadata(metadata) => {
+                *self = metadata;
+            },
+            Alteration::Assert(new_metadata) => {
+                // TODO: this probably boils down to something that could be done with bit magic
+
+                match new_metadata {
+                    MetadataAssertion::StartTurn(color) => {
+                        self.en_passant = None;
+                        self.side_to_move = color;
+                    },
+                    MetadataAssertion::CastleRights(rights) => self.castling = rights,
+                    MetadataAssertion::EnPassant(file) => self.en_passant = { Some(Square::from((self.side_to_move.en_passant_rank(), file))) },
+                    MetadataAssertion::FullMoveCount(count) => self.fullmove_number = count,
+                    MetadataAssertion::FiftyMoveCount(count) => self.halfmove_clock = count,
+                    MetadataAssertion::EndTurn => { }
+                }
+            },
             Alteration::Clear => *self = Self::default(),
             _ => {}
         }
@@ -68,6 +101,22 @@ impl Default for PositionMetadata {
     }
 }
 
+impl Debug for PositionMetadata {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let ep_sq = match self.en_passant {
+            Some(sq) => sq.to_string(),
+            None => "-".to_string(),
+        };
+
+        write!(f, "{} {} {} {} {}",
+            self.side_to_move,
+            self.castling,
+            ep_sq,
+            self.halfmove_clock,
+            self.fullmove_number,
+        )
+    }
+}
 impl Display for PositionMetadata {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let ep_sq = match self.en_passant {
@@ -129,12 +178,8 @@ impl PositionMetadata {
 
         let en_passant = match en_passant {
             Some("-") => None,
-            Some(square) => { 
-                let sq = Square::try_from(square);
-                match sq {
-                    Ok(sq) => Some(sq),
-                    Err(_) => None,
-                }
+            Some(square) => {
+                Square::try_from(square).ok()
             },
             None => panic!("Invalid en passant square"),
         };
@@ -161,7 +206,7 @@ impl PositionMetadata {
         // rely on the color of the piece being moved, rather than reasoning about the side-to-move
         // or delaying it till the end.
 
-        let Occupant::Occupied(piece, color) = board.get(mov.source()) else { panic!("Move has no source piece"); };
+        let Occupant::Occupied(piece, color) = board.get(mov.source()) else { panic!("Move has no source piece: {:?}\n on: \n{}", mov, display_board(board)); };
 
 
         if mov.is_capture() || piece == Piece::Pawn {

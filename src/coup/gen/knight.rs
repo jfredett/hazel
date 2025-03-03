@@ -38,7 +38,7 @@ mod tests {
 
     #[test]
     fn test_position() {
-        let position = Position::new(BEN::new("8/8/2b1b3/1P3P2/3N4/1P3P2/8/8 w - - 0 1"), vec![]);
+        let position = Position::new(BEN::new("8/8/2b1b3/1P3P2/3N4/1P3P2/8/8 w - - 0 1"));
         let moves = generate_moves(&position);
 
         assert_eq!(moves.collect::<Vec<Move>>(), vec![

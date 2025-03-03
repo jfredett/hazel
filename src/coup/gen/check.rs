@@ -1,12 +1,16 @@
-use crate::{game::position::Position, types::Piece};
+use crate::{coup::rep::Move, game::position::Position};
 
-fn is_in_check(position: &Position) -> bool {
-    position.all_attacked_squares(&position.villain()).is_set(position.our_king())
+pub fn is_in_check(position: &Position) -> bool {
+    position.their_reach().is_set(position.our_king())
 }
 
-fn losing_checkmate(position: &Position) -> bool {
-    if is_in_check(position) && position.intervention_squares().is_empty() {
-        todo!();
-    }
+pub fn losing_checkmate(position: &Position) -> bool {
+    todo!();
     false
+}
+
+
+// Generate all valid moves which resolve the check, this is any kind move, or any intervening move
+pub fn generate_moves(position: &Position) -> impl Iterator<Item = Move> {
+    vec![].into_iter()
 }

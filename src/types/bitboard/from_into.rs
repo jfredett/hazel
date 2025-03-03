@@ -30,7 +30,7 @@ impl<N : Into<Square>> From<N> for Bitboard {
 
 impl From<u64> for Bitboard {
     fn from(b: u64) -> Bitboard {
-        Bitboard(b)
+        Bitboard::const_from(b) // DRY.
     }
 }
 
@@ -44,10 +44,24 @@ impl From<&str> for Bitboard {
     }
 }
 
+impl Bitboard {
+    /// From is not const, which is fine, but I do need to build these at compile time.
+    pub const fn const_from(b: u64) -> Bitboard {
+        Bitboard(b)
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn bitboard_const_from_u64() {
+        // technically covered by the standard from case, but belt and.
+        let b = Bitboard::const_from(0x0000000000000001u64);
+        assert_eq!(b, Bitboard(0x0000000000000001u64));
+    }
 
     #[test]
     fn bitboard_from_u64() {

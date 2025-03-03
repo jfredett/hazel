@@ -14,6 +14,12 @@ pub enum File {
     H = 7,
 }
 
+impl From<usize> for File {
+    fn from(value: usize) -> Self {
+        File::from_index(value)
+    }
+}
+
 impl From<u8> for File {
     fn from(value: u8) -> Self {
         File::from_index(value as usize)
@@ -71,6 +77,7 @@ impl File {
         FILE_MASKS[self as usize]
     }
 
+    /// This exists because there is no `ConstFrom` option.
     pub const fn from_index(index: usize) -> Self {
         match index & 0o07 {
             0 => File::A,
@@ -164,14 +171,14 @@ mod test {
 
     #[test]
     fn from_index() {
-        assert_eq!(File::from_index(0), File::A);
-        assert_eq!(File::from_index(1), File::B);
-        assert_eq!(File::from_index(2), File::C);
-        assert_eq!(File::from_index(3), File::D);
-        assert_eq!(File::from_index(4), File::E);
-        assert_eq!(File::from_index(5), File::F);
-        assert_eq!(File::from_index(6), File::G);
-        assert_eq!(File::from_index(7), File::H);
+        assert_eq!(File::from_index(0usize), File::A);
+        assert_eq!(File::from_index(1usize), File::B);
+        assert_eq!(File::from_index(2usize), File::C);
+        assert_eq!(File::from_index(3usize), File::D);
+        assert_eq!(File::from_index(4usize), File::E);
+        assert_eq!(File::from_index(5usize), File::F);
+        assert_eq!(File::from_index(6usize), File::G);
+        assert_eq!(File::from_index(7usize), File::H);
     }
 
     #[test]
@@ -212,14 +219,14 @@ mod test {
 
     #[test]
     fn from_u8() {
-        assert_eq!(File::from(0), File::A);
-        assert_eq!(File::from(1), File::B);
-        assert_eq!(File::from(2), File::C);
-        assert_eq!(File::from(3), File::D);
-        assert_eq!(File::from(4), File::E);
-        assert_eq!(File::from(5), File::F);
-        assert_eq!(File::from(6), File::G);
-        assert_eq!(File::from(7), File::H);
+        assert_eq!(File::from(0u8), File::A);
+        assert_eq!(File::from(1u8), File::B);
+        assert_eq!(File::from(2u8), File::C);
+        assert_eq!(File::from(3u8), File::D);
+        assert_eq!(File::from(4u8), File::E);
+        assert_eq!(File::from(5u8), File::F);
+        assert_eq!(File::from(6u8), File::G);
+        assert_eq!(File::from(7u8), File::H);
     }
 
 

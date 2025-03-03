@@ -1826,3 +1826,198 @@ The generator is _extremely_ slow right now. Well over 3 minutes to fail perft 4
 
 See you on the next branch.
 
+## 1132 - atm
+
+Why ATM?
+
+Because it's all about managing the Cache.
+
+This is going to focus on building some caching into the movegenerator, to hopefully speed us up a bit. I am going to
+avoid adding more rule implementation till after I've got the caching in place.
+
+The main bit of trickiness is going to be hiding the mutable bits so that `Position` transparently uses or populates the
+cache, while the caller only sees the immutable interface -- from their perspective `Position` is just a data object.
+
+I have a basic idea of how to do this. First, setting up some kind of `Zobrist` style hashing (or maybe BCH, I have a
+lot of reading to do) is obvious. Once I have that it should make the `unmake` step a lot faster (since it won't be
+recalculating from scratch each time.
+
+I'm not sure if I'm going to try setting up benchmarks just yet, but it would make it a bit easier to measure
+improvements. I think for now I can just go with wall time, bringing everything up to, say, `perft 5` to within a couple
+minutes would be ideal.
+
+Once I've got something relatively quick, I can finish the implementation for accuracy, then come back to refactor tests
+and add proper benchmarks.
+
+The cache itself will live on the MoveGenerator, and `Position` will have a borrowed reference to the `ATM`, which
+itself has a borrowed, mutable reference to the MoveGen. This _immutable_ reference will centralize all the cache
+retrieve/populate operations, so that multiple `Position` instances ask a single `ATM` for items from the
+`MoveGenerator` cache, and the `ATM` either populates or retrieves those items for the `Position`. This *should* mean
+that `Position` stays this fully immutable looking thing and `MoveGenerator` does all the mutation over time. Since
+`MoveGenerator` is eventually going to be wrapped up in a `Witch` and sent off to live on a thread, this means
+thread-local cache with an immutable interface for the caller, which would be pretty sweet.
+
+I've never tried to do anything like this in Rust, the closest I've come is the `Cursor` stuff on what I've come to
+think of as my "Log-unstructured-messy-tree" datastructure.
+
+It's on the list for a rewrite too.
+
+Anyway, this is the plan, it remains to see if it survives contact.
+
+
+# 27-FEB-2025
+
+## 0017 - atm
+
+My initial idea was to build something like the `Cursor` struct with `ATM`, and have a sort of type-agnostic cache, that
+I could then have each method use. The cache would be transparent to the caller, you ask for the board, you get it, if
+it's cached you pull it from there, if it's not you build it right then and cache it. More like memoization/transparent
+caching.
+
+That's not a great way to do this, with `make` and `unmake` in particular, I have a lot of opportunity for incremental
+updates and minimizing halfply-to-halfply work, so it makes sense to do opportunistic caching during this process, and
+manage when cache is updated more directly.
+
+Right now that cache is a HashMap, but there are smarter structures for this, and memory will be a concern quickly if I
+keep all positions.
+
+So I've opted for a much simpler global cache, centralizing all the cache logic in `Position` for now. Ideally the
+eventual model will be something like:
+
+* `Position` provides an API to talk about the position, it builds it's methods out of methods provided by
+`PositionInner`. It provides the pleasant API for implementing, e.g., movegen.
+
+* `PositionInner` provides the bitboard caclulation and has more memoization-adjacent caching via RwLocked bitboards,
+I'll probably build some custom wrapper around bitboard for that, not sure. Ideally most of the math gets pushed back
+here, and this can be a site for optimization of board querys.
+
+The `PositionInner` should ultimately ideally be `Copy`, just a big pile of bitboards and the like.
+
+I currently have the Alteration cached there as well, but I think I'd prefer that to be first-class on Position, since
+most of my incremental opportunities involve tooling around a Log of Alterations.
+
+To wit, another thing I've been sorely missing has been a good structure for a collection of alterations, and I realized
+as I was writing this that I have the perfect thing already built, that little `Log` structure backing `Variation` would
+work perfectly here, and it's `transaction` feature (which is moreso named for it's aspiration than it's actuality) may
+see some use.
+
+Finally, I'm pretty sure `ChessGame` is going to get factored away and replaced with `Position`, and I think that will
+net out to a much nicer flow than is currently there.
+
+# 27-FEB-2025
+
+## 2354 - atm
+
+make/unmake is such a drag, but I think the issue may be on the side of the `cached_alterations` (and more general
+alteration system). I'm currently just using a `Vec`, but it makes sense to have something closer to `Log`, except I
+don't want all the transaction stuff. Log initially was intended for branching trees of moves, this is something a bit
+simpler, and probably finite/ring-buffer-ish.
+
+I also sort of want to change how metadata is tracked, right now I have to `Assert` the whole metadata into the
+alteration stream (though technically it shouldn't be needed), ideally I would only flag when events happen that alter
+the metadata state; that would also make it easier to unwind (since I just update the `PositionMetadata` incrementally),
+but it unifies the whole system. This also makes zobrist-ing these guys pretty easy (and very amenable to SIMD
+calculation of the zobrist later).
+
+Ultimately what I want to do when doing `make/unmake` is something like:
+
+```
+make(mov):
+    push the move onto the stack
+    compile the move to alterations
+    apply each alteration to the zobrist of this position.
+    check cache:
+        if hit, load the contents
+        if miss,
+            use current contents and incrementally update the position,
+            populate the cache
+
+unmake:
+    unwind alterations until and including the previous START_TURN
+        apply each alteration to update the zobrist of the position
+    pop the move off the list
+    check cache for this position
+        if hit, copy contents.
+        if miss, populate the cache
+```
+
+In both cases, the `Move` is more of a convenience representation for the less compact but much simpler `Alteration`,
+which specifies how to update specific squares, and how metadata updates. In the current model I just dump all 4 bytes
+of `PositionMetadata` into the stream, but I'd prefer if things were a bit more incremental. Turns are already counted,
+but I need flags for at least:
+
+1. Losing Castle Rights (4 bits)
+2. Which is the EP file (if any, it's 3 bits for the file, absence can indicate no EP)
+3. 50 move rule reset (1 bit)
+
+We can calculate movecount and side-to-move from the pre-existing `StartTurn` variant.
+
+Eventually I want to be able to encode this to a bytestream, so it's handy to keep aligned to bytes. For now they can
+just be full variants, but eventually this will be represented as a bytestream that can be stored and gamestates
+recovered without any need to rule checking or any more advanced understanding of chess.
+
+Ideally the `make/unmake` will eventually only store partial alteration tapes, especially if they're finite, when we hit
+some threshold we can take the current zobrist (even in the middle of a partially-applied turn) and clear our buffer and
+continue. Essentially allowing us to `zobrist` whole alteration buffers in and out of cache.
+
+The structure I'm using now (a `Vec<Alteration>`) doesn't have the ability to seek around, and ultimately I need to seek
+through and do something on each alteration, so the whole thing is much more turing-machine than stack machine. The
+latter of which is how I've been considering it so far, but it's inconvenient since it's not a lot of stack bookkeeping
+and manually updating state.
+
+The `Log` datastructure is what I want, but I want to tweak how it works. I'm going to calculate two `Zobrist` values --
+one is the current actual position up to a `StartTurn` marker, this is the 'real' zobrist of the legal chess position.
+The other is a zobrist of the sum of all instructions in the buffer. When the buffer is filled, this zobrist is used to
+cache the state and then clear the cache, that hash is also stored in the tape as the 'previous' state, so unwinding is
+always possible. This hash can be computed incrementally along with the other hash. Once in cache, it may be possible to
+connect hashes together so that more chunks can be served from cache, but I've missed my exit.
+
+This `Tape` structure is really just responsible for managing the alterations, the `Position` will compile moves to it,
+and maintain it's own cache based on the zobrist it calculates.
+
+# 28-FEB-2025
+
+## 1836 - atm
+
+I'm starting to think about `Log`, `Tape`, `Cursor` and `Familiar` and I think I'm honing in on the API I want.
+
+I'm essentially dealing with two APIs.
+
+1. A 'thing what moves through a file' API, i.e Cursor/Familiar, both of which have file-like APIs to non-file things.
+2. A 'thing what stores variants of some enum', i.e., Log or Tape.
+
+A familiar in particular accrues state as it goes, while a cursor is a 'stateless' familiar.
+
+Realistically I don't care about the #2 thing as much as the #1. #2 is just for storing data and should be 'pretty dumb'
+most of the time, however, I do need to store it somewhere so that I can run my familiar over it to accrue whatever
+state it likes. Ultimately a familiar is a type:
+
+```rust
+struct Familiar<'a, F, E, S> where E : Invertible {
+    state: S,
+    source: &'a F<E>,
+    update: fn(&mut S, E)
+}
+```
+
+As the familiar is advanced or retreated, the update function is called with the `E` (entry) item or it's inverse if
+retreating. The `F` here is some arbitrary container, I don't think I can actually specify a type function as a type
+parameter but practically that's a nonissue since this is almost always either `Vec` (as in `Log` or a finite array (in
+the case of `Tape`). This parent structure is responsible for updating/writing things to the log, the familiar is
+responsible for interpreting it's contents and producing whatever items we like on demand.
+
+I think I want to extend this a bit, since familiars may be 'left behind' over time, they are responsible for
+incrementally updating themselves. When a cache-out happens (for `Tape`), their states should also be caught up, cached
+off, and put in the 'initial' state.
+
+These familiars are initially going to be useful for calculating various zobrist hashes of things for which we can
+zobrist. In particular, the `Tape` backend is made of `Alteration`s, which ultimately it what implements the zobrist
+hashing, so a familiar which is maintaining a hash as I edit the storage makes sense.
+
+Similarly, it makes sense to keep track of the hash at the position of the write head. Since we can just have a Familiar
+copy that when the need arises.
+
+I'm just tossing a function pointer in the above, but I suspect that should be some kind of trait. My thought was this
+is not really intended to be called outside the context of the familiar, and it's possible I'll want to build these
+dynamically, especially since these generic familiars will be able to interact with the existing `Variation` structure
+and the `Position` structure as well.

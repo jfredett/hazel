@@ -78,7 +78,7 @@ mod tests {
     #[test]
     fn correctly_calculates_position_after_several_moves() {
         let mut game : ChessGame<PieceBoard> = ChessGame::default();
-        game.apply_mut(&Action::Setup(BEN::new(START_POSITION_FEN).into()))
+        game.apply_mut(&Action::Setup(BEN::new(START_POSITION_FEN)))
             .apply_mut(&Action::Make(Move::new(D2, D4, MoveType::DOUBLE_PAWN)));
 
         let expected_fen = BEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 2");
@@ -103,7 +103,7 @@ mod tests {
         #[test]
         fn into_ben() {
             let mut game : ChessGame<PieceBoard> = ChessGame::default();
-            game.apply_mut(&Action::Setup(BEN::new(START_POSITION_FEN).into()));
+            game.apply_mut(&Action::Setup(BEN::new(START_POSITION_FEN)));
 
             let ben : BEN = game.clone().into();
             let expected_fen = BEN::new(START_POSITION_FEN);
