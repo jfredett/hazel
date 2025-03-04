@@ -187,28 +187,43 @@ impl Position {
     pub fn make(&mut self, mov: Move) {
         tracing::debug!("#make(mov: {:?})", mov);
 
+
+        /*
+        * the ideal version of this is something like:
+        *
+        * let (&board, &metadata) = self.atm.get(tape.position_hash())
+        * let alterations = mov.compile(&board, &metadata)
+        * tape.write_all(&alterations)
+        * gamestate_familiar.sync_to_read_head();
+        * self.atm().update(tape.position_hash()) = gamestate_familiar.state;
+        *
+        * The gamestate familiar manages the cache, on a cache miss above I suppose it would need
+        * to rewind to the last available, we'll still need some kind of cached state in the
+        * position itself probably? Not sure.
+        *
+        * Ideally it borrows the representation instead of copying.
+        *
+        */
+
         let new_alterations: Vec<Alteration>;
-        let new_metadata: Vec<Alteration>;
         let mut position_hash: Zobrist;
 
-        { // Inner is read-locked
-            let mut inner = self.inner.read().unwrap();
-            new_alterations = mov.compile(&inner.board);
-
-            // FIXME: I really don't like this.
-            let mut dummy_metadata = inner.metadata.clone();
-            dummy_metadata.update(&mov, &inner.board);
-            new_metadata = dummy_metadata.into();
+        {   // Incremental Update Calculation
+            // Inner is read-locked
+            let inner = self.inner.read().unwrap();
+            new_alterations = mov.new_compile(&inner.board, &inner.metadata)
         }
 
-        { // Tape is write-locked
+        {   // Write phase
+            // Tape is write-locked
             let mut tape = self.tape.write().unwrap();
-            // NOTE: Order matters, metadata must be written second, because we use `update` above
-            // instead of `alter` right now.
             tape.write_all(&new_alterations);
-            tape.write_all(&new_metadata);
-            position_hash = tape.position_hash();
         }
+
+        // Cache Management
+        // Tape read-locked, this syncs the head to wherever the write head was last left, which is
+        // presently at the end of the turn we just wrote.
+        position_hash = self.tape.read().unwrap().position_hash();
 
         // TODO: Ideally this is lazy, so we only update the board as we roll the associated
         // boardfamiliar forward.
@@ -263,11 +278,9 @@ impl Position {
                 if let Some(alter) = tape.read() {
                     unmoves.push(alter);
 
-                    if matches!(alter, Alteration::InitialMetadata(_)) {
-                        break;
-                    }
-
-                    if matches!(alter, Alteration::Assert(MetadataAssertion::StartTurn(_))) {
+                    if matches!(alter, Alteration::Turn) {
+                        // This ensures we land on the `End` and not the `Turn`
+                        tape.step_backward();
                         break;
                     }
                 }

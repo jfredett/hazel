@@ -2,18 +2,63 @@ use std::fmt::{Debug, Display};
 
 
 use crate::constants::File;
+use crate::coup::rep::MoveType;
 use crate::game::castle_rights::CastleRights;
 use crate::game::position_metadata::PositionMetadata;
 use crate::types::{Color, Occupant};
 use crate::notation::*;
+
+// NOTE: It's interesting to think about commutativity amongst these alterations. In particular if
+// I'm trying to build a final representation of something and I want to vectorize that. It would
+// be beneficial in some sense to be able to 'sum up' all the alterations, cancelling out whichever
+// ones can be canceled, by commuting them around if needed. Turns don't matter if I only care
+// about some specific sum of alterations.
+//
+// I guess what I'm saying is this feels like a monoid, maybe even something group-adjacent, but
+// lacking an explicit NOOP instruction/identity.
+//
+// Assert/Inform have a less commutative structure though, so opposite to place/remove, which
+// ultimately cancel each other out, e.g.:
+//
+// place P @ d4
+// remove P @ d2
+//
+// results in a boardstate equivalent to:
+//
+// remove P @ d2
+// place P @ d4
+//
+// and further
+//
+// place P @ d4
+// remove P @ d2
+// place P @ d5
+// remove P @ d4
+//
+// is exactly equivalent to:
+//
+// remove P @ d2
+// place P @ d5
+//
+// which you can find by commutting and cancelling like:
+//
+// remove P @ d2
+// place P @ d4
+// remove P @ d4
+// place P @ d5
+//
+// Assert/Inform, however, require ordering, since informs have to follow a set of valid asserts.
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum Alteration {
     Place { square: Square, occupant: Occupant },
     Remove { square: Square, occupant: Occupant },
     Assert(MetadataAssertion),
+    Inform(MetadataAssertion),
     InitialMetadata(PositionMetadata),
     Lit(u8),
+    Turn,
+    End,
     Clear,
 }
 
@@ -21,8 +66,9 @@ pub enum Alteration {
 pub enum MetadataAssertion {
     CastleRights(CastleRights),
     EnPassant(File),
-    StartTurn(Color),
-    EndTurn,
+    SideToMove(Color),
+    InCheck,
+    MoveType(MoveType),
     FiftyMoveCount(u8),
     FullMoveCount(u16),
 }
@@ -31,45 +77,39 @@ pub enum MetadataAssertion {
 #[cfg(test)]
 impl quickcheck::Arbitrary for MetadataAssertion {
     fn arbitrary(g: &mut quickcheck::Gen) -> MetadataAssertion {
-        let variant = usize::arbitrary(g) % 5;
+        let variant = usize::arbitrary(g) % 7;
         match variant {
             0 => { MetadataAssertion::CastleRights(CastleRights::arbitrary(g)) },
             1 => { MetadataAssertion::EnPassant(File::arbitrary(g)) },
-            2 => { MetadataAssertion::StartTurn(Color::arbitrary(g)) },
-            3 => { MetadataAssertion::FiftyMoveCount(u8::arbitrary(g) % 50) },
-            4 => { MetadataAssertion::FullMoveCount(u16::arbitrary(g)) },
+            2 => { MetadataAssertion::InCheck },
+            3 => { MetadataAssertion::SideToMove(Color::arbitrary(g)) },
+            4 => { MetadataAssertion::FiftyMoveCount(u8::arbitrary(g) % 50) },
+            5 => { MetadataAssertion::FullMoveCount(u16::arbitrary(g)) },
+            6 => { MetadataAssertion::MoveType(MoveType::arbitrary(g)) },
             _ => { unreachable!(); }
         }
     }
 }
-
-
 
 impl Debug for Alteration {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Place { square, occupant } => write!(f, "Place {} @ {}", occupant, square),
             Self::Remove { square, occupant } => write!(f, "Remove {} @ {}", occupant, square),
-            // it'd be ideal if this dropped a flag with _how to change_ the metadata, not just a
-            // copy of the metadata.
             Self::Assert(metadata) => write!(f, "Assert <{:?}>", metadata),
+            Self::Inform(metadata) => write!(f, "Inform <{:?}>", metadata),
             Self::InitialMetadata(metadata) => write!(f, "InitialMetadata <{:?}>", metadata),
             Self::Clear => write!(f, "Clear"),
-            Self::Lit(byte) => write!(f, "Lit({:x})", byte)
+            Self::Lit(byte) => write!(f, "Lit({:x})", byte),
+            Self::Turn => write!(f, "Turn"),
+            Self::End => write!(f, "End"),
         }
     }
 }
 
 impl Display for Alteration {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Place { square, occupant } => write!(f, "Place {} @ {}", occupant, square),
-            Self::Remove { square, occupant } => write!(f, "Remove {} @ {}", occupant, square),
-            Self::Assert(metadata) => write!(f, "Assert <{:?}>", metadata),
-            Self::InitialMetadata(metadata) => write!(f, "InitialMetadata <{:?}>", metadata),
-            Self::Clear => write!(f, "Clear"),
-            Self::Lit(byte) => write!(f, "Lit({:x})", byte)
-        }
+        write!(f, "{:?}", self)
     }
 }
 
@@ -98,6 +138,7 @@ impl Alteration {
         match self {
             Self::Place { square, occupant } => Self::Remove { square: *square, occupant: *occupant },
             Self::Remove { square, occupant } => Self::Place { square: *square, occupant: *occupant },
+            // TODO: Inverse for metadata assertions/informations are needed
             _ => *self
         }
     }

@@ -135,7 +135,7 @@ impl Alter for Zobrist {
                     0
                 }
             },
-            Alteration::Assert(MetadataAssertion::StartTurn(m)) => {
+            Alteration::Turn => {
                 HazelZobrist::side_to_move_mask()
             },
             // Alteration::Assert(metadata) => {

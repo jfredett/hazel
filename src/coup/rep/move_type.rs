@@ -32,6 +32,16 @@ pub enum MoveType {
     PROMOTION_CAPTURE_QUEEN = 0b1111,
 }
 
+#[cfg(test)]
+impl quickcheck::Arbitrary for MoveType {
+    fn arbitrary(g: &mut quickcheck::Gen) -> MoveType {
+        let u = u16::arbitrary(g) & 0b1111;
+        MoveType::new(u)
+    }
+}
+
+
+
 impl MoveType {
     pub fn decode(self) -> &'static str {
         match self {

@@ -82,6 +82,12 @@ impl<'a, const SIZE: usize, S> TapeFamiliar<'a, SIZE, S> {
         }
     }
 
+    pub fn rewind_until(&mut self, predicate: fn(Alteration) -> bool) {
+        while let Some(alter) = self.tape.read_address(self.position) && predicate(alter) {
+            self.rewind();
+        }
+    }
+
     pub fn rewind(&mut self) {
         self.position -= 1;
         if let Some(alter) = self.tape.read_address(self.position) {
@@ -105,7 +111,7 @@ impl Alter for PositionZobrist {
     fn alter_mut(&mut self, alter: Alteration) -> &mut Self {
         self.current.alter_mut(alter);
 
-        if matches!(alter, Alteration::Assert(MetadataAssertion::StartTurn(_))) || matches!(alter, Alteration::InitialMetadata(_)) {
+        if matches!(alter, Alteration::End) || matches!(alter, Alteration::InitialMetadata(_)) {
             tracing::debug!("Updating Position Hash current hash: {:?}", self.current);
             self.position = self.current;
         }
@@ -297,6 +303,9 @@ mod tests {
     use crate::types::Color;
     use crate::{notation::ben::BEN, types::Occupant};
     use crate::notation::*;
+    use crate::constants::File;
+    use crate::coup::rep::MoveType;
+    use crate::game::castle_rights::CastleRights;
 
     use super::*;
 
@@ -307,10 +316,20 @@ mod tests {
         raw_tape.write_all(&start_pos_alts);
 
         raw_tape.write_all(&[
-            Alteration::Assert(MetadataAssertion::StartTurn(Color::WHITE)),
-            Alteration::remove(D2, Occupant::white_pawn()),
-            Alteration::place(D4, Occupant::white_pawn()),
-            Alteration::Assert(MetadataAssertion::EndTurn)
+            Alteration::Turn,
+                Alteration::Assert(MetadataAssertion::SideToMove(Color::WHITE)),
+                Alteration::Assert(MetadataAssertion::CastleRights(CastleRights::default())),
+                Alteration::Assert(MetadataAssertion::FiftyMoveCount(0u8)),
+                Alteration::Assert(MetadataAssertion::FullMoveCount(1u16)),
+
+                Alteration::remove(D2, Occupant::white_pawn()),
+                Alteration::place(D4, Occupant::white_pawn()),
+
+                Alteration::Inform(MetadataAssertion::EnPassant(File::D)),
+                Alteration::Inform(MetadataAssertion::FiftyMoveCount(0u8)),
+                Alteration::Inform(MetadataAssertion::MoveType(MoveType::DOUBLE_PAWN)),
+                Alteration::Inform(MetadataAssertion::SideToMove(Color::BLACK)),
+            Alteration::End,
         ]);
 
         raw_tape
@@ -329,10 +348,20 @@ mod tests {
     fn zobrist_for_startpos_and_d4() -> Zobrist {
         let mut z : Zobrist = zobrist_for_startpos();
         let alts = vec![
-            Alteration::Assert(MetadataAssertion::StartTurn(Color::WHITE)),
-            Alteration::remove(D2, Occupant::white_pawn()),
-            Alteration::place(D4, Occupant::white_pawn()),
-            Alteration::Assert(MetadataAssertion::EndTurn)
+            Alteration::Turn,
+                Alteration::Assert(MetadataAssertion::SideToMove(Color::WHITE)),
+                Alteration::Assert(MetadataAssertion::CastleRights(CastleRights::default())),
+                Alteration::Assert(MetadataAssertion::FiftyMoveCount(0u8)),
+                Alteration::Assert(MetadataAssertion::FullMoveCount(1u16)),
+
+                Alteration::remove(D2, Occupant::white_pawn()),
+                Alteration::place(D4, Occupant::white_pawn()),
+
+                Alteration::Inform(MetadataAssertion::EnPassant(File::D)),
+                Alteration::Inform(MetadataAssertion::FiftyMoveCount(0u8)),
+                Alteration::Inform(MetadataAssertion::MoveType(MoveType::DOUBLE_PAWN)),
+                Alteration::Inform(MetadataAssertion::SideToMove(Color::BLACK)),
+            Alteration::End,
         ];
         for alt in alts {
             z.alter_mut(alt);
@@ -356,92 +385,13 @@ mod tests {
         familiar.sync_to_read_head();
         tracing::debug!("\n{:?}", familiar);
         assert_eq!(zobrist_for_startpos_and_d4(), familiar.state);
-        familiar.rewind_by(3);
+        familiar.rewind_until(|a| matches!(a, Alteration::Turn));
         tracing::debug!("\n{:?}", familiar);
         assert_eq!(zobrist_for_startpos(), familiar.state);
 
     }
 
 
-    // This is a bad test.
-    // #[test]
-    #[tracing_test::traced_test]
-    fn head_hash_is_maintained_correctly() {
-        let mut tape = tape_with_startpos_and_d4();
-
-        // The position is calculated to start and matches an external calculation.
-        assert_eq!(zobrist_for_startpos_and_d4(), tape.head_hash());
-        assert_eq!(zobrist_for_startpos_and_d4(), tape.position_hash());
-        tracing::debug!("Tape after setup: {:?}", tape);
-
-
-        let actual_initial_position_hash = tape.position_hash();
-        let expected_initial_position_hash = zobrist_for_startpos_and_d4();
-        let expected_initial_head_hash = zobrist_for_startpos_and_d4();
-        let expected_middle_hash = zobrist_for_startpos_and_d4() ^ Zobrist::from(HazelZobrist::side_to_move_mask());
-        let expected_final_position_hash = zobrist_for_startpos();
-
-        // The initial step just takes us off the EOT (which is just the first `None` after all the
-        // instructions, we write a bit like a stack, in that we don't allow internal `none`s
-        // (yet).
-        //
-        //
-        // The Tape Right Now:
-        //
-        //       POSITION(1. d4)                POSITION ^ SIDE_TO_MOVE     POSITION(1. d4 ..)
-        //                                                                  HEAD_HASH, POSITION_HASH        HEAD
-        // ..., START_TURN(WHITE), REMOVE(D2),  PLACE(D4),                  START_TURN(BLACK),              None]
-        //
-        tape.step_backward();
-
-        tracing::debug!("Tape stepping back 1: {:?}", tape);
-        //
-        //       POSITION(1. d4)                POSITION ^ SIDE_TO_MOVE     POSITION(1. d4 ..)
-        //                                                                  HEAD_HASH, POSITION_HASH, HEAD
-        // ..., START_TURN(WHITE), REMOVE(D2),  PLACE(D4),                  START_TURN(BLACK),              None]
-        //
-        assert_eq!(expected_initial_head_hash, tape.head_hash());
-
-        tape.step_backward();
-        //
-        //       POSITION(1. d4)                POSITION ^ SIDE_TO_MOVE        POSITION(1. d4 ..)
-        //                                      HEAD_HASH, POSITION_HASH, HEAD
-        // ..., START_TURN(WHITE), REMOVE(D2),  PLACE(D4),                     START_TURN(BLACK), EOT]
-        //
-        // We are at the unenviable middle position w/ position_hash for a moment while we unwind
-        // back to the next StartTurn.
-        assert_eq!(tape.head_hash(), tape.position_hash());
-        let step_1_head_hash = tape.head_hash();
-        assert_eq!(expected_middle_hash, tape.position_hash());
-
-        tape.step_backward();
-        tracing::debug!("Tape stepping back 2: {:?}", tape);
-        //
-        //       POSITION(1. d4)                         POSITION ^ SIDE_TO_MOVE     POSITION(1. d4 ..)
-        //                                  HEAD_HASH    POSITION_HASH
-        // ..., START_TURN(WHITE),          REMOVE(D2),  PLACE(D4),                  START_TURN(BLACK), EOT]
-        //
-        assert_ne!(step_1_head_hash, tape.head_hash());
-        let step_2_head_hash = tape.head_hash();
-        assert_eq!(expected_middle_hash, tape.position_hash());
-
-        tape.step_backward();
-        tracing::debug!("Tape stepping back 3: {:?}", tape);
-        // None of these are matching u\ with previous rounds
-        //
-        //       POSITION(1. d4)                         POSITION ^ SIDE_TO_MOVE     POSITION(1. d4 ..)
-        //      HEAD_HASH, POSITION_HASH
-        // ..., START_TURN(WHITE),          REMOVE(D2),  PLACE(D4),                  START_TURN(BLACK), EOT]
-        //
-        assert_ne!(zobrist_for_startpos_and_d4(), tape.head_hash()); // this should compare to previous HEAD
-        assert_ne!(zobrist_for_startpos_and_d4(), tape.position_hash());
-        let middle_hash = tape.position_hash() ^ Zobrist::from(HazelZobrist::side_to_move_mask());
-        assert_ne!(zobrist_for_startpos_and_d4(), middle_hash);
-
-        // The position is back to the startpos, and the position_hash is updated
-        assert_eq!(zobrist_for_startpos(), tape.head_hash());
-        assert_eq!(zobrist_for_startpos(), tape.position_hash());
-    }
 
     #[test]
     fn write_and_read() {

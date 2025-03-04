@@ -308,16 +308,47 @@ mod proxy_methods {
         let m = Move::new(D2, D4, MoveType::DOUBLE_PAWN);
         assert!(m.is_double_pawn_push_for(Color::WHITE));
     }
+}
+
+
+mod compilation {
+    use ben::BEN;
+
+    use crate::alteration::MetadataAssertion;
+    use crate::game::castle_rights::CastleRights;
+    use crate::game::position_metadata::PositionMetadata;
+    use crate::board::simple::PieceBoard;
+    use crate::interface::Alter;
+    use crate::Alteration;
+    use crate::coup::rep::MoveType;
+
+    use super::*;
 
     #[test]
-    fn is_short_castling_move_for() {
-        let m = Move::short_castle(Color::WHITE);
-        assert!(m.is_short_castling_move_for(Color::WHITE));
-    }
+    fn test_compile() {
+        let mut board = PieceBoard::default();
+        board.set_fen(BEN::start_position());
+        let mut meta = PositionMetadata::default();
 
-    #[test]
-    fn is_long_castling_move_for() {
-        let m = Move::long_castle(Color::WHITE);
-        assert!(m.is_long_castling_move_for(Color::WHITE));
+        let expected_alterations = vec![
+            Alteration::Turn,
+                Alteration::Assert(MetadataAssertion::SideToMove(Color::WHITE)),
+                Alteration::Assert(MetadataAssertion::CastleRights(CastleRights::default())),
+                Alteration::Assert(MetadataAssertion::FiftyMoveCount(0u8)),
+                Alteration::Assert(MetadataAssertion::FullMoveCount(1u16)),
+
+                Alteration::remove(D2, Occupant::white_pawn()),
+                Alteration::place(D4, Occupant::white_pawn()),
+
+                Alteration::Inform(MetadataAssertion::EnPassant(File::D)),
+                Alteration::Inform(MetadataAssertion::FiftyMoveCount(0u8)),
+                Alteration::Inform(MetadataAssertion::MoveType(MoveType::DOUBLE_PAWN)),
+                Alteration::Inform(MetadataAssertion::SideToMove(Color::BLACK)),
+            Alteration::End,
+        ];
+
+        let mov = Move::new(D2, D4, MoveType::DOUBLE_PAWN);
+
+        similar_asserts::assert_eq!(mov.new_compile(&board, &meta), expected_alterations);
     }
 }
