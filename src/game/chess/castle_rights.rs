@@ -1,11 +1,22 @@
 use std::fmt::{Debug, Display};
 
-#[derive(Default, PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub struct CastleRights {
     pub white_short: bool,
     pub white_long: bool,
     pub black_short: bool,
     pub black_long: bool,
+}
+
+impl Default for CastleRights {
+    fn default() -> Self {
+        CastleRights {
+            white_long: true,
+            white_short: true,
+            black_long: true,
+            black_short: true,
+        }
+    }
 }
 
 impl Debug for CastleRights {

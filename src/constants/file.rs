@@ -14,6 +14,12 @@ pub enum File {
     H = 7,
 }
 
+impl std::fmt::Display for File {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 impl From<usize> for File {
     fn from(value: usize) -> Self {
         File::from_index(value)

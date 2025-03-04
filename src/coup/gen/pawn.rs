@@ -1,4 +1,5 @@
 use crate::game::chess::position::Position;
+use crate::notation::Square;
 use crate::Query;
 use crate::types::{bitboard, Direction, Occupant, Piece};
 use crate::coup::rep::{Move, MoveType};
@@ -58,9 +59,9 @@ pub fn en_passant(position: &Position) -> impl Iterator<Item = Move> {
     // TODO: is this just `self.our_pawn_attacks() & bitboard!(ep_square)`?
 
     let mut ret = vec![];
-    if let Some(ep_square) = position.metadata().en_passant {
+    if let Some(ep_file) = position.metadata().en_passant {
+        let ep_square = Square::from((position.villain().en_passant_rank(), ep_file));
         let color = position.hero();
-        tracing::debug!("ep_square {}", ep_square);
         if let Some(sq) = ep_square.left_oblique(&!color) {
             if position.get(sq) == Occupant::Occupied(Piece::Pawn, color) {
                ret.push(Move::new(sq, ep_square, MoveType::EP_CAPTURE));

@@ -204,6 +204,7 @@ impl BEN {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::constants::File;
     use crate::game::castle_rights::CastleRights;
     use crate::notation::*;
     use crate::types::Piece;
@@ -259,8 +260,9 @@ mod tests {
 
         let metadata = PositionMetadata {
             side_to_move: Color::BLACK,
+            in_check: false,
             castling: CastleRights::default(),
-            en_passant: Some(A1),
+            en_passant: Some(File::A),
             halfmove_clock: 0,
             fullmove_number: 1
         };
