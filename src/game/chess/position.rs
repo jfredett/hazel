@@ -1,9 +1,8 @@
 use std::{fmt::Debug, sync::RwLock};
 
+use crate::constants::move_tables::{KNIGHT_MOVES, KING_ATTACKS};
 
-use tracing::Metadata;
-
-use crate::{alteration::MetadataAssertion, board::PieceBoard, constants::move_tables::{KING_ATTACKS, KNIGHT_MOVES}, coup::{gen::cache::ATM, rep::Move}, notation::{ben::BEN, Square}, types::{pextboard, tape::{ProceedToken, Tape}, Bitboard, Color, Direction, Occupant, Piece}, Alter, Alteration, Query};
+use crate::{board::PieceBoard, coup::{gen::cache::ATM, rep::Move}, notation::{ben::BEN, Square}, types::{pextboard, tape::Tape, Bitboard, Color, Direction, Occupant, Piece}, Alter, Alteration, Query};
 use crate::types::zobrist::Zobrist;
 
 use super::position_metadata::PositionMetadata;
@@ -75,8 +74,8 @@ impl PartialEq for Position {
 
 impl Debug for Position {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "{:?}", self.initial);
-        writeln!(f, "{:?}", self.zobrist());
+        writeln!(f, "{:?}", self.initial)?;
+        writeln!(f, "{:?}", self.zobrist())?;
         writeln!(f, "{:?}", self.tape)
     }
 }
@@ -116,14 +115,12 @@ impl Position {
             inner.metadata.alter_mut(alter);
         }
 
-        let mut ret = Self {
+        Self {
             initial: fen,
             inner: inner.into(),
             tape: tape.into(),
             atm: POSITION_CACHE.atm()
-        };
-
-        ret
+        }
     }
 
     pub fn with_moves(fen: impl Into<BEN>, moves: Vec<Move>) -> Self {
@@ -206,7 +203,7 @@ impl Position {
         */
 
         let new_alterations: Vec<Alteration>;
-        let mut position_hash: Zobrist;
+        let position_hash: Zobrist;
 
         {   // Incremental Update Calculation
             // Inner is read-locked
@@ -263,8 +260,6 @@ impl Position {
 
         let unmove_hash : Zobrist;
         let mut unmoves = vec![];
-
-        let mut bailout = 0;
 
         { // Tape is write-locked
             let mut tape = self.tape.write().unwrap();
@@ -391,8 +386,6 @@ impl Position {
     }
 
     pub fn our_checks(&self) -> Bitboard {
-        let blockers = self.all_blockers();
-        let potential_attackers = self.enemies();
         // To calculate all the squares from which a piece of a given type might give a check to
         // our king. Consider:
         //
@@ -410,12 +403,17 @@ impl Position {
         //
         // 1. All of the C file
         // 2. All of the 4 rank
-        // 3. the A2-G8 diag
+        // 3. the A2-G8 diag up to E6, exclusive (rook of opposite color can't check us from
+        //    there), but the blocked squares are still interesting, so it might be worthwhile to
+        //    optionally have a blocker mask.
         // 4. the A6-F1 diag
         // 5. A3, A6, B2, B7, D2, D7, E3, E6 - the knight-moves around the king.
         //
         // In order for the king to be checked, a piece of the correct type must be present on the
-        // correct square, this calculates all the valid check squares,
+        // correct square, this calculates all the valid check squares, assuming that it is
+        // possible for an enemy piece to get there. It _does not ensure that_. That is, this table
+        // does not imply that there are moves which make put us in check, only that any of these
+        // squares have _a_ piece which _could_ check the king _if_ it were there.
         self.our_assassin_squares(Piece::Bishop) |
         self.our_assassin_squares(Piece::Rook) |
         self.our_assassin_squares(Piece::Queen) |

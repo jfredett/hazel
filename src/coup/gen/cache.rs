@@ -1,9 +1,6 @@
 use std::{collections::HashMap, sync::RwLock, fmt::Debug};
 
-use crate::{game::position::Position, notation::Square, types::{Bitboard, Color, Occupant, Piece}, Alteration};
-use crate::notation::*;
 use crate::types::zobrist::*;
-
 
 #[derive(Default, Debug)]
 pub struct Cache<E> where E : Clone {
@@ -50,7 +47,7 @@ pub type ATM<'a, E> = &'a Cache<E>;
 
 #[cfg(test)]
 mod tests {
-    use crate::notation::ben::BEN;
+    use crate::{game::position::Position, notation::ben::BEN};
 
     use super::*;
 

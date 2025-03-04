@@ -81,7 +81,7 @@ impl Alter for PositionMetadata {
                     },
                     MetadataAssertion::InCheck => self.in_check = true,
                     MetadataAssertion::CastleRights(rights) => self.castling = rights,
-                    MetadataAssertion::EnPassant(file) => self.en_passant = { Some(file) },
+                    MetadataAssertion::EnPassant(file) => self.en_passant = Some(file),
                     MetadataAssertion::FullMoveCount(count) => self.fullmove_number = count,
                     MetadataAssertion::FiftyMoveCount(count) => self.halfmove_clock = count,
                     _ => { }

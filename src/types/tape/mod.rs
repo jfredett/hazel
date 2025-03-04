@@ -1,7 +1,5 @@
-use std::sync::RwLock;
 use std::fmt::Debug;
 
-use crate::alteration::MetadataAssertion;
 use crate::{Alter, Alteration};
 
 use crate::types::zobrist::Zobrist;
@@ -141,7 +139,7 @@ pub struct Tape<const SIZE: usize> {
 
 impl<const SIZE: usize> Debug for Tape<SIZE> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "\nTAPE(head_hash: {:?}, position_hash: {:?}, head: {:#04x})", self.head_hash(), self.position_hash(), self.head);
+        writeln!(f, "\nTAPE(head_hash: {:?}, position_hash: {:?}, head: {:#04x})", self.head_hash(), self.position_hash(), self.head)?;
         let mut running_hash = Zobrist::empty();
         for (idx, entry) in self.data.into_iter().enumerate() {
             match entry {
@@ -152,18 +150,17 @@ impl<const SIZE: usize> Debug for Tape<SIZE> {
                     //     writeln!(f, "HEAD*   | NOOP");
                     //     writeln!(f, "... {:?} NOOP", SIZE - self.head);
                     // }
-                    writeln!(f, "END-OF-TAPE");
+                    writeln!(f, "END-OF-TAPE")?;
                     break;
                 }
                 Some(alter) => {
                     running_hash.alter_mut(alter);
                     if idx == self.head {
-                        writeln!(f, "HEAD*    | {:>width$} | {:?}", alter, running_hash, width = 32);
+                        writeln!(f, "HEAD*    | {:>64} | {:?}", alter, running_hash)?;
                     } else {
-                        writeln!(f, "{:>#008X} | {:>width$} | {:?}", idx, alter, running_hash, width = 32);
+                        writeln!(f, "{:>#008X} | {:>64} | {:?}", idx, alter, running_hash)?;
                     }
                 }
-                _ => { continue; }
             }
         }
         writeln!(f, "=================================")
