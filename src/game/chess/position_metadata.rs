@@ -153,6 +153,8 @@ const EP_FILE_MASK: u8   = 0b0000_0111;
 const EP_FILE_SHIFT: u8  = 0;
 const STM_MASK: u8       = 0b0000_0010;
 const STM_SHIFT: u8      = 1;
+const INCHECK_MASK: u8   = 0b0000_0001;
+const INCHECK_SHIFT: u8  = 0;
 const HMC_MASK: u8       = 0b1111_1100;
 const HMC_SHIFT: u8      = 2;
 
@@ -196,7 +198,6 @@ impl PositionMetadata {
             },
             None => panic!("Invalid en passant square"),
         };
-
 
         self.side_to_move = side_to_move;
         self.castling = castling;
@@ -279,6 +280,7 @@ impl From<PositionMetadata> for u32 {
 
         b2 |= (data.halfmove_clock) << HMC_SHIFT;
         b2 |= (data.side_to_move as u8) << STM_SHIFT;
+        b2 |= if data.in_check { INCHECK_MASK << INCHECK_SHIFT } else { 0 };
 
         let [b3, b4] = data.fullmove_number.to_ne_bytes();
 
@@ -299,10 +301,10 @@ impl From<u32> for PositionMetadata {
         // lowest bit. the LSB is unused.
         // Shifts again to kill unused bits.
         let halfmove_clock = (b2 & HMC_MASK) >> HMC_SHIFT;
+        let in_check = (b2 & INCHECK_MASK) >> INCHECK_SHIFT != 0;
         let side_to_move = Color::from((b2 & STM_MASK) >> STM_SHIFT);
 
         // b1 contains the Castling Information and EP square:
-        // magic numbers are just shifting off the unused portions.
         let castling = CastleRights::from((b1 & CASTLING_MASK) >> CASTLING_SHIFT);
 
         let en_passant = if (b1 & EP_FLAG_MASK) != 0 {
@@ -313,6 +315,8 @@ impl From<u32> for PositionMetadata {
         };
 
 
+
+
         // b3 and b4 contain the fullmove number as a u16
         let fullmove_number = u16::from_ne_bytes([b3, b4]);
 
@@ -320,8 +324,7 @@ impl From<u32> for PositionMetadata {
 
         Self {
             side_to_move,
-            // FIXME: This is wrong, I need to mask it off.
-            in_check: false,
+            in_check,
             castling,
             en_passant,
             halfmove_clock,
