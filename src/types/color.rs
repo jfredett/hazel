@@ -56,8 +56,11 @@ impl Color {
         (!self).pawn_mask()
     }
 
+    /// the rank where the given color can _capture a piece_ via the EP rule (e.g., rank 6 for
+    /// White and rank 3 for black).
     pub fn en_passant_rank(self) -> usize {
         match self {
+            // note the off-by-ones, rank == 5 -> 6th rank.
             Color::WHITE => 5,
             Color::BLACK => 2,
         }
