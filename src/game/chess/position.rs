@@ -274,8 +274,6 @@ impl Position {
                     unmoves.push(alter);
 
                     if matches!(alter, Alteration::Turn) {
-                        // This ensures we land on the `End` and not the `Turn`
-                        tape.step_backward();
                         break;
                     }
                 }
@@ -699,8 +697,8 @@ mod tests {
             let mut p = Position::with_moves(BEN::start_position(), movs);
 
 
-            p.make(Move::new(B2, B4, MoveType::DOUBLE_PAWN));
             let p_prior = p.clone();
+            p.make(Move::new(B2, B4, MoveType::DOUBLE_PAWN));
             p.unmake();
 
             assert_eq!(p_prior, p);
