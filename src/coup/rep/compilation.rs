@@ -7,13 +7,6 @@ impl Move {
     // TODO: Query metadata situation needs addressing, should have like, a gamestate trait?
     pub fn new_compile<C>(&self, context: &C, metadata: &PositionMetadata) -> Vec<Alteration> where C : Query {
         let mut ret : Vec<Alteration> = vec![];
-        let source = self.source();
-        let target = self.target();
-
-        let source_occupant = context.get(source);
-        let target_occupant = context.get(target);
-
-        let contextprime = self.disambiguate(context).unwrap();
 
         // A turn looks like this:
         //

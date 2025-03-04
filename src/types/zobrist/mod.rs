@@ -1,7 +1,7 @@
-use std::{collections::HashMap, sync::RwLock, fmt::Debug};
+use std::fmt::Debug;
 
-use crate::{alteration::MetadataAssertion, game::position::Position, notation::Square, query, types::{Bitboard, Color, Occupant, Piece}, Alteration, Query};
-use crate::notation::*;
+use crate::types::Color;
+use crate::{notation::Square, query, types::{Occupant, Piece}, Alteration, Query};
 use crate::interface::Alter;
 
 pub struct ZobristTable<const SEED: u64>;
@@ -236,7 +236,8 @@ mod tests {
     mod zobrist {
         use quickcheck::{Arbitrary, Gen};
 
-        use crate::{game::position_metadata::PositionMetadata, types::{color::COLORS, piece::PIECES}};
+        use crate::{alteration::MetadataAssertion, game::position_metadata::PositionMetadata, types::{color::COLORS, piece::PIECES}};
+        use crate::notation::*;
 
         use super::*;
 

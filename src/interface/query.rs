@@ -1,5 +1,5 @@
 use crate::{
-    game::position_metadata::PositionMetadata, notation::*, types::{zobrist::Zobrist, Occupant}, util::charray::{Charray, Origin}
+    game::position_metadata::PositionMetadata, notation::*, types::Occupant, util::charray::{Charray, Origin}
 };
 
 use super::Alteration;

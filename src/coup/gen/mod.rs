@@ -12,7 +12,7 @@ mod pawn;
 mod slider;
 
 #[derive(Debug)]
-struct MoveGenerator {
+pub struct MoveGenerator {
     // This should actually just be passed into the generate_moves, and MoveGen is just for holding
     // caches.
     // TODO: Cache anything worth caching?

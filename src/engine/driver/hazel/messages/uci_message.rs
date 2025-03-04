@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use tracing::error;
 
-use crate::{engine::{driver::{Hazel, HazelResponse}, uci::UCIMessage}, game::{position::Position, reason::Reason}, notation::{ben::BEN, uci::UCI}, types::witch::{MessageFor, Witch}};
+use crate::{engine::{driver::{Hazel, HazelResponse}, uci::UCIMessage}, game::position::Position, notation::{ben::BEN, uci::UCI}, types::witch::{MessageFor, Witch}};
 
 #[async_trait]
 impl<const BUF_SIZE: usize> MessageFor<Witch<BUF_SIZE, Hazel, HazelResponse>> for UCIMessage {

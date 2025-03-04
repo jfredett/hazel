@@ -1,7 +1,7 @@
 use crate::game::chess::position::Position;
 use crate::notation::Square;
 use crate::Query;
-use crate::types::{bitboard, Direction, Occupant, Piece};
+use crate::types::{Direction, Occupant, Piece};
 use crate::coup::rep::{Move, MoveType};
 
 
@@ -149,7 +149,7 @@ mod tests {
     #[macro_export]
     macro_rules! assert_finds_moves {
         ($func_name:ident, $fen:expr, [ $($move:expr),* ]) => {
-            let mut position = Position::new(BEN::new($fen));
+            let position = Position::new(BEN::new($fen));
             let mut moves : Vec<Move> = $func_name(&position).collect();
             let mut expected_moves : Vec<Move> = vec![$($move),*];
 
