@@ -81,9 +81,10 @@ impl<'a, const SIZE: usize, S> TapeFamiliar<'a, SIZE, S> {
     }
 
     pub fn rewind_until(&mut self, predicate: fn(Alteration) -> bool) {
-        while let Some(alter) = self.tape.read_address(self.position) && predicate(alter) {
+        while let Some(alter) = self.tape.read_address(self.position) && !predicate(alter) {
             self.rewind();
         }
+        self.rewind(); // rewind is inclusive
     }
 
     pub fn rewind(&mut self) {
@@ -380,10 +381,10 @@ mod tests {
         let mut tape = tape_with_startpos_and_d4();
         let mut familiar : TapeFamiliar<128, Zobrist> = tape.conjure();
         familiar.sync_to_read_head();
-        tracing::debug!("\n{:?}", familiar);
+        tracing::debug!("synced \n{:?}", familiar);
         assert_eq!(zobrist_for_startpos_and_d4(), familiar.state);
         familiar.rewind_until(|a| matches!(a, Alteration::Turn));
-        tracing::debug!("\n{:?}", familiar);
+        tracing::debug!("rewound \n{:?}", familiar);
         assert_eq!(zobrist_for_startpos(), familiar.state);
 
     }
