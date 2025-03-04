@@ -128,13 +128,6 @@ impl Alter for Zobrist {
             Alteration::Remove { square: sq, occupant: Occupant::Occupied(piece, color) } => {
                 HazelZobrist::zobrist_mask_for(sq, color, piece)
             },
-            Alteration::InitialMetadata(m) => {
-                if m.side_to_move.is_black() {
-                    HazelZobrist::side_to_move_mask()
-                } else {
-                    0
-                }
-            },
             Alteration::Turn => {
                 HazelZobrist::side_to_move_mask()
             },

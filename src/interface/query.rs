@@ -94,9 +94,8 @@ pub fn to_alterations<Q>(board: &Q) -> impl Iterator<Item = Alteration> where Q 
     );
 
     if let Some(metadata) = board.try_metadata() {
-        // let metadata_asserts : Vec<Alteration> = metadata.into();
-        // ret.extend(metadata_asserts);
-        ret.push(Alteration::InitialMetadata(metadata));
+        let metadata_information : Vec<Alteration> = metadata.into_information();
+        ret.extend(metadata_information);
     }
 
     ret.into_iter()

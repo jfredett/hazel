@@ -119,12 +119,13 @@ mod tests {
     }
 
     #[test]
+    #[tracing_test::traced_test]
     fn perft_2() {
         assert_no_difference!(perft_start_position(2), 400);
     }
 
-    #[tracing_test::traced_test]
     #[test]
+    #[tracing_test::traced_test]
     fn perft_3() {
         assert_no_difference!(perft_start_position(3), 8_902);
     }
