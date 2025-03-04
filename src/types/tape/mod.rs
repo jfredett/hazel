@@ -110,7 +110,7 @@ impl Alter for PositionZobrist {
     fn alter_mut(&mut self, alter: Alteration) -> &mut Self {
         self.current.alter_mut(alter);
 
-        if matches!(alter, Alteration::End) || matches!(alter, Alteration::InitialMetadata(_)) {
+        if matches!(alter, Alteration::End) {
             tracing::debug!("Updating Position Hash current hash: {:?}", self.current);
             self.position = self.current;
         }
@@ -184,7 +184,11 @@ impl<const SIZE: usize> Tape<SIZE> {
 
     /// the point to which the tape is valid
     pub fn read_head(&self) -> usize {
-        self.write_head() - 1
+        if self.write_head() == 0 {
+            0
+        } else {
+            self.write_head() - 1
+        }
     }
 
     /// the next empty slot to write to

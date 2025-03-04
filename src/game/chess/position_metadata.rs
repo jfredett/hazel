@@ -65,26 +65,47 @@ impl Alter for PositionMetadata {
 
     fn alter_mut(&mut self, alteration: Alteration) -> &mut Self {
         match alteration {
-            Alteration::InitialMetadata(metadata) => {
-                *self = metadata;
-            },
             // Should I clear at End or Start? Maybe I can get rid of end... :/
             Alteration::Turn => {
                 self.en_passant = None;
             },
-            Alteration::Assert(new_metadata) => {
+            Alteration::Inform(new_metadata) => {
                 // TODO: this probably boils down to something that could be done with bit magic
 
+                tracing::debug!("\n\nmy metadata: {:?}\nnew_metadata: {:?}\n", self, new_metadata);
                 match new_metadata {
-                    MetadataAssertion::SideToMove(color) => {
-                        self.side_to_move = color;
-                    },
+                    MetadataAssertion::SideToMove(color) => { self.side_to_move = color; },
                     MetadataAssertion::InCheck => self.in_check = true,
                     MetadataAssertion::CastleRights(rights) => self.castling = rights,
                     MetadataAssertion::EnPassant(file) => self.en_passant = Some(file),
                     MetadataAssertion::FullMoveCount(count) => self.fullmove_number = count,
                     MetadataAssertion::FiftyMoveCount(count) => self.halfmove_clock = count,
-                    _ => { }
+                    MetadataAssertion::MoveType(_) => { }
+                }
+            },
+            // TODO: This should be checking and probably just `panic` for now if the metadata
+            // doesn't match expected values.
+            Alteration::Assert(new_metadata) => {
+                match new_metadata {
+                    MetadataAssertion::SideToMove(color) => {
+                        if self.side_to_move != color { panic_or_trace(format!("Incorrect metadata update, Side To Move is {}, expected {}", color, self.side_to_move)); }
+                    },
+                    MetadataAssertion::InCheck => {
+                        if !self.in_check { panic_or_trace("Asserted we are in check, but we're not!".to_string()); }
+                    },
+                    MetadataAssertion::CastleRights(rights) => {
+                        if self.castling != rights { panic_or_trace(format!("Incorrect metadata update, Castling is {:?}, expected {:?}", rights, self.castling)); }
+                    },
+                    MetadataAssertion::EnPassant(file) => {
+                        if self.en_passant != Some(file) { panic_or_trace(format!("Incorrect metadata update, En Passant File is {:?}, expected {:?}", file, self.en_passant)); }
+                    }
+                    MetadataAssertion::FullMoveCount(count) => {
+                        if self.fullmove_number != count { panic_or_trace(format!("Incorrect metadata update, Full Move Count is {:?}, expected {:?}", count, self.fullmove_number)); }
+                    },
+                    MetadataAssertion::FiftyMoveCount(count) => {
+                        if self.halfmove_clock != count { panic_or_trace(format!("Incorrect metadata update, Fifty Move Clock is {:?}, expected {:?}", count, self.halfmove_clock)); }
+                    }
+                    MetadataAssertion::MoveType(_) => { }
                 }
             },
             Alteration::Clear => *self = Self::default(),
@@ -93,6 +114,18 @@ impl Alter for PositionMetadata {
         self
     }
 }
+
+#[cfg(not(test))]
+fn panic_or_trace(message: String) {
+    tracing::error!(message);
+}
+
+
+#[cfg(test)]
+fn panic_or_trace(message: String) {
+    panic!("{}", message);
+}
+
 
 impl Default for PositionMetadata {
     fn default() -> Self {
@@ -159,6 +192,30 @@ const HMC_MASK: u8       = 0b1111_1100;
 const HMC_SHIFT: u8      = 2;
 
 impl PositionMetadata {
+    pub fn into_information(&self) -> Vec<Alteration> {
+        let mut ret = vec![];
+        ret.push(Alteration::Inform(MetadataAssertion::SideToMove(self.side_to_move)));
+        ret.push(Alteration::Inform(MetadataAssertion::CastleRights(self.castling)));
+        if let Some(ep) = self.en_passant {
+            ret.push(Alteration::Inform(MetadataAssertion::EnPassant(ep)));
+        }
+        ret.push(Alteration::Inform(MetadataAssertion::FiftyMoveCount(self.halfmove_clock)));
+        ret.push(Alteration::Inform(MetadataAssertion::FullMoveCount(self.fullmove_number)));
+        ret
+    }
+
+    pub fn into_assertions(&self) -> Vec<Alteration> {
+        let mut ret = vec![];
+        ret.push(Alteration::Assert(MetadataAssertion::SideToMove(self.side_to_move)));
+        ret.push(Alteration::Assert(MetadataAssertion::CastleRights(self.castling)));
+        if let Some(ep) = self.en_passant {
+            ret.push(Alteration::Assert(MetadataAssertion::EnPassant(ep)));
+        }
+        ret.push(Alteration::Assert(MetadataAssertion::FiftyMoveCount(self.halfmove_clock)));
+        ret.push(Alteration::Assert(MetadataAssertion::FullMoveCount(self.fullmove_number)));
+        ret
+    }
+
     pub fn parse(&mut self, parts: &mut SplitWhitespace<'_>) {
         let side_to_move = parts.next();
         let castling = parts.next();

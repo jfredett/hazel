@@ -108,7 +108,9 @@ impl Position {
 
         let mut inner = InnerPosition::default();
         let mut tape = Tape::new();
+        tracing::debug!("tape before write: {:?}", tape);
         tape.write_all(&alters);
+        tracing::debug!("tape after write: {:?}", tape);
 
         for alter in alters {
             inner.board.alter_mut(alter);
@@ -186,24 +188,16 @@ impl Position {
 
 
         /*
-        * the ideal version of this is something like:
-        *
-        * let (&board, &metadata) = self.atm.get(tape.position_hash())
-        * let alterations = mov.compile(&board, &metadata)
-        * tape.write_all(&alterations)
-        * gamestate_familiar.sync_to_read_head();
-        * self.atm().update(tape.position_hash()) = gamestate_familiar.state;
-        *
         * The gamestate familiar manages the cache, on a cache miss above I suppose it would need
         * to rewind to the last available, we'll still need some kind of cached state in the
         * position itself probably? Not sure.
+        *   To do that we need a gamestate object/trait
         *
         * Ideally it borrows the representation instead of copying.
         *
         */
 
         let new_alterations: Vec<Alteration>;
-        let position_hash: Zobrist;
 
         {   // Incremental Update Calculation
             // Inner is read-locked
@@ -220,7 +214,7 @@ impl Position {
         // Cache Management
         // Tape read-locked, this syncs the head to wherever the write head was last left, which is
         // presently at the end of the turn we just wrote.
-        position_hash = self.tape.read().unwrap().position_hash();
+        let position_hash: Zobrist = self.tape.read().unwrap().position_hash();
 
         // TODO: Ideally this is lazy, so we only update the board as we roll the associated
         // boardfamiliar forward.

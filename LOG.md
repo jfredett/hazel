@@ -2021,3 +2021,22 @@ I'm just tossing a function pointer in the above, but I suspect that should be s
 is not really intended to be called outside the context of the familiar, and it's possible I'll want to build these
 dynamically, especially since these generic familiars will be able to interact with the existing `Variation` structure
 and the `Position` structure as well.
+
+# 4-MAR-2025
+
+## 0937 - atm
+
+I'm back to the perft bugs with the new `Tape` implementation. It's not perfect and needs a ton of sanding, but it's a
+much better and more complete start than I had.
+
+I think the next step is actually going to be wiring this into the UI, so I can manually walk around and watch the perft
+happen and try to catch the Tape misbehaving 'live'. The current bug is definitely just an `unmake` issue, but hard to
+guess from simple trace output, a `TapeWidget` would be helpful, as well as a better way to manage all the `Familiars`
+surrounding the Tape.
+
+I'm also not correctly processing metadata at the moment, the `Inform` blocks don't change the metadata.
+
+So basically, it still doesn't work, but it doesn't doesn't work as doesn'tly as it did didn't before.
+
+I'm going to try to do a little fix-in-place so I can maybe merge this branch before doing more UI stuff, as that's
+going to require building up the communication side of things, and movegen working would help a lot there.

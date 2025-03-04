@@ -6,6 +6,7 @@ pub fn generate_moves(position: &Position) -> impl Iterator<Item = Move> {
     let king_attacks = position.our_king_attacks() & !position.their_reach() & !position.friendlies(); // this should really check for defense of the other pieces?
     let king_quiet = position.our_king_moves() & !position.their_reach() & !king_attacks;
 
+        tracing::debug!("position: {:?}", position);
 
     king_attacks.into_iter().map(move |target_sq| Move::new(source_sq, target_sq, MoveType::CAPTURE)).chain(
         king_quiet.into_iter().map(move |target_sq| Move::new(source_sq, target_sq, MoveType::QUIET)))
@@ -21,9 +22,12 @@ mod tests {
     use super::*;
 
     #[test]
+    #[tracing_test::traced_test]
     fn test_position() {
         let position = Position::new(BEN::new("3k1b2/8/8/2p1P3/3K4/2p1P3/8/8 w - - 0 1"));
         let moves = generate_moves(&position);
+        tracing::debug!("position: {:?}", position);
+        tracing::debug!("position metadata: {:?}", position.metadata());
         similar_asserts::assert_eq!(moves.collect::<Vec<Move>>(), vec![
             Move::new(D4, C3, MoveType::CAPTURE),
             Move::new(D4, D3, MoveType::QUIET),
