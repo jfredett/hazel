@@ -157,9 +157,9 @@ impl<const SIZE: usize> Debug for Tape<SIZE> {
                 Some(alter) => {
                     running_hash.alter_mut(alter);
                     if idx == self.head {
-                        writeln!(f, "HEAD*    | {:>64} | {:?}", alter, running_hash)?;
+                        writeln!(f, "HEAD*    | {:>64} | {:>64?}", alter, running_hash)?;
                     } else {
-                        writeln!(f, "{:>#008X} | {:>64} | {:?}", idx, alter, running_hash)?;
+                        writeln!(f, "{:>#008X} | {:>64} | {:>64?}", idx, alter, running_hash)?;
                     }
                 }
             }
