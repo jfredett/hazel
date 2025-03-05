@@ -14,7 +14,7 @@ pub struct Position {
     pub initial: BEN,
     // caches
     // FIXME: pub only for testing.
-    pub tape: RwLock<Tape<1024>>,
+    pub tape: RwLock<Tape>,
     inner: RwLock<InnerPosition>,
 
     // this should live on movegen?
@@ -107,7 +107,7 @@ impl Position {
         let alters : Vec<Alteration> = fen.to_alterations().collect();
 
         let mut inner = InnerPosition::default();
-        let mut tape = Tape::new();
+        let mut tape = Tape::default();
         tape.write_all(&alters);
 
         for alter in alters {

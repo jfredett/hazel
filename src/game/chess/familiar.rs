@@ -9,6 +9,7 @@ pub struct Familiar<'a> {
     movesheets: Vec<MoveSheet>,
 }
 
+
 impl<'a> Familiar<'a> {
     pub fn new(cursor: Cursor<'a, Action<Move, BEN>>) -> Self {
         Self { cursor, movesheets: vec![MoveSheet::default()] }

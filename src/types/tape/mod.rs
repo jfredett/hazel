@@ -6,8 +6,8 @@ use crate::types::zobrist::Zobrist;
 
 
 #[derive(Debug)]
-pub struct TapeFamiliar<'a, const SIZE: usize, S> {
-    tape: &'a Tape<SIZE>,
+pub struct TapeFamiliar<'a, S> {
+    tape: &'a Tape,
     position: usize,
     state: S,
     update: fn(&mut S, TapeDirection, Alteration)
@@ -29,8 +29,8 @@ impl TapeDirection {
     }
 }
 
-impl<'a, const SIZE: usize, S> TapeFamiliar<'a, SIZE, S> {
-    pub fn new(tape: &'a Tape<SIZE>, state: S, update: fn(&mut S, TapeDirection, Alteration)) -> Self {
+impl<'a, S> TapeFamiliar<'a, S> {
+    pub fn new(tape: &'a Tape, state: S, update: fn(&mut S, TapeDirection, Alteration)) -> Self {
         TapeFamiliar {
             tape,
             position: 0,
@@ -39,7 +39,7 @@ impl<'a, const SIZE: usize, S> TapeFamiliar<'a, SIZE, S> {
         }
     }
 
-    pub fn for_alterable_with_state(tape: &'a Tape<SIZE>, state: S) -> Self where S : Alter {
+    pub fn for_alterable_with_state(tape: &'a Tape, state: S) -> Self where S : Alter {
         TapeFamiliar::new(
             tape,
             state,
@@ -47,13 +47,17 @@ impl<'a, const SIZE: usize, S> TapeFamiliar<'a, SIZE, S> {
                 if direction.advancing() {
                     state.alter_mut(alter);
                 } else {
+                    // NOTE: I ~think~ thought this might be double-inverting some stuff? I need to decide
+                    // where the inversion happens, here or unmake
+                    // - update: Not an issue, because the board isn't maintained as a familiar
+                    // (yet).
                     state.alter_mut(alter.inverse());
                 }
             }
         )
     }
 
-    pub fn for_alterable(tape: &'a Tape<SIZE>) -> Self where S : Default + Alter {
+    pub fn for_alterable(tape: &'a Tape) -> Self where S : Default + Alter {
         TapeFamiliar::for_alterable_with_state(tape, S::default())
     }
 
@@ -97,6 +101,10 @@ impl<'a, const SIZE: usize, S> TapeFamiliar<'a, SIZE, S> {
     pub fn get<'b>(&'b self) -> &'b S  where 'b : 'a {
         &self.state
     }
+
+    pub fn get_mut<'b>(&'b mut self) -> &'b mut S where 'b : 'a {
+        &mut self.state
+    }
 }
 
 
@@ -123,25 +131,27 @@ impl Alter for PositionZobrist {
     }
 }
 
-// struct ZobristFamiliar<'a, const SIZE: usize> = TapeFamiliar<'a,  SIZE>;
-
-// impl<const SIZE: usize, S, 'a> TapeFamiliar<'a, SIZE, S> {
-
-
-// }
-
 #[derive(Clone)]
-pub struct Tape<const SIZE: usize> {
-    data: [Option<Alteration>; SIZE],
+pub struct Tape {
+    data: dynamic_array::MediumArray<Option<Alteration>>,
     // this is the write head, I might need a familiar for the proceed/unwind stuff?
     head: usize
 }
 
-impl<const SIZE: usize> Debug for Tape<SIZE> {
+pub const DEFAULT_TAPE_SIZE : u16 = 1024;
+
+impl Default for Tape {
+    fn default() -> Self {
+        Self::new(DEFAULT_TAPE_SIZE)
+    }
+}
+
+impl Debug for Tape {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "\nTAPE(head_hash: {:?}, position_hash: {:?}, head: {:#04x})", self.head_hash(), self.position_hash(), self.head)?;
         let mut running_hash = Zobrist::empty();
-        for (idx, entry) in self.data.into_iter().enumerate() {
+        let iterator = self.data.as_slice().into_iter();
+        for (idx, entry) in iterator.enumerate() {
             match entry {
                 None => {
                     // if self.head >= idx {
@@ -154,11 +164,11 @@ impl<const SIZE: usize> Debug for Tape<SIZE> {
                     break;
                 }
                 Some(alter) => {
-                    running_hash.alter_mut(alter);
+                    running_hash.alter_mut(*alter);
                     if idx == self.head {
-                        writeln!(f, "HEAD*    | {:>64} | {:>64?}", alter, running_hash)?;
+                        writeln!(f, "HEAD*    | {:>64} | {:>64?}", *alter, running_hash)?;
                     } else {
-                        writeln!(f, "{:>#008X} | {:>64} | {:>64?}", idx, alter, running_hash)?;
+                        writeln!(f, "{:>#008X} | {:>64} | {:>64?}", idx, *alter, running_hash)?;
                     }
                 }
             }
@@ -168,14 +178,14 @@ impl<const SIZE: usize> Debug for Tape<SIZE> {
 
 }
 
-impl<const SIZE: usize> Tape<SIZE> {
-    pub fn new() -> Self {
-        Tape { data: [ None; SIZE ], head: 0 }
+impl Tape {
+    pub fn new(cap: u16) -> Self {
+        Tape { data: dynamic_array::MediumArray::zeroed(cap), head: 0 }
     }
 
     // TODO: OQ: Same as head_hash
     pub fn position_hash(&self) -> Zobrist {
-        let mut familiar : TapeFamiliar<'_, SIZE, PositionZobrist> = self.conjure();
+        let mut familiar : TapeFamiliar<'_, PositionZobrist> = self.conjure();
         familiar.sync_to_read_head();
         familiar.state.position
     }
@@ -197,23 +207,27 @@ impl<const SIZE: usize> Tape<SIZE> {
     // TODO: OQ: possibly these live _on position_?
     pub fn head_hash(&self) -> Zobrist {
         // TODO: Cache this and advance on demand
-        let mut familiar : TapeFamiliar<'_, SIZE, Zobrist> = self.conjure();
+        let mut familiar : TapeFamiliar<'_, Zobrist> = self.conjure();
         // this will change to look at the current write position (head) and moving towards it
         // updating the hash on the way.
         familiar.sync_to_read_head();
         familiar.state
     }
 
-    pub fn conjure<A : Alter + Default>(&self) -> TapeFamiliar<SIZE, A> {
+    pub fn conjure<A : Alter + Default>(&self) -> TapeFamiliar<A> {
         TapeFamiliar::for_alterable(&self)
     }
 
-    pub fn conjure_with_initial_state<A : Alter>(&self, state: A) -> TapeFamiliar<SIZE, A> {
+    pub fn conjure_with_initial_state<A : Alter>(&self, state: A) -> TapeFamiliar<A> {
         TapeFamiliar::for_alterable_with_state(&self, state)
     }
 
     pub fn read(&self) -> Option<Alteration> {
         self.read_address(self.head)
+    }
+
+    pub fn len(&self) -> usize {
+        self.data.len().into()
     }
 
     pub fn write_all(&mut self, alterations: &[Alteration]) {
@@ -223,7 +237,7 @@ impl<const SIZE: usize> Tape<SIZE> {
     }
 
     pub fn read_address(&self, idx: usize) -> Option<Alteration> {
-        if idx >= SIZE {
+        if idx >= self.len() {
             None
         } else {
             self.data[idx]
@@ -240,7 +254,9 @@ impl<const SIZE: usize> Tape<SIZE> {
         // if we're at the End-of-buffer, cache out
         if self.at_eot() {
             // TODO: Actually cache out, this just blanks the buffer and recurses.
-            self.data = [None; SIZE];
+            tracing::error!("CACHE OUT CACHE OUT CACHE OUT");
+            let len = self.data.len();
+            self.data = dynamic_array::MediumArray::zeroed(len);
             self.head = 0;
             self.write(alter);
         }
@@ -256,7 +272,7 @@ impl<const SIZE: usize> Tape<SIZE> {
 
     pub fn at_eot(&self) -> bool {
         // watch out for off-by-ones!
-        self.head == (SIZE - 1)
+        self.head == (self.len() - 1)
     }
 
     pub fn step_forward(&mut self) {
@@ -272,12 +288,6 @@ impl<const SIZE: usize> Tape<SIZE> {
     }
 
 
-}
-
-impl<const SIZE: usize> Default for Tape<SIZE> {
-    fn default() -> Self {
-        Self::new()
-    }
 }
 
 #[derive(PartialEq, Copy, Clone, Debug)]
@@ -299,8 +309,8 @@ mod tests {
 
     use super::*;
 
-    fn tape_with_startpos_and_d4() -> Tape<128> {
-        let mut raw_tape = Tape::new();
+    fn tape_with_startpos_and_d4() -> Tape {
+        let mut raw_tape = Tape::default();
 
         let start_pos_alts : Vec<Alteration> = BEN::start_position().to_alterations().collect();
         raw_tape.write_all(&start_pos_alts);
@@ -359,7 +369,7 @@ mod tests {
         z
     }
 
-    impl Tape<128> {
+    impl Tape {
         pub fn head(&self) -> usize {
             self.head
         }
@@ -371,7 +381,7 @@ mod tests {
     #[tracing_test::traced_test]
     fn hash_familiar_works() {
         let mut tape = tape_with_startpos_and_d4();
-        let mut familiar : TapeFamiliar<128, Zobrist> = tape.conjure();
+        let mut familiar : TapeFamiliar<Zobrist> = tape.conjure();
         familiar.sync_to_read_head();
         assert_eq!(zobrist_for_startpos_and_d4(), familiar.state);
         familiar.rewind_until(|a| matches!(a, Alteration::Turn));
@@ -383,7 +393,7 @@ mod tests {
 
     #[test]
     fn write_and_read() {
-        let mut tape = Tape::<128>::new();
+        let mut tape = Tape::default();
         let alteration = Alteration::place(D4, Occupant::white_pawn());
         tape.write(alteration);
         tape.step_backward();
@@ -393,7 +403,7 @@ mod tests {
 
     #[test]
     fn at_bot() {
-        let mut tape = Tape::<128>::new();
+        let mut tape = Tape::default();
         assert!(tape.at_bot());
 
         tape.write(Alteration::Lit(0));
@@ -402,7 +412,7 @@ mod tests {
 
     #[test]
     fn at_eot() {
-        let mut tape = Tape::<2>::new();
+        let mut tape = Tape::default();
         assert!(!tape.at_eot());
         tape.step_forward();
         tape.step_forward();
