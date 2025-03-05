@@ -2040,3 +2040,76 @@ So basically, it still doesn't work, but it doesn't doesn't work as doesn'tly as
 
 I'm going to try to do a little fix-in-place so I can maybe merge this branch before doing more UI stuff, as that's
 going to require building up the communication side of things, and movegen working would help a lot there.
+
+# 5-MAR-2025
+
+## 0058 - atm
+
+I'm working on the UI a bit to help get the perft bugs sorted out. I am running into an unfortunate design decision
+which leads to some unfortunate type stuff.
+
+Ideally I want a tape to be a static allocation, and have `Alterations` be encoded to some relatively small
+representation (maybe a u16). Encoding this in the type will make it (I hope) easy to tweak later to appease the memory
+gods. It's not premature optimization, it's optimizating prior to maturity.
+
+In any case, using a const generic seems natural, except that my `Familiar` type needs to borrow a reference to it, but
+that means it needs to name _the specific_ type, not just one of any size, though the reference will be the same for all
+of them.
+
+I'm not sure how to fix that, logically I think it's sound to drop the knowledge of the size of the tape here, but I
+can't think of a way to do that in the type system (mostly due to ignorance, I think it should be possible).
+
+I suppose I could push the generic into the method, which would possible make things easier, I think the easiest way to
+address it would be dynamic allocation, but that would set up a bit of a can of worms of how configuration will work. I
+still want it to be a single static allocation so I think that's probably the easiest thing.
+
+## 1022 - atm
+
+I found `dynamic-array`, which I'm going to use for now, I think at some point I'll probably want to implement it by
+hand, but for now I just want a dynamic array I don't have to think about.
+
+## 1535 - atm
+
+`dynamic-array` was drop in, which was nice, but I am straining against how I'm managing these `Familiar`s and I think I
+need to just bite the bullet and do the refactor. In concept it's straightforward, it's a common API for working with
+linear data on some kind of tape. `Everything is a file` extended into Hazel.
+
+
+```rust
+// Calculates a state based on the content of some tapelike. Importantly, the `cursor` should be _replacable_, so that
+// if a familiar runs off the end of a tape, and we have a continuation for that tape in cache, we can replace it's
+// cursor with a new one on the new tape and maintain the state. These should ultimately be sendable between threads, so
+// all their state is maintained internally in a thread-safe way.
+struct Familiar<T, S> {
+    cursor: Cursor<T>,
+    state: S
+}
+
+// A zipper-type over the Tapelike. Hides locking details from familiar, so that familiar can RW safely.
+// Eventually will tie into some kind of transaction tool to coordinate concurrent writes
+struct Cursor<T, E> where T : Tapelike<E> {
+    ref: Arc<RwLock<T>>,
+    position: usize
+}
+
+// Covers all the IO operations on the tape, without an explicit read/write head being maintained.
+trait Tapelike<T> {
+  // locking ranges is internal, ideally takes place transactionally (eventually)
+    fn cursor(&self) -> Cursor<Self, T>;
+    fn length(&self) -> usize;
+    fn read_address(&self, address: usize) -> Option<&T>;
+    fn read_range(&self, range: Range<usize>) -> Option<&[T]>;
+    fn write_address(&mut self, address: usize, data: &T);
+    fn write_range(&mut self, start: usize, data: &[T]);
+}
+
+fn conjure<S, E>(tape: &T) -> Familiar<E, S> where T : Tapelike<E>, S : Default {
+    Familiar {
+        cursor: tape.cursor(),
+        state: S::default()
+    }
+}
+```
+
+this is my rough sketch, I'm not sure I've got all the concurrency stuff right there but that's what compiler errors are
+for.

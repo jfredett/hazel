@@ -24,7 +24,7 @@ clap = { version = "2.33", features = ["yaml"]}
 console-subscriber = "0.4.1"
 const-str = "0.6.2"
 crossbeam = "0.8.4"
-insta = "1.42.2"
+dynamic-array = "0.2.3"
 itertools = "0.14.0"
 lazy_static = "1.4.0"
 nom = "7.1.3"

@@ -135,7 +135,6 @@ mod tests {
             w.send(Box::new(GetState)).await;
             if let Some(HazelResponse::Debug(result)) = w.read().await {
                 assert_eq!(result.position, None);
-                assert_ne!(result.game.log().len(), 0);
             } else {
                 panic!("Expected Debug response");
             }

@@ -2,13 +2,17 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 
 use ratatui::crossterm::event::{Event, KeyCode};
-use ratatui::prelude::*;
+use ratatui::layout::Rect;
 use ratatui::widgets::{Block, Borders};
+use ratatui::Frame;
 
 
 use crate::engine::driver::WitchHazel;
+use crate::notation::ben::BEN;
+use crate::types::tape::TapeFamiliar;
+use crate::ui::widgets::tapereader::*;
+use crate::game::chess::position::Position;
 
-use super::widgets::tile::Tile;
 
 enum Mode {
     Insert,
@@ -20,8 +24,7 @@ pub struct UI<'a> {
     engine: &'a WitchHazel<1024>,
     // UI
     mode: Mode,
-    // I think I'm going to replace this with a different widget entirely, and build from there.
-    tile: Tile,
+    tapereader: TapeReaderWidget
 }
 
 impl<'a> Debug for UI<'a> {
@@ -38,7 +41,7 @@ impl<'a> UI<'a> {
             flags: HashMap::new(),
             engine,
             mode: Mode::Command,
-            tile: Tile::new(),
+            tapereader: TapeReaderWidget::default()
         }
     }
 
@@ -52,13 +55,13 @@ impl<'a> UI<'a> {
                             self.mode = Mode::Command;
                         },
                         KeyCode::Char(c) => {
-                            self.tile.handle_input(c);
+                            // self.tile.handle_input(c);
                         },
                         KeyCode::Backspace => {
-                            self.tile.handle_backspace();
+                            // self.tile.handle_backspace();
                         },
                         KeyCode::Enter => {
-                            self.tile.handle_enter();
+                            // self.tile.handle_enter();
                         },
                         _ => {
                         }
@@ -98,9 +101,13 @@ impl<'a> UI<'a> {
             .borders(Borders::ALL)
     }
 
+    pub fn render(&'a self, frame: &mut Frame) {
+        let position = Position::new(BEN::start_position());
+        let tape = position.tape.read().unwrap();
 
-    pub fn render(&mut self, frame: &mut Frame) {
-        frame.render_widget(&self.tile, Rect::new(0,0,64,32));
+        let mut tapereaderstate = tape.conjure::<TapeReaderState<'a>>();
+
+        frame.render_stateful_widget(&self.tapereader, Rect::new(0,0,100,100), tapereaderstate.get_mut());
     }
 }
 
@@ -109,8 +116,9 @@ impl<'a> UI<'a> {
 mod tests {
     use std::process::Termination;
 
-    use backend::TestBackend;
+    use ratatui::backend::TestBackend;
     use insta::assert_debug_snapshot;
+    use ratatui::Terminal;
 
     use super::*;
 
