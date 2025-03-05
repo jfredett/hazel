@@ -1,6 +1,5 @@
 /// This module contains the UCI protocol implementation for the engine. It includes as UCI
 /// 'primitive' commands the extended/nonstandard commands that Stockfish implements.
-use tracing::{instrument, info, error};
 use std::fmt::{self, Display, Formatter};
 
 
@@ -118,7 +117,6 @@ impl UCIOption {
         }
     }
 
-    #[instrument]
     pub fn parse(option: &str) -> UCIOption {
         // split the option by keyword in KEYWORDS
         let mut buf = vec![];
@@ -196,10 +194,7 @@ impl Display for UCIMessage {
 }
 
 impl UCIMessage {
-    #[instrument(skip(message))]
     pub fn parse(message: &str) -> UCIMessage {
-        info!("Parsing UCI message: {:?}", message);
-
         let mut parts = message.split_whitespace();
         match parts.next() {
             Some("uci") => UCIMessage::UCI,
@@ -207,7 +202,7 @@ impl UCIMessage {
                 Some("on") => UCIMessage::Debug(true),
                 Some("off") => UCIMessage::Debug(false),
                 _ => {
-                    error!("Invalid debug command");
+                    tracing::error!("Invalid debug command");
                     // return an error type eventually, maybe? Spec generally suggests ignoring
                     // errors like this.
                     // for now, set debug on if we're not sure what's going on.

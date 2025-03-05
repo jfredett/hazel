@@ -1,6 +1,5 @@
 use tokio::sync::{mpsc, broadcast};
 use tokio::sync::Mutex;
-use tracing::error;
 use std::sync::Arc;
 
 use super::{MessageForWitch, Witch};
@@ -57,7 +56,7 @@ impl<const BUF_SIZE: usize, S, R> WitchHandle<BUF_SIZE, S, R> where
         match self.inbox.send(msg).await {
             Ok(_) => {},
             Err(e) => {
-                error!("Error sending message to WitchHandle: {:?}", e);
+                tracing::error!("Error sending message to WitchHandle: {:?}", e);
             }
         }
     }

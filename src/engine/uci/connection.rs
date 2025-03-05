@@ -3,7 +3,6 @@
 use std::io;
 use std::io::BufRead;
 
-use tracing::{error, info};
 
 use crate::engine::uci::UCIMessage;
 use crate::engine::driver::{HazelResponse, WitchHazel};
@@ -34,13 +33,13 @@ where T: 'static + io::Read + Send + Unpin,
             };
             match output.write_all(msg.as_bytes()) {
                 Ok(_) => {},
-                Err(e) => { error!("Error writing to output: {}", e); }
+                Err(e) => { tracing::error!("Error writing to output: {}", e); }
             }
         }
     });
 
     let mut input = io::BufReader::new(input);
-    info!("Starting input task");
+    tracing::info!("Starting input task");
     loop {
         let mut line = String::new();
         _ = input.read_line(&mut line);

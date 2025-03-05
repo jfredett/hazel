@@ -58,7 +58,6 @@ pub fn en_passant(position: &Position) -> impl Iterator<Item = Move> {
     let mut ret = vec![];
     if let Some(ep_file) = position.metadata().en_passant {
         let ep_square = Square::from((position.hero().en_passant_rank(), ep_file));
-        tracing::debug!("ep square: {:?}", ep_square);
         let color = position.hero();
         if let Some(sq) = ep_square.left_oblique(&!color) {
             if position.get(sq) == Occupant::Occupied(Piece::Pawn, color) {

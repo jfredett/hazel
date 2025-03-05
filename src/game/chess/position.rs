@@ -108,9 +108,7 @@ impl Position {
 
         let mut inner = InnerPosition::default();
         let mut tape = Tape::new();
-        tracing::debug!("tape before write: {:?}", tape);
         tape.write_all(&alters);
-        tracing::debug!("tape after write: {:?}", tape);
 
         for alter in alters {
             inner.board.alter_mut(alter);
@@ -184,7 +182,6 @@ impl Position {
     // when running the 'real' engine.
     // That could also allow for a similar `Setup` tag, for the setup phase.
     pub fn make(&mut self, mov: Move) {
-        tracing::debug!("#make(mov: {:?})", mov);
 
 
         /*
@@ -250,7 +247,6 @@ impl Position {
 
     // FIXME: this, if anything, should probably return a result type.
     pub fn unmake(&mut self) {
-        tracing::debug!("#unmake()");
 
         let unmove_hash : Zobrist;
         let mut unmoves = vec![];
@@ -676,7 +672,6 @@ mod tests {
 
             p.unmake();
 
-            tracing::debug!("p_prior\n{:?}\n\n p_after:\n{:?}\n\n", p_prior, p);
 
             assert_eq!(p_prior, p);
         }

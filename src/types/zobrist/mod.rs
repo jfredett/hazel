@@ -132,7 +132,6 @@ impl Alter for Zobrist {
                 HazelZobrist::side_to_move_mask()
             },
             // Alteration::Assert(metadata) => {
-            //     tracing::trace!("Side-To-Move is {:?}", metadata.side_to_move);
             //     if metadata.side_to_move.is_black() {
             //         // do nothing
             //         0
@@ -251,7 +250,6 @@ mod tests {
                         let depth : usize = HazelZobrist::depth_for(sq, color, piece) as usize;
                         assert_eq!(idx, depth);
                         idx += 1;
-                        tracing::debug!("{} = {}, {} = {}, {:?} = {}", sq, sq.index(), color, color as usize, piece, piece as usize);
                         depths.push(depth);
                     }
                 }
@@ -260,7 +258,6 @@ mod tests {
 
             use itertools::Itertools;
             for (key, group) in &depths.into_iter().chunk_by(|e| *e) {
-                tracing::debug!("{key} occurs {} times", group.count());
             }
         }
 

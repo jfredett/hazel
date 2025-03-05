@@ -26,7 +26,6 @@ use crate::constants::File;
 
 use serde::{Deserialize, Serialize};
 
-use tracing::instrument;
 
 #[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Serialize, Deserialize)]
 pub struct Move(pub(crate) u16);
@@ -45,7 +44,6 @@ pub use bitmangling::*;
 impl Move {
 
 
-    #[instrument(skip(context))]
     pub fn to_pgn<C>(&self, context: &C) -> String where C: Query {
         if self.is_null() {
             return "".to_string();

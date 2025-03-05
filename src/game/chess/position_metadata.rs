@@ -72,7 +72,6 @@ impl Alter for PositionMetadata {
             Alteration::Inform(new_metadata) => {
                 // TODO: this probably boils down to something that could be done with bit magic
 
-                tracing::debug!("\n\nmy metadata: {:?}\nnew_metadata: {:?}\n", self, new_metadata);
                 match new_metadata {
                     MetadataAssertion::SideToMove(color) => { self.side_to_move = color; },
                     MetadataAssertion::InCheck => self.in_check = true,
@@ -117,7 +116,6 @@ impl Alter for PositionMetadata {
 
 #[cfg(not(test))]
 fn panic_or_trace(message: String) {
-    tracing::error!(message);
 }
 
 
@@ -397,7 +395,6 @@ mod tests {
     use super::*;
 
     use quickcheck::{Arbitrary, Gen};
-    use tracing::debug;
 
     impl Arbitrary for PositionMetadata {
         fn arbitrary(g: &mut Gen) -> Self {

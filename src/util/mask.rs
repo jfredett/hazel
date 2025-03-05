@@ -2,7 +2,6 @@
 // but it reports them not being used at all.
 #![allow(dead_code)]
 
-use tracing::*;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::process::{ChildStdin, Command};
 use std::process::Stdio;
@@ -32,7 +31,6 @@ const BUFFER_SIZE: usize = 256;
 
 impl Mask {
     /// Creates a new instance of `Mask` by starting the Stockfish process.
-    #[instrument]
     pub async fn new(command: &str) -> tokio::io::Result<Self> {
         let mut process = Command::new(command)
             .stdin(Stdio::piped())
@@ -74,7 +72,6 @@ impl Mask {
 
 
     /// Sends a command to the stdin of the child.
-    #[instrument]
     pub async fn send(&mut self, command: &str) -> tokio::io::Result<()> {
         self.stdin.write_all(command.as_bytes()).await?;
         self.stdin.write_all(b"\n").await?;
@@ -82,13 +79,11 @@ impl Mask {
     }
 
     /// Reads a single line of response from the child, blocking until it is available.
-    #[instrument]
     pub async fn read(&mut self) -> Option<String> {
         self.stdout.next().await
     }
 
     /// Reads a single line of error from the child, blocking until it is available.
-    #[instrument]
     pub async fn read_err(&mut self) -> Option<String> {
         self.stderr.next().await
     }

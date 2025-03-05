@@ -22,10 +22,8 @@ impl<E> Cache<E> where E : Clone + Debug + PartialEq {
         {
             let storage = self.storage.read().unwrap();
             if storage.contains_key(&zobrist) {
-                tracing::debug!("Potential Collision!");
                 let existing = storage.get(&zobrist).unwrap();
                 if *existing != entry {
-                    tracing::debug!("Collision found! Cached: {:?} != Inserted {:?} with Hash {:?}", &existing, &entry, &zobrist);
                 }
             }
         }

@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use tracing::error;
 
 use crate::{engine::{driver::{Hazel, HazelResponse}, uci::UCIMessage}, game::position::Position, notation::{ben::BEN, uci::UCI}, types::witch::{MessageFor, Witch}};
 
@@ -73,7 +72,7 @@ impl<const BUF_SIZE: usize> MessageFor<Witch<BUF_SIZE, Hazel, HazelResponse>> fo
                 witch.write(HazelResponse::UCIResponse(UCIMessage::BestMove("0000".to_string(), None)));
             },
             _ => {
-                error!("Unsupported UCI Message: {:?}", self);
+                tracing::error!("Unsupported UCI Message: {:?}", self);
             }
         }
     }

@@ -71,7 +71,6 @@ impl Move {
     /// correct metadata for the move. No effort is made to ensure legality of the move.
     ///
     /// TODO: Does not look for check states.
-    #[instrument(skip(context))]
     pub fn disambiguate<C>(&self, context: &C) -> Option<MoveType> where C: Query {
         // If we are not ambiguous, just return the move as is.
         if !self.is_ambiguous() { return Some(self.move_metadata()); }
@@ -154,7 +153,6 @@ impl Move {
         }
     }
 
-    #[instrument(skip(context))]
     pub fn compile<C>(&self, context: &C) -> Vec<Alteration> where C : Query {
         let source = self.source();
         let target = self.target();

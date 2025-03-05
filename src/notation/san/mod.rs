@@ -1,7 +1,6 @@
 #![allow(dead_code, unused_imports)]
 
 use nom::{branch::alt, bytes::complete::tag, character::complete::char, combinator::opt, IResult};
-use tracing::{debug, instrument};
 
 use crate::{interface::Query, coup::rep::{Move, MoveType}, types::{Bitboard, Color, Occupant, Piece}};
 use crate::types::pextboard;

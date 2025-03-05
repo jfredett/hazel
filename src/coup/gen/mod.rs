@@ -48,29 +48,29 @@ impl MoveGenerator {
 
             position.make(mov);
 
-            if depth == 1 {
-                tracing::debug!("after-make {:?}: {} {}\n\n{}\n{:?}",
-                    position.zobrist(),
-                    crate::query::to_fen_position(&position.clone()),
-                    position.metadata(),
-                    crate::query::display_board(&position.board()),
-                    position.tape
-                );
-            }
+            // if depth == 1 {
+            //     tracing::debug!("after-make {:?}: {} {}\n\n{}\n{:?}",
+            //         position.zobrist(),
+            //         crate::query::to_fen_position(&position.clone()),
+            //         position.metadata(),
+            //         crate::query::display_board(&position.board()),
+            //         position.tape
+            //     );
+            // }
 
             count += self.perft(depth - 1, position);
 
             position.unmake();
 
-            if depth == 1 {
-                tracing::debug!("after-unmake {:?}: {} {}\n\n{}\n{:?}",
-                    position.zobrist(),
-                    crate::query::to_fen_position(&position.clone()),
-                    position.metadata(),
-                    crate::query::display_board(&position.board()),
-                    position.tape
-                );
-            }
+            // if depth == 1 {
+            //     tracing::debug!("after-unmake {:?}: {} {}\n\n{}\n{:?}",
+            //         position.zobrist(),
+            //         crate::query::to_fen_position(&position.clone()),
+            //         position.metadata(),
+            //         crate::query::display_board(&position.board()),
+            //         position.tape
+            //     );
+           // }
         }
 
         count
