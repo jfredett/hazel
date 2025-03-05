@@ -116,6 +116,7 @@ impl Alter for PositionMetadata {
 
 #[cfg(not(test))]
 fn panic_or_trace(message: String) {
+    tracing::error!(message);
 }
 
 
