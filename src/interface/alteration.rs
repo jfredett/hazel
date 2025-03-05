@@ -1,18 +1,13 @@
 use std::fmt::{Debug, Display};
 
 
-use crate::constants::File;
-use crate::coup::rep::MoveType;
-use crate::game::castle_rights::CastleRights;
-use crate::game::position_metadata::PositionMetadata;
-use crate::types::{Color, Occupant};
-use crate::notation::*;
+use crate::{constants::File, coup::rep::MoveType, game::castle_rights::CastleRights, notation::*, types::{Color, Occupant}};
 
-// NOTE: It's interesting to think about commutativity amongst these alterations. In particular if
-// I'm trying to build a final representation of something and I want to vectorize that. It would
-// be beneficial in some sense to be able to 'sum up' all the alterations, cancelling out whichever
-// ones can be canceled, by commuting them around if needed. Turns don't matter if I only care
-// about some specific sum of alterations.
+// NOTE: It's interesting to think about commutativity amongst - or more generally, the 'algebra'
+// of -- these alterations. In particular if I'm trying to build a final representation of
+// something and I want to vectorize that. It would be beneficial in some sense to be able to 'sum
+// up' all the alterations, cancelling out whichever ones can be canceled, by commuting them around
+// if needed. Turns don't matter if I only care about some specific sum of alterations.
 //
 // I guess what I'm saying is this feels like a monoid, maybe even something group-adjacent, but
 // lacking an explicit NOOP instruction/identity.
@@ -48,6 +43,17 @@ use crate::notation::*;
 // place P @ d5
 //
 // Assert/Inform, however, require ordering, since informs have to follow a set of valid asserts.
+//
+//
+// It's sort of a ring structure with an interesting 'dual' property. Assert/Inform are dual to
+// each other, and not commutative, but Place/Remove are dual, but are commutative. Turns take the
+// form `A(nR + mP)I` - some assertion, followed by some number of removals, then some number of
+// placements, then post-turn information about the state of the game.
+//
+// Note that we do removals first as a convenience -- or else we'd need to store 2 pieces on the
+// same square, this is still valid algebraicly, though.
+//
+//
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum Alteration {
@@ -136,9 +142,11 @@ impl Alteration {
         match self {
             Self::Place { square, occupant } => Self::Remove { square: *square, occupant: *occupant },
             Self::Remove { square, occupant } => Self::Place { square: *square, occupant: *occupant },
+            // FIXME: I think in the case of EP, the inverse may be more complicated -- i.e., it
+            // might not be it's own inverse.
+            Self::Inform(MetadataAssertion::EnPassant(_)) => *self,
             Self::Assert(fact) => Self::Inform(*fact),
             Self::Inform(fact) => Self::Assert(*fact),
-            // TODO: Inverse for metadata assertions/informations are needed
             _ => *self
         }
     }

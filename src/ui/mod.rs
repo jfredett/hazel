@@ -14,11 +14,13 @@ mod model;
 mod app;
 mod widgets;
 
-use app::Hazel;
+use app::UI;
+
+use crate::engine::driver::WitchHazel;
 
 /// Boilerplate to get the app started.
 #[cfg_attr(test, mutants::skip)]
-pub fn run() -> Result<(), Box<dyn Error>> {
+pub async fn run() -> Result<(), Box<dyn Error>> {
     enable_raw_mode()?;
     // Reroute to stderr since we want to talk on stdout for UCI potentially
     let mut stderr = io::stderr();
@@ -27,7 +29,8 @@ pub fn run() -> Result<(), Box<dyn Error>> {
     let mut terminal = Terminal::new(backend)?;
 
     // Initialize the application
-    let mut app = Hazel::new();
+    let handle = WitchHazel::new().await;
+    let mut app = UI::with_handle(&handle);
     let _res = run_app(&mut terminal, &mut app);
 
     disable_raw_mode()?;
@@ -38,7 +41,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
 }
 
 #[cfg_attr(test, mutants::skip)]
-fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut Hazel) -> io::Result<bool> {
+fn run_app<'a, B: Backend>(terminal: &mut Terminal<B>, app: &mut UI<'a>) -> io::Result<bool> {
     loop {
         if app.check_flag("exit") { return Ok(true); }
 

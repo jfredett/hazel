@@ -19,7 +19,7 @@ async fn main() {
     // console_subscriber::init();
 
     // TODO: actually parse arguments
-    let headless : bool = true;
+    let headless : bool = false;
 
     if headless {
         // Log to STDERR
@@ -35,6 +35,6 @@ async fn main() {
             .with_env_filter(EnvFilter::from_default_env())
             .with_writer(non_blocking)
             .finish();
-        let _ = ui::run();
+        let _ = ui::run().await;
     };
 }
