@@ -19,6 +19,7 @@ pub struct Hazel {
     state: State,
     /// The current position of the active game. If this is `None`, it means no game is currently
     /// being played.
+    /// TODO: Replace this with a familiar
     position: Option<Position>,
     /// A Variation containing games loaded from some source, or saved from the current gamestate.
     /// NOTE: This is not like the others. Maybe `Hazel` should focus on being just the UCI-related

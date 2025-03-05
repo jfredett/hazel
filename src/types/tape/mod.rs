@@ -230,14 +230,6 @@ impl<const SIZE: usize> Tape<SIZE> {
         }
     }
 
-
-    fn write_all_direct(&mut self, entries: &[Option<Alteration>]) {
-        for entry in entries {
-            self.write_direct(*entry);
-            self.head += 1;
-        }
-    }
-
     fn write_direct(&mut self, entry: Option<Alteration>) {
         self.data[self.head] = entry;
     }

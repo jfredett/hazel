@@ -6,6 +6,8 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders};
 
 
+use crate::engine::driver::WitchHazel;
+
 use super::widgets::tile::Tile;
 
 enum Mode {
@@ -13,15 +15,16 @@ enum Mode {
     Command
 }
 
-pub struct Hazel {
+pub struct UI<'a> {
     flags: HashMap<String, bool>,
-    engine: (),
+    engine: &'a WitchHazel<1024>,
     // UI
     mode: Mode,
+    // I think I'm going to replace this with a different widget entirely, and build from there.
     tile: Tile,
 }
 
-impl Debug for Hazel {
+impl<'a> Debug for UI<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Hazel")
             .field("flags", &self.flags)
@@ -29,24 +32,14 @@ impl Debug for Hazel {
     }
 }
 
-impl Hazel {
-    pub fn new() -> Self {
-        let s = Self {
+impl<'a> UI<'a> {
+    pub fn with_handle(engine: &'a WitchHazel<1024>) -> Self {
+        Self {
             flags: HashMap::new(),
-            engine: (),
+            engine,
             mode: Mode::Command,
             tile: Tile::new(),
-        };
-
-        /*
-        let startup_commands = vec![
-            UCIMessage::UCI,
-            UCIMessage::IsReady,
-            UCIMessage::Position("startpos".to_string(), vec!["d2d4".to_string()]),
-        ];
-        */
-
-        return s;
+        }
     }
 
     pub fn handle_events(&mut self, event: Event) {
@@ -121,9 +114,10 @@ mod tests {
 
     use super::*;
 
-    #[test]
-    fn renders_as_expected() {
-        let mut hazel = Hazel::new();
+    #[tokio::test]
+    async fn renders_as_expected() {
+        let handle  = WitchHazel::<1024>::new().await;
+        let mut hazel = UI::with_handle(&handle);
 
         let mut t = Terminal::new(TestBackend::new(64, 32)).unwrap();
         let _ = t.draw(|f| {
