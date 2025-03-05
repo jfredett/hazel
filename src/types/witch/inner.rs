@@ -1,5 +1,4 @@
 use tokio::sync::{mpsc, broadcast};
-use tracing::error;
 
 use super::MessageForWitch;
 
@@ -52,7 +51,7 @@ where S : Default + Send + Clone + 'static,
         match self.sase.send(msg).await {
             Ok(_) => {},
             Err(e) => {
-                error!("Error sending message to WitchHandle: {:?}", e);
+                tracing::error!("Error sending message to WitchHandle: {:?}", e);
             }
         }
     }

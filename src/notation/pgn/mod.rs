@@ -8,7 +8,6 @@ use std::path::Path;
 use std::io::Error;
 
 use nom::{branch::alt, bytes::complete::tag, character::complete::{multispace0, multispace1, newline, one_of}, combinator::opt, multi::{many0, many1}, sequence::delimited, IResult};
-use tracing::debug;
 
 use crate::{game::familiar::Familiar, notation::pgn::tokenizer::PGNToken};
 use crate::{Alter, constants::START_POSITION_FEN, coup::rep::Move, game::variation::Variation};

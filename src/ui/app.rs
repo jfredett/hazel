@@ -5,7 +5,6 @@ use ratatui::crossterm::event::{Event, KeyCode};
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders};
 
-use tracing::instrument;
 
 use super::widgets::tile::Tile;
 
@@ -31,7 +30,6 @@ impl Debug for Hazel {
 }
 
 impl Hazel {
-    #[instrument]
     pub fn new() -> Self {
         let s = Self {
             flags: HashMap::new(),
@@ -51,7 +49,6 @@ impl Hazel {
         return s;
     }
 
-    #[instrument]
     pub fn handle_events(&mut self, event: Event) {
         if let Event::Key(key) = event {
             match self.mode {
@@ -91,12 +88,10 @@ impl Hazel {
         }
     }
 
-    #[instrument]
     pub fn set_flag(&mut self, flag: &str, value: bool) {
         self.flags.insert(flag.to_string(), value);
     }
 
-    #[instrument]
     pub fn check_flag(&self, flag: &str) -> bool {
         match self.flags.get(flag) {
             Some(value) => *value,
@@ -104,7 +99,6 @@ impl Hazel {
         }
     }
 
-    #[instrument]
     pub fn input_widget(&self) -> Block {
         Block::default()
             .title("Input")
@@ -112,7 +106,6 @@ impl Hazel {
     }
 
 
-    #[instrument(skip(self, frame))]
     pub fn render(&mut self, frame: &mut Frame) {
         frame.render_widget(&self.tile, Rect::new(0,0,64,32));
     }

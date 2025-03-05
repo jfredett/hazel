@@ -1,12 +1,10 @@
 #![allow(unused_imports)]
 
-use tracing::*;
 
 use hazel::engine::uci;
 use hazel::ui;
 
 use std::thread;
-use tracing::info;
 use crossbeam::channel::Sender;
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::fmt;
@@ -16,7 +14,7 @@ use tracing_subscriber::prelude::*;
 #[cfg_attr(test, mutants::skip)]
 #[tokio::main]
 async fn main() {
-    info!("Welcome to Hazel.");
+    tracing::info!("Welcome to Hazel.");
 
     // console_subscriber::init();
 
@@ -37,7 +35,6 @@ async fn main() {
             .with_env_filter(EnvFilter::from_default_env())
             .with_writer(non_blocking)
             .finish();
-        tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
         let _ = ui::run();
     };
 }

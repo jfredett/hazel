@@ -3,7 +3,6 @@ use std::io::{BufRead, BufReader, Write};
 use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
 
 #[allow(unused_imports)] // I want all the tracing stuff available regardless of whether it's used
-use tracing::*;
 
 use crate::engine::uci::UCIMessage;
 use crate::engine::Engine;
@@ -61,12 +60,10 @@ impl Stockfish {
 }
 
 impl Engine<UCIMessage> for Stockfish {
-    #[instrument]
     async fn exec_message(&mut self, message: &str) -> Vec<UCIMessage> {
         self.exec(&UCIMessage::parse(message)).await
     }
 
-    #[instrument]
     async fn exec(&mut self, message: &UCIMessage) -> Vec<UCIMessage> {
         let cmd_str = message.to_string();
 

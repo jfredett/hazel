@@ -3,7 +3,6 @@ use ratatui::prelude::*;
 use ratatui::widgets::Widget;
 
 #[allow(unused_imports)]
-use tracing::{debug, instrument};
 
 use ratatui::buffer::Buffer;
 

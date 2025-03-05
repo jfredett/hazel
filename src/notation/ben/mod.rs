@@ -157,11 +157,8 @@ impl BEN {
 
         let mut metadata = PositionMetadata::default();
         metadata.parse(&mut chunks);
-        tracing::trace!("METADATA IS {:?}", metadata);
         let metadata_alterations : Vec<Alteration> = metadata.into_information();
-        tracing::trace!("METADATA ALTERS ARE: {:?}", metadata_alterations);
         alterations.extend(metadata_alterations);
-        tracing::trace!("ALTERS ARE: {:?}", alterations);
 
         alterations.into_iter()
     }

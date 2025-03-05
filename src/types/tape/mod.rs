@@ -111,7 +111,6 @@ impl Alter for PositionZobrist {
         self.current.alter_mut(alter);
 
         if matches!(alter, Alteration::End) {
-            tracing::debug!("Updating Position Hash current hash: {:?}", self.current);
             self.position = self.current;
         }
         self
@@ -177,7 +176,6 @@ impl<const SIZE: usize> Tape<SIZE> {
     // TODO: OQ: Same as head_hash
     pub fn position_hash(&self) -> Zobrist {
         let mut familiar : TapeFamiliar<'_, SIZE, PositionZobrist> = self.conjure();
-        tracing::debug!("syncing position hash");
         familiar.sync_to_read_head();
         familiar.state.position
     }
@@ -247,10 +245,8 @@ impl<const SIZE: usize> Tape<SIZE> {
     // ## THIS SECTION NEEDS TO MAINTAIN ALL THE HASHES INCREMENTALLY ## //
 
     pub fn write(&mut self, alter: Alteration) {
-        tracing::debug!("Writing {:?}", alter);
         // if we're at the End-of-buffer, cache out
         if self.at_eot() {
-            tracing::trace!("CACHE OUT CACHE OUT CACHE OUT");
             // TODO: Actually cache out, this just blanks the buffer and recurses.
             self.data = [None; SIZE];
             self.head = 0;
@@ -385,10 +381,8 @@ mod tests {
         let mut tape = tape_with_startpos_and_d4();
         let mut familiar : TapeFamiliar<128, Zobrist> = tape.conjure();
         familiar.sync_to_read_head();
-        tracing::debug!("synced \n{:?}", familiar);
         assert_eq!(zobrist_for_startpos_and_d4(), familiar.state);
         familiar.rewind_until(|a| matches!(a, Alteration::Turn));
-        tracing::debug!("rewound \n{:?}", familiar);
         assert_eq!(zobrist_for_startpos(), familiar.state);
 
     }

@@ -3,7 +3,6 @@ use crate::types::Occupant;
 use crate::notation::*;
 
 use ben::BEN;
-use tracing::instrument;
 
 pub mod display_debug;
 
@@ -78,14 +77,12 @@ impl Query for PieceBoard {
 }
 
 impl Alter for PieceBoard {
-    #[instrument]
     fn alter(&self, alter: Alteration) -> PieceBoard {
         let mut board = *self;
         board.alter_mut(alter);
         board
     }
 
-    #[instrument]
     fn alter_mut(&mut self, alter: Alteration) -> &mut Self {
         match alter {
             Alteration::Place { square, occupant } => {
