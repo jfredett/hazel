@@ -22,6 +22,16 @@ pub struct Position {
     atm: ATM<'static, InnerPosition>
 }
 
+// this should work like:
+//
+// 1. A familiar exists for inner position, we have it set to move by turn to the current write
+//    head
+// 2. familiar also calculates zobrists, lazily evaluates board/metadata/other stuff
+// 3. need some way to do 'a collection of alterables is also alterable' so I can add stuff freely
+//    to the familiar
+// 4. when updating, calculate zobrist first, check cache, and only update if needed.
+
+
 #[derive(Clone, Default, Debug, PartialEq)]
 pub struct InnerPosition {
     pub board: PieceBoard,

@@ -6,12 +6,14 @@ use super::{cursor::Cursor, cursorlike::Cursorlike, Tape, tape_direction::TapeDi
 /// if a familiar runs off the end of a tape, and we have a continuation for that tape in cache, we can replace it's
 /// cursor with a new one on the new tape and maintain the state. These should ultimately be sendable between threads, so
 /// all their state is maintained internally in a thread-safe way.
-// OQ: I wonder if it makes sense to `deref` this down to it's state
 pub struct Familiar<'a, T, S> where T : Tapelike {
     cursor: Cursor<'a, T>,
     state: S
 }
 
+// FIXME: This API is trash, it's type signature -- wack, it's leaking abstractions? Wack. It's
+// qualified reference to other functions which also have a bad API. Wack.
+// This is truly the Drake of APIs.
 pub fn conjure<S, T>(tape: &T) -> Familiar<T, S> where T : Tapelike, S : Default {
     Familiar {
         cursor: super::cursor::cursor_for(tape),
@@ -27,6 +29,18 @@ pub struct TapeFamiliar<'a, S> {
     position: usize,
     state: S,
     update: fn(&mut S, TapeDirection, Alteration)
+}
+
+
+// OQ: I wonder if it makes sense to `deref` this down to it's state
+impl<'a, T, S> Familiar<'a, T ,S> where T : Tapelike {
+    pub fn get<'b>(&'b self) -> &'b S  where 'b : 'a {
+        &self.state
+    }
+
+    pub fn get_mut<'b>(&'b mut self) -> &'b mut S where 'b : 'a {
+        &mut self.state
+    }
 }
 
 
@@ -110,9 +124,13 @@ impl<'a, S> TapeFamiliar<'a, S> {
 
 // This impl only covers alteration-without-broader-context updates, equivalent to tapefamiliar but
 // not tied to `tape` or any particular element.
-impl<T, S> Cursorlike for Familiar<'_, T, S> where T : Tapelike<Item = Alteration>, S : Alter {
+impl<T, S> Cursorlike<Alteration> for Familiar<'_, T, S> where T : Tapelike<Item = Alteration>, S : Alter {
     fn position(&self) -> usize {
         self.cursor.position()
+    }
+
+    fn read(&self) -> Option<&'_ Alteration> {
+        self.cursor.read()
     }
 
     fn advance(&mut self) {
