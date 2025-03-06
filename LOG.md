@@ -2068,7 +2068,7 @@ still want it to be a single static allocation so I think that's probably the ea
 I found `dynamic-array`, which I'm going to use for now, I think at some point I'll probably want to implement it by
 hand, but for now I just want a dynamic array I don't have to think about.
 
-## 1535 - atm
+## 1435 - atm
 
 `dynamic-array` was drop in, which was nice, but I am straining against how I'm managing these `Familiar`s and I think I
 need to just bite the bullet and do the refactor. In concept it's straightforward, it's a common API for working with
@@ -2094,7 +2094,7 @@ struct Cursor<T, E> where T : Tapelike<E> {
 
 // Covers all the IO operations on the tape, without an explicit read/write head being maintained.
 trait Tapelike<T> {
-  // locking ranges is internal, ideally takes place transactionally (eventually)
+    // locking ranges is internal, ideally takes place transactionally (eventually)
     fn cursor(&self) -> Cursor<Self, T>;
     fn length(&self) -> usize;
     fn read_address(&self, address: usize) -> Option<&T>;
@@ -2113,3 +2113,25 @@ fn conjure<S, E>(tape: &T) -> Familiar<E, S> where T : Tapelike<E>, S : Default 
 
 this is my rough sketch, I'm not sure I've got all the concurrency stuff right there but that's what compiler errors are
 for.
+
+## 1532 - atm
+
+Extending the above, the `Cursor` object would be able to access the whole `Tapelike` API, which makes me think maybe I
+should use an associated constant for the entry type, similar to Iterator, which is kind of what I'm aping here.
+
+# 6-MAR-2025
+
+## 1354 - atm
+
+Noticed a little bug, if you place two places to the same square in a row, it will happily 'place' the piece in the
+square, screw up the zobrist, and then move along. This is happening in the current (46da817) SHA, though I honestly
+don't know _why_ it's making multiple `place` commands there, it is. Maybe because it's initializing to zeroes and
+trying to read them as `None`s? IDK. Might be worthwhile to add an `Alteration::Noop` in the mix and get rid of the
+`Option` type entirely in `Tape`.
+
+Next steps are to continue refactoring, I realized that by adding some additional methods to the familiar, I can get the
+best of both worlds, update the state via the simple `Alter` code, then when the UI needs to read context data, it talks
+to the familiar, which can specialize the methods according to it's current position/state. This means that `Familiar`
+will proxy some of `Cursorlike` and `Tapelike` to the end user, but with the added context of the familiar's state,
+which I think should be plenty for what I need. I am going to aim to build up the `TapeReaderState` with the new
+familiar system and see how that fares.
