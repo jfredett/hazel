@@ -9,6 +9,7 @@ use ratatui::Frame;
 
 use crate::engine::driver::WitchHazel;
 use crate::notation::ben::BEN;
+use crate::types::tape::Tape;
 use crate::ui::widgets::tapereader::*;
 use crate::game::chess::position::Position;
 
@@ -104,9 +105,10 @@ impl<'a> UI<'a> {
         let position = Position::new(BEN::start_position());
         let tape = position.tape.read().unwrap();
 
-        let mut tapereaderstate = tape.conjure::<TapeReaderState<'a>>();
+        // let mut tapereaderstate = tape.conjure::<TapeReaderState<'a>>();
+        let mut tapereaderfamiliar = crate::types::tape::familiar::conjure::<TapeReaderState<'a>, Tape>(&tape);
 
-        frame.render_stateful_widget(&self.tapereader, Rect::new(0,0,100,100), tapereaderstate.get_mut());
+        frame.render_stateful_widget(&self.tapereader, Rect::new(0,0,100,100), tapereaderfamiliar.get_mut());
     }
 }
 

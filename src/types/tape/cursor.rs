@@ -7,15 +7,15 @@ use super::{cursorlike::Cursorlike, tapelike::Tapelike};
 // these things should be broadly 'okay' from a thread safety perspective, since they're mostly
 // just updating their local state from some shared resource, but probably some locking is
 // necessary.
+//
+// This is pointerlike, it hsould be possible to pass this around pretty freely, but we'd have to
+// copy the reference around, which means Arc, I think.
 pub struct Cursor<'a, T> where T : Tapelike {
     tape: &'a T,
     position: usize
 }
 
 impl<'a, T> Cursor<'a, T> where T : Tapelike {
-    pub fn read(&self) -> Option<&'a T::Item> {
-        self.tape.read_address(self.position)
-    }
 
     pub fn read_range(&self, range: Range<usize>) -> &'a [Option<T::Item>] {
         self.tape.read_range(range)
@@ -29,9 +29,13 @@ impl<'a, T> Cursor<'a, T> where T : Tapelike {
     }
 }
 
-impl<T> Cursorlike for Cursor<'_, T> where T : Tapelike {
+impl<'a, T, E: 'a> Cursorlike<E> for Cursor<'a, T> where T : Tapelike<Item = E> {
     fn position(&self) -> usize {
         self.position
+    }
+
+    fn read(&self) -> Option<&'a E> {
+        self.tape.read_address(self.position)
     }
 
     fn advance(&mut self) {
