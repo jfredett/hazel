@@ -1,6 +1,6 @@
 use crate::{Alter, Alteration};
 
-use super::{cursor::Cursor, cursorlike::Cursorlike, tape::Tape, tape_direction::TapeDirection, tapelike::Tapelike};
+use super::{cursor::Cursor, cursorlike::Cursorlike, Tape, tape_direction::TapeDirection, tapelike::Tapelike};
 
 /// Calculates a state based on the content of some tapelike. Importantly, the `cursor` should be _replacable_, so that
 /// if a familiar runs off the end of a tape, and we have a continuation for that tape in cache, we can replace it's

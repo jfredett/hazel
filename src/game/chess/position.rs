@@ -2,7 +2,7 @@ use std::{fmt::Debug, sync::RwLock};
 
 use crate::constants::move_tables::{KNIGHT_MOVES, KING_ATTACKS};
 
-use crate::types::tape::tape::Tape;
+use crate::types::tape::Tape;
 use crate::{board::PieceBoard, coup::{gen::cache::ATM, rep::Move}, notation::{ben::BEN, Square}, types::{pextboard, Bitboard, Color, Direction, Occupant, Piece}, Alter, Alteration, Query};
 use crate::types::zobrist::Zobrist;
 

@@ -1,10 +1,6 @@
 use std::range::Range;
 
-use itertools::Itertools;
-
-use crate::{Alter, Alteration};
-
-use super::tape::Tape;
+use super::{cursor::Cursor, familiar::Familiar};
 
 // Covers all the IO operations on the tape, without an explicit read/write head being maintained.
 pub trait Tapelike {
