@@ -9,7 +9,6 @@ use ratatui::Frame;
 
 use crate::engine::driver::WitchHazel;
 use crate::notation::ben::BEN;
-use crate::types::tape::TapeFamiliar;
 use crate::ui::widgets::tapereader::*;
 use crate::game::chess::position::Position;
 
