@@ -4,7 +4,8 @@ use std::range::Range;
 use crate::{Alter, Alteration};
 use crate::types::zobrist::Zobrist;
 
-use familiar::TapeFamiliar;
+use crate::types::tape::familiar::menagerie::tape_familiar::TapeFamiliar;
+use familiar::position_zobrist::PositionZobrist;
 use tapelike::Tapelike;
 
 pub mod cursor;
@@ -13,39 +14,15 @@ pub mod familiar;
 pub mod tape_direction;
 pub mod tapelike;
 
-// TODO: Figure out where this should live
-
-#[derive(Default, Clone, Copy)]
-struct PositionZobrist {
-    pub current: Zobrist,
-    pub position: Zobrist
-}
-
-impl Alter for PositionZobrist {
-    fn alter_mut(&mut self, alter: Alteration) -> &mut Self {
-        self.current.alter_mut(alter);
-
-        if matches!(alter, Alteration::End) {
-            self.position = self.current;
-        }
-        self
-    }
-
-    fn alter(&self, alter: Alteration) -> Self {
-        let mut ret = *self;
-        ret.alter_mut(alter);
-        ret
-    }
-}
-
-
 #[derive(Clone)]
 pub struct Tape {
-    data: dynamic_array::MediumArray<Option<Alteration>>,
+    data: dynamic_array::MediumArray<Alteration>,
     // this is the write head, I might need a familiar for the proceed/unwind stuff?
+    hwm: usize,
     head: usize
 }
 
+// TODO: Configuration-by-file-or-engine-option.
 pub const DEFAULT_TAPE_SIZE : u16 = 1024;
 
 impl Default for Tape {
@@ -58,19 +35,34 @@ impl Tapelike for Tape {
     type Item = Alteration;
 
     fn length(&self) -> usize {
-        self.data.len().into()
+        self.hwm
     }
 
-    fn read_address(&self, address: usize) -> Option<&Self::Item> {
-        self.data[address].as_ref()
+    fn read_address(&self, address: usize) -> &Self::Item {
+        if address > self.hwm { return &Alteration::Noop; }
+        &self.data[address]
     }
 
-    fn read_range(&self, range: impl Into<Range<usize>>) -> &[Option<Self::Item>] {
-        self.data.get(range.into()).unwrap_or_default()
+    fn read_range(&self, range: impl Into<Range<usize>>) -> &[Self::Item] {
+        let r : Range<usize> = range.into();
+        dbg!(r);
+        dbg!(self);
+        if r.end <= self.hwm {
+            self.data.get(r).unwrap() // we know it is all populated because it's below the hwm.
+        } else if r.start < self.hwm && r.end > self.hwm {
+            // we know it starts on tape, but falls off, no worries, we just grab everything up to
+            // the HWM
+            self.data.get(r.start..=self.hwm).unwrap() // we know it is all populated because it's below the hwm.
+        } else {
+            &[]
+        }
     }
 
     fn write_address(&mut self, address: usize, data: &Self::Item) {
-        self.data[address] = Some(*data);
+        if address > self.hwm {
+            self.hwm = address;
+        }
+        self.data[address] = *data;
     }
 
     fn write_range(&mut self, start: usize, data: &[Self::Item]) {
@@ -85,23 +77,24 @@ impl Tapelike for Tape {
 
 impl Debug for Tape {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "\nTAPE(head_hash: {:?}, position_hash: {:?}, head: {:#04x})", self.head_hash(), self.position_hash(), self.head)?;
+        writeln!(f, "\nTAPE(head_hash: {:?}, position_hash: {:?}, head: {:#04x}, hwm: {:#04x})",
+            self.head_hash(), self.position_hash(), self.head, self.hwm
+        )?;
         let mut running_hash = Zobrist::empty();
         let iterator = self.data.as_slice().into_iter();
         for (idx, entry) in iterator.enumerate() {
-            match entry {
-                None => {
-                    writeln!(f, "END-OF-TAPE")?;
-                    break;
-                }
-                Some(alter) => {
-                    running_hash.alter_mut(*alter);
-                    if idx == self.head {
-                        writeln!(f, "HEAD*    | {:>64} | {:>64?}", *alter, running_hash)?;
-                    } else {
-                        writeln!(f, "{:>#008X} | {:>64} | {:>64?}", idx, *alter, running_hash)?;
-                    }
-                }
+            if idx >= self.hwm {
+                writeln!(f, "END-OF-TAPE")?;
+                break;
+            }
+
+            let alter = self.read();
+
+            running_hash.alter_mut(*alter);
+            if idx == self.head {
+                writeln!(f, "HEAD*    | {:>64} | {:>64?}", alter, running_hash)?;
+            } else {
+                writeln!(f, "{:>#008X} | {:>64} | {:>64?}", idx, alter, running_hash)?;
             }
         }
         writeln!(f, "=================================")
@@ -111,7 +104,7 @@ impl Debug for Tape {
 
 impl Tape {
     pub fn new(cap: u16) -> Self {
-        Tape { data: dynamic_array::MediumArray::zeroed(cap), head: 0 }
+        Tape { data: dynamic_array::MediumArray::zeroed(cap), head: 0, hwm: 0 }
     }
 
     // TODO: OQ: Same as head_hash
@@ -153,7 +146,7 @@ impl Tape {
         TapeFamiliar::for_alterable_with_state(&self, state)
     }
 
-    pub fn read(&self) -> Option<Alteration> {
+    pub fn read(&self) -> &Alteration {
         self.read_address(self.head)
     }
 
@@ -163,23 +156,11 @@ impl Tape {
         }
     }
 
-    pub fn read_address(&self, idx: usize) -> Option<Alteration> {
-        if idx >= self.length() {
-            None
-        } else {
-            self.data[idx]
-        }
-    }
-
-    fn write_direct(&mut self, entry: Option<Alteration>) {
-        self.data[self.head] = entry;
-    }
-
     // ## THIS SECTION NEEDS TO MAINTAIN ALL THE HASHES INCREMENTALLY ## //
 
     pub fn write(&mut self, alter: Alteration) {
         // if we're at the End-of-buffer, cache out
-        if self.at_eot() {
+        if self.buffer_full() {
             // TODO: Actually cache out, this just blanks the buffer and recurses.
             tracing::error!("CACHE OUT CACHE OUT CACHE OUT");
             let len = self.data.len();
@@ -189,8 +170,11 @@ impl Tape {
         }
 
         // write the instruction to the tape
-        self.write_direct(Some(alter));
+        self.data[self.head] = alter;
         self.head += 1;
+        if self.head > self.hwm {
+            self.hwm = self.head;
+        }
     }
 
     pub fn at_bot(&self) -> bool {
@@ -198,8 +182,12 @@ impl Tape {
     }
 
     pub fn at_eot(&self) -> bool {
-        // watch out for off-by-ones!
-        self.head == (self.length() - 1)
+        self.head == self.hwm
+    }
+
+    pub fn buffer_full(&self) -> bool {
+        // watch out for off-by-ones
+        self.head + 1 == self.length()
     }
 
     pub fn step_forward(&mut self) {
@@ -325,7 +313,7 @@ mod tests {
         tape.write(alteration);
         tape.step_backward();
 
-        assert_eq!(tape.read(), Some(alteration));
+        assert_eq!(tape.read(), &alteration);
     }
 
     #[test]
@@ -340,12 +328,18 @@ mod tests {
     #[test]
     fn at_eot() {
         let mut tape = Tape::default();
+        assert!(tape.at_eot());
+        tape.write_all(&[
+            Alteration::Noop,
+            Alteration::Noop,
+            Alteration::Noop,
+            Alteration::Noop,
+        ]);
+        assert!(tape.at_eot());
+        tape.step_backward();
         assert!(!tape.at_eot());
         tape.step_forward();
-        tape.step_forward();
-        dbg!(&tape);
         assert!(tape.at_eot());
-
     }
 
     #[test]
@@ -354,7 +348,7 @@ mod tests {
         let alteration = Alteration::place(D4, Occupant::white_pawn());
         tape.write(alteration);
 
-        assert_eq!(tape.read_address(0), Some(alteration));
+        assert_eq!(tape.read_address(0), &alteration);
     }
 
 
@@ -368,7 +362,7 @@ mod tests {
         tape.write_all(&alterations);
 
         let range = 0..2;
-        assert_eq!(tape.read_range(range), &[Some(alterations[0]), Some(alterations[1])]);
+        assert_eq!(tape.read_range(range), &alterations);
     }
 
     #[test]
@@ -377,7 +371,7 @@ mod tests {
         let alteration = Alteration::place(D4, Occupant::white_pawn());
         tape.write_address(0, &alteration);
 
-        assert_eq!(tape.read_address(0), Some(alteration));
+        assert_eq!(tape.read_address(0), &alteration);
     }
 
     #[test]
@@ -390,7 +384,7 @@ mod tests {
         tape.write_range(0, &alterations);
 
         let range = 0..2;
-        assert_eq!(tape.read_range(range), &[Some(alterations[0]), Some(alterations[1])]);
+        assert_eq!(tape.read_range(range), &alterations);
     }
 
     #[test]

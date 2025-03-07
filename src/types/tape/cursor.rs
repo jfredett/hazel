@@ -17,11 +17,11 @@ pub struct Cursor<'a, T> where T : Tapelike {
 
 impl<'a, T> Cursor<'a, T> where T : Tapelike {
 
-    pub fn read_range(&self, range: Range<usize>) -> &'a [Option<T::Item>] {
+    pub fn read_range(&self, range: Range<usize>) -> &'a [T::Item] {
         self.tape.read_range(range)
     }
 
-    pub fn read_context(&self, before: usize, after: usize) -> &'a [Option<T::Item>] {
+    pub fn read_context(&self, before: usize, after: usize) -> &'a [T::Item] {
         let start = if before > self.position { 0 } else { self.position - before };
         let end = if self.position + after > self.tape.length() { self.tape.length() } else { self.position + after };
 
@@ -34,7 +34,7 @@ impl<'a, T, E: 'a> Cursorlike<E> for Cursor<'a, T> where T : Tapelike<Item = E> 
         self.position
     }
 
-    fn read(&self) -> Option<&'a E> {
+    fn read(&self) -> &'a E {
         self.tape.read_address(self.position)
     }
 

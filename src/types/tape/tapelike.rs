@@ -8,8 +8,8 @@ pub trait Tapelike {
 
     fn length(&self) -> usize;
 
-    fn read_address(&self, address: usize) -> Option<&Self::Item>;
-    fn read_range(&self, range: impl Into<Range<usize>>) -> &[Option<Self::Item>];
+    fn read_address(&self, address: usize) -> &Self::Item;
+    fn read_range(&self, range: impl Into<Range<usize>>) -> &[Self::Item];
     fn write_address(&mut self, address: usize, data: &Self::Item);
     fn write_range(&mut self, start: usize, data: &[Self::Item]);
 }

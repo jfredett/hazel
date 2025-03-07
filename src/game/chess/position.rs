@@ -271,12 +271,11 @@ impl Position {
                     panic!("Cannot unwind from Beginning of Tape");
                 }
 
-                if let Some(alter) = tape.read() {
-                    unmoves.push(alter);
+                let alter = *tape.read();
+                unmoves.push(alter);
 
-                    if matches!(alter, Alteration::Turn) {
-                        break;
-                    }
+                if matches!(alter, Alteration::Turn) {
+                    break;
                 }
 
                 tape.step_backward();
