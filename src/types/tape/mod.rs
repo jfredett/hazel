@@ -5,7 +5,7 @@ use crate::{Alter, Alteration};
 use crate::types::zobrist::Zobrist;
 
 use crate::types::tape::familiar::menagerie::tape_familiar::TapeFamiliar;
-use familiar::position_zobrist::PositionZobrist;
+use familiar::state::position_zobrist::PositionZobrist;
 use tapelike::Tapelike;
 
 pub mod cursor;
@@ -82,13 +82,11 @@ impl Debug for Tape {
         )?;
         let mut running_hash = Zobrist::empty();
         let iterator = self.data.as_slice().into_iter();
-        for (idx, entry) in iterator.enumerate() {
+        for (idx, alter) in iterator.enumerate() {
             if idx >= self.hwm {
                 writeln!(f, "END-OF-TAPE")?;
                 break;
             }
-
-            let alter = self.read();
 
             running_hash.alter_mut(*alter);
             if idx == self.head {
