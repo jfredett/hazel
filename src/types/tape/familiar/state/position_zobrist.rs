@@ -1,6 +1,5 @@
 use crate::{types::zobrist::Zobrist, Alter, Alteration};
 
-
 #[derive(Default, Clone, Copy)]
 pub struct PositionZobrist {
     pub current: Zobrist,
