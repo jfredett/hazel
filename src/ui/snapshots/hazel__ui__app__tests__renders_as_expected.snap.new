@@ -1,6 +1,6 @@
 ---
 source: src/ui/app.rs
-assertion_line: 134
+assertion_line: 136
 expression: t.backend().buffer().clone()
 ---
 Buffer {

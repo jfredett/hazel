@@ -55,12 +55,13 @@ use crate::{constants::File, coup::rep::MoveType, game::castle_rights::CastleRig
 //
 //
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Default, Clone, Copy, PartialEq)]
 pub enum Alteration {
     Place { square: Square, occupant: Occupant },
     Remove { square: Square, occupant: Occupant },
     Assert(MetadataAssertion),
     Inform(MetadataAssertion),
+    #[default] Noop,
     Lit(u8),
     Turn,
     End,
@@ -106,6 +107,7 @@ impl Debug for Alteration {
             Self::Clear => write!(f, "Clear"),
             Self::Lit(byte) => write!(f, "Lit({:x})", byte),
             Self::Turn => write!(f, "Turn"),
+            Self::Noop => write!(f, "Noop"),
             Self::End => write!(f, "End"),
         }
     }

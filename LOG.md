@@ -2135,3 +2135,77 @@ to the familiar, which can specialize the methods according to it's current posi
 will proxy some of `Cursorlike` and `Tapelike` to the end user, but with the added context of the familiar's state,
 which I think should be plenty for what I need. I am going to aim to build up the `TapeReaderState` with the new
 familiar system and see how that fares.
+
+## 1936 - atm
+
+I was thinking a bit about `Zobrist` while organizing code, and I think I want to tweak the design. I'm planning to use
+`Zobrist` for much more than just position hashing, since I can certainly use them for `Tape` caching at least, and
+perhaps for other things as well. I also expect I'll want to use them primarily in the context of a Cache, so I want to
+tie those things together and also ensure the type system prevents using the wrong calculated hash, since they all look
+pretty much the same. I'd also like to be able to tweak the seed per cache, since the behavior is quite sensitive to
+what it is you're hashing.
+
+I'm thinking of taking a phantom type, at the very least, on both `Cache` and `Zobrist`. Cache will accept lookups only
+with matching type. I can also use that phantom type information to report back to the debug UI and log as telemetry
+about the hashes, which I can then use to start analyzing hash quality, which I think will be important. I think this
+will be a good way to implement things when I get to actually implementing a non-stub version of `Cache`.
+
+Unrelated, I need to put some kind of prelude module together, there is a set of common things (Square constants,
+macros, some types) that I simply need all the time, and more generally it'd be good to have some sort of toolbox module
+that just reexports all the stuff I need. I have been idling on splitting up the thing into multiple crates, LSP is
+getting quite slow and I think it's potentially due to project structure -- it's also just getting a bit messy, and some
+parts of the system are quite stable and unlikely to change until I get into the optimization loop later.
+
+## 1953 - atm
+
+I'm procrastinating, but I thought of a potentially interesting game/tool for teaching chess to children. My kid is
+almost four, and loves watching me play chess, despite constant protestation about not playing illegal moves. I've been
+thinking about how I will teach the game, and when it comes to teaching, my style is somewhat idiosyncratic. I dislike
+direct instruction and generic or trite metaphors. Rarely do these appeal to the actual individual learning in front of
+you, and they always seem to focus on creating a superficial understanding that does not really drive nor reward
+discovering better abstractions later.
+
+Take, for example, chess puzzles. I love them now, but hated them at first because they didn't make sense -- I didn't
+understand what they were aiming to reinforce or teach, because I was hung up on the idea that I was simply supposed to
+play 'well' and not 'accurately', puzzles reward accurate identification of tactical sequences and execution of those
+sequences ("combination"). By directing a student to a puzzle which has the full rules of chess enforced, probably with
+many pieces to consider, and then to expect them to just 'caclulate' leads to frustration. This is mitigated either by
+replacing the puzzle with simpler ones, which is demoralizing for many students (myself included); or by starting with
+trivial puzzles (which don't really help develop the muscles for real games, which is the typical goal of students
+(myself not included)) and progressively increasing difficulty, which delays the value of the puzzle and makes it hard
+to understand how it's helping; or by carefully walking them through the puzzle and emphasizing calculation and patience
+and how to look for tactics and so on. This is probably our best try, but it still leaves the game badly unbalanced, the
+amount of _work_ it takes to drag a student through the weight of all the possibilities is highly inefficient.
+
+The problem is not the student nor the teacher, it's the rules. There are two many of them to easily isolate tactics in
+a narrow space that makes calculation easy. Most small-piececount puzzles in chess are either trivial mates/forks, or
+pawn-and-piece endgames which are renowned for being calculation intense, as the branching factor shrinks, allowing a
+great deal of depth, paradoxically _increasing_ the number of positions that must be considered.
+
+The rules are also against us because the _best_ tactical positions are also the _narrowest_. These offer the most
+excitement, snatching victory from the jaws of utter defeat. A mate-or-be-mated position is _thrilling_, and excitement
+cements memory like nothing else. So we want to reduce the resistance and ensure early and frequent narrow wins. We, as
+teachers, can then slowly increase the difficulty and lower the win rate, and ultimately develop the mental muscles of
+our student.
+
+So what if we isolate tactics into smaller rulesets built around simpler games? Let's also try to make the game slightly
+asymmetric, such that the student's role is easier, we will rely on the skill differential to help balance the game.
+We'll also use an asymmetric clock, so that the stronger player has less time.
+
+The rules of the game are simple, the stronger player takes a king and piece of their choice (not a pawn). The student
+takes a piece assigned to them by the stronger player. The stronger player is given a clock, the student may be given a
+clock, depending on the stage of training.
+
+Student places their piece on the board.
+
+The teacher goes second and places both of their pieces on the board.
+
+The student must fork the teacher's pieces. As soon as this happens the game ends and the student wins. If the student's
+piece is captured, they lose. When the student wins, the teacher gains an increment on their clock and the game resets.
+When the teacher wins, they lose an increment. Play until you're done.
+
+The point of the game is just to practice recognizing fork configurations of these pieces on instinct. There is no
+attempt to teach deeper chess concepts, it's just lifting weights.
+
+I don't know if it's a good game, but I might make hazel play it someday.
+

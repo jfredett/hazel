@@ -1,7 +1,7 @@
 pub trait Cursorlike<E> {
     fn position(&self) -> usize;
 
-    fn read(&self) -> Option<&E>;
+    fn read(&self) -> &E;
 
     fn advance(&mut self);
     fn rewind(&mut self);
