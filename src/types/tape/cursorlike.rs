@@ -1,5 +1,7 @@
 pub trait Cursorlike<E> {
     fn position(&self) -> usize;
+    fn length(&self) -> usize;
+    fn at_end(&self) -> bool;
 
     fn read(&self) -> &E;
 
@@ -25,6 +27,12 @@ pub trait Cursorlike<E> {
             } else if self.position() > desired_position {
                 self.rewind();
             }
+        }
+    }
+
+    fn advance_to_end(&mut self) {
+        while !self.at_end() {
+            self.advance()
         }
     }
 }

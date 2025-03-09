@@ -34,6 +34,14 @@ impl<'a, T, E: 'a> Cursorlike<E> for Cursor<'a, T> where T : Tapelike<Item = E> 
         self.position
     }
 
+    fn length(&self) -> usize {
+        self.tape.length()
+    }
+
+    fn at_end(&self) -> bool {
+        self.tape.length() == self.position
+    }
+
     fn read(&self) -> &'a E {
         self.tape.read_address(self.position)
     }
