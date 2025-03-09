@@ -24,9 +24,8 @@ pub fn conjure<S, T>(tape: &T) -> Familiar<T, S> where T : Tapelike, S : Default
     }
 }
 
-
 // OQ: I wonder if it makes sense to `deref` this down to it's state
-impl<'a, T, S> Familiar<'a, T ,S> where T : Tapelike {
+impl<'a, T, S> Familiar<'a, T, S> where T : Tapelike {
     pub fn get<'b>(&'b self) -> &'b S  where 'b : 'a {
         &self.state
     }
@@ -36,12 +35,19 @@ impl<'a, T, S> Familiar<'a, T ,S> where T : Tapelike {
     }
 }
 
-
 // This impl only covers alteration-without-broader-context updates, equivalent to tapefamiliar but
 // not tied to `tape` or any particular element.
 impl<T, S> Cursorlike<Alteration> for Familiar<'_, T, S> where T : Tapelike<Item = Alteration>, S : Alter {
     fn position(&self) -> usize {
         self.cursor.position()
+    }
+
+    fn length(&self) -> usize {
+        self.cursor.length()
+    }
+
+    fn at_end(&self) -> bool {
+        self.cursor.at_end()
     }
 
     fn read(&self) -> &'_ Alteration {

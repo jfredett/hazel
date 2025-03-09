@@ -1,14 +1,14 @@
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Direction, Layout, Rect};
 
-use ratatui::widgets::{StatefulWidget, Widget};
+use ratatui::widgets::{StatefulWidget, TableState, Widget};
 use ratatui::{
     layout::Constraint,
     style::{Style, Stylize},
     widgets::{Block, Row, Table},
 };
 
-use crate::{Alter, Alteration};
+use crate::types::tape::familiar::state::tape_reader_state::TapeReaderState;
 
 use super::placeholder::Placeholder;
 
@@ -29,60 +29,41 @@ use super::placeholder::Placeholder;
 //
 // 
 
-#[derive(Clone)]
-pub struct TapeReaderState<'a> {
-    context: Option<&'a [Alteration]>, // I could alternately do this with a deque instead of re-grabbing the slice each update? This doesn't re-alloc on length change.
-    length: usize, // the size of the slice to retrieve
-    offset: usize // an offset at which the context window starts.
+/// This is just a method-container and lifetime marker, the state is provided externally via a
+/// familiar on the tape.
+pub struct TapeReaderWidget {
+    pub desired_position: usize
 }
 
-const DEFAULT_TAPE_READER_LENGTH : usize = 32;
-
-impl Default for TapeReaderState<'_> {
+impl Default for TapeReaderWidget {
     fn default() -> Self {
-        TapeReaderState {
-            context: None,
-            length: DEFAULT_TAPE_READER_LENGTH,
-            offset: 0
+        TapeReaderWidget {
+            desired_position: 0,
         }
     }
 }
 
-
-impl Alter for TapeReaderState<'_> {
-    fn alter(&self, alter: Alteration) -> Self {
-        let mut ret = self.clone();
-        ret.alter_mut(alter);
-        ret
-    }
-
-    fn alter_mut(&mut self, alter: Alteration) -> &mut Self {
-        todo!()
-    }
-}
-
-/// This is just a method-container and lifetime marker, the state is provided externally via a
-/// familiar on the tape.
-#[derive(Default)]
-pub struct TapeReaderWidget {
-
-}
-
 impl TapeReaderWidget {
     pub fn layout(&self) -> Layout {
-        let layout = Layout::horizontal([
+        Layout::horizontal([
             Constraint::Length(1), // header
             Constraint::Min(1), // code seciton
             Constraint::Length(1), // footer
-        ]);
-        layout
+        ])
     }
 
+    pub fn select_next(&mut self) {
+        self.desired_position += 1;
+    }
+
+    pub fn select_previous(&mut self) {
+        self.desired_position -= 1;
+    }
 }
 
 
 impl<'a> StatefulWidget for &'a TapeReaderWidget {
-    type State = TapeReaderState<'a>;
+    type State = TapeReaderState;
 
     fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
         // Columns widths are constrained in the same way as Layout...
@@ -98,45 +79,23 @@ impl<'a> StatefulWidget for &'a TapeReaderWidget {
             Constraint::Length(32)
         ];
 
-        let rows = if let Some(tape_slice) = state.context {
-            tape_slice
-        } else {
-            &[]
-        }.into_iter().enumerate().map(|(idx, e)| {
-            // we have the alteration + context from `state` proper, we need to prepare the context
-                // rows here, and add the header/footer rows (not sections) later.
-            Row::new(vec![
-                format!("ADDR: {}", idx + state.offset),
-                e.to_string(),
-                "Running Hash".to_string()
-            ])
-        });
 
-        let table = Table::new(rows, widths)
-            // ...and they can be separated by a fixed spacing.
+        let table = Table::new(state.rows(), widths)
             .column_spacing(1)
-            // You can set the style of the entire Table.
-            .style(Style::new().blue())
-            // It has an optional header, which is simply a Row always visible at the top.
+            .style(Style::new().white())
             .header(
                 Row::new(vec!["Address", "Instruction", "Hash"])
                     .style(Style::new().bold())
-                    // To add space between the header and the rest of the rows, specify the margin
-                    .bottom_margin(1),
             )
-            // It has an optional footer, which is simply a Row always visible at the bottom.
-            .footer(Row::new(vec!["PLACEHOLDER FOR FEN OF CURRENT POSITION"]))
-            // As any other widget, a Table can be wrapped in a Block.
-            .block(Block::new().title("Table"))
-            // The selected row, column, cell and its content can also be styled.
+            .footer(Row::new(vec!["PLACEHOLDER FOR FEN OF CURRENT POSITION UNDER HEAD"]))
+            .block(state.title_block())
             .row_highlight_style(Style::new().reversed())
             .column_highlight_style(Style::new().red())
             .cell_highlight_style(Style::new().blue())
-            // ...and potentially show a symbol in front of the selection.
             .highlight_symbol(">>");
 
         Placeholder::of_size(header.width, header.height).render(header, buf);
-        Widget::render(&table, code, buf);
+        StatefulWidget::render(&table, code, buf, &mut state.table_state());
         Placeholder::of_size(footer.width, footer.height).render(footer, buf);
     }
 }

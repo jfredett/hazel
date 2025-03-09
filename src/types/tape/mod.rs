@@ -4,8 +4,9 @@ use std::range::Range;
 use crate::{Alter, Alteration};
 use crate::types::zobrist::Zobrist;
 
-use crate::types::tape::familiar::menagerie::tape_familiar::TapeFamiliar;
+use cursorlike::Cursorlike;
 use familiar::state::position_zobrist::PositionZobrist;
+use familiar::Familiar;
 use tapelike::Tapelike;
 
 pub mod cursor;
@@ -17,8 +18,9 @@ pub mod tapelike;
 #[derive(Clone)]
 pub struct Tape {
     data: dynamic_array::MediumArray<Alteration>,
-    // this is the write head, I might need a familiar for the proceed/unwind stuff?
+    // the current end of tape ("high water") mark.
     hwm: usize,
+    // this is the write head, I might need a familiar for the proceed/unwind stuff?
     head: usize
 }
 
@@ -45,14 +47,12 @@ impl Tapelike for Tape {
 
     fn read_range(&self, range: impl Into<Range<usize>>) -> &[Self::Item] {
         let r : Range<usize> = range.into();
-        dbg!(r);
-        dbg!(self);
         if r.end <= self.hwm {
             self.data.get(r).unwrap() // we know it is all populated because it's below the hwm.
         } else if r.start < self.hwm && r.end > self.hwm {
             // we know it starts on tape, but falls off, no worries, we just grab everything up to
             // the HWM
-            self.data.get(r.start..=self.hwm).unwrap() // we know it is all populated because it's below the hwm.
+            self.data.get(r.start..self.hwm).unwrap() // we know it is all populated because it's below the hwm.
         } else {
             &[]
         }
@@ -107,8 +107,8 @@ impl Tape {
 
     // TODO: OQ: Same as head_hash
     pub fn position_hash(&self) -> Zobrist {
-        let mut familiar : TapeFamiliar<'_, PositionZobrist> = self.conjure();
-        familiar.sync_to_read_head();
+        let mut familiar : Familiar<'_, Self, PositionZobrist> = self.conjure();
+        familiar.seek(self.head);
         familiar.get().position
     }
 
@@ -129,19 +129,15 @@ impl Tape {
     // TODO: OQ: possibly these live _on position_?
     pub fn head_hash(&self) -> Zobrist {
         // TODO: Cache this and advance on demand
-        let mut familiar : TapeFamiliar<'_, Zobrist> = self.conjure();
+        let mut familiar : Familiar<'_, Tape, Zobrist> = self.conjure();
         // this will change to look at the current write position (head) and moving towards it
         // updating the hash on the way.
-        familiar.sync_to_read_head();
+        familiar.seek(self.head);
         *familiar.get()
     }
 
-    pub fn conjure<A : Alter + Default>(&self) -> TapeFamiliar<A> {
-        TapeFamiliar::for_alterable(&self)
-    }
-
-    pub fn conjure_with_initial_state<A : Alter>(&self, state: A) -> TapeFamiliar<A> {
-        TapeFamiliar::for_alterable_with_state(&self, state)
+    pub fn conjure<A : Default>(&self) -> Familiar<Tape,A> {
+        familiar::conjure(self)
     }
 
     pub fn read(&self) -> &Alteration {
@@ -211,6 +207,8 @@ pub enum ProceedToken {
 
 #[cfg(test)]
 mod tests {
+    use cursorlike::Cursorlike;
+
     use crate::alteration::MetadataAssertion;
     use crate::types::zobrist::HazelZobrist;
     use crate::types::Color;
@@ -293,16 +291,13 @@ mod tests {
     #[test]
     #[tracing_test::traced_test]
     fn hash_familiar_works() {
-        let mut tape = tape_with_startpos_and_d4();
-        let mut familiar : TapeFamiliar<Zobrist> = tape.conjure();
-        familiar.sync_to_read_head();
+        let tape = tape_with_startpos_and_d4();
+        let mut familiar : Familiar<Tape, Zobrist> = tape.conjure();
+        familiar.seek(tape.write_head());
         assert_eq!(zobrist_for_startpos_and_d4(), *familiar.get());
-        familiar.rewind_until(|a| matches!(a, Alteration::Turn));
+        familiar.rewind_until(|a| matches!(a.read(), Alteration::Turn));
         assert_eq!(zobrist_for_startpos(), *familiar.get());
-
     }
-
-
 
     #[test]
     fn write_and_read() {

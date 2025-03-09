@@ -4,4 +4,4 @@
 // 2. a Menagerie class which manages creating, moving/adjusting, and sharing familiars (eventually)
 //
 
-pub mod tape_familiar;
+//pub mod tape_familiar;
