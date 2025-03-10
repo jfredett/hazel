@@ -5,6 +5,7 @@ use ratatui::crossterm::event::{Event, KeyCode};
 use ratatui::layout::Rect;
 use ratatui::widgets::{Block, Borders};
 use ratatui::Frame;
+use tui_logger::TuiWidgetState;
 
 
 use crate::engine::driver::WitchHazel;
@@ -26,7 +27,8 @@ pub struct UI<'a> {
     engine: &'a WitchHazel<1024>,
     // UI
     mode: Mode,
-    tapereader: TapeReaderWidget
+    tapereader: TapeReaderWidget,
+    tuiloggerstate: TuiWidgetState,
 }
 
 impl Debug for UI<'_> {
@@ -43,7 +45,8 @@ impl<'a> UI<'a> {
             flags: HashMap::new(),
             engine,
             mode: Mode::Command,
-            tapereader: TapeReaderWidget::default()
+            tapereader: TapeReaderWidget::default(),
+            tuiloggerstate: TuiWidgetState::default()
         }
     }
 
@@ -80,10 +83,10 @@ impl<'a> UI<'a> {
                         },
 
                         KeyCode::Down => {
-                            self.tapereader.select_next();
+                            self.tapereader.advance();
                         }
                         KeyCode::Up => {
-                            self.tapereader.select_previous();
+                            self.tapereader.rewind();
                         }
                         _ => {
                         }
@@ -115,6 +118,9 @@ impl<'a> UI<'a> {
         let tape = position.tape.read().unwrap();
         tracing::debug!("{:?}", tape);
 
+        // layout here
+        //
+
         // this will get handled by the engine at some point, so we won't create it here. We'll
         // just ask for the current TapeReaderState for whatever thing we want directly from the
         // WitchHazel engine instance
@@ -122,8 +128,9 @@ impl<'a> UI<'a> {
 
         // FIXME: this should seek to a position chosen in the UI via up/down arror
         tapereaderfamiliar.seek(self.tapereader.desired_position);
+        // HACK: Initialization of this state is so weird.
 
-        frame.render_stateful_widget(&self.tapereader, Rect::new(0,0,100,100), tapereaderfamiliar.get_mut());
+        frame.render_stateful_widget(&self.tapereader, Rect::new(0,0,96,36), tapereaderfamiliar.get_mut());
     }
 }
 

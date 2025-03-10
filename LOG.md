@@ -2209,3 +2209,16 @@ attempt to teach deeper chess concepts, it's just lifting weights.
 
 I don't know if it's a good game, but I might make hazel play it someday.
 
+# 9-MAR-2025
+
+## 0034 - atm
+
+Working a bit more, I've got the tape widget kind of working, but the `Table` widget has some slightly strange behavior
+that I can't _quite_ say is it's fault, but I don't see where the issue is on my side.
+
+It's an easy problem to fix, though, DIY.
+
+I am starting to think that I should build my actual Widgets to be the payload of a Familiar, using a similar
+update-override, I could have a `Widgety` trait that adds an advance/retreat logic to update it's internal state, and
+then a parent widget can just manage advancing/retreating whatever widget needs said advancing/retreating.
+

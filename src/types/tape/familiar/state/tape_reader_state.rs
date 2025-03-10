@@ -1,5 +1,8 @@
 use std::range::Range;
-use ratatui::{layout::Rows, widgets::{Block, Row, TableState}};
+
+// TODO: This should probably live under /ui/
+use ratatui::{layout::Rows, style::Style, widgets::{Block, Row, TableState}};
+use ratatui::prelude::Stylize;
 
 use crate::{types::tape::{cursor::Cursor, cursorlike::Cursorlike, familiar::Familiar, tapelike::Tapelike, Tape}, Alter, Alteration};
 
@@ -25,33 +28,36 @@ impl Default for TapeReaderState {
 }
 
 impl TapeReaderState {
-    pub fn update(&mut self, cursor: &Cursor<Tape>, range: Range<usize>) {
-        let context = cursor.read_range(self.context_range());
+    pub fn update(&mut self, cursor: &Cursor<Tape>) {
+        // TODO: only fetch the range when we page over.
+        let context = cursor.read_range(self.page_range());
         self.position = cursor.position();
         self.tape_length = cursor.length();
         self.context = context.to_vec();
     }
 
-
     // convert from a desired position in the buffer to the screen of code that needs to be
     // displayed
     // TODO: Would be nice to have an 'overlap' between screens by a few (configurable number of?)
     // rows.
-    pub fn position_in_screen(&self) -> usize {
+    pub fn position_in_page(&self) -> usize {
         self.position % self.length
     }
 
-    pub fn current_offset(&self) -> usize {
-        self.current_page() * self.length
-
+    pub fn offset(&self) -> usize {
+        self.page() * self.length
     }
 
-    pub fn context_range(&self) -> Range<usize> {
-        (self.current_offset()..(self.current_offset() + self.length)).into()
+    pub fn set_page_size(&mut self, ps: usize) {
+        self.length = ps;
     }
 
-    pub fn current_page(&self) -> usize {
-        (self.position / self.length)
+    pub fn page_range(&self) -> Range<usize> {
+        (self.offset()..(self.offset() + self.length - 1)).into()
+    }
+
+    pub fn page(&self) -> usize {
+        self.position / self.length
     }
 
     pub fn total_pages(&self) -> usize {
@@ -60,29 +66,43 @@ impl TapeReaderState {
 
     pub fn table_state(&self) -> TableState {
         TableState::default()
-            .with_offset(self.current_offset())
-            .with_selected(self.position_in_screen())
-
+            .with_selected(self.position_in_page())
     }
+
+    pub fn header_row(&self) -> Row {
+        Row::new(vec!["Address", "Instruction", "Hash"])
+            .style(Style::new().bold())
+    }
+
+
     pub fn title_block(&self) -> Block {
         Block::new()
             .title(
-                format!("Tape: POS: {:#07X} ({}/{}), EOT: {:#07X}",
-                    self.position, self.current_page(), self.total_pages(), self.tape_length
+                format!("{}, {}, {}, {:?}, {}, {}, {}",
+                    self.position, self.position_in_page(), self.offset(), self.page_range(), self.page(), self.total_pages(), self.length
                 )
+                // format!("Tape: POS: {:#07X} ({}/{}), EOT: {:#07X}",
+                //     self.position, self.page(), self.total_pages(), self.tape_length
+                // )
             )
     }
 
     pub fn rows(&self) -> Vec<Row> {
-        self.context.clone().into_iter().enumerate().map(|(idx, e)| {
+        let mut ret : Vec<Row> = self.context.clone().into_iter().enumerate().map(|(idx, e)| {
             // we have the alteration + context from `state` proper, we need to prepare the context
             // rows here, and add the header/footer rows (not sections) later.
             Row::new(vec![
-                format!("{:#07X}", idx + self.current_offset()),
+                format!("{:#07X}", idx + self.offset()),
                 e.to_string(),
                 "Running Hash".to_string()
             ])
-        }).collect()
+        }).collect();
+
+        for addr in ret.len()..self.length {
+            ret.push(Row::new(vec![format!("{:#07X}", self.offset() + addr)]));
+        }
+
+        ret
     }
 }
 
@@ -90,6 +110,9 @@ impl TapeReaderState {
 impl Familiar<'_, Tape, TapeReaderState> {
     pub fn context_range(&self) -> Range<usize> {
         let mut start = self.cursor.position();
+
+        if self.cursor.length() < start { return (start..start).into(); }
+
         let distance_to_hwm = self.cursor.length() - start;
         let end = if distance_to_hwm > self.state.length {
             self.cursor.length()
@@ -104,8 +127,7 @@ impl Familiar<'_, Tape, TapeReaderState> {
 impl Cursorlike<Alteration> for Familiar<'_, Tape, TapeReaderState> {
     fn advance(&mut self) {
         self.cursor.advance();
-        let range = self.context_range();
-        self.state.update(&self.cursor, range)
+        self.state.update(&self.cursor);
     }
 
     fn length(&self) -> usize {
@@ -125,9 +147,8 @@ impl Cursorlike<Alteration> for Familiar<'_, Tape, TapeReaderState> {
     }
 
     fn rewind(&mut self) {
+        self.state.update(&self.cursor);
         self.cursor.rewind();
-        let range = self.context_range();
-        self.state.update(&self.cursor, range)
     }
 }
 
@@ -141,3 +162,45 @@ impl Cursorlike<Alteration> for Familiar<'_, Tape, TapeReaderState> {
 //
 // Another option would be to just directly expose the tape, then calculate other items OTF w/
 // familiars?
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn paging_calculation() {
+        let mut trs = TapeReaderState {
+            context: vec![],
+            position: 0,
+            tape_length: 10*DEFAULT_TAPE_READER_LENGTH,
+            length: DEFAULT_TAPE_READER_LENGTH,
+        };
+        assert_eq!(trs.page_range(), (0..DEFAULT_TAPE_READER_LENGTH).into());
+        assert_eq!(trs.offset(), 0);
+        assert_eq!(trs.position_in_page(), 0);
+        assert_eq!(trs.page(), 0);
+        trs.position = 1;
+        assert_eq!(trs.page_range(), (0..DEFAULT_TAPE_READER_LENGTH).into());
+        assert_eq!(trs.offset(), 0);
+        assert_eq!(trs.position_in_page(), 1);
+        assert_eq!(trs.page(), 0);
+        trs.position = 0x1F;
+        assert_eq!(trs.page_range(), (0..DEFAULT_TAPE_READER_LENGTH).into());
+        assert_eq!(trs.offset(), 0);
+        assert_eq!(trs.position_in_page(), 0x1F);
+        assert_eq!(trs.page(), 0);
+        trs.position = 0x20;
+        assert_eq!(trs.page_range(), (DEFAULT_TAPE_READER_LENGTH..(2 * DEFAULT_TAPE_READER_LENGTH)).into());
+        assert_eq!(trs.offset(), 0x20);
+        assert_eq!(trs.page(), 1);
+        assert_eq!(trs.position_in_page(), 0);
+        trs.position = 0x21;
+        assert_eq!(trs.page_range(), (DEFAULT_TAPE_READER_LENGTH..(2 * DEFAULT_TAPE_READER_LENGTH)).into());
+        assert_eq!(trs.offset(), 0x20);
+        assert_eq!(trs.page(), 1);
+        assert_eq!(trs.position_in_page(), 1);
+
+
+    }
+    
+}
