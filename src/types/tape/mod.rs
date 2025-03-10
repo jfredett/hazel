@@ -1,3 +1,4 @@
+use std::cmp;
 use std::fmt::Debug;
 use std::range::Range;
 
@@ -47,15 +48,19 @@ impl Tapelike for Tape {
 
     fn read_range(&self, range: impl Into<Range<usize>>) -> &[Self::Item] {
         let r : Range<usize> = range.into();
-        if r.end <= self.hwm {
-            self.data.get(r).unwrap() // we know it is all populated because it's below the hwm.
-        } else if r.start < self.hwm && r.end > self.hwm {
-            // we know it starts on tape, but falls off, no worries, we just grab everything up to
-            // the HWM
-            self.data.get(r.start..self.hwm).unwrap() // we know it is all populated because it's below the hwm.
-        } else {
-            &[]
-        }
+
+        // (start..end), hwm, length
+        //
+        // Correct values:
+        //
+        // (min(start,hwm)..max(end,hwm))
+        let corrected_range_start = cmp::min(r.start, self.hwm);
+        let corrected_range_end = cmp::max(r.end, self.hwm);
+        let corrected_range = corrected_range_start..corrected_range_end;
+
+        tracing::debug!("Given Range: {:?}, Corrected Range: {:?}, HWM: {:#04X}", r, corrected_range, self.hwm);
+        // FIXME: bare unwrap, should be safe, but I'm sure it'll bite me someday.
+        self.data.get(corrected_range).unwrap()
     }
 
     fn write_address(&mut self, address: usize, data: &Self::Item) {

@@ -52,17 +52,17 @@ impl TapeReaderWidget {
         ])
     }
 
-    pub fn select_next(&mut self) {
+    pub fn advance(&mut self) {
         self.desired_position += 1;
     }
 
-    pub fn select_previous(&mut self) {
-        self.desired_position -= 1;
+    pub fn rewind(&mut self) {
+        self.desired_position = self.desired_position.saturating_sub(1);
     }
 }
 
 
-impl<'a> StatefulWidget for &'a TapeReaderWidget {
+impl StatefulWidget for &TapeReaderWidget {
     type State = TapeReaderState;
 
     fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
@@ -79,20 +79,19 @@ impl<'a> StatefulWidget for &'a TapeReaderWidget {
             Constraint::Length(32)
         ];
 
+        // TODO: This is probably not identity, but some function of height
+        // state.set_page_size((code.height - 4) as usize);
 
         let table = Table::new(state.rows(), widths)
             .column_spacing(1)
             .style(Style::new().white())
-            .header(
-                Row::new(vec!["Address", "Instruction", "Hash"])
-                    .style(Style::new().bold())
-            )
-            .footer(Row::new(vec!["PLACEHOLDER FOR FEN OF CURRENT POSITION UNDER HEAD"]))
+            //.header(state.header_row())
             .block(state.title_block())
             .row_highlight_style(Style::new().reversed())
             .column_highlight_style(Style::new().red())
             .cell_highlight_style(Style::new().blue())
             .highlight_symbol(">>");
+
 
         Placeholder::of_size(header.width, header.height).render(header, buf);
         StatefulWidget::render(&table, code, buf, &mut state.table_state());
