@@ -2222,3 +2222,139 @@ I am starting to think that I should build my actual Widgets to be the payload o
 update-override, I could have a `Widgety` trait that adds an advance/retreat logic to update it's internal state, and
 then a parent widget can just manage advancing/retreating whatever widget needs said advancing/retreating.
 
+# 11-MAR-2025
+
+## 0042 - atm
+
+I'm finding it quite difficult to live with my, perhaps ill-adviced/anxiety-informed choice to try to avoid `Arc`/`Rc`
+for the `Cursor`/`Familiar` system, but I think I have met my match with the way things are going with the tape widget.
+
+After a brief diversion to get logging exposed in the UI, I now have an interactive way to debug the damn tape widget.
+
+I finally want to get it hooked up to the actual engine backend using the `Witch` actor system, but I'm running into a
+borrowing issue since I'm now in the multithreaded environment where it gets tricky to pass the data around to be used
+by both the engine and the various UI components. Since I want the UI to be able to expose parts of the engine directly
+for debugging, I don't want to rely on copying state across or otherwise processing it, I really want a reference as
+close as possible to the 'real' thing.
+
+I've been putting off using any kind of thread-safe stuff because I couldn't imagine what joint it would make sense to
+cut at in terms of thread safety. Too coarse and the system won't scale, too fine and the system won't perform. Polya
+says if you have a hard problem you can't solve, find a simpler one you can't solve; thus everything else up till now.
+
+I have already established one boundary, `Hazel` is the engine state struct, with `Witch` surrounding it and managing
+message passing. Hazel ultimately will contain a `Variation`, which encodes a multi-variation game structure as a flat
+file[1]. A `Familiar` on that structure will calculate some chosen `Position` based on the contents of the `Variation`
+at the chosen point. Similarly, `Position` compiles `Moves` and writes them to a `Tape`[2]. This tape also uses a
+`Familiar` to calculate the current boardstate, potentially jumping to specific states via Zobrist `Cache` hits.
+`PositionFamiliar`s, in particular, use `Bitboard`, the `Query` trait, and ultimately use the `Alter` trait and it's
+companion `Alteration` enum to specify incremental, reversible updates. Since `Cursor`s (and therefore `Familiar`s) can
+also read ranges of the underlying tape, eventually these Familiars can optimize across multiple `Alteration`s to
+minimize computation (e.g., the `PawnStructure` familiar might ignore all the non-pawn related alterations, and further
+use `simd` to apply multiple alterations at once where possible). All of this is provided via the `hazel` libary.
+
+`main.rs` is then just whatever is necessary to set up a `tokio` environment and run either the UI or just the UCI
+subsystem. The `UCI` subsytem uses the `UCIMessage` struct (which sucks) to send UCI messages to the engine via
+`WitchHazel`'s `MessageFor` trait implementors. Eventually each message will be it's own type and can contain whatever
+logic is needed to move hazel into the implied state in their various impls. Most will be ZSTs, but where natural types
+like `BEN` and such can be used. This will also make it easy to add custom commands to `Hazel`, which I need for the
+eventual database-y features I intend to add.
+
+The `Familiar`s in particular need to be self-contained little guys that ideally can be quickly transferred to any
+thread or client `Hazel` engine. They rely on the `Cursor` object, and ultimately I think that's the joint where I need
+to start cutting. `Cursor` presently relies on a simple borrowed reference to talk about it's target `Tapelike` object,
+but it should probably use an `Arc`.
+
+Additionally, I only have familiars that don't mutate the underlying variation, I don't know that I'll run into a need
+to have concurrent writes _just_ yet, and it's another joint in any case. I *think* there is some combination of `Arc`
+and `RwLock` that might make sense for cursor, but I need to think on it.
+
+I think this should also clean up the types a bit and avoid all the lifetime math I've been doing, since I can just
+clone an `Arc` around without the same anxiety that cloning a big `Tape` gives me.
+
+Once _all_ of that refactoring is done, I will _finally_ be able to finish the `TapeReader` widget, since it will rely on
+a `TapeFamiliar`[3] instead of this crazy reference lifetime rigamarole I've been trying to massage into shape.
+
+The remaining problems to solve I see are:
+
+1. Getting the UCI Implementation working (as always).
+2. Some mechanism for managing a familiars and states
+    - In particular, the `TapeReader` can only show it's own position, but I will want to be able to have the result of
+      other familiars operating on the tape simultaneously shown on a single widget.
+    - I also want to be able to independently manage a particular familiar (as in, the API wrapping a particular
+    state-object with a cursor onto some other object) with the actual cursor that 'powers' it. In this way I can better
+    batch different needs of the engine. If multiple lines all want to calculate through some particular position, I can
+    prioritize unblocking those threads dynamically. This is the plan, anyway.
+    - It will _also_ enable the UI to have a `Menagerie` of familiars it can then loan the state of to each of the
+    widgets.
+3. Hook up the `Board` widget to a syncronized `Familiar` with `TapeReader`, and we should get the engine's idea of the
+   current selected boardstate.
+4. Write some command that runs `perft` in the engine so we can watch it blow up.
+5. ...
+6. Well, I can't say profit, but it'll be cool to watch the pieces move around. Very `blinkenlights`, very cool.
+
+Anyway -- the point of this is _that's it_, that's the whole system I have conceived up to this point. I took time to
+work on `tabitha` trying to figure out that, and though I haven't finished her yet, she ended up not being totally
+necessary. There are a few missing types I didn't mention in there (`Square` is probably the only notable omission, but
+it's not really a type, just a notational convenience in the engine), but it covers the design as is. I am pretty close,
+I think, to getting that working and getting to at least step 1 (or 2) with a little more refactoring and a finished
+cache implementation, which should come quickly when I finish the debugging tool intended to fix it.
+
+Let's hope I don't go walkabout first.
+
+----
+
+[1] Variation presently uses an early iteration of the `Tapelike` interface and all that, it needs to be unified to this
+model and also to use the `Tape` structure, enhanced with some write-to-disk functionality added.
+
+[2] The same cache-to-disk functionality can be applied to any particular `Tape`, but with a target of an in-memory
+cache.
+
+[3] `type TapeFamiliar<S> = forall T : Tapelike, Familiar<T, S>` -- or whatever rust has for that, I think.
+
+
+## 1033 - atm
+
+Started working on the refactor, I decided to just go ahead an do an `Arc<RwLock<T>>` on `Cursor`, but not provide a
+write API for now. I think ultimately I'll want to put the write API on the cursor itself, but for now it mostly aids in
+sharing the already RwLock'd tape inside position. I am also going to `Arc` that `tape` instance in `Position`, which
+makes creating the cursor very easy (cursor just clones the `tape`, but the tape is owned by `Position`).
+
+## 1046 - atm
+
+I'm also ripping out all the hash calculation on `tape`, I'm going to manage this via familiars still, but I want them
+to exist outside tape itself, which should be agnostic with respect to it's contents.
+
+The only place where I'm a little hesitant is the `head_hash`, which is used for tape-level cache-out, but I think the
+cacheout can just calculate this at cache-out time from scratch (no incremental maintenance), since the array is small
+this works out to a pretty small number of operations done rarely, which I think is probably fine.
+
+## 2049 - atm
+
+I've found that, in fact, what I'm trying to do is impossible, and needs some additional state. In particular, I'm
+reinventing the `owning_ref` crate. Ultimately, I want to only allocate the underlying `Tape`'s memory _once_, living in
+an (eventually not `'static` `Cache` shared amongst threads and owned by the parent thread behind a tokio wrapper so
+that it is accessible across networked clients as well).
+
+I'm also starting to get frustrated with the compile time cycle. I think there are a few things to look into. First is
+[this](https://benw.is/posts/how-i-improved-my-rust-compile-times-by-seventy-five-percent) and it's followup to
+investigate. I'm already on nightly with all the stripes painted on the side, so I don't mind being experimental. I
+think `mold` was set up at least when I was still using the other shell framework, but I'll have to spend a cycle or two
+refactoring. I also suspect moving to a workspace and separating out some of the crates might mean I can cut some
+dependencies out and speed things up.
+
+Add it to the bucketlist.
+
+
+## 2119 - atm
+
+Okay, I think I've ended up on a rabbit trail. I'm also in a bit of a pickle with respect to the repo, I need to commit
+off some of the UI work, and then I think revert a bit and take a fresh stab at the Familiar/Cursor/Tape stuff.
+
+In particular, this arose while trying to get the `TapeReader` widget working, which was exhibiting extremely strange
+bugs, that ultimately were down to the scaffolded way I had wired it in re-building the widget every `draw` call.
+
+The idea was to connect it to the engine, which exposed issues with `tokio` and how the UI connects to the backend, and
+thus all this other work.
+
+I'm going to get the commits done, then start over on this setup. I think the rough heirarchy still makes sense, but I
+need to push some of the concurrency around and that requires a redesign.

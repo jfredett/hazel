@@ -75,7 +75,11 @@ impl Widget for &Tile {
 
         let game_section = GameSectionLayout::new(self.state.clone());
         game_section.render(chunks[0], buf);
-        Placeholder::of_size(chunks[1].width, chunks[1].height).borders(Borders::LEFT | Borders::RIGHT).render(chunks[1], buf);
+        Widget::render(
+            &Placeholder::of_size(chunks[1].width, chunks[1].height).borders(Borders::LEFT | Borders::RIGHT),
+            chunks[1],
+            buf
+        );
 
         self.engine_io_section.render(chunks[2], buf);
 

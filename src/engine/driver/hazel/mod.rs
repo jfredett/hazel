@@ -24,6 +24,7 @@ pub struct Hazel {
     /// The current position of the active game. If this is `None`, it means no game is currently
     /// being played.
     /// TODO: Replace this with a familiar
+    /// TODO: Be able to share a cached version of this via an Arc.
     position: Option<Position>,
     /// Options set by the UI or other external sources.
     options: HashMap<String, Option<String>>

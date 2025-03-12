@@ -1,4 +1,4 @@
-use crate::engine::uci::UCIMessage;
+use crate::{engine::uci::UCIMessage, game::position::Position};
 
 use super::Hazel;
 
@@ -6,5 +6,6 @@ use super::Hazel;
 pub enum HazelResponse {
     #[default] Silence,
     UCIResponse(UCIMessage),
-    Debug(Hazel)
+    Debug(Hazel),
+    Position(Option<Position>)
 }
