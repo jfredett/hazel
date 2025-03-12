@@ -1,20 +1,26 @@
 use std::cmp;
 use std::fmt::Debug;
+use std::ops::Deref;
 use std::range::Range;
+use std::sync::Arc;
 
 use crate::{Alter, Alteration};
 use crate::types::zobrist::Zobrist;
 
+use cursor::Cursor;
 use cursorlike::Cursorlike;
 use familiar::state::position_zobrist::PositionZobrist;
 use familiar::Familiar;
+use owning_ref::ArcRef;
 use tapelike::Tapelike;
+use taperef::TapeRef;
 
 pub mod cursor;
 pub mod cursorlike;
 pub mod familiar;
 pub mod tape_direction;
 pub mod tapelike;
+pub mod taperef;
 
 #[derive(Clone)]
 pub struct Tape {
@@ -41,9 +47,12 @@ impl Tapelike for Tape {
         self.hwm
     }
 
-    fn read_address(&self, address: usize) -> &Self::Item {
-        if address > self.hwm { return &Alteration::Noop; }
-        &self.data[address]
+    fn read_address(&self, address: usize) -> Self::Item {
+        if address > self.hwm {
+            Alteration::Noop
+        } else {
+            self.data[address]
+        }
     }
 
     fn read_range(&self, range: impl Into<Range<usize>>) -> &[Self::Item] {
@@ -59,7 +68,6 @@ impl Tapelike for Tape {
         let corrected_range = corrected_range_start..corrected_range_end;
 
         tracing::debug!("Given Range: {:?}, Corrected Range: {:?}, HWM: {:#04X}", r, corrected_range, self.hwm);
-        // FIXME: bare unwrap, should be safe, but I'm sure it'll bite me someday.
         self.data.get(corrected_range).unwrap()
     }
 
@@ -110,9 +118,10 @@ impl Tape {
         Tape { data: dynamic_array::MediumArray::zeroed(cap), head: 0, hwm: 0 }
     }
 
-    // TODO: OQ: Same as head_hash
+    // TODO: This should be moved up to Position, it gets handed the Arc<Tape> from there.
     pub fn position_hash(&self) -> Zobrist {
-        let mut familiar : Familiar<'_, Self, PositionZobrist> = self.conjure();
+        // this is not the right way to do this, it should definitely live up on position
+        let mut familiar : Familiar<Self, PositionZobrist> = familiar::conjure(Arc::new(self.clone()));
         familiar.seek(self.head);
         familiar.get().position
     }
@@ -131,21 +140,22 @@ impl Tape {
         self.head
     }
 
-    // TODO: OQ: possibly these live _on position_?
+    // This should maybe live here, but the familiar is over the dynamic array type instead of the
+    // tape, and Tape should Arc<RwLock> it's underlying data. We'll hand that Arc<RwLock> to the
+    // head-hash familiar and manage it that way.
+    //
+    // Alternately externalize all this stuff and manage caching tapes from some external system.
     pub fn head_hash(&self) -> Zobrist {
         // TODO: Cache this and advance on demand
-        let mut familiar : Familiar<'_, Tape, Zobrist> = self.conjure();
+        // TOO: refactor all this 
+        let mut familiar : Familiar<Tape, Zobrist> = familiar::conjure(Arc::new(self.clone()));
         // this will change to look at the current write position (head) and moving towards it
         // updating the hash on the way.
         familiar.seek(self.head);
         *familiar.get()
     }
 
-    pub fn conjure<A : Default>(&self) -> Familiar<Tape,A> {
-        familiar::conjure(self)
-    }
-
-    pub fn read(&self) -> &Alteration {
+    pub fn read(&self) -> Alteration {
         self.read_address(self.head)
     }
 
@@ -200,14 +210,14 @@ impl Tape {
             self.head -= 1;
         }
     }
-
-
 }
 
-#[derive(PartialEq, Copy, Clone, Debug)]
-pub enum ProceedToken {
-    Continue,
-    Halt
+impl Deref for Tape {
+    type Target = [Alteration];
+
+    fn deref(&self) -> &[Alteration] {
+        self.data.as_slice()
+    }
 }
 
 #[cfg(test)]
@@ -297,10 +307,10 @@ mod tests {
     #[tracing_test::traced_test]
     fn hash_familiar_works() {
         let tape = tape_with_startpos_and_d4();
-        let mut familiar : Familiar<Tape, Zobrist> = tape.conjure();
+        let mut familiar : Familiar<Tape, Zobrist> = familiar::conjure(Arc::new(tape.clone()));
         familiar.seek(tape.write_head());
         assert_eq!(zobrist_for_startpos_and_d4(), *familiar.get());
-        familiar.rewind_until(|a| matches!(a.read(), Alteration::Turn));
+        familiar.rewind_until(|a| matches!(a.read_address(a.position()), Alteration::Turn));
         assert_eq!(zobrist_for_startpos(), *familiar.get());
     }
 
@@ -311,7 +321,7 @@ mod tests {
         tape.write(alteration);
         tape.step_backward();
 
-        assert_eq!(tape.read(), &alteration);
+        assert_eq!(tape.read(), alteration);
     }
 
     #[test]
@@ -346,7 +356,7 @@ mod tests {
         let alteration = Alteration::place(D4, Occupant::white_pawn());
         tape.write(alteration);
 
-        assert_eq!(tape.read_address(0), &alteration);
+        assert_eq!(tape.read_address(0), alteration);
     }
 
 
@@ -369,7 +379,7 @@ mod tests {
         let alteration = Alteration::place(D4, Occupant::white_pawn());
         tape.write_address(0, &alteration);
 
-        assert_eq!(tape.read_address(0), &alteration);
+        assert_eq!(tape.read_address(0), alteration);
     }
 
     #[test]

@@ -1,7 +1,8 @@
-use std::range::Range;
+use std::{ops::Deref, range::Range, sync::Arc};
 
-use super::{cursorlike::Cursorlike, tapelike::Tapelike};
+use owning_ref::ArcRef;
 
+use super::{cursorlike::Cursorlike, tapelike::Tapelike, taperef::TapeRef, Tape};
 
 // A zipper-like type over some tapelike. I'm not worried about thread safety just yet, I think
 // these things should be broadly 'okay' from a thread safety perspective, since they're mostly
@@ -10,26 +11,40 @@ use super::{cursorlike::Cursorlike, tapelike::Tapelike};
 //
 // This is pointerlike, it hsould be possible to pass this around pretty freely, but we'd have to
 // copy the reference around, which means Arc, I think.
-pub struct Cursor<'a, T> where T : Tapelike {
-    tape: &'a T,
+pub struct Cursor<T> where T : Tapelike {
+    tape: ArcRef<T>,
     position: usize
 }
 
-impl<'a, T> Cursor<'a, T> where T : Tapelike {
+impl<T> Deref for Cursor<T> where T : Tapelike {
+    type Target = ArcRef<T>;
 
-    pub fn read_range(&self, range: Range<usize>) -> &'a [T::Item] {
-        self.tape.read_range(range)
-    }
-
-    pub fn read_context(&self, before: usize, after: usize) -> &'a [T::Item] {
-        let start = if before > self.position { 0 } else { self.position - before };
-        let end = if self.position + after > self.tape.length() { self.tape.length() } else { self.position + after };
-
-        self.read_range((start..end).into())
+    fn deref(&self) -> &Self::Target {
+        &self.tape
     }
 }
 
-impl<'a, T, E: 'a> Cursorlike<E> for Cursor<'a, T> where T : Tapelike<Item = E> {
+impl<T> Cursor<T> where T : Tapelike {
+    // pub fn read_range(&self, range: Range<usize>) -> &[T::Item] {
+    //     self.tape.read_range(range)
+    // }
+
+    pub fn read_context(&self, before: usize, after: usize) -> &[T::Item] {
+        let start = if before > self.position { 0 } else { self.position - before };
+        let end = if self.position + after > self.tape.length() { self.tape.length() } else { self.position + after };
+
+        (*self).read_range((start..end))
+    }
+
+    pub fn on_tapelike(tapelike: Arc<T>) -> Self {
+        Cursor {
+            tape: tapelike.clone().into(),
+            position: 0
+        }
+    }
+}
+
+impl<T> Cursorlike for Cursor<T> where T : Tapelike {
     fn position(&self) -> usize {
         self.position
     }
@@ -42,22 +57,11 @@ impl<'a, T, E: 'a> Cursorlike<E> for Cursor<'a, T> where T : Tapelike<Item = E> 
         self.tape.length() == self.position
     }
 
-    fn read(&self) -> &'a E {
-        self.tape.read_address(self.position)
-    }
-
     fn advance(&mut self) {
         self.position += 1;
     }
 
     fn rewind(&mut self) {
         self.position -= 1;
-    }
-}
-
-pub fn cursor_for<T>(tape: &T) -> Cursor<'_, T> where T : Tapelike {
-    Cursor {
-        tape,
-        position: 0
     }
 }

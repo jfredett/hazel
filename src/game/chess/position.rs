@@ -276,7 +276,7 @@ impl Position {
                     panic!("Cannot unwind from Beginning of Tape");
                 }
 
-                let alter = *tape.read();
+                let alter = tape.read();
                 unmoves.push(alter);
 
                 if matches!(alter, Alteration::Turn) {

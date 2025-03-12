@@ -4,7 +4,7 @@ use std::range::Range;
 use ratatui::{layout::Rows, style::Style, widgets::{Block, Row, TableState}};
 use ratatui::prelude::Stylize;
 
-use crate::{types::tape::{cursor::Cursor, cursorlike::Cursorlike, familiar::Familiar, tapelike::Tapelike, Tape}, Alter, Alteration};
+use crate::{types::tape::{cursor::Cursor, cursorlike::Cursorlike, familiar::Familiar, tapelike::Tapelike, taperef::TapeRef, Tape}, Alter, Alteration};
 
 #[derive(Clone)]
 pub struct TapeReaderState {
@@ -107,7 +107,7 @@ impl TapeReaderState {
 }
 
 
-impl Familiar<'_, Tape, TapeReaderState> {
+impl Familiar<Tape, TapeReaderState> {
     pub fn context_range(&self) -> Range<usize> {
         let mut start = self.cursor.position();
 
@@ -124,7 +124,7 @@ impl Familiar<'_, Tape, TapeReaderState> {
     }
 }
 
-impl Cursorlike<Alteration> for Familiar<'_, Tape, TapeReaderState> {
+impl Cursorlike for Familiar<Tape, TapeReaderState> {
     fn advance(&mut self) {
         self.cursor.advance();
         self.state.update(&self.cursor);
@@ -132,10 +132,6 @@ impl Cursorlike<Alteration> for Familiar<'_, Tape, TapeReaderState> {
 
     fn length(&self) -> usize {
         self.cursor.length()
-    }
-
-    fn read(&self) -> &Alteration {
-        self.cursor.read()
     }
 
     fn at_end(&self) -> bool {
