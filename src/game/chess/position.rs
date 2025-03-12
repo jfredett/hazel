@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use std::{fmt::Debug, sync::RwLock};
 
 use crate::constants::move_tables::{KNIGHT_MOVES, KING_ATTACKS};
@@ -15,7 +16,7 @@ pub struct Position {
     pub initial: BEN,
     // caches
     // FIXME: pub only for testing.
-    pub tape: RwLock<Tape>,
+    pub tape: Arc<RwLock<Tape>>,
     inner: RwLock<InnerPosition>,
 
     // this should live on movegen?
@@ -51,12 +52,16 @@ impl Clone for Position {
     fn clone(&self) -> Self {
         // FIXME: Ideally we'd actually just keep a reference to this cached thing instead of copying it
         // all over creation
+        //
+        // OQ: with the `Arc` here on tape, and the explicit clone here, I'm asserting that
+        // '#clone' means "Create a _new copy_", which I think are the correct semantics but I'm
+        // not sure.
         let new_inner = self.inner.read().unwrap().clone();
         let new_tape = self.tape.read().unwrap().clone();
 
         Position {
             initial: self.initial,
-            tape: RwLock::new(new_tape),
+            tape: Arc::new(RwLock::new(new_tape)),
             inner: RwLock::new(new_inner),
             atm: self.atm
         }
@@ -129,7 +134,7 @@ impl Position {
         Self {
             initial: fen,
             inner: inner.into(),
-            tape: tape.into(),
+            tape: Arc::new(tape.into()),
             atm: POSITION_CACHE.atm()
         }
     }
