@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 use ratatui::crossterm::event::{Event, KeyCode};
 use ratatui::layout::{Constraint, Layout};
@@ -28,9 +28,12 @@ enum Mode {
 pub struct UI<'a> {
     flags: HashMap<String, bool>,
     engine: &'a WitchHazel<1024>,
+    // TODO: Eventually this should probably be provided directly from the engine as a 'loaned'
+    // familiar.
+    position_familiar: Option<Familiar<RwLock<Tape>, TapeReaderState>>,
     // UI
     mode: Mode,
-    // tapereader: TapeReaderWidget,
+    tapereader: TapeReaderWidget,
     tuiloggerstate: TuiWidgetState,
 }
 
@@ -45,24 +48,23 @@ impl Debug for UI<'_> {
 impl<'a> UI<'a> {
     pub async fn with_handle(engine: &'a WitchHazel<1024>) -> Self {
         // TODO: Extract this to a function that we call to update the Option<Fam> every render.
-        // engine.send(Box::new(GetPosition)).await;
-        // let response = engine.read().await;
+        engine.send(Box::new(GetPosition)).await;
+        let response = engine.read().await;
 
-        // // I need a function to ask for a tapefamiliar over a position.
-        // let tape = if let Some(HazelResponse::Position(Some(pos))) = response {
-        //     let source_tape = pos.tape.read().unwrap();
-        //     Some(source_tape.clone())
-        // } else {
-        //     None
-        // };
+        // I need a function to ask for a tapefamiliar over a position.
+        let position_familiar = if let Some(HazelResponse::Position(Some(pos))) = response {
+            Some(pos.conjure())
+        } else {
+            None
+        };
 
-// mut tapereaderfamiliar : Familiar<'a, Tape, TapeReaderState> =
 
         Self {
             flags: HashMap::new(),
             engine,
+            position_familiar,
             mode: Mode::Command,
-            // tapereader: TapeReaderWidget::default(),
+            tapereader: TapeReaderWidget::default(),
             tuiloggerstate: TuiWidgetState::new().set_default_display_level(LevelFilter::Trace)
         }
     }

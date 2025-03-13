@@ -2,8 +2,6 @@
 use std::io::{BufRead, BufReader, Write};
 use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
 
-#[allow(unused_imports)] // I want all the tracing stuff available regardless of whether it's used
-
 use crate::engine::uci::UCIMessage;
 use crate::engine::Engine;
 

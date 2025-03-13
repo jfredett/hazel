@@ -1,8 +1,6 @@
-use std::{ops::Deref, range::Range, sync::Arc};
+use std::{ops::Deref, sync::Arc};
 
-use owning_ref::ArcRef;
-
-use super::{cursorlike::Cursorlike, tapelike::Tapelike, taperef::TapeRef, Tape};
+use super::{cursorlike::Cursorlike, tapelike::Tapelike};
 
 // A zipper-like type over some tapelike. I'm not worried about thread safety just yet, I think
 // these things should be broadly 'okay' from a thread safety perspective, since they're mostly
@@ -12,28 +10,24 @@ use super::{cursorlike::Cursorlike, tapelike::Tapelike, taperef::TapeRef, Tape};
 // This is pointerlike, it hsould be possible to pass this around pretty freely, but we'd have to
 // copy the reference around, which means Arc, I think.
 pub struct Cursor<T> where T : Tapelike {
-    tape: ArcRef<T>,
+    tape: Arc<T>,
     position: usize
 }
 
 impl<T> Deref for Cursor<T> where T : Tapelike {
-    type Target = ArcRef<T>;
+    type Target = T;
 
     fn deref(&self) -> &Self::Target {
-        &self.tape
+        &*self.tape
     }
 }
 
 impl<T> Cursor<T> where T : Tapelike {
-    // pub fn read_range(&self, range: Range<usize>) -> &[T::Item] {
-    //     self.tape.read_range(range)
-    // }
-
-    pub fn read_context(&self, before: usize, after: usize) -> &[T::Item] {
+    pub fn read_context(&self, before: usize, after: usize) -> dynamic_array::SmallArray<T::Item> {
         let start = if before > self.position { 0 } else { self.position - before };
         let end = if self.position + after > self.tape.length() { self.tape.length() } else { self.position + after };
 
-        (*self).read_range((start..end))
+        self.read_range(start..end)
     }
 
     pub fn on_tapelike(tapelike: Arc<T>) -> Self {

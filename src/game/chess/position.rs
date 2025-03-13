@@ -3,10 +3,11 @@ use std::{fmt::Debug, sync::RwLock};
 
 use crate::constants::move_tables::{KNIGHT_MOVES, KING_ATTACKS};
 
-use crate::types::tape::Tape;
+use crate::types::tape::{familiar, Tape};
 use crate::{board::PieceBoard, coup::{gen::cache::ATM, rep::Move}, notation::{ben::BEN, Square}, types::{pextboard, Bitboard, Color, Direction, Occupant, Piece}, Alter, Alteration, Query};
 use crate::types::zobrist::Zobrist;
 
+use crate::types::tape::familiar::Familiar;
 use super::position_metadata::PositionMetadata;
 use crate::coup::gen::cache::Cache;
 
@@ -139,6 +140,10 @@ impl Position {
         }
     }
 
+    pub fn conjure<S>(&self) -> Familiar<RwLock<Tape>, S> where S : Default {
+        familiar::conjure(self.tape.clone())
+    }
+
     pub fn with_moves(fen: impl Into<BEN>, moves: Vec<Move>) -> Self {
         let mut ret = Self::new(fen);
         for m in moves {
@@ -252,7 +257,7 @@ impl Position {
 
     // TODO: this is a good idea, just needs familiars.
  
-    ///write an alteration to the tape.
+    // write an alteration to the tape.
     // fn write_alteration(&mut self, alter: Alteration) {
     //     todo!()
     // }

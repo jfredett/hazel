@@ -2,18 +2,15 @@ use std::cmp;
 use std::fmt::Debug;
 use std::ops::Deref;
 use std::range::Range;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 use crate::{Alter, Alteration};
 use crate::types::zobrist::Zobrist;
 
-use cursor::Cursor;
 use cursorlike::Cursorlike;
 use familiar::state::position_zobrist::PositionZobrist;
 use familiar::Familiar;
-use owning_ref::ArcRef;
 use tapelike::Tapelike;
-use taperef::TapeRef;
 
 pub mod cursor;
 pub mod cursorlike;
@@ -40,6 +37,34 @@ impl Default for Tape {
     }
 }
 
+
+// TODO: probably instead of this, the RwLock should be hidden by the Cursor
+impl Tapelike for RwLock<Tape> {
+    type Item = Alteration;
+
+    fn length(&self) -> usize {
+        self.read().unwrap().hwm
+    }
+
+    fn read_address(&self, address: usize) -> Self::Item {
+        let tape = self.read().unwrap();
+        tape.read_address(address)
+    }
+
+    fn read_range(&self, range: impl Into<Range<usize>>) -> dynamic_array::SmallArray<Self::Item> {
+        let tape = self.read().unwrap();
+        tape.read_range(range)
+    }
+
+    fn write_address(&mut self, address: usize, data: &Self::Item) {
+        todo!()
+    }
+
+    fn write_range(&mut self, start: usize, data: &[Self::Item]) {
+        todo!()
+    }
+}
+
 impl Tapelike for Tape {
     type Item = Alteration;
 
@@ -55,7 +80,7 @@ impl Tapelike for Tape {
         }
     }
 
-    fn read_range(&self, range: impl Into<Range<usize>>) -> &[Self::Item] {
+    fn read_range(&self, range: impl Into<Range<usize>>) -> dynamic_array::SmallArray<Self::Item> {
         let r : Range<usize> = range.into();
 
         // (start..end), hwm, length
@@ -68,7 +93,20 @@ impl Tapelike for Tape {
         let corrected_range = corrected_range_start..corrected_range_end;
 
         tracing::debug!("Given Range: {:?}, Corrected Range: {:?}, HWM: {:#04X}", r, corrected_range, self.hwm);
-        self.data.get(corrected_range).unwrap()
+        // NOTE: This is closer to what I'd prefer, but it doesn't work through the RwLock impl.
+        // OwningRef::new(self).map(|e| e.data.get(corrected_range).unwrap())
+
+        // We have to do an additional check since we return a small-array, which is indexed by a
+        // u8.
+        let u8max : usize = u8::MAX.into();
+        let data = if corrected_range.len() > u8max {
+            self.data.get(corrected_range_start..(corrected_range_start + u8max)).unwrap()
+        } else {
+            self.data.get(corrected_range).unwrap()
+        };
+
+        // HACK: Gross.
+        dynamic_array::SmallArray::from_vec(data.to_vec())
     }
 
     fn write_address(&mut self, address: usize, data: &Self::Item) {
@@ -370,7 +408,7 @@ mod tests {
         tape.write_all(&alterations);
 
         let range = 0..2;
-        assert_eq!(tape.read_range(range), &alterations);
+        assert_eq!(*tape.read_range(range), alterations);
     }
 
     #[test]
@@ -392,7 +430,7 @@ mod tests {
         tape.write_range(0, &alterations);
 
         let range = 0..2;
-        assert_eq!(tape.read_range(range), &alterations);
+        assert_eq!(*tape.read_range(range), alterations);
     }
 
     #[test]

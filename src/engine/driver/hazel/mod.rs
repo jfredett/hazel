@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use crate::engine::uci::UCIMessage;
-use crate::game::variation::Variation;
 use crate::types::witch::WitchHandle;
 use crate::game::chess::position::Position;
 
