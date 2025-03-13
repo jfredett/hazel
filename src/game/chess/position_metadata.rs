@@ -306,12 +306,9 @@ impl PositionMetadata {
             Piece::Rook => {}
             Piece::Pawn => {
                 self.en_passant = if mov.is_double_pawn_push_for(color) {
-                    match mov.target().shift(color.pawn_direction()) {
-                        Some(target) => { Some(File::from(target.file())) },
-                        None => None
-                    }
+                    mov.target().shift(color.pawn_direction()).map(|target| File::from(target.file()))
                 } else {
-                        None
+                    None
                 }
             }
             _ => {}
@@ -399,7 +396,6 @@ mod tests {
 
     impl Arbitrary for PositionMetadata {
         fn arbitrary(g: &mut Gen) -> Self {
-            let should_ep = bool::arbitrary(g);
             let color = Color::arbitrary(g);
 
             // these are not necessarily _valid_ metadata states, they are simple _arbitrary_

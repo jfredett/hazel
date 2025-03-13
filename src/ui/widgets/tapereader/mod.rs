@@ -1,12 +1,4 @@
-use ratatui::buffer::Buffer;
-use ratatui::layout::{Direction, Layout, Rect};
-
-use ratatui::widgets::{StatefulWidget, TableState, Widget};
-use ratatui::{
-    layout::Constraint,
-    style::{Style, Stylize},
-    widgets::{Block, Row, Table},
-};
+use ratatui::{buffer::Buffer, layout::{Constraint, Layout, Rect}, style::{Style, Stylize}, widgets::{StatefulWidget, Table}};
 
 use crate::types::tape::familiar::state::tape_reader_state::TapeReaderState;
 
@@ -31,16 +23,9 @@ use super::placeholder::Placeholder;
 
 /// This is just a method-container and lifetime marker, the state is provided externally via a
 /// familiar on the tape.
+#[derive(Default)]
 pub struct TapeReaderWidget {
     pub desired_position: usize
-}
-
-impl Default for TapeReaderWidget {
-    fn default() -> Self {
-        TapeReaderWidget {
-            desired_position: 0,
-        }
-    }
 }
 
 impl TapeReaderWidget {

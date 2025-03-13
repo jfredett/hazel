@@ -1,10 +1,10 @@
 use std::range::Range;
 
 // TODO: This should probably live under /ui/
-use ratatui::{layout::Rows, style::Style, widgets::{Block, Row, TableState}};
+use ratatui::{style::Style, widgets::{Block, Row, TableState}};
 use ratatui::prelude::Stylize;
 
-use crate::{types::tape::{cursor::Cursor, cursorlike::Cursorlike, familiar::Familiar, tapelike::Tapelike, taperef::TapeRef, Tape}, Alter, Alteration};
+use crate::{types::tape::{cursor::Cursor, cursorlike::Cursorlike, familiar::Familiar, tapelike::Tapelike, Tape}, Alteration};
 
 #[derive(Clone)]
 pub struct TapeReaderState {

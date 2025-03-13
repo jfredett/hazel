@@ -328,7 +328,7 @@ mod compilation {
     fn test_compile() {
         let mut board = PieceBoard::default();
         board.set_fen(BEN::start_position());
-        let mut meta = PositionMetadata::default();
+        let meta = PositionMetadata::default();
 
         let expected_alterations = vec![
             Alteration::Turn,

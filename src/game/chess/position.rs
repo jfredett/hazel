@@ -238,8 +238,8 @@ impl Position {
         // boardfamiliar forward.
         match self.atm.get(position_hash) {
             Some(cached_inner) => {
-                // Atomic
-                self.inner.replace(cached_inner.clone());
+                // Atomic, TODO: Handle Result
+                _ = self.inner.replace(cached_inner.clone());
             },
             None => {
                 // Inner is write-locked
@@ -302,8 +302,8 @@ impl Position {
         // been cooking.
         match self.atm.get(unmove_hash) {
             Some(cached_inner) => {
-                // Atomic
-                self.inner.replace(cached_inner.clone());
+                // Atomic, TODO: Handle Result
+                _ = self.inner.replace(cached_inner.clone());
             },
             None => {
                 // Inner is write-locked
@@ -669,7 +669,7 @@ mod tests {
             ];
 
             let mut p = Position::with_moves(start, moves);
-            let z_prior = p.zobrist();
+            // let z_prior = p.zobrist();
             let m = Move::new(E2, E3, MoveType::QUIET);
 
             p.make(m);
@@ -796,7 +796,7 @@ mod tests {
 
             #[test]
             fn startpos_black() {
-                let mut pos = Position::new(BEN::start_position());
+                let pos = Position::new(BEN::start_position());
                 let expected = *RANK_6;
                 assert_eq!(pos.their_pawn_attacks(), expected);
             }

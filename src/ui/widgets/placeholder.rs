@@ -62,7 +62,7 @@ impl Placeholder {
 impl StatefulWidget for &Placeholder {
     type State = ();
 
-    fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
+    fn render(self, area: Rect, buf: &mut Buffer, _state: &mut Self::State) {
         Widget::render(self, area, buf);
     }
 }

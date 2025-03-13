@@ -23,12 +23,10 @@ pub trait Cursorlike {
 
     fn seek(&mut self, desired_position: usize) {
         loop {
-            if self.position() < desired_position {
-                self.advance();
-            } else if self.position() > desired_position {
-                self.rewind();
-            } else { // equal
-                break;
+            match self.position().cmp(&desired_position) {
+                std::cmp::Ordering::Less => self.advance(),
+                std::cmp::Ordering::Equal => break,
+                std::cmp::Ordering::Greater => self.rewind(),
             }
         }
     }

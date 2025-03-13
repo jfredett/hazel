@@ -89,7 +89,7 @@ impl Move {
             });
         }
 
-        return result;
+        result
     }
 
     pub fn is_null(&self) -> bool {

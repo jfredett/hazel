@@ -17,7 +17,6 @@ pub mod cursorlike;
 pub mod familiar;
 pub mod tape_direction;
 pub mod tapelike;
-pub mod taperef;
 
 #[derive(Clone)]
 pub struct Tape {
@@ -56,11 +55,11 @@ impl Tapelike for RwLock<Tape> {
         tape.read_range(range)
     }
 
-    fn write_address(&mut self, address: usize, data: &Self::Item) {
+    fn write_address(&mut self, _address: usize, _data: &Self::Item) {
         todo!()
     }
 
-    fn write_range(&mut self, start: usize, data: &[Self::Item]) {
+    fn write_range(&mut self, _start: usize, _data: &[Self::Item]) {
         todo!()
     }
 }
@@ -132,7 +131,7 @@ impl Debug for Tape {
             self.head_hash(), self.position_hash(), self.head, self.hwm
         )?;
         let mut running_hash = Zobrist::empty();
-        let iterator = self.data.as_slice().into_iter();
+        let iterator = self.data.as_slice().iter();
         for (idx, alter) in iterator.enumerate() {
             if idx >= self.hwm {
                 writeln!(f, "END-OF-TAPE")?;

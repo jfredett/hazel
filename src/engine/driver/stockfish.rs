@@ -82,9 +82,9 @@ impl Engine<UCIMessage> for Stockfish {
 
                 if message.is_complete(line) { break; } // Check if the response is complete.
             }
-            return response
+            response
         } else {
-            return vec![]
+            vec![]
         }
     }
 }

@@ -1,10 +1,4 @@
-use ratatui::text::Text;
-use ratatui::prelude::*;
-use ratatui::widgets::Widget;
-
-#[allow(unused_imports)]
-
-use ratatui::buffer::Buffer;
+use ratatui::{buffer::Buffer, prelude::*, text::Text, widgets::Widget};
 
 use crate::notation::ben::BEN;
 

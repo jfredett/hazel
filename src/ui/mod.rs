@@ -45,7 +45,7 @@ pub async fn run() -> Result<(), Box<dyn Error>> {
 }
 
 #[cfg_attr(test, mutants::skip)]
-fn run_app<'a, B: Backend>(terminal: &mut Terminal<B>, app: &mut UI<'a>) -> io::Result<bool> {
+fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut UI<'_>) -> io::Result<bool> {
     use tracing_subscriber::prelude::*;
 
     // Set up the Tracing layer

@@ -18,7 +18,7 @@ impl<T> Deref for Cursor<T> where T : Tapelike {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
-        &*self.tape
+        &self.tape
     }
 }
 
@@ -32,7 +32,7 @@ impl<T> Cursor<T> where T : Tapelike {
 
     pub fn on_tapelike(tapelike: Arc<T>) -> Self {
         Cursor {
-            tape: tapelike.clone().into(),
+            tape: tapelike.clone(),
             position: 0
         }
     }

@@ -147,9 +147,9 @@ impl Move {
         };
         // Otherwise, moves are just captures or quiet, simple as.
         if capturing {
-            return Some(MoveType::CAPTURE);
+            Some(MoveType::CAPTURE)
         } else {
-            return Some(MoveType::QUIET);
+            Some(MoveType::QUIET)
         }
     }
 
@@ -162,7 +162,7 @@ impl Move {
 
         let contextprime = self.disambiguate(context).unwrap();
 
-        let alterations = match contextprime {
+        match contextprime {
             MoveType::QUIET => vec![
                 Alteration::remove(source, source_occupant),
                 Alteration::place(target, source_occupant),
@@ -257,8 +257,6 @@ impl Move {
             ],
             MoveType::NULLMOVE => vec![],
             _ => { unreachable!(); }
-        };
-
-        return alterations;
+        }
     }
 }

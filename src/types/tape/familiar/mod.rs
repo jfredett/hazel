@@ -2,7 +2,7 @@ use std::{ops::Deref, sync::Arc};
 
 use crate::{Alter, Alteration};
 
-use super::{cursor::Cursor, cursorlike::Cursorlike, tapelike::Tapelike, taperef::TapeRef};
+use super::{cursor::Cursor, cursorlike::Cursorlike, tapelike::Tapelike};
 
 pub mod menagerie;
 pub mod state;

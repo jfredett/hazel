@@ -1,24 +1,9 @@
-use std::collections::HashMap;
-use std::fmt::Debug;
-use std::sync::{Arc, RwLock};
+use std::{collections::HashMap, fmt::Debug, sync::RwLock};
 
-use ratatui::crossterm::event::{Event, KeyCode};
-use ratatui::layout::{Constraint, Layout};
-use ratatui::style::{Color, Style};
-use ratatui::widgets::{Block, Borders, StatefulWidget, Widget};
-use ratatui::Frame;
+use ratatui::{crossterm::event::{Event, KeyCode}, layout::{Constraint, Layout}, style::{Color, Style}, widgets::{Block, Borders, Widget}, Frame};
 use tui_logger::{LevelFilter, TuiLoggerLevelOutput, TuiLoggerSmartWidget, TuiWidgetState};
 
-
-use crate::engine::driver::{GetPosition, HazelResponse, WitchHazel};
-use crate::notation::ben::BEN;
-use crate::types::tape::cursorlike::Cursorlike;
-use crate::types::tape::familiar::state::tape_reader_state::TapeReaderState;
-use crate::types::tape::familiar::{self, Familiar};
-use crate::types::tape::Tape;
-use crate::ui::widgets::tapereader::*;
-use crate::game::chess::position::Position;
-use crate::types::tape::tapelike::Tapelike;
+use crate::{engine::driver::{GetPosition, HazelResponse, WitchHazel}, types::tape::{familiar::{state::tape_reader_state::TapeReaderState, Familiar}, Tape}, ui::widgets::tapereader::*};
 
 enum Mode {
     Insert,
@@ -78,7 +63,7 @@ impl<'a> UI<'a> {
                         KeyCode::Esc => {
                             self.mode = Mode::Command;
                         },
-                        KeyCode::Char(c) => {
+                        KeyCode::Char(_c) => {
                             // self.tile.handle_input(c);
                         },
                         KeyCode::Backspace => {
@@ -191,7 +176,7 @@ mod tests {
     #[tokio::test]
     async fn renders_as_expected() {
         let handle  = WitchHazel::<1024>::new().await;
-        let mut hazel = UI::with_handle(&handle).await;
+        let hazel = UI::with_handle(&handle).await;
 
         let mut t = Terminal::new(TestBackend::new(64, 32)).unwrap();
         let _ = t.draw(|f| {
