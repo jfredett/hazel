@@ -7,7 +7,7 @@ use crate::types::tape::{familiar, Tape};
 use crate::{board::PieceBoard, coup::{gen::cache::ATM, rep::Move}, notation::{ben::BEN, Square}, types::{pextboard, Bitboard, Color, Direction, Occupant, Piece}, Alter, Alteration, Query};
 use crate::types::zobrist::Zobrist;
 
-use crate::types::tape::familiar::Familiar;
+use crate::types::tape::familiar::{Familiar, Quintessence};
 use super::position_metadata::PositionMetadata;
 use crate::coup::gen::cache::Cache;
 
@@ -142,6 +142,10 @@ impl Position {
 
     pub fn conjure<S>(&self) -> Familiar<RwLock<Tape>, S> where S : Default {
         familiar::conjure(self.tape.clone())
+    }
+
+    pub fn resummon<S>(&self, quintessence: &Quintessence<S>) -> Familiar<RwLock<Tape>, S> where S : Clone {
+        familiar::resummon_on(self.tape.clone(), quintessence)
     }
 
     pub fn with_moves(fen: impl Into<BEN>, moves: Vec<Move>) -> Self {

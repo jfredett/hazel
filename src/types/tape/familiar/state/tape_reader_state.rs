@@ -1,4 +1,4 @@
-use std::range::Range;
+use std::{range::Range, sync::RwLock};
 
 // TODO: This should probably live under /ui/
 use ratatui::{style::Style, widgets::{Block, Row, TableState}};
@@ -6,7 +6,7 @@ use ratatui::prelude::Stylize;
 
 use crate::{types::tape::{cursor::Cursor, cursorlike::Cursorlike, familiar::Familiar, tapelike::Tapelike, Tape}, Alteration};
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct TapeReaderState {
     pub context: Vec<Alteration>,
     pub position: usize, // the currently selected position of the buffer
@@ -28,7 +28,7 @@ impl Default for TapeReaderState {
 }
 
 impl TapeReaderState {
-    pub fn update(&mut self, cursor: &Cursor<Tape>) {
+    pub fn update<T>(&mut self, cursor: &Cursor<T>) where T : Tapelike<Item = Alteration> {
         // TODO: only fetch the range when we page over.
         let context = cursor.read_range(self.page_range());
         self.position = cursor.position();
@@ -124,7 +124,7 @@ impl Familiar<Tape, TapeReaderState> {
     }
 }
 
-impl Cursorlike for Familiar<Tape, TapeReaderState> {
+impl<T> Cursorlike for Familiar<T, TapeReaderState> where T : Tapelike<Item = Alteration> {
     fn advance(&mut self) {
         self.cursor.advance();
         self.state.update(&self.cursor);
@@ -132,6 +132,10 @@ impl Cursorlike for Familiar<Tape, TapeReaderState> {
 
     fn length(&self) -> usize {
         self.cursor.length()
+    }
+
+    fn jump(&mut self, desired_position: usize) {
+        self.cursor.jump(desired_position)
     }
 
     fn at_end(&self) -> bool {

@@ -51,8 +51,10 @@ impl Tapelike for RwLock<Tape> {
     }
 
     fn read_range(&self, range: impl Into<Range<usize>>) -> dynamic_array::SmallArray<Self::Item> {
+        let r = range.into();
+        tracing::trace!(target="hazel::tapelike", "reading range {:?}", &r);
         let tape = self.read().unwrap();
-        tape.read_range(range)
+        tape.read_range(r)
     }
 
     fn write_address(&mut self, _address: usize, _data: &Self::Item) {

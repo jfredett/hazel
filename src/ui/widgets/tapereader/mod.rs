@@ -1,6 +1,6 @@
 use ratatui::{buffer::Buffer, layout::{Constraint, Layout, Rect}, style::{Style, Stylize}, widgets::{StatefulWidget, Table}};
 
-use crate::types::tape::familiar::state::tape_reader_state::TapeReaderState;
+use crate::types::tape::familiar::{state::tape_reader_state::TapeReaderState, Quintessence};
 
 use super::placeholder::Placeholder;
 
@@ -76,7 +76,6 @@ impl StatefulWidget for &TapeReaderWidget {
             .column_highlight_style(Style::new().red())
             .cell_highlight_style(Style::new().blue())
             .highlight_symbol(">>");
-
 
         StatefulWidget::render(&Placeholder::of_size(header.width, header.height), header, buf, &mut ());
         StatefulWidget::render(&table, code, buf, &mut state.table_state());

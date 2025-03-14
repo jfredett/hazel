@@ -34,7 +34,7 @@ pub async fn run() -> Result<(), Box<dyn Error>> {
     // Initialize the application
     let handle = WitchHazel::new().await;
     let mut app = UI::with_handle(&handle).await;
-    let _res = run_app(&mut terminal, &mut app);
+    _ = run_app(&mut terminal, &mut app).await;
 
     disable_raw_mode()?;
 
@@ -45,7 +45,7 @@ pub async fn run() -> Result<(), Box<dyn Error>> {
 }
 
 #[cfg_attr(test, mutants::skip)]
-fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut UI<'_>) -> io::Result<bool> {
+async fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut UI<'_>) -> io::Result<bool> {
     use tracing_subscriber::prelude::*;
 
     // Set up the Tracing layer
@@ -68,17 +68,25 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut UI<'_>) -> io::Resu
     // Set the log files
     set_log_file(file_options);
 
-    tracing::debug!(target:"Hazel", "Logging to {}", dir.to_str().unwrap());
-    tracing::debug!(target:"Hazel", "Logging initialized");
+    tracing::debug!(target:"hazel::ui", "Logging to {}", dir.to_str().unwrap());
+    tracing::debug!(target:"hazel::ui", "Logging initialized");
 
+    // do an initial draw so we don't blank-screen, this maybe should be a splash page?
+    tracing::info!(target:"hazel::ui", "initial draw");
+    terminal.draw(|f| app.render(f) )?;
 
     loop {
         if app.check_flag("exit") { return Ok(true); }
 
-        tracing::trace!(target:"Hazel", "drawing");
-        terminal.draw(|f| app.render(f) )?;
-
+        tracing::info!(target:"hazel::ui", "handling events");
         let event = event::read()?;
         app.handle_events(event);
+
+        tracing::info!(target:"hazel::ui", "updating");
+        app.update().await;
+
+        tracing::info!(target:"hazel::ui", "drawing");
+        terminal.draw(|f| app.render(f) )?;
+
     }
 }

@@ -1,4 +1,4 @@
-use std::{ops::Deref, sync::Arc};
+use std::{ops::{Deref, DerefMut}, sync::Arc};
 
 use crate::{Alter, Alteration};
 
@@ -14,6 +14,12 @@ pub mod state;
 pub struct Familiar<T, S> where T : Tapelike {
     cursor: Cursor<T>,
     state: S
+}
+
+impl<T,S> DerefMut for Familiar<T, S> where T : Tapelike {
+    fn deref_mut(&mut self) -> &mut Cursor<T> {
+        &mut self.cursor
+    }
 }
 
 impl<T,S> Deref for Familiar<T, S> where T : Tapelike {
@@ -35,6 +41,31 @@ impl<T, S> Familiar<T, S> where T : Tapelike {
     }
 }
 
+pub struct Quintessence<S> {
+    position: usize,
+    pub state: S
+}
+
+impl<S> std::fmt::Debug for Quintessence<S> where S : std::fmt::Debug {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "Dust<{:#04X}, {:?}>", self.position, self.state)
+    }
+
+}
+
+pub fn dismiss<T, S>(familiar: Familiar<T,S>) -> Quintessence<S> where T : Tapelike, S : Clone {
+    Quintessence {
+        position: familiar.position(),
+        state: familiar.state.clone()
+    }
+}
+
+pub fn resummon_on<T,S>(tapelike: Arc<T>, quintessence: &Quintessence<S>) -> Familiar<T,S> where T : Tapelike, S : Clone {
+    let mut fam = conjure_with(tapelike, quintessence.state.clone());
+    fam.jump(quintessence.position);
+    fam
+}
+
 pub fn conjure_with<T, S>(tapelike: Arc<T>, state: S) -> Familiar<T, S> where T : Tapelike {
     let cursor = Cursor::on_tapelike(tapelike.clone());
     Familiar {
@@ -52,6 +83,10 @@ pub fn conjure<T, S>(tapelike: Arc<T>) -> Familiar<T,S> where T : Tapelike, S : 
 impl<T, S> Cursorlike for Familiar<T, S> where T : Tapelike<Item = Alteration>, S : Alter {
     fn position(&self) -> usize {
         self.cursor.position()
+    }
+
+    fn jump(&mut self, desired_position: usize) {
+        self.cursor.jump(desired_position)
     }
 
     fn length(&self) -> usize {

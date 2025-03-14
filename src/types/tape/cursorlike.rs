@@ -21,15 +21,21 @@ pub trait Cursorlike {
         }
     }
 
+    /// advance/rewind until the `desired_position` is reached, maintaining state along the way.
     fn seek(&mut self, desired_position: usize) {
         loop {
             match self.position().cmp(&desired_position) {
+                // TODO: Replace with an advance_until and remove the outer loop.
                 std::cmp::Ordering::Less => self.advance(),
                 std::cmp::Ordering::Equal => break,
+                // TODO: Replace with an rewind_until and remove the outer loop.
                 std::cmp::Ordering::Greater => self.rewind(),
             }
         }
     }
+
+    /// jump immediately (no state maintenance) to the `desired_position`
+    fn jump(&mut self, desired_position: usize);
 
     fn advance_to_end(&mut self) {
         while !self.at_end() {

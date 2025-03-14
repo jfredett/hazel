@@ -47,6 +47,14 @@ impl<T> Cursorlike for Cursor<T> where T : Tapelike {
         self.tape.length()
     }
 
+    fn jump(&mut self, desired_position: usize) {
+        self.position = if desired_position < self.length() {
+            desired_position
+        } else {
+            self.length() - 1
+        }
+    }
+
     fn at_end(&self) -> bool {
         self.tape.length() == self.position
     }
