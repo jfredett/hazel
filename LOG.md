@@ -2359,3 +2359,55 @@ thus all this other work.
 I'm going to get the commits done, then start over on this setup. I think the rough heirarchy still makes sense, but I
 need to push some of the concurrency around and that requires a redesign.
 
+
+# 14-MAR-2025
+
+## 1056 - atm
+
+I got it working, mostly. The `Table` widget is not working as I'd expect, and in particular it seems to have very
+little correlation in the number of rows I fetch to the number of rows it renders. I think I may DIY this, I'm not
+entirely sure what I'm doing wrong, so building it myself might be an improvement. Also an opportunity to work out the
+remaining bugs with the thing. Mostly UX issues, a couple of weird UI bugs as well, and at least one `O(n)`-growing
+repeated call problem when you scroll past the end of the tape.
+
+Separately, I want to integrate a board representation and other diagnostic info before getting to the actual point,
+which is debugging `perft` and the game representation.
+
+I had to compromise a lot on the `Tapelike` design, mostly due to the way `Tape` don't have central
+allocation/management. Ultimately `Tape` should reside in some stable memory-space that I can easily refer to across the
+application. I'd even like if they were CoW and the '`TapeDeck`'[1]
+
+[1] Name pending, I went with `Tape` for the tame now, but it doesn't fit the rest of the naming scheme w/ familiars and
+stuff. `Tape` is a very Computer-Sciency name for it, I want something more like Computer Witchcraft, so this might get
+renamed.
+
+## 1538 - atm
+
+Continuing: Barring some naming stuff, once I have a situation where I'm storing `Tape`s in some broader allocation, I
+can share reference to subsections of `Tape` that way. Eventually I think the result will be some storage entity a la
+`Cache` that holds all the tapes and dynamically grabs the right 'section' of tape (identified by Zobrist of said tape)
+and dynamically creates a `Tape` with that content as needed. This will also allow the UI a stable reference to a
+section of tape.
+
+Ideally this thing is actually just a big `Vec` of larger contiguous chunks of memory, maybe adding some kind of `Jump`
+alteration to skip around to different subsections within the `Tape` (so long as the destination had a reversible
+`Landing` instruction, a la `COME FROM` in Intercal, of all things).
+
+I think getting a board/metadata rep connected is the next step, and then I can rig up an IO section for controlling the
+engine via uci commands. Once I can do that I should be able to get it hooked up to `perft` output.
+
+I will need to extend this to a nested reader at some point, connecting a variation-tape to a position-tape and warping
+everything around appropriately.
+
+I also really need to overhaul both how communication is handled via `Witch` (it's presently handled in a way to mimic a
+STDIO/UCI style thing, and I'd prefer to have most internal messages be a direct-response-over-a-oneshot-channel, which
+will avoid all sorts of race conditions if multiple clients are reading the engine simultaneously), and also refactor
+the UI to be a fully asynchronous update/event/draw loop. Ideally the drawing would be independent of the other two and
+support a high-sample-rate of the underlying state, so that the engine is not limited by the UI update speed, which I
+suspect will be the case in the current model.
+
+Last, I need to think about what columns make sense in the TapeReader, and also how to render alterations. I know for
+sure I need to add a `Inform/Assert(EnPassant(None))` at least for now to make the forward/reverse simple, but I suspect
+in the longer term I'll be able to elide much of the metadata alterations.
+
+For now, though, the tapereader basically works (mod bugs), and things are starting to look like how I want them.

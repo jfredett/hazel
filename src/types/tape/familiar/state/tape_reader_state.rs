@@ -30,9 +30,10 @@ impl Default for TapeReaderState {
 impl TapeReaderState {
     pub fn update<T>(&mut self, cursor: &Cursor<T>) where T : Tapelike<Item = Alteration> {
         // TODO: only fetch the range when we page over.
-        let context = cursor.read_range(self.page_range());
         self.position = cursor.position();
         self.tape_length = cursor.length();
+
+        let context = cursor.read_range(self.page_range());
         self.context = context.to_vec();
     }
 
@@ -53,6 +54,7 @@ impl TapeReaderState {
     }
 
     pub fn page_range(&self) -> Range<usize> {
+        tracing::trace!("Page range is: {}..{}", self.offset(), self.offset() + self.length - 1);
         (self.offset()..(self.offset() + self.length - 1)).into()
     }
 
@@ -76,14 +78,14 @@ impl TapeReaderState {
 
 
     pub fn title_block(&self) -> Block {
-        Block::new()
+        Block::bordered()
             .title(
-                format!("{}, {}, {}, {:?}, {}, {}, {}",
-                    self.position, self.position_in_page(), self.offset(), self.page_range(), self.page(), self.total_pages(), self.length
-                )
-                // format!("Tape: POS: {:#07X} ({}/{}), EOT: {:#07X}",
-                //     self.position, self.page(), self.total_pages(), self.tape_length
+                // format!("{}, {}, {}, {:?}, {}, {}, {}",
+                //     self.position, self.position_in_page(), self.offset(), self.page_range(), self.page(), self.total_pages(), self.length
                 // )
+                format!("Tape: POS: {:#07X} ({}/{}), EOT: {:#07X}",
+                    self.position, self.page(), self.total_pages(), self.tape_length
+                )
             )
     }
 

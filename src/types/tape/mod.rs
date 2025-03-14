@@ -50,6 +50,18 @@ impl Tapelike for RwLock<Tape> {
         tape.read_address(address)
     }
 
+    // FIXME: I dislike this, I wish I was sending back something that didn't require an
+    // allocation, but I think ultimately this is probably the best way to do it for now.
+    //
+    // At some point, I think Tapes will probably be further abstracted to be 'infinite' in a way
+    // they aren't, presently. At that point there will be some other entity holding the reference
+    // to a specific section of tape, and I think _that thing_ will hand out, e.g., Arcs to those
+    // things.
+    //
+    // Essentially a big Tape Allocator (the "TapeDeck" if you will). Which handles caching and
+    // sharing chunks of tape, and 2-phase updating them, etc. Tapes can then be held immutably
+    // there, and when updates are made they are CoW, and so references will always be to some
+    // static memory that can be shared freely.
     fn read_range(&self, range: impl Into<Range<usize>>) -> dynamic_array::SmallArray<Self::Item> {
         let r = range.into();
         tracing::trace!(target="hazel::tapelike", "reading range {:?}", &r);
@@ -88,9 +100,9 @@ impl Tapelike for Tape {
         //
         // Correct values:
         //
-        // (min(start,hwm)..max(end,hwm))
+        // (min(start,hwm)..min(end,hwm))
         let corrected_range_start = cmp::min(r.start, self.hwm);
-        let corrected_range_end = cmp::max(r.end, self.hwm);
+        let corrected_range_end = cmp::min(r.end, self.hwm) + 1;
         let corrected_range = corrected_range_start..corrected_range_end;
 
         tracing::debug!("Given Range: {:?}, Corrected Range: {:?}, HWM: {:#04X}", r, corrected_range, self.hwm);

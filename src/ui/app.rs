@@ -128,7 +128,6 @@ impl<'a> UI<'a> {
         match self.engine.read().await {
             Some(HazelResponse::Position(Some(pos))) => {
                 tracing::debug!(target="hazel::ui::update", "Position is nonempty");
-                tracing::debug!(target="hazel::ui::update", "TRS is {:?}", &self.tapereader_state);
                 let mut fam = match &self.tapereader_state {
                     Some(dust) => { pos.resummon(dust) },
                     None => { pos.conjure() }
@@ -136,7 +135,6 @@ impl<'a> UI<'a> {
                 tracing::debug!(target="hazel::ui::update", "desired pos: {:#05X}", self.tapereader.desired_position);
                 fam.seek(self.tapereader.desired_position);
                 self.tapereader_state = Some(familiar::dismiss(fam));
-                tracing::debug!(target="hazel::ui::update", "TRS is {:?}", &self.tapereader_state);
 
             },
             Some(HazelResponse::Position(None)) => {
@@ -148,22 +146,8 @@ impl<'a> UI<'a> {
         }
     }
 
-    pub fn render(&'a self, frame: &mut Frame<'_>) {
-
-        let chunks = LAYOUT.split(frame.area());
-
-        // this will get handled by the engine at some point, so we won't create it here. We'll
-        // just ask for the current TapeReaderState for whatever thing we want directly from the
-        // WitchHazel engine instance
-
-        // FIXME: this should seek to a position chosen in the UI via up/down arror
-        // if let Some(fam) = &self.position_familiar {
-        //     fam.seek(self.tapereader.desired_position);
-        //     StatefulWidget::render(&self.tapereader, chunks[0], frame.buffer_mut(), fam.get_mut());
-        // }
-
-
-        let tlw = TuiLoggerSmartWidget::default()
+    fn tui_logger_widget(&self) -> TuiLoggerSmartWidget {
+        TuiLoggerSmartWidget::default()
             .style_error(Style::default().fg(Color::Red))
             .style_debug(Style::default().fg(Color::Green))
             .style_warn(Style::default().fg(Color::Yellow))
@@ -175,12 +159,20 @@ impl<'a> UI<'a> {
             .output_target(true)
             .output_file(true)
             .output_line(true)
-            .state(&self.tuiloggerstate);
+            .state(&self.tuiloggerstate)
+    }
 
+    pub fn render(&'a self, frame: &mut Frame<'_>) {
+        let chunks = LAYOUT.split(frame.area());
+
+        let tlw = self.tui_logger_widget();
         let mut s = match &self.tapereader_state {
             Some(dust) => dust.state.clone(),
             None => TapeReaderState::default()
         };
+
+        tracing::trace!("Setting TRW height to {}", chunks[0].height - 4);
+
         StatefulWidget::render(&self.tapereader, chunks[0], frame.buffer_mut(), &mut s);
         Widget::render(tlw, chunks[1], frame.buffer_mut());
     }
@@ -191,7 +183,7 @@ lazy_static! {
         .direction(ratatui::layout::Direction::Vertical)
         .constraints(
             [
-                Constraint::Length(32),
+                Constraint::Length(50),
                 Constraint::Min(1),
             ].as_ref(),
         );
