@@ -1,7 +1,7 @@
 use std::{range::Range, sync::RwLock};
 
 // TODO: This should probably live under /ui/
-use ratatui::{style::Style, widgets::{Block, Row, TableState}};
+use ratatui::{style::Style, text::Text, widgets::{Block, Row, TableState}};
 use ratatui::prelude::Stylize;
 
 use crate::{types::tape::{cursor::Cursor, cursorlike::Cursorlike, familiar::Familiar, tapelike::Tapelike, Tape}, Alteration};
@@ -77,9 +77,8 @@ impl TapeReaderState {
     }
 
 
-    pub fn title_block(&self) -> Block {
-        Block::bordered()
-            .title(
+    pub fn header(&self) -> Text {
+        Text::from(
                 // format!("{}, {}, {}, {:?}, {}, {}, {}",
                 //     self.position, self.position_in_page(), self.offset(), self.page_range(), self.page(), self.total_pages(), self.length
                 // )

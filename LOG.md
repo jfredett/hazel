@@ -2411,3 +2411,28 @@ sure I need to add a `Inform/Assert(EnPassant(None))` at least for now to make t
 in the longer term I'll be able to elide much of the metadata alterations.
 
 For now, though, the tapereader basically works (mod bugs), and things are starting to look like how I want them.
+
+## 2352 - atm
+
+Just documenting some bugs w/ the tapereaderwidget:
+
+1. On first load, shows nothing, this is probably due to how it's initialized, but the unloaded state should be better
+   represented.
+2. After loading by pressing 'down', it loads and sits on 0x00001, can't scroll up to 0x00000.
+    - I can scroll to 0x00020 later, without issue, so it's just the 0th entry, not the first entry of a page
+3. 0x00049 is the actual end of tape, 0x0004A shows a null-place (`Place N @ a1` maps to `0` in all fields), so I'm
+   getting a null that's interpreted as an alteration even though there isn't an alteration there (or shouldn't be,
+   anyway).
+4. After scrolling past the end of the tape, it seems to have an O(n) increasing number of calls to the page_range
+   function, which is an issue only if I allow scrolling past the final page/scrolling arbitrarily far forward.
+
+Next tasks:
+
+1. Hook up and provide a gamestate representation attached to the current position. Board, FEN, at least.
+2. Input/output section routing to the engine.
+    - UCI messages should get rebuilt into `WitchHazel` messages, ideally with a oneshot return channel, but they also
+    need to obey the STDIO stuff as well which is going to use the `#write` method.
+    - Internal messages are more free, and the main ones I'm looking for are probably going to be something like
+    'load-from-file' and 'perft' to start. That'll make it possible to build the stockfish integration test I
+    described... way back in November...
+3. Make things look nicer.

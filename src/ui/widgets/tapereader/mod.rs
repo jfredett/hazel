@@ -18,6 +18,14 @@ impl TapeReaderWidget {
         ])
     }
 
+    pub fn code_layout(&self) -> Layout {
+        Layout::horizontal([
+            Constraint::Percentage(40), // code seciton
+            Constraint::Percentage(60), // code seciton
+        ])
+
+    }
+
     pub fn advance(&mut self) {
         self.desired_position += 1;
     }
@@ -36,7 +44,9 @@ impl StatefulWidget for &TapeReaderWidget {
 
         let chunks = self.layout().split(area);
         let header = chunks[0];
-        let code = chunks[1];
+        let code_section = self.code_layout().split(chunks[1]);
+        let board_side = code_section[0];
+        let tape_side = code_section[1];
         let footer = chunks[2];
 
         let widths = [
@@ -58,8 +68,8 @@ impl StatefulWidget for &TapeReaderWidget {
             .cell_highlight_style(Style::new().blue())
             .highlight_symbol(">>");
 
-        Widget::render(&state.title_block(), header, buf);
-        StatefulWidget::render(&table, code, buf, &mut state.table_state());
+        Widget::render(state.header(), header, buf);
+        StatefulWidget::render(&table, tape_side, buf, &mut state.table_state());
         StatefulWidget::render(&Placeholder::of_size(footer.height, footer.width).borders(Borders::ALL), footer, buf, &mut ());
     }
 }
