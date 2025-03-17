@@ -1,8 +1,8 @@
 use ratatui::{buffer::Buffer, layout::{Constraint, Layout, Rect}, style::{Style, Stylize}, widgets::{Block, Borders, StatefulWidget, Table, Widget}};
 
-use crate::types::tape::familiar::{state::tape_reader_state::TapeReaderState, Quintessence};
+use crate::{board::PieceBoard, notation::ben::BEN, types::tape::familiar::{state::tape_reader_state::TapeReaderState, Quintessence}};
 
-use super::placeholder::Placeholder;
+use super::{board::Board, placeholder::Placeholder};
 
 #[derive(Default)]
 pub struct TapeReaderWidget {
@@ -37,10 +37,14 @@ impl TapeReaderWidget {
 
 
 impl StatefulWidget for &TapeReaderWidget {
-    type State = TapeReaderState;
+    type State = (TapeReaderState, BEN);
 
-    fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
+    fn render(self, area: Rect, buf: &mut Buffer, state_pair: &mut Self::State) {
         // Columns widths are constrained in the same way as Layout...
+
+        let (ref mut state, ben) = state_pair;
+        let mut pieceboard = PieceBoard::default();
+        pieceboard.set_position(*ben);
 
         let chunks = self.layout().split(area);
         let header = chunks[0];
@@ -68,8 +72,11 @@ impl StatefulWidget for &TapeReaderWidget {
             .cell_highlight_style(Style::new().blue())
             .highlight_symbol(">>");
 
+        let board = Board::from(pieceboard);
+
         Widget::render(state.header(), header, buf);
         StatefulWidget::render(&table, tape_side, buf, &mut state.table_state());
+        Widget::render(&board, board_side, buf);
         StatefulWidget::render(&Placeholder::of_size(footer.height, footer.width).borders(Borders::ALL), footer, buf, &mut ());
     }
 }

@@ -3,7 +3,7 @@ use std::{cell::LazyCell, collections::HashMap, fmt::Debug, sync::RwLock};
 use ratatui::{crossterm::event::{Event, KeyCode}, layout::{Constraint, Layout}, style::{Color, Style}, widgets::{Block, Borders, StatefulWidget, Widget}, Frame};
 use tui_logger::{LevelFilter, TuiLoggerLevelOutput, TuiLoggerSmartWidget, TuiWidgetState};
 
-use crate::{constants::START_POSITION_FEN, engine::{driver::{GetPosition, HazelResponse, WitchHazel}, uci::UCIMessage}, types::tape::{cursorlike::Cursorlike, familiar::{self, resummon_on, state::tape_reader_state::TapeReaderState, Familiar, Quintessence}, Tape}, ui::widgets::tapereader::*};
+use crate::{constants::START_POSITION_FEN, engine::{driver::{GetPosition, HazelResponse, WitchHazel}, uci::UCIMessage}, notation::ben::BEN, types::tape::{cursorlike::Cursorlike, familiar::{self, resummon_on, state::tape_reader_state::TapeReaderState, Familiar, Quintessence}, Tape}, ui::widgets::tapereader::*};
 
 enum Mode {
     Insert,
@@ -171,9 +171,11 @@ impl<'a> UI<'a> {
             None => TapeReaderState::default()
         };
 
+        let mut state = (s, BEN::start_position());
+
         tracing::trace!("Setting TRW height to {}", chunks[0].height - 4);
 
-        StatefulWidget::render(&self.tapereader, chunks[0], frame.buffer_mut(), &mut s);
+        StatefulWidget::render(&self.tapereader, chunks[0], frame.buffer_mut(), &mut state);
         Widget::render(tlw, chunks[1], frame.buffer_mut());
     }
 }
