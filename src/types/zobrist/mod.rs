@@ -307,7 +307,7 @@ mod tests {
                 match variant {
                     0 => Self::Place { square: Square::arbitrary(g), occupant },
                     1 => Self::Remove { square: Square::arbitrary(g), occupant },
-                    2 => Self::Assert(MetadataAssertion::arbitrary(g)),
+                    2 => Self::Assert(PositionMetadata::arbitrary(g)),
                     3 => Self::Clear,
                     4 => Self::Lit(u8::arbitrary(g)),
                     _ => { unreachable!(); }

@@ -19,6 +19,7 @@ pub struct UI<'a> {
     tuiloggerstate: TuiWidgetState,
     // State
     tapereader_state: Option<Quintessence<TapeReaderState>>,
+    current_ben: Option<BEN>,
 }
 
 impl Debug for UI<'_> {
@@ -46,7 +47,8 @@ impl<'a> UI<'a> {
             mode: Mode::Command,
             tapereader: TapeReaderWidget::default(),
             tuiloggerstate: TuiWidgetState::new().set_default_display_level(LevelFilter::Trace),
-            tapereader_state: None
+            tapereader_state: None,
+            current_ben: None
         }
     }
 
@@ -135,12 +137,14 @@ impl<'a> UI<'a> {
                 tracing::debug!(target="hazel::ui::update", "desired pos: {:#05X}", self.tapereader.desired_position);
                 fam.seek(self.tapereader.desired_position);
                 self.tapereader_state = Some(familiar::dismiss(fam));
+                self.current_ben = Some(pos.into());
 
             },
             Some(HazelResponse::Position(None)) => {
                 tracing::debug!(target="hazel::ui::update", "Position is None");
                 // There is no game to watch.
                 self.tapereader_state = None;
+                self.current_ben = None;
             },
             _ => { }
         }
@@ -171,7 +175,7 @@ impl<'a> UI<'a> {
             None => TapeReaderState::default()
         };
 
-        let mut state = (s, BEN::start_position());
+        let mut state = (s, self.current_ben.unwrap_or(BEN::empty()));
 
         tracing::trace!("Setting TRW height to {}", chunks[0].height - 4);
 

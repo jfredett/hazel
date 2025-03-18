@@ -276,6 +276,7 @@ mod tests {
     use cursorlike::Cursorlike;
 
     use crate::alteration::MetadataAssertion;
+    use crate::game::position_metadata::PositionMetadata;
     use crate::types::zobrist::HazelZobrist;
     use crate::types::Color;
     use crate::{notation::ben::BEN, types::Occupant};
@@ -292,20 +293,20 @@ mod tests {
         let start_pos_alts : Vec<Alteration> = BEN::start_position().to_alterations().collect();
         raw_tape.write_all(&start_pos_alts);
 
+        let meta = PositionMetadata::default();
+        let mut meta_after_move = PositionMetadata::default();
+        meta_after_move.en_passant = Some(File::D);
+        meta_after_move.side_to_move = Color::BLACK;
+
+
         raw_tape.write_all(&[
             Alteration::Turn,
-                Alteration::Assert(MetadataAssertion::SideToMove(Color::WHITE)),
-                Alteration::Assert(MetadataAssertion::CastleRights(CastleRights::default())),
-                Alteration::Assert(MetadataAssertion::FiftyMoveCount(0u8)),
-                Alteration::Assert(MetadataAssertion::FullMoveCount(1u16)),
+                Alteration::assert(&meta),
 
                 Alteration::remove(D2, Occupant::white_pawn()),
                 Alteration::place(D4, Occupant::white_pawn()),
 
-                Alteration::Inform(MetadataAssertion::EnPassant(File::D)),
-                Alteration::Inform(MetadataAssertion::FiftyMoveCount(0u8)),
-                Alteration::Inform(MetadataAssertion::MoveType(MoveType::DOUBLE_PAWN)),
-                Alteration::Inform(MetadataAssertion::SideToMove(Color::BLACK)),
+                Alteration::inform(&meta_after_move),
             Alteration::End,
         ]);
 
@@ -324,22 +325,23 @@ mod tests {
 
     fn zobrist_for_startpos_and_d4() -> Zobrist {
         let mut z : Zobrist = zobrist_for_startpos();
+
+        let meta = PositionMetadata::default();
+        let mut meta_after_move = PositionMetadata::default();
+        meta_after_move.en_passant = Some(File::D);
+        meta_after_move.side_to_move = Color::BLACK;
+
         let alts = vec![
             Alteration::Turn,
-                Alteration::Assert(MetadataAssertion::SideToMove(Color::WHITE)),
-                Alteration::Assert(MetadataAssertion::CastleRights(CastleRights::default())),
-                Alteration::Assert(MetadataAssertion::FiftyMoveCount(0u8)),
-                Alteration::Assert(MetadataAssertion::FullMoveCount(1u16)),
+                Alteration::assert(&meta),
 
                 Alteration::remove(D2, Occupant::white_pawn()),
                 Alteration::place(D4, Occupant::white_pawn()),
 
-                Alteration::Inform(MetadataAssertion::EnPassant(File::D)),
-                Alteration::Inform(MetadataAssertion::FiftyMoveCount(0u8)),
-                Alteration::Inform(MetadataAssertion::MoveType(MoveType::DOUBLE_PAWN)),
-                Alteration::Inform(MetadataAssertion::SideToMove(Color::BLACK)),
+                Alteration::inform(&meta_after_move),
             Alteration::End,
         ];
+
         for alt in alts {
             z.alter_mut(alt);
         }

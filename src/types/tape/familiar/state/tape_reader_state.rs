@@ -1,4 +1,4 @@
-use std::{range::Range, sync::RwLock};
+use std::range::Range;
 
 // TODO: This should probably live under /ui/
 use ratatui::{style::Style, text::Text, widgets::{Block, Row, TableState}};

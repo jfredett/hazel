@@ -27,10 +27,12 @@ impl TapeReaderWidget {
     }
 
     pub fn advance(&mut self) {
+        tracing::trace!(target="hazel::ui::events", "advancing to desired position: {:#04X} from {:#04X}", self.desired_position + 1, self.desired_position);
         self.desired_position += 1;
     }
 
     pub fn rewind(&mut self) {
+        tracing::trace!(target="hazel::ui::events", "rewinding to desired position: {:#04X} from {:#04X}", self.desired_position.saturating_sub(1), self.desired_position);
         self.desired_position = self.desired_position.saturating_sub(1);
     }
 }

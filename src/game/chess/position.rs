@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use std::{fmt::Debug, sync::RwLock};
 
+use crate::{alter, query};
 use crate::constants::move_tables::{KNIGHT_MOVES, KING_ATTACKS};
 
 use crate::types::tape::{familiar, Tape};
@@ -117,6 +118,16 @@ impl Query for Position {
 lazy_static!(
     pub static ref POSITION_CACHE : Cache<InnerPosition> = Cache::new();
 );
+
+
+impl From<Position> for BEN {
+    // TODO: This could probably be better managed by a familiar.
+    fn from(value: Position) -> Self {
+        let mut ben : BEN = alter::setup(query::to_alterations(&value.board()));
+        ben.set_metadata(value.metadata());
+        ben
+    }
+}
 
 impl Position {
     pub fn new(fen: impl Into<BEN>) -> Self {

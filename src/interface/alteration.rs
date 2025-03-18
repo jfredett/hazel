@@ -1,7 +1,7 @@
 use std::fmt::{Debug, Display};
 
 
-use crate::{constants::File, coup::rep::MoveType, game::castle_rights::CastleRights, notation::*, types::{Color, Occupant}};
+use crate::{constants::File, coup::rep::MoveType, game::{castle_rights::CastleRights, position_metadata::PositionMetadata}, notation::*, types::{Color, Occupant}};
 
 // NOTE: It's interesting to think about commutativity amongst - or more generally, the 'algebra'
 // of -- these alterations. In particular if I'm trying to build a final representation of
@@ -59,8 +59,8 @@ use crate::{constants::File, coup::rep::MoveType, game::castle_rights::CastleRig
 pub enum Alteration {
     Place { square: Square, occupant: Occupant },
     Remove { square: Square, occupant: Occupant },
-    Assert(MetadataAssertion),
-    Inform(MetadataAssertion),
+    Assert(PositionMetadata),
+    Inform(PositionMetadata),
     #[default] Noop,
     Lit(u8),
     Turn,
@@ -132,6 +132,14 @@ impl Alteration {
         Self::Lit(byte)
     }
 
+    pub fn inform(meta: &PositionMetadata) -> Self {
+        Self::Inform(*meta)
+    }
+
+    pub fn assert(meta: &PositionMetadata) -> Self {
+        Self::Assert(*meta)
+    }
+
     pub fn lit(bytes: &[u8]) -> Vec<Self> {
         bytes.iter().map(|byte| Self::Lit(*byte)).collect()
     }
@@ -144,9 +152,6 @@ impl Alteration {
         match self {
             Self::Place { square, occupant } => Self::Remove { square: *square, occupant: *occupant },
             Self::Remove { square, occupant } => Self::Place { square: *square, occupant: *occupant },
-            // FIXME: I think in the case of EP, the inverse may be more complicated -- i.e., it
-            // might not be it's own inverse.
-            Self::Inform(MetadataAssertion::EnPassant(_)) => *self,
             Self::Assert(fact) => Self::Inform(*fact),
             Self::Inform(fact) => Self::Assert(*fact),
             _ => *self

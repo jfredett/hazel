@@ -52,14 +52,17 @@ impl Move {
         ret.extend(alters);
 
         // Information section
-        let mut new_metadata = *metadata;
-        new_metadata.update(self, context);
-        if let Some(file) = new_metadata.en_passant {
-            ret.push(Alteration::Inform(MetadataAssertion::EnPassant(file)));
-        }
-        ret.push(Alteration::Inform(MetadataAssertion::FiftyMoveCount(new_metadata.halfmove_clock)));
-        ret.push(Alteration::Inform(MetadataAssertion::MoveType(self.move_metadata())));
-        ret.push(Alteration::Inform(MetadataAssertion::SideToMove(new_metadata.side_to_move)));
+        ret.push(Alteration::Inform(*metadata));
+
+        // NOTE: Finer grained approach here...
+        // let mut new_metadata = *metadata;
+        // new_metadata.update(self, context);
+        // if let Some(file) = new_metadata.en_passant {
+        //     ret.push(Alteration::Inform(MetadataAssertion::EnPassant(file)));
+        // }
+        // ret.push(Alteration::Inform(MetadataAssertion::FiftyMoveCount(new_metadata.halfmove_clock)));
+        // ret.push(Alteration::Inform(MetadataAssertion::MoveType(self.move_metadata())));
+        // ret.push(Alteration::Inform(MetadataAssertion::SideToMove(new_metadata.side_to_move)));
 
         // End
         ret.push(Alteration::End);

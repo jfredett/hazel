@@ -329,21 +329,17 @@ mod compilation {
         let mut board = PieceBoard::default();
         board.set_fen(BEN::start_position());
         let meta = PositionMetadata::default();
+        let mut meta_after_move = PositionMetadata::default();
+        meta_after_move.side_to_move = Color::BLACK;
 
         let expected_alterations = vec![
             Alteration::Turn,
-                Alteration::Assert(MetadataAssertion::SideToMove(Color::WHITE)),
-                Alteration::Assert(MetadataAssertion::CastleRights(CastleRights::default())),
-                Alteration::Assert(MetadataAssertion::FiftyMoveCount(0u8)),
-                Alteration::Assert(MetadataAssertion::FullMoveCount(1u16)),
+                Alteration::assert(&meta),
 
                 Alteration::remove(D2, Occupant::white_pawn()),
                 Alteration::place(D4, Occupant::white_pawn()),
 
-                Alteration::Inform(MetadataAssertion::EnPassant(File::D)),
-                Alteration::Inform(MetadataAssertion::FiftyMoveCount(0u8)),
-                Alteration::Inform(MetadataAssertion::MoveType(MoveType::DOUBLE_PAWN)),
-                Alteration::Inform(MetadataAssertion::SideToMove(Color::BLACK)),
+                Alteration::inform(&meta_after_move),
             Alteration::End,
         ];
 
