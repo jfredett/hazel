@@ -3,7 +3,9 @@ use std::{cell::LazyCell, collections::HashMap, fmt::Debug, sync::RwLock};
 use ratatui::{crossterm::event::{Event, KeyCode}, layout::{Constraint, Layout}, style::{Color, Style}, widgets::{Block, Borders, StatefulWidget, Widget}, Frame};
 use tui_logger::{LevelFilter, TuiLoggerLevelOutput, TuiLoggerSmartWidget, TuiWidgetState};
 
-use crate::{constants::START_POSITION_FEN, engine::{driver::{GetPosition, HazelResponse, WitchHazel}, uci::UCIMessage}, notation::ben::BEN, types::tape::{cursorlike::Cursorlike, familiar::{self, resummon_on, state::tape_reader_state::TapeReaderState, Familiar, Quintessence}, Tape}, ui::widgets::tapereader::*};
+use crate::{board::PieceBoard, constants::START_POSITION_FEN, engine::{driver::{GetPosition, HazelResponse, WitchHazel}, uci::UCIMessage}, notation::ben::BEN, types::tape::{cursorlike::Cursorlike, familiar::{self, resummon_on, state::tape_reader_state::TapeReaderState, Familiar, Quintessence}, Tape}, ui::widgets::tapereader::*};
+
+use super::widgets::{board::Board, fen::FEN, placeholder::Placeholder};
 
 enum Mode {
     Insert,
@@ -19,7 +21,7 @@ pub struct UI<'a> {
     tuiloggerstate: TuiWidgetState,
     // State
     tapereader_state: Option<Quintessence<TapeReaderState>>,
-    current_ben: Option<BEN>,
+    current_ben: Option<Quintessence<BEN>>,
 }
 
 impl Debug for UI<'_> {
@@ -39,7 +41,20 @@ impl Debug for UI<'_> {
 //  - render the new view.
 impl<'a> UI<'a> {
     pub async fn with_handle(engine: &'a WitchHazel<1024>) -> Self {
-        engine.send(Box::new(UCIMessage::Position(START_POSITION_FEN.to_owned(), vec!["d2d4".to_string(), "d7d5".to_string(), "c1f4".to_string()]))).await;
+        engine.send(Box::new(
+            UCIMessage::Position(START_POSITION_FEN.to_owned(),
+            vec![
+                "d2d4".to_string(),
+                "d7d5".to_string(),
+                "c1f4".to_string(),
+                "g8f6".to_string(),
+                "e2e3".to_string(),
+                "b8c6".to_string(),
+                "g1f3".to_string(),
+                "e7e6".to_string(),
+                "f1d3".to_string(),
+            ]
+        ))).await;
 
         Self {
             flags: HashMap::new(),
@@ -137,7 +152,13 @@ impl<'a> UI<'a> {
                 tracing::debug!(target="hazel::ui::update", "desired pos: {:#05X}", self.tapereader.desired_position);
                 fam.seek(self.tapereader.desired_position);
                 self.tapereader_state = Some(familiar::dismiss(fam));
-                self.current_ben = Some(pos.into());
+
+                let mut fam = match &self.current_ben {
+                    Some(dust) => { pos.resummon(dust) },
+                    None => { pos.conjure() }
+                };
+                fam.seek(self.tapereader.desired_position);
+                self.current_ben = Some(familiar::dismiss(fam));
 
             },
             Some(HazelResponse::Position(None)) => {
@@ -167,32 +188,65 @@ impl<'a> UI<'a> {
     }
 
     pub fn render(&'a self, frame: &mut Frame<'_>) {
-        let chunks = LAYOUT.split(frame.area());
+        let chunks = PRIMARY_LAYOUT.split(frame.area());
+        let upper_section = chunks[0];
+        let log_section = chunks[1];
+
+        let chunks = UPPER_LAYOUT.split(upper_section);
+        let board_section = chunks[0];
+        let tapereader_section = chunks[1];
+
+        let chunks = BOARD_SECTION_LAYOUT.split(board_section);
+        let board_header = chunks[0];
+        let board_field = chunks[1];
+        let board_footer = chunks[2];
 
         let tlw = self.tui_logger_widget();
-        let mut s = match &self.tapereader_state {
+        let mut state = match &self.tapereader_state {
             Some(dust) => dust.state.clone(),
             None => TapeReaderState::default()
         };
 
-        let mut state = (s, self.current_ben.unwrap_or(BEN::empty()));
+        let ben = match &self.current_ben {
+            Some(dust) => dust.state,
+            None => BEN::empty()
+        };
 
-        tracing::trace!("Setting TRW height to {}", chunks[0].height - 4);
+        let mut pieceboard = PieceBoard::default();
+        pieceboard.set_position(ben);
 
-        StatefulWidget::render(&self.tapereader, chunks[0], frame.buffer_mut(), &mut state);
-        Widget::render(tlw, chunks[1], frame.buffer_mut());
+        let board = Board::from(pieceboard);
+        let fen = FEN::new(ben);
+
+        StatefulWidget::render(&self.tapereader, tapereader_section, frame.buffer_mut(), &mut state);
+        Widget::render(&board, board_field, frame.buffer_mut());
+        Widget::render(&fen, board_footer, frame.buffer_mut());
+        Widget::render(tlw, log_section, frame.buffer_mut());
     }
 }
 
 lazy_static! {
-    static ref LAYOUT : Layout = Layout::default()
+    static ref PRIMARY_LAYOUT : Layout = Layout::default()
         .direction(ratatui::layout::Direction::Vertical)
-        .constraints(
-            [
+        .constraints([
                 Constraint::Length(50),
                 Constraint::Min(1),
-            ].as_ref(),
-        );
+            ].as_ref());
+
+    static ref UPPER_LAYOUT : Layout = Layout::default()
+        .direction(ratatui::layout::Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage(30),
+            Constraint::Percentage(70),
+        ].as_ref());
+
+    static ref BOARD_SECTION_LAYOUT : Layout = Layout::default()
+        .direction(ratatui::layout::Direction::Vertical)
+        .constraints([
+            Constraint::Percentage(20),
+            Constraint::Percentage(60),
+            Constraint::Percentage(20),
+        ].as_ref());
 }
 
 

@@ -72,47 +72,12 @@ impl Alter for PositionMetadata {
                 self.en_passant = None;
             },
             Alteration::Inform(new_metadata) => {
-                // TODO: this probably boils down to something that could be done with bit magic
-
                 *self = new_metadata;
-
-                // match new_metadata {
-                //     MetadataAssertion::SideToMove(color) => { self.side_to_move = color; },
-                //     MetadataAssertion::InCheck => self.in_check = true,
-                //     MetadataAssertion::CastleRights(rights) => self.castling = rights,
-                //     MetadataAssertion::EnPassant(file) => self.en_passant = Some(file),
-                //     MetadataAssertion::FullMoveCount(count) => self.fullmove_number = count,
-                //     MetadataAssertion::FiftyMoveCount(count) => self.halfmove_clock = count,
-                //     MetadataAssertion::MoveType(_) => { }
-                // }
             },
-            // TODO: This should be checking and probably just `panic` for now if the metadata
-            // doesn't match expected values.
             Alteration::Assert(check_metadata) => {
                 if *self != check_metadata {
                     panic_or_trace(format!("Incorrect metadata, Found: {:?}, expected {:?}", check_metadata, self));
                 }
-                // match new_metadata {
-                //     MetadataAssertion::SideToMove(color) => {
-                //         if self.side_to_move != color { panic_or_trace(format!("Incorrect metadata update, Side To Move is {}, expected {}", color, self.side_to_move)); }
-                //     },
-                //     MetadataAssertion::InCheck => {
-                //         if !self.in_check { panic_or_trace("Asserted we are in check, but we're not!".to_string()); }
-                //     },
-                //     MetadataAssertion::CastleRights(rights) => {
-                //         if self.castling != rights { panic_or_trace(format!("Incorrect metadata update, Castling is {:?}, expected {:?}", rights, self.castling)); }
-                //     },
-                //     MetadataAssertion::EnPassant(file) => {
-                //         if self.en_passant != Some(file) { panic_or_trace(format!("Incorrect metadata update, En Passant File is {:?}, expected {:?}", file, self.en_passant)); }
-                //     }
-                //     MetadataAssertion::FullMoveCount(count) => {
-                //         if self.fullmove_number != count { panic_or_trace(format!("Incorrect metadata update, Full Move Count is {:?}, expected {:?}", count, self.fullmove_number)); }
-                //     },
-                //     MetadataAssertion::FiftyMoveCount(count) => {
-                //         if self.halfmove_clock != count { panic_or_trace(format!("Incorrect metadata update, Fifty Move Clock is {:?}, expected {:?}", count, self.halfmove_clock)); }
-                //     }
-                //     MetadataAssertion::MoveType(_) => { }
-                // }
             },
             Alteration::Clear => *self = Self::default(),
             _ => {}
@@ -121,17 +86,10 @@ impl Alter for PositionMetadata {
     }
 }
 
-#[cfg(not(test))]
 fn panic_or_trace(message: String) {
     tracing::error!(message);
+    #[cfg(test)] panic!("Failing");
 }
-
-
-#[cfg(test)]
-fn panic_or_trace(message: String) {
-    panic!("{}", message);
-}
-
 
 impl Default for PositionMetadata {
     fn default() -> Self {
@@ -154,14 +112,16 @@ impl Default for PositionMetadata {
 impl Debug for PositionMetadata {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let ep_sq = match self.en_passant {
-            Some(file) => file.to_string(),
+            Some(file) => file.to_string().to_lowercase(),
             None => "-".to_string(),
         };
+        let ep_rank = if self.en_passant.is_some() { (!self.side_to_move).en_passant_rank().to_string() } else { "".to_string() };
 
-        write!(f, "{} {} {} {} {}",
+        write!(f, "{} {} {}{} {} {}",
             self.side_to_move,
             self.castling,
             ep_sq,
+            ep_rank,
             self.halfmove_clock,
             self.fullmove_number,
         )
@@ -169,18 +129,7 @@ impl Debug for PositionMetadata {
 }
 impl Display for PositionMetadata {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let ep_sq = match self.en_passant {
-            Some(sq) => sq.to_string(),
-            None => "-".to_string(),
-        };
-
-        write!(f, "{} {} {} {} {}",
-            self.side_to_move,
-            self.castling,
-            ep_sq,
-            self.halfmove_clock,
-            self.fullmove_number,
-        )
+        write!(f, "{:?}", self)
     }
 }
 
@@ -259,7 +208,7 @@ impl PositionMetadata {
         self.en_passant = None;
 
 
-        if self.side_to_move == Color::WHITE {
+        if self.side_to_move == Color::BLACK {
             self.fullmove_number += 1;
         }
         self.side_to_move = !self.side_to_move;

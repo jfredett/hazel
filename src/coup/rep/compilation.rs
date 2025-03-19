@@ -52,7 +52,9 @@ impl Move {
         ret.extend(alters);
 
         // Information section
-        ret.push(Alteration::Inform(*metadata));
+        let mut new_metadata = *metadata;
+        new_metadata.update(self, context);
+        ret.push(Alteration::Inform(new_metadata));
 
         // NOTE: Finer grained approach here...
         // let mut new_metadata = *metadata;

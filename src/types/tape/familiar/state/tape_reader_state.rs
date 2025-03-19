@@ -76,12 +76,19 @@ impl TapeReaderState {
             .style(Style::new().bold())
     }
 
-
     pub fn header(&self) -> Text {
         Text::from(
                 // format!("{}, {}, {}, {:?}, {}, {}, {}",
                 //     self.position, self.position_in_page(), self.offset(), self.page_range(), self.page(), self.total_pages(), self.length
                 // )
+                format!("Tape: POS: {:#07X} ({}/{}), EOT: {:#07X}",
+                    self.position, self.page(), self.total_pages(), self.tape_length
+                )
+            )
+    }
+
+    pub fn footer(&self) -> Text {
+        Text::from(
                 format!("Tape: POS: {:#07X} ({}/{}), EOT: {:#07X}",
                     self.position, self.page(), self.total_pages(), self.tape_length
                 )

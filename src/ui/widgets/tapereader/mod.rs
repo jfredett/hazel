@@ -14,16 +14,8 @@ impl TapeReaderWidget {
         Layout::vertical([
             Constraint::Length(1), // header
             Constraint::Length(40), // code seciton
-            Constraint::Length(1), // footer
+            Constraint::Min(1), // footer
         ])
-    }
-
-    pub fn code_layout(&self) -> Layout {
-        Layout::horizontal([
-            Constraint::Percentage(40), // code seciton
-            Constraint::Percentage(60), // code seciton
-        ])
-
     }
 
     pub fn advance(&mut self) {
@@ -39,20 +31,14 @@ impl TapeReaderWidget {
 
 
 impl StatefulWidget for &TapeReaderWidget {
-    type State = (TapeReaderState, BEN);
+    type State = TapeReaderState;
 
-    fn render(self, area: Rect, buf: &mut Buffer, state_pair: &mut Self::State) {
+    fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
         // Columns widths are constrained in the same way as Layout...
-
-        let (ref mut state, ben) = state_pair;
-        let mut pieceboard = PieceBoard::default();
-        pieceboard.set_position(*ben);
 
         let chunks = self.layout().split(area);
         let header = chunks[0];
-        let code_section = self.code_layout().split(chunks[1]);
-        let board_side = code_section[0];
-        let tape_side = code_section[1];
+        let tape_area = chunks[1];
         let footer = chunks[2];
 
         let widths = [
@@ -74,12 +60,9 @@ impl StatefulWidget for &TapeReaderWidget {
             .cell_highlight_style(Style::new().blue())
             .highlight_symbol(">>");
 
-        let board = Board::from(pieceboard);
-
         Widget::render(state.header(), header, buf);
-        StatefulWidget::render(&table, tape_side, buf, &mut state.table_state());
-        Widget::render(&board, board_side, buf);
-        StatefulWidget::render(&Placeholder::of_size(footer.height, footer.width).borders(Borders::ALL), footer, buf, &mut ());
+        StatefulWidget::render(&table, tape_area, buf, &mut state.table_state());
+        Widget::render(state.footer(), footer, buf);
     }
 }
 
