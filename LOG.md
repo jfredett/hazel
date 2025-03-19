@@ -2448,3 +2448,14 @@ The way the tapereader work sucks in a lot of ways, but it is pretty cool to wat
 
 The UI is quite messy, and I need to wire up some more controls so I can make better use of the log widget, and also
 send messages into the system, then I should be able to get perft working in the UI.
+
+# 19-MAR-2025
+
+## 1600 - atm
+
+I really need to split this thing into multiple crates, if only so I can more easily skip all the UI tests which, owing
+to their 'compare to a text screenshot' approach, are pretty brittle when I start working on the UI.
+
+I'm back to working through some of the failed tests, going to hopefully get it back down to just perft failures before
+continuing with the UI debugging, ideally to minimize the number of moving bugs when I'm trying to squash the zobrist
+caching part of movegen, which is what this whole thing was supposed to be about in the first place.

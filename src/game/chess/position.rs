@@ -684,11 +684,13 @@ mod tests {
             ];
 
             let mut p = Position::with_moves(start, moves);
-            // let z_prior = p.zobrist();
+            let z_prior = p.zobrist();
             let m = Move::new(E2, E3, MoveType::QUIET);
 
             p.make(m);
             p.unmake();
+
+            assert_eq!(z_prior, p.zobrist());
         }
 
         #[test]
