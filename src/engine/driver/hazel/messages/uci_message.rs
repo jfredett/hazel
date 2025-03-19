@@ -127,18 +127,18 @@ mod tests {
 
         // FIXME: This I think is not working as I refactor `Position`
         // #[tokio::test]
-        async fn uci_new_game() {
-            let w : WitchHandle<10, Hazel, HazelResponse> = WitchHandle::new().await;
+        // async fn uci_new_game() {
+        //     let w : WitchHandle<10, Hazel, HazelResponse> = WitchHandle::new().await;
 
-            w.send(Box::new(UCIMessage::Position(START_POSITION_FEN.to_string(), vec![]))).await;
-            w.send(Box::new(UCIMessage::UCINewGame)).await;
-            w.send(Box::new(GetState)).await;
-            if let Some(HazelResponse::Debug(result)) = w.read().await {
-                assert_eq!(result.position, None);
-            } else {
-                panic!("Expected Debug response");
-            }
-        }
+        //     w.send(Box::new(UCIMessage::Position(START_POSITION_FEN.to_string(), vec![]))).await;
+        //     w.send(Box::new(UCIMessage::UCINewGame)).await;
+        //     w.send(Box::new(GetState)).await;
+        //     if let Some(HazelResponse::Debug(result)) = w.read().await {
+        //         assert_eq!(result.position, None);
+        //     } else {
+        //         panic!("Expected Debug response");
+        //     }
+        // }
 
         #[tokio::test]
         async fn position() {

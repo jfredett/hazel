@@ -1,8 +1,7 @@
 use std::range::Range;
 
 // TODO: This should probably live under /ui/
-use ratatui::{style::Style, text::Text, widgets::{Block, Row, TableState}};
-use ratatui::prelude::Stylize;
+use ratatui::{prelude::Stylize, style::Style, text::Text, widgets::{Row, TableState}};
 
 use crate::{types::tape::{cursor::Cursor, cursorlike::Cursorlike, familiar::Familiar, tapelike::Tapelike, Tape}, Alteration};
 
@@ -81,18 +80,14 @@ impl TapeReaderState {
                 // format!("{}, {}, {}, {:?}, {}, {}, {}",
                 //     self.position, self.position_in_page(), self.offset(), self.page_range(), self.page(), self.total_pages(), self.length
                 // )
-                format!("Tape: POS: {:#07X} ({}/{}), EOT: {:#07X}",
+                format!("Tape: POS: {:#07X} ({}/{}), EOT: {:#06X}",
                     self.position, self.page(), self.total_pages(), self.tape_length
                 )
             )
     }
 
     pub fn footer(&self) -> Text {
-        Text::from(
-                format!("Tape: POS: {:#07X} ({}/{}), EOT: {:#07X}",
-                    self.position, self.page(), self.total_pages(), self.tape_length
-                )
-            )
+        Text::from("Footer here".to_string())
     }
 
     pub fn rows(&self) -> Vec<Row> {
@@ -100,14 +95,14 @@ impl TapeReaderState {
             // we have the alteration + context from `state` proper, we need to prepare the context
             // rows here, and add the header/footer rows (not sections) later.
             Row::new(vec![
-                format!("{:#07X}", idx + self.offset()),
+                format!("{:#06X}", idx + self.offset()),
                 e.to_string(),
                 "Running Hash".to_string()
             ])
         }).collect();
 
         for addr in ret.len()..self.length {
-            ret.push(Row::new(vec![format!("{:#07X}", self.offset() + addr)]));
+            ret.push(Row::new(vec![format!("{:#06X}", self.offset() + addr)]));
         }
 
         ret

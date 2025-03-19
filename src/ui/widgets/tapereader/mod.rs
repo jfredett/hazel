@@ -1,8 +1,5 @@
-use ratatui::{buffer::Buffer, layout::{Constraint, Layout, Rect}, style::{Style, Stylize}, widgets::{Block, Borders, StatefulWidget, Table, Widget}};
-
-use crate::{board::PieceBoard, notation::ben::BEN, types::tape::familiar::{state::tape_reader_state::TapeReaderState, Quintessence}};
-
-use super::{board::Board, placeholder::Placeholder};
+use ratatui::{buffer::Buffer, layout::{Constraint, Layout, Rect}, style::{Style, Stylize}, widgets::{Block, StatefulWidget, Table, Widget}};
+use crate::types::tape::familiar::state::tape_reader_state::TapeReaderState;
 
 #[derive(Default)]
 pub struct TapeReaderWidget {

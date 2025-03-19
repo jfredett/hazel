@@ -1,11 +1,11 @@
-use std::{cell::LazyCell, collections::HashMap, fmt::Debug, sync::RwLock};
+use std::{collections::HashMap, fmt::Debug};
 
-use ratatui::{crossterm::event::{Event, KeyCode}, layout::{Constraint, Layout}, style::{Color, Style}, widgets::{Block, Borders, StatefulWidget, Widget}, Frame};
+use ratatui::{crossterm::event::{Event, KeyCode}, layout::{Constraint, Layout}, style::{Color, Style}, widgets::{StatefulWidget, Widget}, Frame};
 use tui_logger::{LevelFilter, TuiLoggerLevelOutput, TuiLoggerSmartWidget, TuiWidgetState};
 
-use crate::{board::PieceBoard, constants::START_POSITION_FEN, engine::{driver::{GetPosition, HazelResponse, WitchHazel}, uci::UCIMessage}, notation::ben::BEN, types::tape::{cursorlike::Cursorlike, familiar::{self, resummon_on, state::tape_reader_state::TapeReaderState, Familiar, Quintessence}, Tape}, ui::widgets::tapereader::*};
+use crate::{board::PieceBoard, constants::START_POSITION_FEN, engine::{driver::{GetPosition, HazelResponse, WitchHazel}, uci::UCIMessage}, notation::ben::BEN, types::tape::{cursorlike::Cursorlike, familiar::{self, state::tape_reader_state::TapeReaderState, Quintessence}}, ui::widgets::tapereader::*};
 
-use super::widgets::{board::Board, fen::FEN, placeholder::Placeholder};
+use super::widgets::{board::Board, fen::FEN};
 
 enum Mode {
     Insert,
@@ -53,6 +53,7 @@ impl<'a> UI<'a> {
                 "g1f3".to_string(),
                 "e7e6".to_string(),
                 "f1d3".to_string(),
+                "e1g1".to_string(),
             ]
         ))).await;
 
@@ -126,11 +127,11 @@ impl<'a> UI<'a> {
         }
     }
 
-    pub fn input_widget(&self) -> Block {
-        Block::default()
-            .title("Input")
-            .borders(Borders::ALL)
-    }
+    // pub fn input_widget(&self) -> Block {
+    //     Block::default()
+    //         .title("Input")
+    //         .borders(Borders::ALL)
+    // }
 
     pub async fn update(&mut self) {
         // If we have an active state, we want to update it, if we don't, we want to check to see
@@ -197,7 +198,7 @@ impl<'a> UI<'a> {
         let tapereader_section = chunks[1];
 
         let chunks = BOARD_SECTION_LAYOUT.split(board_section);
-        let board_header = chunks[0];
+        let _board_header = chunks[0];
         let board_field = chunks[1];
         let board_footer = chunks[2];
 

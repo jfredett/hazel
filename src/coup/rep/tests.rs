@@ -329,9 +329,11 @@ mod compilation {
         let mut board = PieceBoard::default();
         board.set_fen(BEN::start_position());
         let meta = PositionMetadata::default();
-        let mut meta_after_move = PositionMetadata::default();
-        meta_after_move.side_to_move = Color::BLACK;
-        meta_after_move.en_passant = Some(File::D);
+        let meta_after_move = PositionMetadata {
+            side_to_move: Color::BLACK,
+            en_passant: Some(File::D),
+            ..Default::default()
+        };
 
         let expected_alterations = vec![
             Alteration::Turn,

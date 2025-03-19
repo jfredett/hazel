@@ -103,7 +103,7 @@ impl Debug for Zobrist {
 // this should probably be killed
 impl From<&[Alteration]> for Zobrist {
     fn from(alterations: &[Alteration]) -> Zobrist {
-        *Zobrist::empty().update(&alterations)
+        *Zobrist::empty().update(alterations)
     }
 }
 
@@ -240,26 +240,28 @@ mod tests {
             assert_ne!(p.zobrist(), Zobrist::empty());
         }
 
-        #[test]
-        fn depth_for_covers_expected_range() {
-            let mut depths = vec![];
-            let mut idx = 0;
-            for sq in Square::by_rank_and_file() {
-                for color in COLORS {
-                    for piece in PIECES {
-                        let depth : usize = HazelZobrist::depth_for(sq, color, piece) as usize;
-                        assert_eq!(idx, depth);
-                        idx += 1;
-                        depths.push(depth);
-                    }
-                }
-            }
+        // #[test]
+        // fn depth_for_covers_expected_range() {
+        //     let mut depths = vec![];
+        //     let mut idx = 0;
+        //     for sq in Square::by_rank_and_file() {
+        //         for color in COLORS {
+        //             for piece in PIECES {
+        //                 let depth : usize = HazelZobrist::depth_for(sq, color, piece) as usize;
+        //                 assert_eq!(idx, depth);
+        //                 idx += 1;
+        //                 depths.push(depth);
+        //             }
+        //         }
+        //     }
 
 
-            use itertools::Itertools;
-            for (key, group) in &depths.into_iter().chunk_by(|e| *e) {
-            }
-        }
+        //     use itertools::Itertools;
+        //     for (key, group) in &depths.into_iter().chunk_by(|e| *e) {
+        //         assert!(false); // I left this half-complete and can't remember what I intended to
+        //         // test here.
+        //     }
+        // }
 
         #[test]
         fn zobrist_is_different_after_a_move_is_made() {

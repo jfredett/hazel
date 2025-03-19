@@ -294,9 +294,11 @@ mod tests {
         raw_tape.write_all(&start_pos_alts);
 
         let meta = PositionMetadata::default();
-        let mut meta_after_move = PositionMetadata::default();
-        meta_after_move.en_passant = Some(File::D);
-        meta_after_move.side_to_move = Color::BLACK;
+        let meta_after_move = PositionMetadata {
+            side_to_move: Color::BLACK,
+            en_passant: Some(File::D),
+            ..Default::default()
+        };
 
 
         raw_tape.write_all(&[
@@ -327,9 +329,11 @@ mod tests {
         let mut z : Zobrist = zobrist_for_startpos();
 
         let meta = PositionMetadata::default();
-        let mut meta_after_move = PositionMetadata::default();
-        meta_after_move.en_passant = Some(File::D);
-        meta_after_move.side_to_move = Color::BLACK;
+        let meta_after_move = PositionMetadata {
+            side_to_move: Color::BLACK,
+            en_passant: Some(File::D),
+            ..Default::default()
+        };
 
         let alts = vec![
             Alteration::Turn,

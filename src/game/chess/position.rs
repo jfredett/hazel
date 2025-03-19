@@ -746,26 +746,26 @@ mod tests {
         }
 
         // #[test] // I entered the moves wrong, I don't know where.
-        fn d4() {
-            let start = BEN::start_position();
-            let target = BEN::new("rnbqk2r/pp2bppp/2p1pn2/3p4/3P1B2/3BPN2/PPP2PPP/RN1Q1RK1 b kq - 1 6");
-            let moves = vec![
-                Move::new(D2, D4, MoveType::DOUBLE_PAWN), Move::new(D7, D5, MoveType::DOUBLE_PAWN),
-                Move::new(C1, F4, MoveType::QUIET), Move::new(E7, E6, MoveType::QUIET),
-                Move::new(E2, E3, MoveType::QUIET), Move::new(G8, F6, MoveType::QUIET),
-                Move::new(G1, F3, MoveType::QUIET), Move::new(F8, E7, MoveType::QUIET),
-                Move::new(F1, D3, MoveType::QUIET), Move::new(C7, C6, MoveType::QUIET),
-                Move::short_castle(Color::WHITE)
-            ];
+        // fn d4() {
+        //     let start = BEN::start_position();
+        //     let target = BEN::new("rnbqk2r/pp2bppp/2p1pn2/3p4/3P1B2/3BPN2/PPP2PPP/RN1Q1RK1 b kq - 1 6");
+        //     let moves = vec![
+        //         Move::new(D2, D4, MoveType::DOUBLE_PAWN), Move::new(D7, D5, MoveType::DOUBLE_PAWN),
+        //         Move::new(C1, F4, MoveType::QUIET), Move::new(E7, E6, MoveType::QUIET),
+        //         Move::new(E2, E3, MoveType::QUIET), Move::new(G8, F6, MoveType::QUIET),
+        //         Move::new(G1, F3, MoveType::QUIET), Move::new(F8, E7, MoveType::QUIET),
+        //         Move::new(F1, D3, MoveType::QUIET), Move::new(C7, C6, MoveType::QUIET),
+        //         Move::short_castle(Color::WHITE)
+        //     ];
 
-            let mut pb = PieceBoard::default();
-            pb.set_position(target);
+        //     let mut pb = PieceBoard::default();
+        //     pb.set_position(target);
 
-            let position = Position::with_moves(start, moves);
+        //     let position = Position::with_moves(start, moves);
 
-            assert_eq!(position.board(), pb);
-            assert_eq!(position.metadata(), start.metadata());
-        }
+        //     assert_eq!(position.board(), pb);
+        //     assert_eq!(position.metadata(), start.metadata());
+        // }
     }
 
     mod pawns {

@@ -1,4 +1,4 @@
-use crate::{alteration::MetadataAssertion, game::position_metadata::PositionMetadata};
+use crate::game::position_metadata::PositionMetadata;
 
 use super::*;
 

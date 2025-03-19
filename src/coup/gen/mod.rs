@@ -131,10 +131,10 @@ mod tests {
     }
 
     //#[test]
-    #[tracing_test::traced_test]
-    fn perft_4() {
-        assert_no_difference!(perft_start_position(4), 197_281);
-    }
+    // #[tracing_test::traced_test]
+    // fn perft_4() {
+    //     assert_no_difference!(perft_start_position(4), 197_281);
+    // }
 
     #[test]
     fn check_mate_position_has_zero_perft_at_any_depth() {

@@ -9,14 +9,7 @@
 use std::fmt::{Debug, Display};
 use std::str::SplitWhitespace;
 
-use crate::alteration::MetadataAssertion;
-use crate::interface::Query;
-use crate::constants::File;
-use crate::coup::rep::Move;
-use crate::game::chess::castle_rights::CastleRights;
-use crate::query::display_board;
-use crate::{notation::*, Alter, Alteration};
-use crate::types::{Color, Occupant, Piece};
+use crate::{constants::File, coup::rep::Move, game::chess::castle_rights::CastleRights, interface::Query, notation::*, query::display_board, types::{Color, Occupant, Piece}, Alter, Alteration};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct PositionMetadata {

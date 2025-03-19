@@ -2436,3 +2436,15 @@ Next tasks:
     'load-from-file' and 'perft' to start. That'll make it possible to build the stockfish integration test I
     described... way back in November...
 3. Make things look nicer.
+
+
+# 18-MAR-2025
+
+## 2343 - atm
+
+The end-of-tape-nullmove bug does introduce a secondary bug, where it overwrites the A1 square with a knight that does
+not unwind when you run back over it. I think I might just clamp the end of the tape so you can't scroll past the end.
+The way the tapereader work sucks in a lot of ways, but it is pretty cool to watch the pieces wiggle around.
+
+The UI is quite messy, and I need to wire up some more controls so I can make better use of the log widget, and also
+send messages into the system, then I should be able to get perft working in the UI.
