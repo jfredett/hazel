@@ -26,3 +26,4 @@ pub fn setup<A>(alterations: impl Iterator<Item = Alteration>) -> A where A : Al
     }
     ret
 }
+

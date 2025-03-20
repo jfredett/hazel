@@ -6,6 +6,7 @@ pub trait Tapelike where Self: Sized {
     type Item;
 
     fn length(&self) -> usize;
+    fn writehead(&self) -> usize;
 
     fn read_address(&self, address: usize) -> Self::Item;
     // BUG: I *hate* this. I should be able to return a reference to an arbitrary range of a tape,

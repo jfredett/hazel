@@ -36,13 +36,16 @@ impl Default for Tape {
     }
 }
 
-
 // TODO: probably instead of this, the RwLock should be hidden by the Cursor
 impl Tapelike for RwLock<Tape> {
     type Item = Alteration;
 
     fn length(&self) -> usize {
-        self.read().unwrap().hwm
+        self.read().unwrap().length()
+    }
+
+    fn writehead(&self) -> usize {
+        self.read().unwrap().writehead()
     }
 
     fn read_address(&self, address: usize) -> Self::Item {
@@ -83,6 +86,10 @@ impl Tapelike for Tape {
 
     fn length(&self) -> usize {
         self.hwm
+    }
+
+    fn writehead(&self) -> usize {
+        self.head
     }
 
     fn read_address(&self, address: usize) -> Self::Item {
@@ -141,8 +148,8 @@ impl Tapelike for Tape {
 
 impl Debug for Tape {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "\nTAPE(head_hash: {:?}, position_hash: {:?}, head: {:#04x}, hwm: {:#04x})",
-            self.head_hash(), self.position_hash(), self.head, self.hwm
+        writeln!(f, "\nTAPE(head_hash: {:?}, head: {:#04x}, hwm: {:#04x})",
+            self.head_hash(), self.head, self.hwm
         )?;
         let mut running_hash = Zobrist::empty();
         let iterator = self.data.as_slice().iter();
@@ -167,14 +174,6 @@ impl Debug for Tape {
 impl Tape {
     pub fn new(cap: u16) -> Self {
         Tape { data: dynamic_array::MediumArray::zeroed(cap), head: 0, hwm: 0 }
-    }
-
-    // TODO: This should be moved up to Position, it gets handed the Arc<Tape> from there.
-    pub fn position_hash(&self) -> Zobrist {
-        // this is not the right way to do this, it should definitely live up on position
-        let mut familiar : Familiar<Self, PositionZobrist> = familiar::conjure(Arc::new(self.clone()));
-        familiar.seek(self.head);
-        familiar.get().position
     }
 
     /// the point to which the tape is valid

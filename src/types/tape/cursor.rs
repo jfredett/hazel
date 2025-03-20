@@ -36,6 +36,10 @@ impl<T> Cursor<T> where T : Tapelike {
             position: 0
         }
     }
+
+    pub fn sync_to_writehead(&mut self) {
+        self.seek(self.tape.writehead());
+    }
 }
 
 impl<T> Cursorlike for Cursor<T> where T : Tapelike {

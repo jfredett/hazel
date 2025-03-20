@@ -42,4 +42,5 @@ pub trait Cursorlike {
             self.advance()
         }
     }
+
 }

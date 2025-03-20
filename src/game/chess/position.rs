@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use std::{fmt::Debug, sync::RwLock};
 
+use crate::types::tape::cursorlike::Cursorlike;
 use crate::{alter, query};
 use crate::constants::move_tables::{KNIGHT_MOVES, KING_ATTACKS};
 
@@ -168,7 +169,10 @@ impl Position {
     }
 
     pub fn zobrist(&self) -> Zobrist {
-        self.tape.read().unwrap().position_hash()
+        // TODO: this is not ideal, it should cache this somewhere, probably as a quintessence.
+        let mut fam : Familiar<RwLock<Tape>, Zobrist> = self.conjure();
+        fam.sync_to_writehead();
+        *fam.get()
     }
 
     pub fn metadata(&self) -> PositionMetadata {
@@ -245,9 +249,9 @@ impl Position {
         }
 
         // Cache Management
-        // Tape read-locked, this syncs the head to wherever the write head was last left, which is
-        // presently at the end of the turn we just wrote.
-        let position_hash: Zobrist = self.tape.read().unwrap().position_hash();
+        // Tape read-locked, this syncs the head to the 'end of the tape', which should match the 
+        // current write head position, which is presently at the end of the turn we just wrote.
+        let position_hash: Zobrist = self.zobrist();
 
         // TODO: Ideally this is lazy, so we only update the board as we roll the associated
         // boardfamiliar forward.
@@ -269,17 +273,6 @@ impl Position {
             },
         }
     }
-
-    // TODO: this is a good idea, just needs familiars.
- 
-    // write an alteration to the tape.
-    // fn write_alteration(&mut self, alter: Alteration) {
-    //     todo!()
-    // }
-
-    // fn write_alterations(&mut self, alters: &[Alteration]) {
-    //     alters.into_iter().for_each(self.write_alteration);
-    // }
 
     // FIXME: this, if anything, should probably return a result type.
     pub fn unmake(&mut self) {
@@ -305,7 +298,9 @@ impl Position {
 
                 tape.step_backward();
             }
-            unmove_hash = tape.position_hash();
+            // FIXME: this causes a sync to the writehead, I don't love the spook, but I think it should
+            // work for now
+            unmove_hash = self.zobrist();
         }
 
         // TODO: This is an exact copy of the above, mod the #inverse calls on `alter`. definitely
