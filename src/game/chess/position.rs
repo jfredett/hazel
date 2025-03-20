@@ -183,67 +183,21 @@ impl Position {
         self.inner.read().unwrap().board
     }
 
-    // FIXME: BUG: This is the current bug.
-    //
-    // The way I update metadata sucks, frankly, the way I track it kind of sucks too. it is
-    // sensitive to order in a way I dislike, and ideally it should be compiled to alterations
-    // alongside the move, so the `compile` would change to a full boardstate.
-    //
-    // I also want the alteration stream to be more sparse -- if, e.g., castlerights don't change,
-    // we shouldn't bother printing them to the tape.
-    //
-    // I think the plan is to make the `compile` api a `mov.compile(&board, &metadata) ->
-    // vec<alterations>` that encompases the whole turn. That gets written to tape, and that's
-    // that.
-    //
-    // I do need to account for one other thing -- rewinding then writing to tape will invalidate
-    // the tape proceeding from the overwritten section, there is currently no way to detect that,
-    // so perhaps `tape` should be 'rewind only'? I might mark `step_forward` unsafe for this
-    // reason.
-    //
-    // I haven't decided if that would be sinful or not. Technically it would be undefined
-    // behavior, so it makes sense, but I could easily clear-on-first-write (even just logically by
-    // maintaining some high-water-mark or something.
-    //
-    // I think changing it to have a little sublanguage could work, something like:
-    //
-    // Turn(Color)
-    //    Assert(CastleRights(KQkq)) // asserts that this should be the current state of the system, available for any metadata assertion
-    //    //... more asserts
-    //    Remove P @ d2
-    //    Place P @ d4
-    //    Inform MoveType DOUBLE_PAWN // set this key in the metadata structure
-    //    Inform EnPassant A
-    //    Inform HalfMoveReset // a pawn move means reset this clock
-    // End
-    //
-    // For debugging, we could take those asserts as if they were `informs`, it is a check that
-    // verifies the previous metadata state. We can later optimize them out (or just skip them)
-    // when running the 'real' engine.
-    // That could also allow for a similar `Setup` tag, for the setup phase.
     pub fn make(&mut self, mov: Move) {
-
-
-        /*
-        * The gamestate familiar manages the cache, on a cache miss above I suppose it would need
-        * to rewind to the last available, we'll still need some kind of cached state in the
-        * position itself probably? Not sure.
-        *   To do that we need a gamestate object/trait
-        *
-        * Ideally it borrows the representation instead of copying.
-        *
-        */
+        tracing::debug!("making: {:?}", mov);
 
         let new_alterations: Vec<Alteration>;
 
         {   // Incremental Update Calculation
             // Inner is read-locked
+            tracing::trace!("Compiling move");
             let inner = self.inner.read().unwrap();
             new_alterations = mov.new_compile(&inner.board, &inner.metadata)
         }
 
         {   // Write phase
             // Tape is write-locked
+            tracing::trace!("Writing move");
             let mut tape = self.tape.write().unwrap();
             tape.write_all(&new_alterations);
         }
@@ -251,37 +205,44 @@ impl Position {
         // Cache Management
         // Tape read-locked, this syncs the head to the 'end of the tape', which should match the 
         // current write head position, which is presently at the end of the turn we just wrote.
+        tracing::trace!("Caching");
         let position_hash: Zobrist = self.zobrist();
 
         // TODO: Ideally this is lazy, so we only update the board as we roll the associated
         // boardfamiliar forward.
         match self.atm.get(position_hash) {
             Some(cached_inner) => {
+                tracing::trace!("Cache hit");
                 // Atomic, TODO: Handle Result
                 _ = self.inner.replace(cached_inner.clone());
             },
             None => {
+                tracing::trace!("Cache miss");
                 // Inner is write-locked
                 let mut inner = self.inner.write().unwrap();
-
+                tracing::trace!("locked inner");
                 for alter in new_alterations {
                     inner.board.alter_mut(alter);
                     inner.metadata.alter_mut(alter);
                 }
+                tracing::trace!("updated inner");
 
                 self.atm.set(position_hash, inner.clone());
+                tracing::trace!("set cache");
             },
         }
     }
 
     // FIXME: this, if anything, should probably return a result type.
     pub fn unmake(&mut self) {
+        tracing::debug!("Unmaking");
 
-        let unmove_hash : Zobrist;
         let mut unmoves = vec![];
 
         { // Tape is write-locked
+            tracing::trace!("Unwinding tape");
             let mut tape = self.tape.write().unwrap();
+            tracing::trace!("Locked tape for write");
             loop { // this is inelegant, but hopefully effective.
 
                 if tape.at_bot() {
@@ -292,16 +253,18 @@ impl Position {
                 let alter = tape.read();
                 unmoves.push(alter);
 
+                tape.step_backward();
+
                 if matches!(alter, Alteration::Turn) {
                     break;
                 }
-
-                tape.step_backward();
             }
-            // FIXME: this causes a sync to the writehead, I don't love the spook, but I think it should
-            // work for now
-            unmove_hash = self.zobrist();
         }
+        tracing::trace!("Tape unlocked from write");
+
+        // FIXME: this causes a sync to the writehead, I don't love the spook, but I think it should
+        // work for now
+        let unmove_hash : Zobrist = self.zobrist();
 
         // TODO: This is an exact copy of the above, mod the #inverse calls on `alter`. definitely
         // could be extracted to something like `#withdraw_or_deposit(hash, &alters)`, unmake would
@@ -312,10 +275,12 @@ impl Position {
         // been cooking.
         match self.atm.get(unmove_hash) {
             Some(cached_inner) => {
+                tracing::trace!("Unmake cache hit");
                 // Atomic, TODO: Handle Result
                 _ = self.inner.replace(cached_inner.clone());
             },
             None => {
+                tracing::trace!("Unmake cache miss");
                 // Inner is write-locked
                 let mut inner = self.inner.write().unwrap();
 
