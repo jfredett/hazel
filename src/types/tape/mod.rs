@@ -178,16 +178,11 @@ impl Tape {
 
     /// the point to which the tape is valid
     pub fn read_head(&self) -> usize {
-        if self.write_head() == 0 {
+        if self.writehead() == 0 {
             0
         } else {
-            self.write_head() - 1
+            self.writehead() - 1
         }
-    }
-
-    /// the next empty slot to write to
-    pub fn write_head(&self) -> usize {
-        self.head
     }
 
     // This should maybe live here, but the familiar is over the dynamic array type instead of the
@@ -364,9 +359,9 @@ mod tests {
     fn hash_familiar_works() {
         let tape = tape_with_startpos_and_d4();
         let mut familiar : Familiar<Tape, Zobrist> = familiar::conjure(Arc::new(tape.clone()));
-        familiar.seek(tape.write_head());
+        familiar.seek(tape.writehead());
         assert_eq!(zobrist_for_startpos_and_d4(), *familiar.get());
-        familiar.rewind_until(|a| matches!(a.read_address(a.position()), Alteration::Turn));
+        familiar.rewind_until(|a| matches!(a.cursor.read_address(a.position()), Alteration::Turn));
         assert_eq!(zobrist_for_startpos(), *familiar.get());
     }
 

@@ -12,23 +12,27 @@ pub mod state;
 /// cursor with a new one on the new tape and maintain the state. These should ultimately be sendable between threads, so
 /// all their state is maintained internally in a thread-safe way.
 pub struct Familiar<T, S> where T : Tapelike {
-    cursor: Cursor<T>,
+    // FIXME: This shouldn't be pub, but I don't want to fight it now
+    pub cursor: Cursor<T>,
     state: S
 }
 
-impl<T,S> DerefMut for Familiar<T, S> where T : Tapelike {
-    fn deref_mut(&mut self) -> &mut Cursor<T> {
-        &mut self.cursor
-    }
-}
+// FIXME: I like this idea but it makes the types weird. Need to redesign the interfaces for this I
+// think.
+//
+// impl<T,S> DerefMut for Familiar<T, S> where T : Tapelike {
+//     fn deref_mut(&mut self) -> &mut Cursor<T> {
+//         &mut self.cursor
+//     }
+// }
 
-impl<T,S> Deref for Familiar<T, S> where T : Tapelike {
-    type Target = Cursor<T>;
+// impl<T,S> Deref for Familiar<T, S> where T : Tapelike {
+//     type Target = Cursor<T>;
 
-    fn deref(&self) -> &Cursor<T> {
-        &self.cursor
-    }
-}
+//     fn deref(&self) -> &Cursor<T> {
+//         &self.cursor
+//     }
+// }
 
 // OQ: I wonder if it makes sense to `deref` this down to it's state
 impl<T, S> Familiar<T, S> where T : Tapelike {
@@ -55,14 +59,16 @@ impl<S> std::fmt::Debug for Quintessence<S> where S : std::fmt::Debug {
 
 pub fn dismiss<T, S>(familiar: Familiar<T,S>) -> Quintessence<S> where T : Tapelike, S : Clone {
     Quintessence {
-        position: familiar.position(),
+        position: familiar.cursor.position(),
         state: familiar.state.clone()
     }
 }
 
 pub fn resummon_on<T,S>(tapelike: Arc<T>, quintessence: &Quintessence<S>) -> Familiar<T,S> where T : Tapelike, S : Clone {
     let mut fam = conjure_with(tapelike, quintessence.state.clone());
-    fam.jump(quintessence.position);
+    // NOTE: Bypass the cursorlike impl below in favor of just moving the cursor, this dodges some type
+    // constraint issues that come from a not great trait design.
+    fam.cursor.jump(quintessence.position);
     fam
 }
 
@@ -98,6 +104,7 @@ impl<T, S> Cursorlike for Familiar<T, S> where T : Tapelike<Item = Alteration>, 
     }
 
     fn advance(&mut self) {
+        tracing::trace!("advancing"); // Familiar is not using the correct method, probably because I'm doing stupid type tricks.
         self.cursor.advance();
 
         let alter = self.cursor.read_address(self.cursor.position());
@@ -105,6 +112,7 @@ impl<T, S> Cursorlike for Familiar<T, S> where T : Tapelike<Item = Alteration>, 
     }
 
     fn rewind(&mut self) {
+        tracing::trace!("rewinding");
         // NOTE: doing this backwards like this makes this an actual inverse of advance, `advance +
         // rewind` should generally be a noop -- but since state updates might not adhere to that,
         // we can't assume.

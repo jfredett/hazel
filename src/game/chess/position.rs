@@ -2,6 +2,8 @@ use std::sync::Arc;
 use std::{fmt::Debug, sync::RwLock};
 
 use crate::types::tape::cursorlike::Cursorlike;
+use crate::types::tape::familiar::state::position_zobrist::PositionZobrist;
+use crate::types::tape::tapelike::Tapelike;
 use crate::{alter, query};
 use crate::constants::move_tables::{KNIGHT_MOVES, KING_ATTACKS};
 
@@ -168,10 +170,12 @@ impl Position {
         ret
     }
 
-    pub fn zobrist(&self) -> Zobrist {
+    pub fn zobrist(&self) -> PositionZobrist {
         // TODO: this is not ideal, it should cache this somewhere, probably as a quintessence.
-        let mut fam : Familiar<RwLock<Tape>, Zobrist> = self.conjure();
-        fam.sync_to_writehead();
+        let mut fam : Familiar<RwLock<Tape>, PositionZobrist> = self.conjure();
+        tracing::debug!("fam-before-sync: {:?}", fam.get());
+        fam.seek(self.tape.read().unwrap().writehead());
+        tracing::debug!("fam-after-sync: {:?}", fam.get());
         *fam.get()
     }
 
@@ -206,13 +210,13 @@ impl Position {
         // Tape read-locked, this syncs the head to the 'end of the tape', which should match the 
         // current write head position, which is presently at the end of the turn we just wrote.
         tracing::trace!("Caching");
-        let position_hash: Zobrist = self.zobrist();
+        let position_hash: Zobrist = self.zobrist().position;
 
         // TODO: Ideally this is lazy, so we only update the board as we roll the associated
         // boardfamiliar forward.
         match self.atm.get(position_hash) {
             Some(cached_inner) => {
-                tracing::trace!("Cache hit");
+                tracing::trace!("Cache hit {:?}", position_hash);
                 // Atomic, TODO: Handle Result
                 _ = self.inner.replace(cached_inner.clone());
             },
@@ -264,7 +268,7 @@ impl Position {
 
         // FIXME: this causes a sync to the writehead, I don't love the spook, but I think it should
         // work for now
-        let unmove_hash : Zobrist = self.zobrist();
+        let unmove_hash : Zobrist = self.zobrist().position;
 
         // TODO: This is an exact copy of the above, mod the #inverse calls on `alter`. definitely
         // could be extracted to something like `#withdraw_or_deposit(hash, &alters)`, unmake would
@@ -275,7 +279,7 @@ impl Position {
         // been cooking.
         match self.atm.get(unmove_hash) {
             Some(cached_inner) => {
-                tracing::trace!("Unmake cache hit");
+                tracing::trace!("Unmake cache hit {:?}", unmove_hash);
                 // Atomic, TODO: Handle Result
                 _ = self.inner.replace(cached_inner.clone());
             },

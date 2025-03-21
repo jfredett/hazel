@@ -62,9 +62,9 @@ mod tests {
         let p = Position::new(BEN::start_position());
 
         assert_eq!(cache.raw_storage().values().len(), 0);
-        cache.get(p.zobrist());
+        cache.get(p.zobrist().position);
         assert_eq!(cache.raw_storage().values().len(), 0);
-        cache.set(p.zobrist(), p);
+        cache.set(p.zobrist().position, p);
         assert_eq!(cache.raw_storage().values().len(), 1);
     }
 }

@@ -129,6 +129,7 @@ impl Familiar<Tape, TapeReaderState> {
 
 impl<T> Cursorlike for Familiar<T, TapeReaderState> where T : Tapelike<Item = Alteration> {
     fn advance(&mut self) {
+        tracing::trace!("wrong-advance");
         self.cursor.advance();
         self.state.update(&self.cursor);
     }
@@ -150,6 +151,7 @@ impl<T> Cursorlike for Familiar<T, TapeReaderState> where T : Tapelike<Item = Al
     }
 
     fn rewind(&mut self) {
+        tracing::trace!("wrong-rewind");
         self.state.update(&self.cursor);
         self.cursor.rewind();
     }
