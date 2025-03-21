@@ -343,7 +343,6 @@ mod compilation {
                 Alteration::place(D4, Occupant::white_pawn()),
 
                 Alteration::inform(&meta_after_move),
-            Alteration::End,
         ];
 
         let mov = Move::new(D2, D4, MoveType::DOUBLE_PAWN);

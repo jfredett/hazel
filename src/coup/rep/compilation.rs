@@ -29,7 +29,6 @@ impl Move {
         //    Inform(Check) // only if the move is a check
         //    Inform(HalfMoveReset)
         //    // etc
-        // End
         //
         // When a turn is processed, the position hash for the completed turn is when the familiar
         // is on the `End` token. The metadata in the `Assert` section must be sufficient to
@@ -66,8 +65,6 @@ impl Move {
         // ret.push(Alteration::Inform(MetadataAssertion::MoveType(self.move_metadata())));
         // ret.push(Alteration::Inform(MetadataAssertion::SideToMove(new_metadata.side_to_move)));
 
-        // End
-        ret.push(Alteration::End);
         ret
     }
 

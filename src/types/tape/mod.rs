@@ -303,7 +303,6 @@ mod tests {
                 Alteration::place(D4, Occupant::white_pawn()),
 
                 Alteration::inform(&meta_after_move),
-            Alteration::End,
         ]);
 
         raw_tape
@@ -337,7 +336,6 @@ mod tests {
                 Alteration::place(D4, Occupant::white_pawn()),
 
                 Alteration::inform(&meta_after_move),
-            Alteration::End,
         ];
 
         for alt in alts {

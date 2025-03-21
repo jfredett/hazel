@@ -12,7 +12,7 @@ impl Alter for PositionZobrist {
         self.current.alter_mut(alter);
         tracing::debug!("self.current-after {:?}", self.current);
 
-        if matches!(alter, Alteration::End) {
+        if matches!(alter, Alteration::Turn) {
             self.position = self.current;
         }
         self

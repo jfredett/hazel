@@ -89,7 +89,7 @@ impl PartialEq for Position {
         // error rate, but this should be sufficient for the short term...
         //
         // He said, awaiting the inevitable point where this becomes a multi-day bughunt.
-        self.zobrist() == other.zobrist()
+        self.zobrist().position == other.zobrist().position
     }
 }
 
@@ -262,6 +262,7 @@ impl Position {
                 if matches!(alter, Alteration::Turn) {
                     break;
                 }
+
             }
         }
         tracing::trace!("Tape unlocked from write");
@@ -654,7 +655,7 @@ mod tests {
             p.make(m);
             p.unmake();
 
-            assert_eq!(z_prior, p.zobrist());
+            assert_eq!(z_prior.position, p.zobrist().position);
         }
 
         #[test]

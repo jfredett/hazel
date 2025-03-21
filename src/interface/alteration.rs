@@ -64,7 +64,6 @@ pub enum Alteration {
     #[default] Noop,
     Lit(u8),
     Turn,
-    End,
     Clear,
 }
 
@@ -108,7 +107,6 @@ impl Debug for Alteration {
             Self::Lit(byte) => write!(f, "Lit({:x})", byte),
             Self::Turn => write!(f, "Turn"),
             Self::Noop => write!(f, "Noop"),
-            Self::End => write!(f, "End"),
         }
     }
 }
