@@ -7,6 +7,7 @@ pub mod game_section;
 // other widgets are more general use oriented.
 pub mod query;
 pub mod placeholder;
+pub mod tapereader;
 
 pub mod input;
 pub mod output;

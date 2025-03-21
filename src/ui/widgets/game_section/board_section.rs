@@ -39,7 +39,7 @@ impl Widget for &BoardSection<'_> {
         self.board_widget.render(chunks[0], buf);
 
         let query_widget = Placeholder::of_size(chunks[1].width, chunks[1].height).borders(Borders::NONE);
-        query_widget.render(chunks[1], buf);
+        Widget::render(&query_widget, chunks[1], buf);
     }
 }
 

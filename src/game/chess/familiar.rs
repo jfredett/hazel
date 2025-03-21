@@ -2,12 +2,14 @@
 use crate::{coup::rep::Move, interface::play::Play, notation::ben::BEN, types::{log::cursor::Cursor, movesheet::MoveSheet}};
 use super::{action::Action, delim::Delim};
 
+// TODO: port this to the new system.
 #[derive(Debug, Clone)]
 pub struct Familiar<'a> {
     // TODO: Temporarily fixing the types
     cursor: Cursor<'a, Action<Move, BEN>>,
     movesheets: Vec<MoveSheet>,
 }
+
 
 impl<'a> Familiar<'a> {
     pub fn new(cursor: Cursor<'a, Action<Move, BEN>>) -> Self {
@@ -134,7 +136,7 @@ mod tests {
 
     use super::*;
 
-    pub(in self) fn example_game() -> Variation {
+    fn example_game() -> Variation {
         let mut log = Variation::default();
         log.new_game()
             .make(Move::new(D2, D4, MoveType::DOUBLE_PAWN))

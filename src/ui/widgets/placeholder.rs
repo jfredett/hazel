@@ -1,4 +1,4 @@
-use ratatui::widgets::{Block, Borders, Paragraph, Widget};
+use ratatui::widgets::{Block, Borders, Paragraph, StatefulWidget, Widget};
 use ratatui::layout::{Alignment, Rect};
 use ratatui::style::Style;
 use ratatui::widgets::Wrap;
@@ -59,6 +59,14 @@ impl Placeholder {
     }
 }
 
+impl StatefulWidget for &Placeholder {
+    type State = ();
+
+    fn render(self, area: Rect, buf: &mut Buffer, _state: &mut Self::State) {
+        Widget::render(self, area, buf);
+    }
+}
+
 impl Widget for &Placeholder {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let widget = self.calculate_text().block(
@@ -66,7 +74,8 @@ impl Widget for &Placeholder {
                 .borders(self.borders)
         ).alignment(Alignment::Center);
         let new_rect = Rect::new(area.x, area.y, self.width, self.height);
-        widget.render(new_rect, buf);
+
+        Widget::render(&widget, new_rect, buf);
     }
 }
 
@@ -93,8 +102,7 @@ mod tests {
             let mut buffer = Buffer::empty(rect);
             buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
-            let placeholder = &mut Placeholder::of_size(13, 3);
-            placeholder.render(buffer.area, &mut buffer);
+            Widget::render(&Placeholder::of_size(13, 3), buffer.area, &mut buffer);
 
             let mut expected = Buffer::with_lines(vec![
                 "┌───────────┐",
@@ -112,8 +120,7 @@ mod tests {
             let mut buffer = Buffer::empty(rect);
             buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
-            let placeholder = &mut Placeholder::of_size(20, 5);
-            placeholder.render(buffer.area, &mut buffer);
+            Widget::render(&Placeholder::of_size(20, 5), buffer.area, &mut buffer);
 
             let mut expected = Buffer::with_lines(vec![
                 "┌──────────────────┐",
@@ -133,8 +140,8 @@ mod tests {
             let mut buffer = Buffer::empty(rect);
             buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
-            let placeholder = &mut Placeholder::of_size(19, 6);
-            placeholder.render(buffer.area, &mut buffer);
+            let placeholder = Placeholder::of_size(19, 6);
+            Widget::render(&placeholder, buffer.area, &mut buffer);
 
             let mut expected = Buffer::with_lines(vec![
                 "┌─────────────────┐",
@@ -155,8 +162,8 @@ mod tests {
             let mut buffer = Buffer::empty(rect);
             buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
-            let placeholder = &mut Placeholder::of_size(20, 6);
-            placeholder.render(buffer.area, &mut buffer);
+            let placeholder = Placeholder::of_size(20, 6);
+            Widget::render(&placeholder, buffer.area, &mut buffer);
 
             let mut expected = Buffer::with_lines(vec![
                 "┌──────────────────┐",
@@ -177,8 +184,8 @@ mod tests {
             let mut buffer = Buffer::empty(rect);
             buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
-            let placeholder = &mut Placeholder::of_size(19, 5);
-            placeholder.render(buffer.area, &mut buffer);
+            let placeholder = Placeholder::of_size(19, 5);
+            Widget::render(&placeholder, buffer.area, &mut buffer);
 
             let mut expected = Buffer::with_lines(vec![
                 "┌─────────────────┐",
@@ -198,8 +205,8 @@ mod tests {
             let mut buffer = Buffer::empty(rect);
             buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
-            let placeholder = &mut Placeholder::of_size(10, 3);
-            placeholder.render(buffer.area, &mut buffer);
+            let placeholder = Placeholder::of_size(10, 3);
+            Widget::render(&placeholder, buffer.area, &mut buffer);
 
             let mut expected = Buffer::with_lines(vec![
                 "┌────────┐",
@@ -217,8 +224,8 @@ mod tests {
             let mut buffer = Buffer::empty(rect);
             buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
-            let placeholder = &mut Placeholder::of_size(10, 4);
-            placeholder.render(buffer.area, &mut buffer);
+            let placeholder = Placeholder::of_size(10, 4);
+            Widget::render(&placeholder, buffer.area, &mut buffer);
 
             let mut expected = Buffer::with_lines(vec![
                 "┌────────┐",
@@ -237,8 +244,8 @@ mod tests {
             let mut buffer = Buffer::empty(rect);
             buffer.set_style(rect, Style::default().fg(Color::White).bg(Color::Black));
 
-            let placeholder = &mut Placeholder::of_size(11, 3);
-            placeholder.render(buffer.area, &mut buffer);
+            let placeholder = Placeholder::of_size(11, 3);
+            Widget::render(&placeholder, buffer.area, &mut buffer);
 
             let mut expected = Buffer::with_lines(vec![
                 "┌─────────┐",

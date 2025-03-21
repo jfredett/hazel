@@ -3,7 +3,7 @@ use std::ops::Not;
 
 use crate::types::Bitboard;
 use crate::types::Direction;
-use crate::constants::{RANK_1, RANK_2, RANK_7, RANK_8};
+use crate::constants::{RANK_2, RANK_7};
 
 use serde::{Deserialize, Serialize};
 
@@ -54,6 +54,16 @@ impl Color {
     /// a mask for the promotion rank
     pub fn promotion_mask(self) -> Bitboard {
         (!self).pawn_mask()
+    }
+
+    /// the rank where the given color can _capture a piece_ via the EP rule (e.g., rank 6 for
+    /// White and rank 3 for black).
+    pub fn en_passant_rank(self) -> usize {
+        match self {
+            // note the off-by-ones, rank == 5 -> 6th rank.
+            Color::WHITE => 5,
+            Color::BLACK => 2,
+        }
     }
 
     pub fn pawn_rank(self) -> usize {

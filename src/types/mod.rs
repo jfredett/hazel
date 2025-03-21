@@ -15,11 +15,17 @@ pub mod direction;
 
 // A freely moving cursor-based log object for recording and replaying actions.
 pub mod log;
+// Similar to a log, but no transactions, finite, relies on Zobrist.
+pub mod tape;
+
 // A type for storing a stack of moves while allowing for variations.
 pub mod movesheet;
 
 // An Actor type, but with a fun name because no one can stop me.
 pub mod witch;
+
+// Zobrist Tables and types
+pub mod zobrist;
 
 pub use bitboard::Bitboard;
 pub use pextboard::PEXTBoard;

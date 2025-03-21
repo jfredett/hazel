@@ -37,7 +37,7 @@ impl Widget for &InfoSection {
         let chunks = LAYOUT.split(area);
 
         let ticker_widget = Placeholder::of_size(chunks[0].width, chunks[0].height).borders(Borders::NONE); // &mut info_section::InfoSection::new();
-        ticker_widget.render(chunks[0], buf);//, state);
+        Widget::render(&ticker_widget, chunks[0], buf);//, state);
 
         self.pgn.render(chunks[1], buf);
     }

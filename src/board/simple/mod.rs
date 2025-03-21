@@ -3,7 +3,6 @@ use crate::types::Occupant;
 use crate::notation::*;
 
 use ben::BEN;
-use tracing::instrument;
 
 pub mod display_debug;
 
@@ -29,7 +28,7 @@ impl<Q> Iterator for OccupantIterator<Q> where Q : Query {
     type Item = (Square, Occupant);
     fn next(&mut self) -> Option<Self::Item> {
         loop {
-            let Some(sq) = self.idx.next() else { return None; };
+            let sq = self.idx.next()?;
             if self.source.is_occupied(sq) { return Some((sq, self.source.get(sq))); }
         }
     }
@@ -45,7 +44,7 @@ impl PieceBoard {
 
     pub fn by_occupant(&self) -> OccupantIterator<PieceBoard> {
         OccupantIterator {
-            source: self.clone(),
+            source: *self,
             idx: Square::by_rank_and_file()
         }
 
@@ -78,14 +77,12 @@ impl Query for PieceBoard {
 }
 
 impl Alter for PieceBoard {
-    #[instrument]
     fn alter(&self, alter: Alteration) -> PieceBoard {
         let mut board = *self;
         board.alter_mut(alter);
         board
     }
 
-    #[instrument]
     fn alter_mut(&mut self, alter: Alteration) -> &mut Self {
         match alter {
             Alteration::Place { square, occupant } => {

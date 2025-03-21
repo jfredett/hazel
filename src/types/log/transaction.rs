@@ -45,7 +45,7 @@ mod tests {
 
         #[test]
         fn commit_records_changes() {
-            let mut log = Log::default();
+            let mut log : Log<usize> = Log::default();
             log.record(1).record(2);
             assert_eq!(log.log(), vec![]);
             log.commit();
@@ -54,7 +54,7 @@ mod tests {
 
         #[test]
         fn multiple_txns() {
-            let mut log = Log::default();
+            let mut log : Log<usize> = Log::default();
             log.record(1).record(2);
             log.commit();
             log.record(3).record(4);
@@ -64,7 +64,7 @@ mod tests {
 
         #[test]
         fn nested_txns() {
-            let mut log = Log::default();
+            let mut log : Log<usize> = Log::default();
 
             assert_eq!(log.log(), vec![]);
 
@@ -78,7 +78,7 @@ mod tests {
             assert_eq!(log.txn_state(), vec![3]);
 
             log.begin()
-                .record(4);
+               .record(4);
 
             assert_eq!(log.txn_state(), vec![4]);
 

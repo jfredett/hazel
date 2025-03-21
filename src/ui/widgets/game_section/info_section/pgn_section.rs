@@ -74,7 +74,7 @@ impl Widget for &PGNSection {
         self.render_variation(chunks[0], buf);
 
         let query = Placeholder::of_size(chunks[1].width, chunks[1].height);
-        query.render(chunks[1], buf);
+        Widget::render(&query, chunks[1], buf);
     }
 }
 

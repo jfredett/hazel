@@ -1,4 +1,4 @@
-use crate::{coup::rep::{Move, MoveType}, game::position::Position, notation::Square, types::{Bitboard, Direction}};
+use crate::{coup::rep::{Move, MoveType}, game::position::Position};
 
 pub fn generate_moves(position: &Position) -> impl Iterator<Item = Move> {
     // assumes we aren't in check, captures assume piece is not protected.
@@ -21,8 +21,9 @@ mod tests {
     use super::*;
 
     #[test]
+    #[tracing_test::traced_test]
     fn test_position() {
-        let position = Position::new(BEN::new("3k1b2/8/8/2p1P3/3K4/2p1P3/8/8 w - - 0 1"), vec![]);
+        let position = Position::new(BEN::new("3k1b2/8/8/2p1P3/3K4/2p1P3/8/8 w - - 0 1"));
         let moves = generate_moves(&position);
         similar_asserts::assert_eq!(moves.collect::<Vec<Move>>(), vec![
             Move::new(D4, C3, MoveType::CAPTURE),

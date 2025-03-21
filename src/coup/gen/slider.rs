@@ -1,5 +1,5 @@
 
-use crate::{coup::rep::{Move, MoveType}, game::position::Position, notation::Square, types::{pextboard, Bitboard, Direction, Occupant, Piece}};
+use crate::{coup::rep::{Move, MoveType}, game::position::Position, types::{pextboard, Occupant, Piece}};
 
 pub mod bishop {
     use super::*;
@@ -23,7 +23,7 @@ pub mod queen {
 }
 
 fn generate_slider_moves(position: &Position, piece: Piece) -> impl Iterator<Item = Move> {
-    let pieces = position.find(|(sq, occ)| *occ == Occupant::Occupied(piece, position.hero()));
+    let pieces = position.find(|(_sq, occ)| *occ == Occupant::Occupied(piece, position.hero()));
     let blockers = position.all_blockers();
     let enemies = position.enemies();
     let friendlies = position.friendlies();
@@ -46,7 +46,7 @@ mod tests {
 
     #[test]
     fn bishop_test_position() {
-        let position = Position::new(BEN::new("8/8/1p3p2/8/3B4/2P1P3/8/8 w - - 0 1"), vec![]);
+        let position = Position::new(BEN::new("8/8/1p3p2/8/3B4/2P1P3/8/8 w - - 0 1"));
         let moves = bishop::generate_moves(&position);
         let mut expected = vec![
             Move::new(D4, C5, MoveType::QUIET),
@@ -61,7 +61,7 @@ mod tests {
 
     #[test]
     fn queen_test_position() {
-        let position = Position::new(BEN::new("8/3p4/1p3p2/8/2PQP3/2PPP3/8/8 w - - 0 1"), vec![]);
+        let position = Position::new(BEN::new("8/3p4/1p3p2/8/2PQP3/2PPP3/8/8 w - - 0 1"));
         let moves = queen::generate_moves(&position);
         let mut expected =  vec![
             Move::new(D4, C5, MoveType::QUIET),
@@ -79,7 +79,7 @@ mod tests {
 
     #[test]
     fn rook_test_position() {
-        let position = Position::new(BEN::new("8/8/3p4/8/3R1p2/3P4/8/3P4 w - - 0 1"), vec![]);
+        let position = Position::new(BEN::new("8/8/3p4/8/3R1p2/3P4/8/3P4 w - - 0 1"));
         let moves = rook::generate_moves(&position);
         let mut expected = vec![
             Move::new(D4, C4, MoveType::QUIET),
