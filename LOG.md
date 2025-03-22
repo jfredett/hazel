@@ -2459,3 +2459,58 @@ to their 'compare to a text screenshot' approach, are pretty brittle when I star
 I'm back to working through some of the failed tests, going to hopefully get it back down to just perft failures before
 continuing with the UI debugging, ideally to minimize the number of moving bugs when I'm trying to squash the zobrist
 caching part of movegen, which is what this whole thing was supposed to be about in the first place.
+
+# 22-MAR-2025
+
+## 1227 - atm
+
+Setting up the input section, and I'm finding the layouts result in the Input-line is off the end of the screen, I'm not
+quite sure why as I'm using percentages for almost everything, might just be something with padding? not sure.
+
+Getting input wired up probably also comes with getting better event handling and widget-selection, which leads me
+further from the point of this branch, but I suppose I'm just committed to the UI stuff now. I'd rather not merge with
+broken tests.
+
+I did put a little work into the perft stuff, but I'm getting a bug where it unwinds too much and ends up running off
+the end of the tape. I think fixing that should get perft working back up to perft3.
+
+I have _no_ idea how I'm going to get the `perft-in-the-ui` working, I think I'll have to build a specific message +
+handler that sends position updates back to the UI as it runs, then the UI can render it and the perft can continue,
+it'll be quite slow, but this isn't intended for performance, but debugging. Something like a:
+
+```rust
+
+struct Perft {
+    initial: BEN,
+    depth: usize,
+    reply_to: TxChannel
+}
+
+impl Perft {
+    pub fn new(initial: impl Into<BEN>) -> (Box<Self>, RxChannel) {
+        // returns both the message to send and the callback channel
+        // UI then hands the callback channel to the UI widget, which 
+        // waits asynchronously for a message and updates when it recieves one.
+    }
+}
+
+```
+
+I'm a little concerned that this approach is going to rapidly devolve into a "Simply rebuild the entire UI to be fully
+async in all parts from the get-go", at which point I may abandon this till I can at least get the tests passing again
+and then take a better stab at refactoring. Before I do that level of work on the UI I want to at least (in no
+particular order yet):
+
+1. Split up the crates
+2. move to rs-test
+3. Unify the variation stuff under the new `familiar` system and remove the old implementation.
+
+Once that's done, I can move to a fully asynchronous UI which 'observes' the engine state over (ideally) a channel that
+is otherwise ignorant of the internals, this *should* allow the UI to work _as I upgrade the engine code_ via something
+like a hot-reload.
+
+My intent is to first support all of UCI, but quickly this will mean a custom protocol for communicating internal engine
+state to the UI asynchronously. Ultimately I want the UI to basically hold a finite buffer of updates and try to just
+'keep up' with the engine, discarding states it can't get too as it does so.
+
+Input will be collected, categorized, and then notifications sent to various subcomponents of the UI.

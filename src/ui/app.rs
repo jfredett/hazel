@@ -1,11 +1,11 @@
-use std::{collections::HashMap, fmt::Debug};
+use std::{collections::HashMap, fmt::Debug, sync::Mutex};
 
-use ratatui::{crossterm::event::{Event, KeyCode}, layout::{Constraint, Layout}, style::{Color, Style}, widgets::{StatefulWidget, Widget}, Frame};
+use ratatui::{crossterm::event::{Event, KeyCode}, layout::{Constraint, Layout}, style::{Color, Style}, widgets::{Block, Borders, StatefulWidget, Widget}, Frame};
 use tui_logger::{LevelFilter, TuiLoggerLevelOutput, TuiLoggerSmartWidget, TuiWidgetState};
 
 use crate::{board::PieceBoard, constants::START_POSITION_FEN, engine::{driver::{GetPosition, HazelResponse, WitchHazel}, uci::UCIMessage}, notation::ben::BEN, types::tape::{cursorlike::Cursorlike, familiar::{self, state::tape_reader_state::TapeReaderState, Quintessence}}, ui::widgets::tapereader::*};
 
-use super::widgets::{board::Board, fen::FEN};
+use super::widgets::{board::Board, fen::FEN, input::Input, output::Output};
 
 enum Mode {
     Insert,
@@ -22,6 +22,7 @@ pub struct UI<'a> {
     // State
     tapereader_state: Option<Quintessence<TapeReaderState>>,
     current_ben: Option<Quintessence<BEN>>,
+    current_inputline: Mutex<String>
 }
 
 impl Debug for UI<'_> {
@@ -64,7 +65,8 @@ impl<'a> UI<'a> {
             tapereader: TapeReaderWidget::default(),
             tuiloggerstate: TuiWidgetState::new().set_default_display_level(LevelFilter::Trace),
             tapereader_state: None,
-            current_ben: None
+            current_ben: None,
+            current_inputline: Mutex::new("".to_string())
         }
     }
 
@@ -127,11 +129,13 @@ impl<'a> UI<'a> {
         }
     }
 
-    // pub fn input_widget(&self) -> Block {
-    //     Block::default()
-    //         .title("Input")
-    //         .borders(Borders::ALL)
-    // }
+    pub fn output_widget(&self) -> Output {
+        Output::default()
+    }
+
+    pub fn input_widget(&self) -> Input {
+        Input::default()
+    }
 
     pub async fn update(&mut self) {
         // If we have an active state, we want to update it, if we don't, we want to check to see
@@ -192,6 +196,7 @@ impl<'a> UI<'a> {
         let chunks = PRIMARY_LAYOUT.split(frame.area());
         let upper_section = chunks[0];
         let log_section = chunks[1];
+        let io_section = chunks[2];
 
         let chunks = UPPER_LAYOUT.split(upper_section);
         let board_section = chunks[0];
@@ -201,6 +206,10 @@ impl<'a> UI<'a> {
         let _board_header = chunks[0];
         let board_field = chunks[1];
         let board_footer = chunks[2];
+
+        let chunks = IO_SECTION_LAYOUT.split(io_section);
+        let output_section = chunks[0];
+        let input_section = chunks[1];
 
         let tlw = self.tui_logger_widget();
         let mut state = match &self.tapereader_state {
@@ -223,6 +232,11 @@ impl<'a> UI<'a> {
         Widget::render(&board, board_field, frame.buffer_mut());
         Widget::render(&fen, board_footer, frame.buffer_mut());
         Widget::render(tlw, log_section, frame.buffer_mut());
+        {
+            // this feels wrong
+            let mut current_line = self.current_inputline.lock().unwrap();
+            StatefulWidget::render(&self.input_widget(), input_section, frame.buffer_mut(), &mut current_line);
+        }
     }
 }
 
@@ -230,7 +244,8 @@ lazy_static! {
     static ref PRIMARY_LAYOUT : Layout = Layout::default()
         .direction(ratatui::layout::Direction::Vertical)
         .constraints([
-                Constraint::Length(50),
+                Constraint::Percentage(50),
+                Constraint::Percentage(30),
                 Constraint::Min(1),
             ].as_ref());
 
@@ -247,6 +262,13 @@ lazy_static! {
             Constraint::Percentage(20),
             Constraint::Percentage(60),
             Constraint::Percentage(20),
+        ].as_ref());
+
+    static ref IO_SECTION_LAYOUT : Layout = Layout::default()
+        .direction(ratatui::layout::Direction::Vertical)
+        .constraints([
+            Constraint::Min(1),
+            Constraint::Length(1)
         ].as_ref());
 }
 

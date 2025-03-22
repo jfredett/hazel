@@ -13,7 +13,7 @@ impl Input {
 
     pub fn pop(&mut self) {
         self.content.pop();
-    } 
+    }
 
     pub fn content(&self) -> String {
         self.content.clone()
