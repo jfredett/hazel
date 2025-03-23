@@ -27,7 +27,7 @@ impl<T> Cursor<T> where T : Tapelike {
         let start = if before > self.position { 0 } else { self.position - before };
         let end = if self.position + after > self.tape.length() { self.tape.length() } else { self.position + after };
 
-        self.read_range(start..end)
+        self.read_range(start, end)
     }
 
     pub fn on_tapelike(tapelike: Arc<T>) -> Self {

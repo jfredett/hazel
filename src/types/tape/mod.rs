@@ -65,11 +65,9 @@ impl Tapelike for RwLock<Tape> {
     // sharing chunks of tape, and 2-phase updating them, etc. Tapes can then be held immutably
     // there, and when updates are made they are CoW, and so references will always be to some
     // static memory that can be shared freely.
-    fn read_range(&self, range: impl Into<Range<usize>>) -> dynamic_array::SmallArray<Self::Item> {
-        let r = range.into();
-        tracing::trace!(target="hazel::tapelike", "reading range {:?}", &r);
+    fn read_range(&self, start: usize, end: usize) -> dynamic_array::SmallArray<Self::Item> {
         let tape = self.read().unwrap();
-        tape.read_range(r)
+        tape.read_range(start, end)
     }
 
     fn write_address(&mut self, _address: usize, _data: &Self::Item) {
@@ -100,29 +98,23 @@ impl Tapelike for Tape {
         }
     }
 
-    fn read_range(&self, range: impl Into<Range<usize>>) -> dynamic_array::SmallArray<Self::Item> {
-        let r : Range<usize> = range.into();
-
+    fn read_range(&self, start: usize, end: usize) -> dynamic_array::SmallArray<Self::Item> {
         // (start..end), hwm, length
         //
         // Correct values:
         //
         // (min(start,hwm)..min(end,hwm))
-        let corrected_range_start = cmp::min(r.start, self.hwm);
-        let corrected_range_end = cmp::min(r.end, self.hwm) + 1;
-        let corrected_range = corrected_range_start..corrected_range_end;
-
-        tracing::debug!("Given Range: {:?}, Corrected Range: {:?}, HWM: {:#04X}", r, corrected_range, self.hwm);
-        // NOTE: This is closer to what I'd prefer, but it doesn't work through the RwLock impl.
-        // OwningRef::new(self).map(|e| e.data.get(corrected_range).unwrap())
+        let corrected_range_start = cmp::min(start, self.hwm);
+        let corrected_range_end = cmp::min(end, self.hwm);
+        let request_size = corrected_range_end - corrected_range_start + 1;
 
         // We have to do an additional check since we return a small-array, which is indexed by a
         // u8.
         let u8max : usize = u8::MAX.into();
-        let data = if corrected_range.len() > u8max {
-            self.data.get(corrected_range_start..(corrected_range_start + u8max)).unwrap()
+        let data = if request_size > u8max {
+            self.data.get(corrected_range_start..).unwrap()
         } else {
-            self.data.get(corrected_range).unwrap()
+            self.data.get(corrected_range_start..=corrected_range_end).unwrap()
         };
 
         // HACK: Gross.
@@ -418,8 +410,7 @@ mod tests {
         ];
         tape.write_all(&alterations);
 
-        let range = 0..2;
-        assert_eq!(*tape.read_range(range), alterations);
+        assert_eq!(*tape.read_range(0, 1), alterations);
     }
 
     #[test]
@@ -440,8 +431,7 @@ mod tests {
         ];
         tape.write_range(0, &alterations);
 
-        let range = 0..2;
-        assert_eq!(*tape.read_range(range), alterations);
+        assert_eq!(*tape.read_range(0, 1), alterations);
     }
 
     #[test]
