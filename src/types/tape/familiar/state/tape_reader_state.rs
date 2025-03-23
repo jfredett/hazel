@@ -180,27 +180,27 @@ mod test {
             tape_length: 10*DEFAULT_TAPE_READER_LENGTH,
             length: DEFAULT_TAPE_READER_LENGTH,
         };
-        assert_eq!(trs.page_range(), (0..DEFAULT_TAPE_READER_LENGTH).into());
+        assert_eq!(trs.page_range(), (0..(DEFAULT_TAPE_READER_LENGTH - 1)).into());
         assert_eq!(trs.offset(), 0);
         assert_eq!(trs.position_in_page(), 0);
         assert_eq!(trs.page(), 0);
         trs.position = 1;
-        assert_eq!(trs.page_range(), (0..DEFAULT_TAPE_READER_LENGTH).into());
+        assert_eq!(trs.page_range(), (0..(DEFAULT_TAPE_READER_LENGTH - 1)).into());
         assert_eq!(trs.offset(), 0);
         assert_eq!(trs.position_in_page(), 1);
         assert_eq!(trs.page(), 0);
         trs.position = 0x1F;
-        assert_eq!(trs.page_range(), (0..DEFAULT_TAPE_READER_LENGTH).into());
+        assert_eq!(trs.page_range(), (0..(DEFAULT_TAPE_READER_LENGTH - 1)).into());
         assert_eq!(trs.offset(), 0);
         assert_eq!(trs.position_in_page(), 0x1F);
         assert_eq!(trs.page(), 0);
         trs.position = 0x20;
-        assert_eq!(trs.page_range(), (DEFAULT_TAPE_READER_LENGTH..(2 * DEFAULT_TAPE_READER_LENGTH)).into());
+        assert_eq!(trs.page_range(), (DEFAULT_TAPE_READER_LENGTH..(2 * DEFAULT_TAPE_READER_LENGTH - 1)).into());
         assert_eq!(trs.offset(), 0x20);
         assert_eq!(trs.page(), 1);
         assert_eq!(trs.position_in_page(), 0);
         trs.position = 0x21;
-        assert_eq!(trs.page_range(), (DEFAULT_TAPE_READER_LENGTH..(2 * DEFAULT_TAPE_READER_LENGTH)).into());
+        assert_eq!(trs.page_range(), (DEFAULT_TAPE_READER_LENGTH..(2 * DEFAULT_TAPE_READER_LENGTH - 1)).into());
         assert_eq!(trs.offset(), 0x20);
         assert_eq!(trs.page(), 1);
         assert_eq!(trs.position_in_page(), 1);
