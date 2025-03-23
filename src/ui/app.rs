@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fmt::Debug, sync::Mutex};
 
-use ratatui::{crossterm::event::{Event, KeyCode}, layout::{Constraint, Layout}, style::{Color, Style}, widgets::{Block, Borders, StatefulWidget, Widget}, Frame};
+use ratatui::{crossterm::event::{Event, KeyCode}, layout::{Constraint, Layout}, style::{Color, Style}, widgets::{StatefulWidget, Widget}, Frame};
 use tui_logger::{LevelFilter, TuiLoggerLevelOutput, TuiLoggerSmartWidget, TuiWidgetState};
 
 use crate::{board::PieceBoard, constants::START_POSITION_FEN, engine::{driver::{GetPosition, HazelResponse, WitchHazel}, uci::UCIMessage}, notation::ben::BEN, types::tape::{cursorlike::Cursorlike, familiar::{self, state::tape_reader_state::TapeReaderState, Quintessence}}, ui::widgets::tapereader::*};
@@ -232,6 +232,9 @@ impl<'a> UI<'a> {
         Widget::render(&board, board_field, frame.buffer_mut());
         Widget::render(&fen, board_footer, frame.buffer_mut());
         Widget::render(tlw, log_section, frame.buffer_mut());
+
+        // TODO: Maintain backlog
+        StatefulWidget::render(&self.output_widget(), output_section, frame.buffer_mut(), &mut vec![]);
         {
             // this feels wrong
             let mut current_line = self.current_inputline.lock().unwrap();
