@@ -2514,3 +2514,37 @@ state to the UI asynchronously. Ultimately I want the UI to basically hold a fin
 'keep up' with the engine, discarding states it can't get too as it does so.
 
 Input will be collected, categorized, and then notifications sent to various subcomponents of the UI.
+
+# 23-MAR-2025
+
+## 1317 - atm
+
+I don't think there's going to be an easy way to get the debug frontend set up until I overhaul the UI heavily to be
+more async-first. Bear with me while I talk it out.
+
+Basically, in order to handle the input, I need to include some sort of 'focus' mechanism so I can still scroll through
+the tape, but also enter values, etc. In order to do this I need to:
+
+1. Track which subsection is chosen, easy -- I already have a modal enum I can just add another enum to tell me which
+   part of the UI I've got selected.
+2. Harder, I need to then hand off event handling to that subsection
+3. Harder still, I need to do this without interrupting the engine.
+
+This is doable if I move to a message-passing/multi-process setup, because then I can just have each subcomponent have a
+channel for event handling, etc. Getting there is it's own little project entirely though.
+
+So on that front, I think I'm going to try to do something a little crazy.
+
+I should be able to fix unmake by basically saying, "Recacluate the boardstate from the beginning of the tape each
+time." I don't think I'm at any risk of overwriting the end of the tape, and I can always make it bigger in the short
+term, but I think that might get all the calculations right at the expense of not actually caching out efficiently?
+
+Eventually I want to store the running-hash alongside the alteration in the tape, and I think that model will work a bit
+better anyway, most of my widget code is written at the tape level and not the position level, as well, and I think that
+might be wrong.
+
+I think I'm going to spend a few cycles trying to fix the code as is, if I can get it right, then I should be able to
+get the tests passing and back to working on the engine, I can follow through with my above plan for either the UI or
+the more general plan I set up on 14-MAR.
+
+

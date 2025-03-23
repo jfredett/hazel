@@ -1,6 +1,5 @@
 ---
 source: src/ui/widgets/tapereader/mod.rs
-assertion_line: 125
 expression: actual
 ---
 Buffer {

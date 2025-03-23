@@ -32,6 +32,7 @@
                         cargo-llvm-cov
                         cargo-mutants
                         cargo-nextest
+                        cargo-insta
                         clang
                         cloc
                         gnuplot
