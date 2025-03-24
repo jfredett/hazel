@@ -40,6 +40,8 @@ pub struct Position {
 
 #[derive(Clone, Default, Debug, PartialEq)]
 pub struct InnerPosition {
+    // this should be a familiar, implementing `alter`, and then we store it's quintessence instead
+    // of the whole struct.
     pub board: PieceBoard,
     pub metadata: PositionMetadata,
 }
@@ -50,6 +52,16 @@ impl InnerPosition {
             board,
             metadata,
         }
+    }
+}
+
+impl Query for InnerPosition {
+    fn get(&self, square: impl Into<Square>) -> Occupant {
+        self.board.get(square)
+    }
+
+    fn try_metadata(&self) -> Option<PositionMetadata> {
+        Some(self.metadata)
     }
 }
 
@@ -132,6 +144,7 @@ impl From<Position> for BEN {
     }
 }
 
+
 impl Position {
     pub fn new(fen: impl Into<BEN>) -> Self {
         let fen = fen.into();
@@ -165,6 +178,7 @@ impl Position {
     pub fn with_moves(fen: impl Into<BEN>, moves: Vec<Move>) -> Self {
         let mut ret = Self::new(fen);
         for m in moves {
+            tracing::trace!("Making move: {:?}", m);
             ret.make(m);
         }
         ret
@@ -173,9 +187,7 @@ impl Position {
     pub fn zobrist(&self) -> PositionZobrist {
         // TODO: this is not ideal, it should cache this somewhere, probably as a quintessence.
         let mut fam : Familiar<RwLock<Tape>, PositionZobrist> = self.conjure();
-        tracing::debug!("fam-before-sync: {:?}", fam.get());
         fam.seek(self.tape.read().unwrap().writehead());
-        tracing::debug!("fam-after-sync: {:?}", fam.get());
         *fam.get()
     }
 
@@ -194,14 +206,12 @@ impl Position {
 
         {   // Incremental Update Calculation
             // Inner is read-locked
-            tracing::trace!("Compiling move");
             let inner = self.inner.read().unwrap();
             new_alterations = mov.new_compile(&inner.board, &inner.metadata)
         }
 
         {   // Write phase
             // Tape is write-locked
-            tracing::trace!("Writing move");
             let mut tape = self.tape.write().unwrap();
             tape.write_all(&new_alterations);
         }
@@ -216,23 +226,24 @@ impl Position {
         // boardfamiliar forward.
         match self.atm.get(position_hash) {
             Some(cached_inner) => {
-                tracing::trace!("Cache hit {:?}", position_hash);
                 // Atomic, TODO: Handle Result
+                tracing::trace!("Cache hit {:?} -> {:?}", position_hash, query::to_fen_position(&cached_inner));
                 _ = self.inner.replace(cached_inner.clone());
             },
             None => {
                 tracing::trace!("Cache miss");
                 // Inner is write-locked
                 let mut inner = self.inner.write().unwrap();
-                tracing::trace!("locked inner");
                 for alter in new_alterations {
+                    tracing::trace!("Applying: {:?}", alter);
                     inner.board.alter_mut(alter);
                     inner.metadata.alter_mut(alter);
                 }
                 tracing::trace!("updated inner");
 
+                tracing::trace!("Cache set {:?} -> {:?}", position_hash, query::to_fen_position(&inner.clone()));
+                tracing::trace!("Tape is: {:?}", self);
                 self.atm.set(position_hash, inner.clone());
-                tracing::trace!("set cache");
             },
         }
     }
@@ -712,27 +723,27 @@ mod tests {
             assert_eq!(position.metadata(), kiwi.metadata());
         }
 
-        // #[test] // I entered the moves wrong, I don't know where.
-        // fn d4() {
-        //     let start = BEN::start_position();
-        //     let target = BEN::new("rnbqk2r/pp2bppp/2p1pn2/3p4/3P1B2/3BPN2/PPP2PPP/RN1Q1RK1 b kq - 1 6");
-        //     let moves = vec![
-        //         Move::new(D2, D4, MoveType::DOUBLE_PAWN), Move::new(D7, D5, MoveType::DOUBLE_PAWN),
-        //         Move::new(C1, F4, MoveType::QUIET), Move::new(E7, E6, MoveType::QUIET),
-        //         Move::new(E2, E3, MoveType::QUIET), Move::new(G8, F6, MoveType::QUIET),
-        //         Move::new(G1, F3, MoveType::QUIET), Move::new(F8, E7, MoveType::QUIET),
-        //         Move::new(F1, D3, MoveType::QUIET), Move::new(C7, C6, MoveType::QUIET),
-        //         Move::short_castle(Color::WHITE)
-        //     ];
+        #[test] // I entered the moves wrong, I don't know where.
+        fn d4() {
+            let start = BEN::start_position();
+            let target = BEN::new("rnbqk2r/pp2bppp/2p1pn2/3p4/3P1B2/3BPN2/PPP2PPP/RN1Q1RK1 b kq - 1 6");
+            let moves = vec![
+                Move::new(D2, D4, MoveType::DOUBLE_PAWN), Move::new(D7, D5, MoveType::DOUBLE_PAWN),
+                Move::new(C1, F4, MoveType::QUIET), Move::new(E7, E6, MoveType::QUIET),
+                Move::new(E2, E3, MoveType::QUIET), Move::new(G8, F6, MoveType::QUIET),
+                Move::new(G1, F3, MoveType::QUIET), Move::new(F8, E7, MoveType::QUIET),
+                Move::new(F1, D3, MoveType::QUIET), Move::new(C7, C6, MoveType::QUIET),
+                Move::short_castle(Color::WHITE)
+            ];
 
-        //     let mut pb = PieceBoard::default();
-        //     pb.set_position(target);
+            let mut pb = PieceBoard::default();
+            pb.set_position(target);
 
-        //     let position = Position::with_moves(start, moves);
+            let position = Position::with_moves(start, moves);
 
-        //     assert_eq!(position.board(), pb);
-        //     assert_eq!(position.metadata(), start.metadata());
-        // }
+            assert_eq!(position.board(), pb);
+            assert_eq!(position.metadata(), target.metadata());
+        }
     }
 
     mod pawns {

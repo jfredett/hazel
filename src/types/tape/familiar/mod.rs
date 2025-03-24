@@ -1,4 +1,4 @@
-use std::{ops::{Deref, DerefMut}, sync::Arc};
+use std::sync::Arc;
 
 use crate::{Alter, Alteration};
 
@@ -104,7 +104,6 @@ impl<T, S> Cursorlike for Familiar<T, S> where T : Tapelike<Item = Alteration>, 
     }
 
     fn advance(&mut self) {
-        tracing::trace!("advancing"); // Familiar is not using the correct method, probably because I'm doing stupid type tricks.
         self.cursor.advance();
 
         let alter = self.cursor.read_address(self.cursor.position());

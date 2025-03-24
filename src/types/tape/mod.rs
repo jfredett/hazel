@@ -1,14 +1,12 @@
 use std::cmp;
 use std::fmt::Debug;
 use std::ops::Deref;
-use std::range::Range;
 use std::sync::{Arc, RwLock};
 
 use crate::{Alter, Alteration};
 use crate::types::zobrist::Zobrist;
 
 use cursorlike::Cursorlike;
-use familiar::state::position_zobrist::PositionZobrist;
 use familiar::Familiar;
 use tapelike::Tapelike;
 
@@ -91,7 +89,7 @@ impl Tapelike for Tape {
     }
 
     fn read_address(&self, address: usize) -> Self::Item {
-        if address > self.hwm {
+        if address >= self.hwm {
             Alteration::Noop
         } else {
             self.data[address]
@@ -122,8 +120,8 @@ impl Tapelike for Tape {
     }
 
     fn write_address(&mut self, address: usize, data: &Self::Item) {
-        if address > self.hwm {
-            self.hwm = address;
+        if address >= self.hwm {
+            self.hwm = address + 1;
         }
         self.data[address] = *data;
     }
@@ -342,8 +340,6 @@ mod tests {
         }
     }
 
-
-
     #[test]
     #[tracing_test::traced_test]
     fn hash_familiar_works() {
@@ -351,7 +347,10 @@ mod tests {
         let mut familiar : Familiar<Tape, Zobrist> = familiar::conjure(Arc::new(tape.clone()));
         familiar.seek(tape.writehead());
         assert_eq!(zobrist_for_startpos_and_d4(), *familiar.get());
+
+        tracing::debug!("BEFORE rewind {:?}", familiar.get());
         familiar.rewind_until(|a| matches!(a.cursor.read_address(a.position()), Alteration::Turn));
+        tracing::debug!("AFTER rewind {:?}", familiar.get());
         assert_eq!(zobrist_for_startpos(), *familiar.get());
     }
 
@@ -414,10 +413,13 @@ mod tests {
     }
 
     #[test]
+    #[tracing_test::traced_test]
     fn tape_can_write_addresses() {
         let mut tape = Tape::default();
         let alteration = Alteration::place(D4, Occupant::white_pawn());
+        tracing::trace!("{:?}", tape);
         tape.write_address(0, &alteration);
+        tracing::trace!("{:?}", tape);
 
         assert_eq!(tape.read_address(0), alteration);
     }

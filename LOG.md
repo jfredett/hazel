@@ -2547,4 +2547,201 @@ I think I'm going to spend a few cycles trying to fix the code as is, if I can g
 get the tests passing and back to working on the engine, I can follow through with my above plan for either the UI or
 the more general plan I set up on 14-MAR.
 
+# 24-MAR-2025
 
+## 1406 - atm
+
+I'm getting close to scrapping the current Position implementation. I think in order to move to the Familiar-based
+approach, it may be sensible to take that route, since it removes some of the internal hash calculation stuff and
+*should* result in a smoother experience. Right now I end up with a lot of little logical errors everywhere because
+multiple different codepaths are trying to keep track of a gamestate. I started extracting this (based on the
+`InnerPosition` struct), and I think this will make it easier to transfer state around (just send a quintessence and a
+reference-by-hash to the relevant tape.
+
+The ergonomics are such that I may try blanking the relevant tests, merging as-is, and then doing the split. I'm going
+to see how close I can get to working again, but I'm itching to do some sanding on this to get the rough spots down.
+
+## 1519 - atm
+
+There is definitely an errant cache hit, and naturally the easiest thing to do is to create a UI widget to see the
+internal state of the cache, but once again that returns me to the same problem of the UI side of things being pretty
+messy.
+
+
+```
+# In the `zobrist_is_same_for_transposition` test
+
+# ... before this, I construct a transposed version of the position. The final position is the same FEN, but the route
+# to get there is different
+
+2025-03-24T19:14:34.610727Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Making move: d2 (11) -> d4 (27) (QUIET) [0o026660]
+2025-03-24T19:14:34.610836Z DEBUG zobrist_is_same_for_transposition: hazel::game::chess::position: making: d2 (11) -> d4 (27) (QUIET) [0o026660]
+2025-03-24T19:14:34.610928Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Caching
+
+# Right here I get a cache hit but it's wrong, this has cached the position _after 1... d5_ as if it were the position
+# after 1. d4.
+2025-03-24T19:14:34.611145Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Cache hit Z|0x49B41FB4723326D3| -> "rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1"
+2025-03-24T19:14:34.611206Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Making move: g8 (62) -> f6 (45) (QUIET) [0o175320]
+2025-03-24T19:14:34.611249Z DEBUG zobrist_is_same_for_transposition: hazel::game::chess::position: making: g8 (62) -> f6 (45) (QUIET) [0o175320]
+2025-03-24T19:14:34.611292Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Caching
+2025-03-24T19:14:34.611397Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Cache hit Z|0x7AE74C1F751CA0F1| -> "rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq d6 0 2"
+2025-03-24T19:14:34.611442Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Making move: c1 (02) -> f4 (29) (QUIET) [0o004720]
+2025-03-24T19:14:34.611481Z DEBUG zobrist_is_same_for_transposition: hazel::game::chess::position: making: c1 (02) -> f4 (29) (QUIET) [0o004720]
+```
+
+Not yet sure why it's calculating the same hash for that position, I suspect it's probably some side-to-move malarky. I
+should be able to drop the `Turn` marker and instead use the fact that Assert/Inform wraps each move, that should mean I
+can do my STM on/off through those.
+
+I definitely could benefit from a Cache-browser widget for this, but I think getting into the Actor-y stuff seems most
+interesting right now anyway, so I'll probably pack this up and merge it if I can't fix this easily.
+
+## 1834 - atm
+
+I tweaked to remove the update on `Turn` and replaced it with full metadata updates on `Inform/Assert`, as I mentioned
+before. Doesn't solve the immediate problem but does resolve one of the hash_familiar tests.
+
+## 1953 - atm
+
+```
+2025-03-24T23:51:55.072518Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Making move: d2 (11) -> d4 (27) (QUIET) [0o026660]
+2025-03-24T23:51:55.072750Z DEBUG zobrist_is_same_for_transposition: hazel::game::chess::position: making: d2 (11) -> d4 (27) (QUIET) [0o026660]
+2025-03-24T23:51:55.072892Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Caching
+2025-03-24T23:51:55.073106Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Cache miss
+2025-03-24T23:51:55.073196Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Applying: Turn
+2025-03-24T23:51:55.073243Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Applying: Assert <w KQkq - 0 1>
+2025-03-24T23:51:55.073324Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position_metadata: My meta: w KQkq - 0 1, their meta: w KQkq - 0 1
+2025-03-24T23:51:55.073370Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Applying: Remove P @ d2
+2025-03-24T23:51:55.073430Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Applying: Place P @ d4
+2025-03-24T23:51:55.073472Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Applying: Inform <b KQkq d3 0 1>
+2025-03-24T23:51:55.073547Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: updated inner
+2025-03-24T23:51:55.073650Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Cache set Z|0x175357BEF46D03ED| -> "rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1"
+2025-03-24T23:51:55.073721Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Tape is: 0x42356324111111110000000000000000000000000000000077777777a89bc98a:w KQkq - 0 1
+PositionZobrist { current: Z|0xB2390A8808563F88|, position: Z|0x175357BEF46D03ED| }
+RwLock { data: 
+TAPE(head_hash: Z|0xB2390A8808563F88|, head: 0x27, hwm: 0x27)
+0x000000 | Clear | Z|0x0000000000000000|
+0x000001 | Place R @ a1 | Z|0xF8F96A2C09E4AF7E|
+0x000002 | Place N @ b1 | Z|0xEA58B07658FE5BEA|
+0x000003 | Place B @ c1 | Z|0x4929572CE96AC736|
+0x000004 | Place Q @ d1 | Z|0xD80F29D8B72E614D|
+0x000005 | Place K @ e1 | Z|0x407EFBE89EB626EA|
+0x000006 | Place B @ f1 | Z|0x82E8D8D87B2DF6B8|
+0x000007 | Place N @ g1 | Z|0x246E9B437DAE2756|
+0x000008 | Place R @ h1 | Z|0xDA8B17A14E032698|
+0x000009 | Place P @ a2 | Z|0xE13AC46130BCA406|
+0x00000A | Place P @ b2 | Z|0xC09F69247A322979|
+0x00000B | Place P @ c2 | Z|0x423E7386EE621B94|
+0x00000C | Place P @ d2 | Z|0x06F4427BB3BBFA4B|
+0x00000D | Place P @ e2 | Z|0xF7C662F78033FE6D|
+0x00000E | Place P @ f2 | Z|0x33FF1E11437B3BB5|
+0x00000F | Place P @ g2 | Z|0x4488A0019704DF24|
+0x000010 | Place P @ h2 | Z|0xF9569451BA88BDBE|
+0x000011 | Place p @ a7 | Z|0x560A2845D85A8564|
+0x000012 | Place p @ b7 | Z|0x174477C88AD15BCD|
+0x000013 | Place p @ c7 | Z|0x52788A0CCA3D5708|
+0x000014 | Place p @ d7 | Z|0x864346235FD05CED|
+0x000015 | Place p @ e7 | Z|0x44F8C4E79659D080|
+0x000016 | Place p @ f7 | Z|0x136DFFF91DDB872C|
+0x000017 | Place p @ g7 | Z|0x857658D3FD60A795|
+0x000018 | Place p @ h7 | Z|0x6E7BB19382E73A5A|
+0x000019 | Place r @ a8 | Z|0x18603AEEAAEC7478|
+0x00001A | Place n @ b8 | Z|0xA020A28F27D57B0A|
+0x00001B | Place b @ c8 | Z|0xBC72A17411A7839D|
+0x00001C | Place q @ d8 | Z|0x0FD353607E034BD1|
+0x00001D | Place k @ e8 | Z|0xF93226BEA0E8522A|
+0x00001E | Place b @ f8 | Z|0x5FD9F939C87C647E|
+0x00001F | Place n @ g8 | Z|0xB1484F2F5287B45C|
+0x000020 | Place r @ h8 | Z|0x816A59230F79B9AA|
+0x000021 | Inform <w KQkq - 0 1> | Z|0x175357BEF46D03ED|
+0x000022 | Turn | Z|0x175357BEF46D03ED|
+0x000023 | Assert <w KQkq - 0 1> | Z|0x816A59230F79B9AA|
+0x000024 | Remove P @ d2 | Z|0xC5A068DE52A05875|
+0x000025 | Place P @ d4 | Z|0x46776A46D78D19A7|
+0x000026 | Inform <b KQkq d3 0 1> | Z|0xB2390A8808563F88|
+END-OF-TAPE
+=================================
+, poisoned: false, .. }
+
+2025-03-24T23:51:55.074220Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Making move: d7 (51) -> d5 (35) (QUIET) [0o147060]
+2025-03-24T23:51:55.074287Z DEBUG zobrist_is_same_for_transposition: hazel::game::chess::position: making: d7 (51) -> d5 (35) (QUIET) [0o147060]
+2025-03-24T23:51:55.074354Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Caching
+2025-03-24T23:51:55.074452Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Cache miss
+2025-03-24T23:51:55.074500Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Applying: Turn
+2025-03-24T23:51:55.074530Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Applying: Assert <b KQkq d3 0 1>
+2025-03-24T23:51:55.074572Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position_metadata: My meta: b KQkq - 0 1, their meta: b KQkq d3 0 1
+2025-03-24T23:51:55.074642Z ERROR zobrist_is_same_for_transposition: hazel::game::chess::position_metadata: Incorrect metadata, Found: b KQkq d3 0 1, expected b KQkq - 0 1
+2025-03-24T23:51:55.074723Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Applying: Remove p @ d7
+2025-03-24T23:51:55.074760Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Applying: Place p @ d5
+2025-03-24T23:51:55.074793Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Applying: Inform <w KQkq d6 0 2>
+2025-03-24T23:51:55.074837Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: updated inner
+
+### Note the hash, 0xB239... this hash is associated with the move after 1... d5.
+2025-03-24T23:51:55.074911Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Cache set Z|0xB2390A8808563F88| -> "rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq d6 0 2" 
+
+
+2025-03-24T23:51:55.074985Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Tape is: 0x42356324111111110000000000000000000000000000000077777777a89bc98a:w KQkq - 0 1
+PositionZobrist { current: Z|0x75AB520EB7FCDCCB|, position: Z|0xB2390A8808563F88| }
+RwLock { data: 
+TAPE(head_hash: Z|0x75AB520EB7FCDCCB|, head: 0x2c, hwm: 0x2c)
+0x000000 | Clear | Z|0x0000000000000000|
+0x000001 | Place R @ a1 | Z|0xF8F96A2C09E4AF7E|
+0x000002 | Place N @ b1 | Z|0xEA58B07658FE5BEA|
+0x000003 | Place B @ c1 | Z|0x4929572CE96AC736|
+0x000004 | Place Q @ d1 | Z|0xD80F29D8B72E614D|
+0x000005 | Place K @ e1 | Z|0x407EFBE89EB626EA|
+0x000006 | Place B @ f1 | Z|0x82E8D8D87B2DF6B8|
+0x000007 | Place N @ g1 | Z|0x246E9B437DAE2756|
+0x000008 | Place R @ h1 | Z|0xDA8B17A14E032698|
+0x000009 | Place P @ a2 | Z|0xE13AC46130BCA406|
+0x00000A | Place P @ b2 | Z|0xC09F69247A322979|
+0x00000B | Place P @ c2 | Z|0x423E7386EE621B94|
+0x00000C | Place P @ d2 | Z|0x06F4427BB3BBFA4B|
+0x00000D | Place P @ e2 | Z|0xF7C662F78033FE6D|
+0x00000E | Place P @ f2 | Z|0x33FF1E11437B3BB5|
+0x00000F | Place P @ g2 | Z|0x4488A0019704DF24|
+0x000010 | Place P @ h2 | Z|0xF9569451BA88BDBE|
+0x000011 | Place p @ a7 | Z|0x560A2845D85A8564|
+0x000012 | Place p @ b7 | Z|0x174477C88AD15BCD|
+0x000013 | Place p @ c7 | Z|0x52788A0CCA3D5708|
+0x000014 | Place p @ d7 | Z|0x864346235FD05CED|
+0x000015 | Place p @ e7 | Z|0x44F8C4E79659D080|
+0x000016 | Place p @ f7 | Z|0x136DFFF91DDB872C|
+0x000017 | Place p @ g7 | Z|0x857658D3FD60A795|
+0x000018 | Place p @ h7 | Z|0x6E7BB19382E73A5A|
+0x000019 | Place r @ a8 | Z|0x18603AEEAAEC7478|
+0x00001A | Place n @ b8 | Z|0xA020A28F27D57B0A|
+0x00001B | Place b @ c8 | Z|0xBC72A17411A7839D|
+0x00001C | Place q @ d8 | Z|0x0FD353607E034BD1|
+0x00001D | Place k @ e8 | Z|0xF93226BEA0E8522A|
+0x00001E | Place b @ f8 | Z|0x5FD9F939C87C647E|
+0x00001F | Place n @ g8 | Z|0xB1484F2F5287B45C|
+0x000020 | Place r @ h8 | Z|0x816A59230F79B9AA|
+0x000021 | Inform <w KQkq - 0 1> | Z|0x175357BEF46D03ED|
+0x000022 | Turn | Z|0x175357BEF46D03ED|
+0x000023 | Assert <w KQkq - 0 1> | Z|0x816A59230F79B9AA|
+0x000024 | Remove P @ d2 | Z|0xC5A068DE52A05875|
+0x000025 | Place P @ d4 | Z|0x46776A46D78D19A7|
+0x000026 | Inform <b KQkq d3 0 1> | Z|0xB2390A8808563F88|
+
+### Note the hash here corresponds to the above, but is incorrect -- it should be further down, on 0x00002B
+
+0x000027 | Turn | Z|0xB2390A8808563F88|
+0x000028 | Assert <b KQkq d3 0 1> | Z|0x46776A46D78D19A7|
+0x000029 | Remove p @ d7 | Z|0x924CA66942601242|
+0x00002A | Place p @ d5 | Z|0xDF027ACAEE79DFDA|
+0x00002B | Inform <w KQkq d6 0 2> | Z|0x75AB520EB7FCDCCB|
+END-OF-TAPE
+=================================
+, poisoned: false, .. }
+```
+
+That wall of text shows the bug in real time. We can see that the Zobrist it's using is based on the start of the turn,
+not the end of it. So instead of caching the position associated _after applying_ the move, we associate the _updated
+position_ with the hash _prior to applying_ the move, which is an off-by-one, essentially. I could fix this by
+reintroducing the `end` command, or by instead ensuring I'm updating the position hash at the `Inform` step. In reverse,
+this will still work, since it will be examining `alter.inverse()`, which for `Assert` is `Inform`, and thus on the
+reverse it will still do the right thing cache-wise.
+
+I think I'm going to try to remove `Turn`, fewer tokens is better, since ultimately I want to encode this into a
+bytestream.

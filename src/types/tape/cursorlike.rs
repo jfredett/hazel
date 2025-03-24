@@ -9,38 +9,34 @@ pub trait Cursorlike {
     fn advance(&mut self);
     fn rewind(&mut self);
 
-    fn advance_until(&mut self, pred: fn(&Self) -> bool) {
-        while !pred(self) {
-            self.advance()
+    fn advance_until(&mut self, pred: impl Fn(&Self) -> bool) {
+        loop {
+            self.advance();
+            if pred(self) { break ; }
         }
     }
 
-    fn rewind_until(&mut self, pred: fn(&Self) -> bool) {
-        while !pred(self) {
-            self.rewind()
+    fn rewind_until(&mut self, pred: impl Fn(&Self) -> bool) {
+        // I think on rewind the check needs to come after, not before
+        loop {
+            tracing::trace!("current pos: {:#04X}", self.position());
+            self.rewind();
+            // HACK: This feels bad, but it works.
+            if pred(self) { self.rewind(); break; }
         }
     }
 
     /// advance/rewind until the `desired_position` is reached, maintaining state along the way.
     fn seek(&mut self, desired_position: usize) {
-        tracing::trace!("Inside Seek");
-        loop {
-            match self.position().cmp(&desired_position) {
-                // TODO: Replace with an advance_until and remove the outer loop.
-                std::cmp::Ordering::Less => { 
-                    tracing::trace!("seek says advance");
-                    // BUG: This is derefing to the Cursor, and bypassing Familiar's
-                    // implementation, if I remove the deref it should work. I think Familiar
-                    // should probably be a trait.
-                    self.advance();
-                },
-                std::cmp::Ordering::Equal => break,
-                // TODO: Replace with an rewind_until and remove the outer loop.
-                std::cmp::Ordering::Greater => {
-                    tracing::trace!("seek says rewind");
-                    self.rewind();
-                },
+        use std::cmp::Ordering::*;
+        match self.position().cmp(&desired_position) {
+            Less => {
+                self.advance_until(|me| me.position() == desired_position + 1);
             }
+            Greater => {
+                self.rewind_until(|me| me.position() == desired_position);
+            }
+            _ => {}
         }
     }
 

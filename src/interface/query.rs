@@ -81,6 +81,12 @@ pub fn to_fen_position(board: &impl Query) -> String {
     }
 
     f.pop(); // remove the last slash
+
+    if let Some(meta) = board.try_metadata() {
+        f.push(' ');
+        f.push_str(&meta.to_string());
+    }
+
     f
 }
 

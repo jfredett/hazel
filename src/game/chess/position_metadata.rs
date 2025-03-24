@@ -35,19 +35,10 @@ impl From<PositionMetadata> for Vec<Alteration> {
     }
 }
 
+// TODO: Remove this
 impl From<&PositionMetadata> for Vec<Alteration> {
     fn from(pm: &PositionMetadata) -> Vec<Alteration> {
         vec![Alteration::Assert(*pm)]
-        // NOTE: Finer-grained approach via MetadataAssertion here, needs work
-        // let mut ret = vec![];
-        // ret.push(Alteration::Assert(MetadataAssertion::SideToMove(pm.side_to_move)));
-        // ret.push(Alteration::Assert(MetadataAssertion::CastleRights(pm.castling)));
-        // if let Some(ep) = pm.en_passant {
-        //     ret.push(Alteration::Assert(MetadataAssertion::EnPassant(ep)));
-        // }
-        // ret.push(Alteration::Assert(MetadataAssertion::FiftyMoveCount(pm.halfmove_clock)));
-        // ret.push(Alteration::Assert(MetadataAssertion::FullMoveCount(pm.fullmove_number)));
-        // ret
     }
 }
 
@@ -68,6 +59,7 @@ impl Alter for PositionMetadata {
                 *self = new_metadata;
             },
             Alteration::Assert(check_metadata) => {
+                tracing::trace!("My meta: {:?}, their meta: {:?}", self, check_metadata);
                 if *self != check_metadata {
                     panic_or_trace(format!("Incorrect metadata, Found: {:?}, expected {:?}", check_metadata, self));
                 }
@@ -108,7 +100,10 @@ impl Debug for PositionMetadata {
             Some(file) => file.to_string().to_lowercase(),
             None => "-".to_string(),
         };
-        let ep_rank = if self.en_passant.is_some() { (!self.side_to_move).en_passant_rank().to_string() } else { "".to_string() };
+        let ep_rank = if self.en_passant.is_some() { 
+            let r = self.side_to_move.en_passant_rank() + 1;
+            r.to_string()
+        } else { "".to_string() };
 
         write!(f, "{} {} {}{} {} {}",
             self.side_to_move,

@@ -8,9 +8,7 @@ pub struct PositionZobrist {
 
 impl Alter for PositionZobrist {
     fn alter_mut(&mut self, alter: Alteration) -> &mut Self {
-        tracing::debug!("self.current-before {:?}", self.current);
         self.current.alter_mut(alter);
-        tracing::debug!("self.current-after {:?}", self.current);
 
         if matches!(alter, Alteration::Turn) {
             self.position = self.current;

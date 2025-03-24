@@ -150,8 +150,6 @@ impl Alter for Zobrist {
     }
 
     fn alter_mut(&mut self, alteration: Alteration) -> &mut Self {
-        tracing::trace!("In Zobrist, current: {:?}", self);
-        tracing::trace!("Alter {:?}", alteration);
         let delta = match alteration {
             Alteration::Place { square: sq, occupant: Occupant::Occupied(piece, color) } => {
                 HazelZobrist::zobrist_mask_for(sq, color, piece)
@@ -159,17 +157,26 @@ impl Alter for Zobrist {
             Alteration::Remove { square: sq, occupant: Occupant::Occupied(piece, color) } => {
                 HazelZobrist::zobrist_mask_for(sq, color, piece)
             },
-            Alteration::Turn => {
-                HazelZobrist::side_to_move_mask()
+            // Alteration::Turn => {
+            //     HazelZobrist::side_to_move_mask()
+            // },
+            Alteration::Assert(metadata) => {
+                let stm = if metadata.side_to_move.is_black() { HazelZobrist::side_to_move_mask() } else { 0 };
+
+                stm ^
+                HazelZobrist::castling_mask_for(metadata.castling) ^
+                HazelZobrist::en_passant_mask_for(metadata.en_passant)
             },
             Alteration::Inform(metadata) => {
+                let stm = if metadata.side_to_move.is_black() { HazelZobrist::side_to_move_mask() } else { 0 };
+
+                stm ^
                 HazelZobrist::castling_mask_for(metadata.castling) ^
                 HazelZobrist::en_passant_mask_for(metadata.en_passant)
             },
             _ => { 0 }
         };
         self.0 ^= delta;
-        tracing::trace!("In Zobrist, updated: {:?}", self);
         self
     }
 }
@@ -311,7 +318,7 @@ mod tests {
 
         impl Arbitrary for Alteration {
             fn arbitrary(g: &mut Gen) -> Alteration {
-                let variant : usize = usize::arbitrary(g) % 5;
+                let variant : usize = usize::arbitrary(g) % 6;
 
                 let occupant = Occupant::Occupied(Piece::arbitrary(g), Color::arbitrary(g));
 
@@ -321,6 +328,7 @@ mod tests {
                     2 => Self::Assert(PositionMetadata::arbitrary(g)),
                     3 => Self::Clear,
                     4 => Self::Lit(u8::arbitrary(g)),
+                    5 => Self::Inform(PositionMetadata::arbitrary(g)),
                     _ => { unreachable!(); }
                 }
             }

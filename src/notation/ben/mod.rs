@@ -94,7 +94,7 @@ impl Debug for BEN {
 
 impl std::fmt::Display for BEN {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} {}", query::to_fen_position(self), self.metadata)
+        write!(f, "{}", query::to_fen_position(self))
     }
 }
 

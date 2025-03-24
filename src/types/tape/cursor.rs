@@ -65,7 +65,6 @@ impl<T> Cursorlike for Cursor<T> where T : Tapelike {
     }
 
     fn advance(&mut self) {
-        tracing::trace!("in cursor advance"); 
         self.position += 1;
     }
 
