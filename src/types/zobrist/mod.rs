@@ -1,5 +1,7 @@
 use std::fmt::Debug;
 
+use crate::constants::File;
+use crate::game::castle_rights::CastleRights;
 use crate::types::Color;
 use crate::{notation::Square, query, types::{Occupant, Piece}, Alteration, Query};
 use crate::interface::Alter;
@@ -14,8 +16,14 @@ pub struct ZobristTable<const SEED: u64>;
 // * 6 piece types
 // * 2 colors
 // + 1 flag for when it's black's turn
-const ZOBRIST_TABLE_SIZE : usize = 1 + (2 * 6 * 64);
+// + 8 for en_passant
+// + 16 for each configuration of castling rights
+const ZOBRIST_TABLE_SIZE : usize = 1 + (2 * 6 * 64) + 8 + 16;
 const ZOBRIST_SEED : u64 = 0x10062021_18092010 ^ 0x01081987_19051987;
+const STM_OFFSET : usize = 1; // last entry is the STM
+const EP_OFFSET : usize = STM_OFFSET + 8; // preceded by the 8 EP entries.
+const CASTLING_OFFSET : usize = EP_OFFSET + 16; // preceded by the 16 Castling entries.
+
 
 pub type HazelZobrist = ZobristTable<ZOBRIST_SEED>;
 
@@ -80,6 +88,27 @@ impl<const SEED: u64> ZobristTable<SEED> {
     pub const fn side_to_move_mask() -> u64 {
         Self::TABLE[ZOBRIST_TABLE_SIZE - 1]
     }
+
+    pub const fn castling_mask_for(rights: CastleRights) -> u64 {
+        let mut idx = 0;
+
+        if rights.white_long { idx += 8; }
+        if rights.white_short { idx += 4; }
+        if rights.black_long { idx += 2; }
+        if rights.black_short { idx += 1; }
+
+        Self::TABLE[ZOBRIST_TABLE_SIZE - CASTLING_OFFSET + idx]
+    }
+
+    pub const fn en_passant_mask_for(maybe_file: Option<File>) -> u64 {
+        if let Some(file) = maybe_file {
+            let idx = file as usize;
+            Self::TABLE[ZOBRIST_TABLE_SIZE - EP_OFFSET + idx]
+        } else {
+            0
+        }
+
+    }
 }
 
 
@@ -121,6 +150,8 @@ impl Alter for Zobrist {
     }
 
     fn alter_mut(&mut self, alteration: Alteration) -> &mut Self {
+        tracing::trace!("In Zobrist, current: {:?}", self);
+        tracing::trace!("Alter {:?}", alteration);
         let delta = match alteration {
             Alteration::Place { square: sq, occupant: Occupant::Occupied(piece, color) } => {
                 HazelZobrist::zobrist_mask_for(sq, color, piece)
@@ -131,18 +162,14 @@ impl Alter for Zobrist {
             Alteration::Turn => {
                 HazelZobrist::side_to_move_mask()
             },
-            // Alteration::Assert(metadata) => {
-            //     if metadata.side_to_move.is_black() {
-            //         // do nothing
-            //         0
-            //     } else {
-            //         // undo the startturn's black-to-move masking
-            //         HazelZobrist::black_to_move_mask()
-            //     }
-            // },
+            Alteration::Inform(metadata) => {
+                HazelZobrist::castling_mask_for(metadata.castling) ^
+                HazelZobrist::en_passant_mask_for(metadata.en_passant)
+            },
             _ => { 0 }
         };
         self.0 ^= delta;
+        tracing::trace!("In Zobrist, updated: {:?}", self);
         self
     }
 }
@@ -241,29 +268,6 @@ mod tests {
             assert_ne!(p.zobrist().current, Zobrist::empty());
         }
 
-        // #[test]
-        // fn depth_for_covers_expected_range() {
-        //     let mut depths = vec![];
-        //     let mut idx = 0;
-        //     for sq in Square::by_rank_and_file() {
-        //         for color in COLORS {
-        //             for piece in PIECES {
-        //                 let depth : usize = HazelZobrist::depth_for(sq, color, piece) as usize;
-        //                 assert_eq!(idx, depth);
-        //                 idx += 1;
-        //                 depths.push(depth);
-        //             }
-        //         }
-        //     }
-
-
-        //     use itertools::Itertools;
-        //     for (key, group) in &depths.into_iter().chunk_by(|e| *e) {
-        //         assert!(false); // I left this half-complete and can't remember what I intended to
-        //         // test here.
-        //     }
-        // }
-
         #[test]
         fn zobrist_is_different_after_a_move_is_made() {
             let p1 = Position::new(BEN::start_position());
@@ -287,15 +291,19 @@ mod tests {
                 Move::new(D7, D5, MoveType::QUIET),
                 Move::new(C1, F4, MoveType::QUIET),
                 Move::new(G8, F6, MoveType::QUIET),
+                Move::new(E2, E3, MoveType::QUIET),
             ];
             let variation_2 = vec![
                 Move::new(D2, D4, MoveType::QUIET),
                 Move::new(G8, F6, MoveType::QUIET),
                 Move::new(C1, F4, MoveType::QUIET),
                 Move::new(D7, D5, MoveType::QUIET),
+                Move::new(E2, E3, MoveType::QUIET),
             ];
             let p1 = Position::with_moves(BEN::start_position(), variation_1);
+            tracing::trace!("p1: {:?}", p1);
             let p2 = Position::with_moves(BEN::start_position(), variation_2);
+            tracing::trace!("p2: {:?}", p2);
 
             assert_eq!(p1.zobrist(), p2.zobrist());
         }
