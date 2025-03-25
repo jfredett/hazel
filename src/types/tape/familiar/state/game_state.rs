@@ -1,4 +1,4 @@
-use crate::{board::PieceBoard, game::position_metadata::PositionMetadata, types::zobrist::Zobrist, Alter};
+use crate::{board::PieceBoard, game::position_metadata::PositionMetadata, Alter};
 
 #[derive(Clone, Default, Debug, PartialEq)]
 pub struct GameState {
