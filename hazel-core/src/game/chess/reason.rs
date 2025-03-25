@@ -1,4 +1,4 @@
-use crate::types::Color;
+use hazel_basic::color::Color;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Reason {

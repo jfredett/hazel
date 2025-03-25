@@ -1,7 +1,8 @@
 use std::fmt::{Debug, Display};
 
+use hazel_basic::{color::Color, file::File, occupant::Occupant, square::*};
 
-use crate::{constants::File, coup::rep::MoveType, game::{castle_rights::CastleRights, position_metadata::PositionMetadata}, notation::*, types::{Color, Occupant}};
+use crate::{coup::rep::MoveType, game::{castle_rights::CastleRights, position_metadata::PositionMetadata}};
 
 // NOTE: It's interesting to think about commutativity amongst - or more generally, the 'algebra'
 // of -- these alterations. In particular if I'm trying to build a final representation of
@@ -160,6 +161,8 @@ impl Alteration {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use quickcheck::quickcheck;
 
     #[test]
     fn debug_display_is_correct() {

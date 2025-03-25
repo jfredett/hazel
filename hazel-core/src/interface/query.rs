@@ -1,5 +1,7 @@
+use hazel_basic::occupant::Occupant;
+
 use crate::{
-    game::position_metadata::PositionMetadata, notation::*, types::Occupant, util::charray::{Charray, Origin}
+    game::position_metadata::PositionMetadata, notation::*, util::charray::{Charray, Origin}
 };
 
 use super::Alteration;

@@ -9,7 +9,18 @@
 use std::fmt::{Debug, Display};
 use std::str::SplitWhitespace;
 
-use crate::{constants::File, coup::rep::Move, game::chess::castle_rights::CastleRights, interface::Query, notation::*, query::display_board, types::{Color, Occupant, Piece}, Alter, Alteration};
+use hazel_basic::color::Color;
+use hazel_basic::file::File;
+use hazel_basic::occupant::Occupant;
+use hazel_basic::piece::Piece;
+use hazel_basic::square::*;
+
+use crate::coup::rep::Move;
+use crate::query::display_board;
+use crate::{Alter, Alteration, Query};
+
+use super::castle_rights::CastleRights;
+
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct PositionMetadata {
@@ -174,10 +185,10 @@ impl PositionMetadata {
 
         let en_passant = match en_passant {
             Some("-") => None,
-            Some(square) => {
-                if let Ok(sq) = Square::try_from(square) {
-                    Some(File::from(sq.file()))
-                } else { None }
+            Some(square) => if let Ok(sq) = Square::try_from(square) {
+                Some(File::from(sq.file()))
+            } else {
+                None
             },
             None => panic!("Invalid en passant square"),
         };

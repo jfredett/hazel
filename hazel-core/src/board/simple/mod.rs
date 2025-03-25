@@ -1,6 +1,5 @@
-use crate::interface::{alter::Alter, alteration::Alteration, query::Query};
-use crate::types::Occupant;
-use crate::notation::*;
+use hazel_basic::occupant::Occupant;
+use crate::{notation::*, Alter, Alteration, Query};
 
 use ben::BEN;
 

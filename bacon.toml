@@ -7,6 +7,17 @@
 
 default_job = "check"
 
+[jobs.bacon-ls]
+command = [ "cargo", "clippy", "--message-format", "json-diagnostic-rendered-ansi" ]
+analyzer = "cargo_json"
+watch = [ "hazel-*" ]
+need_stdout = true
+
+[exports.cargo-json-spans]
+auto = true
+exporter = "analyzer"
+line_format = "{diagnostic.level}:{span.file_name}:{span.line_start}:{span.line_end}:{diagnostic.message}"
+
 [jobs.check]
 command = ["cargo", "check", "--color", "always"]
 need_stdout = false

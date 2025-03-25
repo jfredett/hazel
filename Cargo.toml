@@ -4,6 +4,8 @@ members = [
     # Main libraries
     "hazel-core",
     "hazel-ui",
+    "hazel-basic",
+    "hazel-bitboard",
 
     # Small binaries that act as a profiling hook
     "hooks/pextboard",
@@ -29,7 +31,15 @@ tracing = "0.1"
 tracing-appender = "0.2"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 hazel-core = { path = "./hazel-core" }
-
+hazel-basic = { path = "./hazel-basic" }
+hazel-bitboard = { path = "./hazel-bitboard" }
+hazel-ui = { path = "./hazel-core" }
+# Dev dependencies to share
+mutants = "0.0.3"
+quickcheck = "1.0.3"
+quickcheck_macros = "1.0.0"
+similar-asserts = "1.7.0"
+tracing-test = "0.2.5"
 
 [profile.bench]
 opt-level = 3
@@ -50,7 +60,6 @@ inherits = "test"
 debug = false
 debug-assertions = false
 opt-level = 3
-
 
 [profile.dev.package]
 insta.opt-level = 3

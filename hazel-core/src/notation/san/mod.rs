@@ -1,10 +1,12 @@
 #![allow(dead_code, unused_imports)]
 
+use hazel_basic::{color::Color, occupant::Occupant, piece::Piece};
+use hazel_bitboard::bitboard::Bitboard;
 use nom::{branch::alt, bytes::complete::tag, character::complete::char, combinator::opt, IResult};
 
-use crate::{interface::Query, coup::rep::{Move, MoveType}, types::{Bitboard, Color, Occupant, Piece}};
-use crate::types::pextboard;
-use crate::notation::*;
+use crate::{coup::rep::{Move, MoveType}, notation::*};
+use crate::Query;
+use crate::notation::pgn::parsers::*;
 
 use super::{ben::BEN, Square};
 
@@ -268,7 +270,7 @@ impl SAN {
         match self.source_piece.unwrap() {
             Piece::Rook | Piece::Bishop | Piece::Queen => {
                 for source_sq in possible_source_squares {
-                    let attacks = pextboard::attacks_for(self.source_piece.unwrap(), *source_sq, blocks);
+                    let attacks = hazel_bitboard::pextboard::attacks_for(self.source_piece.unwrap(), *source_sq, blocks);
                     if attacks.is_set(self.target_sq.unwrap()) {
                         return Ok(*source_sq);
                     }

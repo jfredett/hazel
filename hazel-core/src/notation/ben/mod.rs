@@ -13,8 +13,11 @@
 //! but this seemed the most natural way to do it to me, whether that's because I'm a genius or
 //! because I've seen it before, I don't know, but I'm very likely not a genius.
 
+use hazel_basic::{color::Color, occupant::Occupant, piece::Piece};
+
+use crate::{constants::START_POSITION_FEN, game::position_metadata::PositionMetadata, Alter, Alteration, Query};
+
 use super::Square;
-use crate::{engine::uci::START_POSITION_FEN, game::position_metadata::PositionMetadata, query, types::{Color, Occupant, Piece}, Alter, Alteration, Query};
 use std::fmt::{Debug, Formatter};
 
 mod from_into;
@@ -94,7 +97,7 @@ impl Debug for BEN {
 
 impl std::fmt::Display for BEN {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", query::to_fen_position(self))
+        write!(f, "{}", crate::query::to_fen_position(self))
     }
 }
 
@@ -110,7 +113,7 @@ impl BEN {
     }
 
     pub fn to_alterations(&self) -> impl Iterator<Item = Alteration> {
-        query::to_alterations(self)
+        crate::query::to_alterations(self)
     }
 
     // TODO: Move this to it's own function, it should produce a _Log_ of alteratons
@@ -203,11 +206,10 @@ impl BEN {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::constants::File;
     use crate::game::castle_rights::CastleRights;
-    use crate::notation::*;
-    use crate::types::Piece;
+
+    use super::*;
+    use hazel_basic::{file::File, square::*};
 
     #[quickcheck]
     fn alter_mut(square: Square, occupant: Occupant) {

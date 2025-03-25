@@ -1,7 +1,12 @@
-
-use crate::{coup::rep::{Move, MoveType}, game::position::Position, types::{pextboard, Occupant, Piece}};
+use hazel_basic::occupant::Occupant;
+use hazel_basic::piece::Piece;
+use hazel_bitboard::pextboard;
+use crate::game::position::Position;
+use crate::coup::rep::{Move, MoveType};
 
 pub mod bishop {
+
+
     use super::*;
     pub fn generate_moves(position: &Position) -> impl Iterator<Item = Move> {
         generate_slider_moves(position, Piece::Bishop)

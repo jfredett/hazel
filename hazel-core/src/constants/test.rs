@@ -1,5 +1,7 @@
-use crate::types::Color;
-use crate::notation::*;
+// TODO: sort out where these go? probably basic? maybe into the test fixture stuff?
+
+use hazel_basic::color::Color;
+use hazel_basic::square::*;
 use crate::coup::rep::{Move, MoveType};
 
 /// FEN for an empty board.

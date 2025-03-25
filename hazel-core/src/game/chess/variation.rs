@@ -149,9 +149,9 @@ impl Variation {
 mod tests {
     use game::delim::Delim;
 
+    use crate::coup::rep::MoveType;
     use crate::notation::*;
     use crate::game::chess::PositionMetadata;
-    use crate::{coup::rep::MoveType, types::Occupant};
     use crate::*;
 
     use super::*;

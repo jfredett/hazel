@@ -1,6 +1,7 @@
+use hazel_basic::color::Color;
 use nom::{branch::alt, bytes::complete::tag, character::complete::{char, alpha1, multispace0, newline, one_of}, combinator::opt, multi::many1, sequence::delimited, IResult};
 
-use crate::{game::reason::Reason, types::Color};
+use crate::{game::reason::Reason};
 
 use super::TagPair;
 

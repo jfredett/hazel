@@ -1,7 +1,8 @@
-use crate::types::Bitboard;
-use crate::types::Direction;
+use hazel_bitboard::bitboard::Bitboard;
+use hazel_basic::direction::Direction;
 use crate::notation::*;
 
+// bitboard crate? maybe stays in core?
 
 lazy_static! {
     /// A lookup table to convert a knight on a given index -> it's bitboard of moves

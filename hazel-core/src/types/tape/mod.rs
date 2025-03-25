@@ -258,16 +258,9 @@ impl Deref for Tape {
 #[cfg(test)]
 mod tests {
     use cursorlike::Cursorlike;
+    use hazel_basic::{color::Color, file::File, occupant::Occupant, square::*};
 
-    use crate::alteration::MetadataAssertion;
-    use crate::game::position_metadata::PositionMetadata;
-    use crate::types::zobrist::HazelZobrist;
-    use crate::types::Color;
-    use crate::{notation::ben::BEN, types::Occupant};
-    use crate::notation::*;
-    use crate::constants::File;
-    use crate::coup::rep::MoveType;
-    use crate::game::castle_rights::CastleRights;
+    use crate::{game::position_metadata::PositionMetadata, notation::ben::BEN};
 
     use super::*;
 

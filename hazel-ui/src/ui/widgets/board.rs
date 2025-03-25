@@ -1,9 +1,11 @@
 #![allow(unused_imports, dead_code)]
 
+use hazel_basic::color;
+use hazel_basic::occupant::Occupant;
+use hazel_basic::piece::Piece;
 use ratatui::prelude::*;
 use hazel::board::simple::PieceBoard;
 use hazel::Query;
-use hazel::types::{self, Occupant, Piece};
 use hazel::notation::*;
 
 use ratatui::widgets::{Table, Row};
@@ -110,10 +112,10 @@ impl Widget for &Board<'_> {
                     cell.set_symbol(symbol);
 
                     match (cell.bg, color) {
-                        (WHITE_SQUARE, types::Color::BLACK) => cell.fg = BLACK_PIECE_WHITE_SQUARE,
-                        (WHITE_SQUARE, types::Color::WHITE) => cell.fg = WHITE_PIECE_WHITE_SQUARE,
-                        (BLACK_SQUARE, types::Color::BLACK) => cell.fg = BLACK_PIECE_BLACK_SQUARE,
-                        (BLACK_SQUARE, types::Color::WHITE) => cell.fg = WHITE_PIECE_BLACK_SQUARE,
+                        (WHITE_SQUARE, color::Color::BLACK) => cell.fg = BLACK_PIECE_WHITE_SQUARE,
+                        (WHITE_SQUARE, color::Color::WHITE) => cell.fg = WHITE_PIECE_WHITE_SQUARE,
+                        (BLACK_SQUARE, color::Color::BLACK) => cell.fg = BLACK_PIECE_BLACK_SQUARE,
+                        (BLACK_SQUARE, color::Color::WHITE) => cell.fg = WHITE_PIECE_BLACK_SQUARE,
                         _ => {}
                     }
 

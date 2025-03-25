@@ -1,16 +1,22 @@
+use hazel_basic::piece::Piece;
 use nom::character::complete::one_of;
 
-use crate::types::Piece;
+// TODO: Move this to extensions
 
 use super::*;
 
-impl Piece {
-    pub fn parse_rank(input: &str) -> IResult<&str, usize> {
+pub trait PieceParsing {
+    fn parse_rank(input: &str) -> IResult<&str, usize>;
+    fn parse(input: &str) -> IResult<&str, Piece>;
+}
+
+impl PieceParsing for Piece {
+    fn parse_rank(input: &str) -> IResult<&str, usize> {
         let (input, rank_data) = one_of("12345678")(input)?;
         Ok((input, (rank_data.to_digit(10).unwrap() - 1u32) as usize))
     }
 
-    pub fn parse(input: &str) -> IResult<&str, Piece> {
+    fn parse(input: &str) -> IResult<&str, Piece> {
         let (input, piece) = one_of("KQRBNP")(input)?;
         match piece {
             'K' => Ok((input, Piece::King)),

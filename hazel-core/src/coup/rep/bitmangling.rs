@@ -15,7 +15,7 @@ impl Move {
 
     /// ```
     /// # use hazel::coup::rep::*;
-    /// # use hazel::notation::*;
+    /// # use hazel_basic::square::*;
     /// // the move from d2 -> d4
     ///
     /// let m = Move::new(D2, D4, MoveType::DOUBLE_PAWN);
@@ -27,7 +27,7 @@ impl Move {
 
     /// ```
     /// # use hazel::coup::rep::*;
-    /// # use hazel::notation::*;
+    /// # use hazel_basic::square::*;
     /// // the move from d2 -> d4
     ///
     /// let m = Move::new(D2, D4, MoveType::DOUBLE_PAWN);
@@ -39,7 +39,7 @@ impl Move {
     /// Gets the target index from the compact move representation
     /// ```
     /// # use hazel::coup::rep::*;
-    /// # use hazel::notation::*;
+    /// # use hazel_basic::square::*;
     ///
     /// // the move from d2 -> d4
     ///
@@ -54,7 +54,7 @@ impl Move {
     /// Gets the target index from the compact move representation
     /// ```
     /// # use hazel::coup::rep::*;
-    /// # use hazel::notation::*;
+    /// # use hazel_basic::square::*;
     ///
     /// // the move from d2 -> d4
     ///
@@ -69,7 +69,7 @@ impl Move {
     /// True if the move indicates a promotion
     /// ```
     /// # use hazel::coup::rep::*;
-    /// # use hazel::notation::*;
+    /// # use hazel_basic::square::*;
     ///
     /// // the move from d2 -> d4
     /// let m1 = Move::new(D2, D4, MoveType::DOUBLE_PAWN);
@@ -87,9 +87,9 @@ impl Move {
     ///
     /// ```
     /// # use hazel::coup::rep::*;
-    /// # use hazel::constants::*;
-    /// # use hazel::notation::*;
-    /// # use hazel::types::Piece;
+    /// # use hazel_basic::square::*;
+    /// # use hazel_basic::piece::Piece;
+    ///
     /// // the move from d2 -> d4
     /// let m1 = Move::new(D2, D4, MoveType::DOUBLE_PAWN);
     /// let m2 = Move::new(D7, D8, MoveType::PROMOTION_QUEEN);
@@ -104,7 +104,9 @@ impl Move {
     /// on MoveType to interpret the data.
     /// ```
     /// # use hazel::coup::rep::*;
-    /// # use hazel::notation::*;
+    /// # use hazel_basic::square::*;
+    /// # use hazel_basic::piece::Piece;
+    ///
     /// // the move from d2 -> d4
     /// let m1 = Move::new(D2, D4, MoveType::QUIET);
     /// assert!(m1.move_metadata().is_quiet());

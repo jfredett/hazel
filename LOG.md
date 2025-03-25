@@ -2800,3 +2800,14 @@ don't mind just having them toplevel.
 
 Part of the work so far moved over some ratatui stuff to the ui crate, which changed some apis around, but so far it's
 mostly been mechanical.
+
+## 1150 - spring-cleaning-1
+
+I tried to extract the `constants` module, but it tangles pretty tightly with other chunks of the system, and extracting
+them will be a little tricky. It's actually a little tricky to extract anything right now because it all
+cross-references pretty freely. I think the way out of that is to push more of the code to rely on the interfaces in
+`src/interface`, and have _that_ become `hazel-core`, and then the other hazel crates rely on the interface, and we have
+a delightfully decoupled thing. Ultimately this will mean there is a `hazel-representation` crate which implements the
+interfaces, and then that should be replacable when I come up with better representations.
+
+He said, full of dumb hope.

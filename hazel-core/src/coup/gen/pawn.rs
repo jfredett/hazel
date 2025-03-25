@@ -1,7 +1,11 @@
+use hazel_basic::direction::Direction;
+use hazel_basic::occupant::Occupant;
+use hazel_basic::piece::Piece;
+use hazel_bitboard::ColorMasks;
+
 use crate::game::chess::position::Position;
 use crate::notation::Square;
 use crate::Query;
-use crate::types::{Direction, Occupant, Piece};
 use crate::coup::rep::{Move, MoveType};
 
 

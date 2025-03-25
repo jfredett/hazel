@@ -13,6 +13,8 @@ path="src/lib.rs"
 # I might featureflag some stuff, e.g., serde and that, to reduce compile times?
 
 [dependencies]
+hazel-basic.workspace = true
+hazel-bitboard.workspace = true
 async-trait = "0.1.87"
 dynamic-array = "0.2.3"
 itertools = "0.14.0"
@@ -26,8 +28,8 @@ tracing-subscriber.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]
-mutants = "0.0.3"
-quickcheck = "1.0.3"
-quickcheck_macros = "1.0.0"
-similar-asserts = "1.7.0"
-tracing-test = "0.2.5"
+quickcheck.workspace = true
+mutants.workspace = true
+quickcheck_macros.workspace = true
+similar-asserts.workspace = true
+tracing-test.workspace = true

@@ -372,11 +372,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "hazel-basic"
+version = "0.1.0"
+dependencies = [
+ "mutants",
+ "quickcheck",
+ "quickcheck_macros",
+ "serde",
+ "similar-asserts",
+]
+
+[[package]]
+name = "hazel-bitboard"
+version = "0.1.0"
+dependencies = [
+ "hazel-basic",
+ "lazy_static",
+ "quickcheck",
+ "quickcheck_macros",
+]
+
+[[package]]
 name = "hazel-core"
 version = "0.1.0"
 dependencies = [
  "async-trait",
  "dynamic-array",
+ "hazel-basic",
+ "hazel-bitboard",
  "itertools 0.14.0",
  "lazy_static",
  "mutants",
@@ -399,6 +422,8 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "dynamic-array",
+ "hazel-basic",
+ "hazel-bitboard",
  "hazel-core",
  "insta",
  "lazy_static",
@@ -703,6 +728,8 @@ checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
 name = "pextboard-test"
 version = "1.0.0"
 dependencies = [
+ "hazel-basic",
+ "hazel-bitboard",
  "hazel-core",
  "rand",
  "tracing",

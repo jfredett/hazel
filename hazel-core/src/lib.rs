@@ -31,7 +31,6 @@ pub use tracing_test;
 
 
 pub mod board;
-pub mod brain;
 pub mod constants;
 pub mod coup;
 pub mod engine;

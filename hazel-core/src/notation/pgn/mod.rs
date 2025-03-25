@@ -1,7 +1,7 @@
 #![allow(dead_code, unused_imports)]
 
 mod tag_pair;
-mod parsers;
+pub mod parsers;
 mod tokenizer;
 
 use std::path::Path;
@@ -11,7 +11,7 @@ use nom::{branch::alt, bytes::complete::tag, character::complete::{multispace0, 
 
 use crate::{game::familiar::Familiar, notation::pgn::tokenizer::PGNToken};
 use crate::{Alter, constants::START_POSITION_FEN, coup::rep::Move, game::variation::Variation};
-use crate::{notation::{ben::BEN, san::SAN}, types::Color};
+use crate::notation::{ben::BEN, san::SAN};
 
 use super::{san::SANConversionError, Square};
 

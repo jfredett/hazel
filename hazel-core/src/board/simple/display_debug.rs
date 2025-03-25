@@ -23,9 +23,8 @@ mod tests {
     use super::*;
 
     use crate::Query;
-    use crate::types::Piece;
-    use crate::types::Occupant;
-    use crate::notation::*;
+    use hazel_basic::{piece::Piece, square::*};
+    use crate::board::simple::Occupant;
 
 
     #[test]

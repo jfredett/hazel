@@ -21,8 +21,10 @@
 
 use crate::interface::{Alteration, Query};
 use crate::notation::*;
-use crate::types::{Color, Piece, Occupant};
-use crate::constants::File;
+use hazel_basic::file::File;
+use hazel_basic::piece::Piece;
+use hazel_basic::occupant::Occupant;
+use hazel_basic::color::Color;
 
 use serde::{Deserialize, Serialize};
 

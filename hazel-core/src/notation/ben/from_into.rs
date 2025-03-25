@@ -1,4 +1,4 @@
-use crate::{alter, game::ChessGame};
+use crate::{alter, game::ChessGame, query, Alter, Query};
 
 use super::*;
 

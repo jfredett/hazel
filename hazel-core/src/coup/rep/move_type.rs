@@ -1,4 +1,4 @@
-use crate::types::Piece;
+use hazel_basic::piece::Piece;
 
 #[allow(non_camel_case_types)]
 #[derive(PartialEq, Eq, Debug, Clone, Copy)]

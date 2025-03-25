@@ -1,10 +1,14 @@
 use std::fmt::Debug;
 
-use crate::constants::File;
+use hazel_basic::color::Color;
+use hazel_basic::file::File;
+use hazel_basic::occupant::Occupant;
+use hazel_basic::piece::Piece;
+use hazel_basic::square::Square;
+
 use crate::game::castle_rights::CastleRights;
-use crate::types::Color;
-use crate::{notation::Square, query, types::{Occupant, Piece}, Alteration, Query};
 use crate::interface::Alter;
+use crate::{Alteration, Query};
 
 pub struct ZobristTable<const SEED: u64>;
 
@@ -195,7 +199,7 @@ impl Zobrist {
     }
 
     pub fn new(query: &impl Query) -> Zobrist {
-        let alterations : Vec<Alteration> = query::to_alterations(query).collect();
+        let alterations : Vec<Alteration> = crate::query::to_alterations(query).collect();
         Zobrist::from(alterations.as_slice())
     }
 
@@ -262,8 +266,7 @@ mod tests {
     mod zobrist {
         use quickcheck::{Arbitrary, Gen};
 
-        use crate::{alteration::MetadataAssertion, game::position_metadata::PositionMetadata, types::{color::COLORS, piece::PIECES}};
-        use crate::notation::*;
+        use crate::{game::position_metadata::PositionMetadata, notation::*};
 
         use super::*;
 

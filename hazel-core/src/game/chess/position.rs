@@ -1,19 +1,29 @@
 use std::sync::Arc;
 use std::{fmt::Debug, sync::RwLock};
 
+use hazel_basic::color::Color;
+use hazel_basic::direction::Direction;
+use hazel_basic::occupant::Occupant;
+use hazel_basic::piece::Piece;
+use hazel_basic::square::Square;
+use hazel_bitboard::bitboard::Bitboard;
+use hazel_bitboard::ColorMasks;
+
+use crate::board::PieceBoard;
+use crate::coup::rep::Move;
+use crate::notation::ben::BEN;
 use crate::types::tape::cursorlike::Cursorlike;
 use crate::types::tape::familiar::state::position_zobrist::PositionZobrist;
 use crate::types::tape::tapelike::Tapelike;
-use crate::{alter, query};
 use crate::constants::move_tables::{KNIGHT_MOVES, KING_ATTACKS};
+use crate::interface::{Alter, Query, Alteration};
 
 use crate::types::tape::{familiar, Tape};
-use crate::{board::PieceBoard, coup::{gen::cache::ATM, rep::Move}, notation::{ben::BEN, Square}, types::{pextboard, Bitboard, Color, Direction, Occupant, Piece}, Alter, Alteration, Query};
 use crate::types::zobrist::Zobrist;
 
 use crate::types::tape::familiar::{Familiar, Quintessence};
 use super::position_metadata::PositionMetadata;
-use crate::coup::gen::cache::Cache;
+use crate::coup::gen::cache::{Cache, ATM};
 
 
 pub struct Position {
@@ -138,7 +148,7 @@ lazy_static!(
 impl From<Position> for BEN {
     // TODO: This could probably be better managed by a familiar.
     fn from(value: Position) -> Self {
-        let mut ben : BEN = alter::setup(query::to_alterations(&value.board()));
+        let mut ben : BEN = crate::alter::setup(crate::query::to_alterations(&value.board()));
         ben.set_metadata(value.metadata());
         ben
     }
@@ -225,7 +235,7 @@ impl Position {
         match self.atm.get(position_hash) {
             Some(cached_inner) => {
                 // Atomic, TODO: Handle Result
-                tracing::trace!("Cache hit {:?} -> {:?}", position_hash, query::to_fen_position(&cached_inner));
+                tracing::trace!("Cache hit {:?} -> {:?}", position_hash, crate::query::to_fen_position(&cached_inner));
                 _ = self.inner.replace(cached_inner.clone());
             },
             None => {
@@ -237,7 +247,7 @@ impl Position {
                     inner.metadata.alter_mut(alter);
                 }
 
-                tracing::trace!("Cache set {:?} -> {:?}", position_hash, query::to_fen_position(&inner.clone()));
+                tracing::trace!("Cache set {:?} -> {:?}", position_hash, crate::query::to_fen_position(&inner.clone()));
                 self.atm.set(position_hash, inner.clone());
             },
         }
@@ -458,7 +468,7 @@ impl Position {
             }
             Piece::King => { Bitboard::empty() /* Kings can't check kings. */ }
         };
-        pextboard::attacks_for(piece, self.our_king(), blockers) & mask
+        hazel_bitboard::pextboard::attacks_for(piece, self.our_king(), blockers) & mask
     }
 
     // ### OUR HERO'S MOVES, ATTACKS, AND THE LIKE ### //
@@ -635,7 +645,7 @@ impl Position {
         let blockers = self.all_blockers();
         self.find(|(_, occ)| { *occ == Occupant::Occupied(piece, color) })
             .into_iter()
-            .map(|sq| { pextboard::attacks_for(piece, sq, blockers) })
+            .map(|sq| { hazel_bitboard::pextboard::attacks_for(piece, sq, blockers) })
             .fold(Bitboard::empty(), |acc, e| acc | e)
     }
 
@@ -657,8 +667,11 @@ mod tests {
     // and specific, narrower testcases will replace the startpos stuff eventually.
     // This ties to a move to, e.g., rstest or some other framework.
     use super::*;
-    use crate::notation::*;
     use crate::coup::rep::MoveType;
+
+    use hazel_basic::square::*;
+    use hazel_bitboard::bitboard;
+    use hazel_bitboard::constants::masks::*;
 
 
     mod make_unmake {
@@ -722,6 +735,8 @@ mod tests {
     }
 
     mod gamestate {
+        use crate::constants::POS2_KIWIPETE_FEN;
+
         use super::*;
 
 
@@ -790,7 +805,6 @@ mod tests {
         }
 
         mod our_pawn_attacks {
-            use crate::constants::{RANK_3, RANK_6};
 
             use super::*;
 
@@ -875,7 +889,6 @@ mod tests {
         use super::*;
 
         mod moves {
-            use crate::bitboard;
 
             use super::*;
 
@@ -902,11 +915,11 @@ mod tests {
         }
     }
 
-    use crate::{bitboard, constants::*};
     mod rook {
         use super::*;
 
         mod moves {
+
 
             use super::*;
 
