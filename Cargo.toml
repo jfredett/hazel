@@ -1,7 +1,20 @@
 [workspace]
 resolver = "2"
-members = ["hazel-core"]
+members = ["hazel-core", "hazel-ui"]
 
+[workspace.package]
+authors = ["Joe Fredette <jfredett@gmail.com>"]
+edition = "2021"
+license = "AGPL v3"
+repository = "https://github.com/jfredett/hazel"
+
+[workspace.dependencies]
+tracing = "0.1"
+tracing-appender = "0.2"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+hazel-core = { path = "./hazel-core" }
+
+[workspace.dev-dependencies]
 
 [profile.bench]
 opt-level = 3

@@ -1,0 +1,28 @@
+---
+source: src/ui/widgets/game_section/info_section/mod.rs
+expression: buffer
+---
+Buffer {
+    area: Rect { x: 0, y: 0, width: 64, height: 16 },
+    content: [
+        "                           Placeholder                          ",
+        "                           Placeholder                          ",
+        "                           Placeholder                          ",
+        "                                 ┌─────────────────────────────┐",
+        "                                 │         Placeholder         │",
+        "                                 │         Placeholder         │",
+        "                                 │         Placeholder         │",
+        "                                 │         Placeholder         │",
+        "                                 │         Placeholder         │",
+        "                                 │         Placeholder         │",
+        "                                 │         Placeholder         │",
+        "                                 │         Placeholder         │",
+        "                                 │         Placeholder         │",
+        "                                 │         Placeholder         │",
+        "                                 │         Placeholder         │",
+        "                                 └─────────────────────────────┘",
+    ],
+    styles: [
+        x: 0, y: 0, fg: White, bg: Black, underline: Reset, modifier: NONE,
+    ]
+}
