@@ -6,9 +6,9 @@ where
     T: Copy,
 {
     let mut out = vec![];
-    for i in 0..64 {
+    for (i, item) in vector.iter().enumerate().take(64) {
         if selection & (1 << i) > 0 {
-            out.push(vector[i])
+            out.push(*item)
         }
     }
     out

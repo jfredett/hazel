@@ -44,6 +44,7 @@ impl Widget for &SmallBoard {
         ];
 
         for i in 0..8 {
+            #[allow(clippy::needless_range_loop)] // it's just more natural to do it this way.
             for j in 0..8 {
                 let sq = Square::from((i, j));
                 let cell = Block::default()
