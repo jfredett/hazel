@@ -1,4 +1,4 @@
-use ratatui::{buffer::Buffer, layout::{Constraint, Layout, Rect}, style::{Style, Stylize}, widgets::{Block, StatefulWidget, Table, Widget}};
+use ratatui::{buffer::Buffer, layout::{Constraint, Layout, Rect}, style::{Style, Stylize}, text::Text, widgets::{Block, Row, StatefulWidget, Table, TableState, Widget}};
 use hazel::types::tape::familiar::state::tape_reader_state::TapeReaderState;
 
 #[derive(Default)]
@@ -24,8 +24,49 @@ impl TapeReaderWidget {
         tracing::trace!(target="hazel::ui::events", "rewinding to desired position: {:#04X} from {:#04X}", self.desired_position.saturating_sub(1), self.desired_position);
         self.desired_position = self.desired_position.saturating_sub(1);
     }
-}
 
+
+    pub fn header_row(&self) -> Row {
+        Row::new(vec!["Address", "Instruction", "Hash"])
+            .style(Style::new().bold())
+    }
+
+    pub fn header(&self, state: &mut TapeReaderState) -> Text {
+        let (pos, page, total_pages, len) = state.header();
+        Text::from(
+            format!("Tape: POS: {:#07X} ({}/{}), EOT: {:#06X}",
+                pos, page, total_pages, len
+            )
+        )
+    }
+
+    pub fn table_state(&self, state: &mut TapeReaderState) -> TableState {
+        TableState::default()
+            .with_selected(state.position_in_page())
+    }
+
+    pub fn footer(&self) -> Text {
+        Text::from("Footer here".to_string())
+    }
+
+    pub fn rows(&self, state: &mut TapeReaderState) -> Vec<Row> {
+        let mut ret : Vec<Row> = state.context.clone().into_iter().enumerate().map(|(idx, e)| {
+            // we have the alteration + context from `state` proper, we need to prepare the context
+            // rows here, and add the header/footer rows (not sections) later.
+            Row::new(vec![
+                format!("{:#06X}", idx + state.offset()),
+                e.to_string(),
+                "Running Hash".to_string()
+            ])
+        }).collect();
+
+        for addr in ret.len()..state.length {
+            ret.push(Row::new(vec![format!("{:#06X}", state.offset() + addr)]));
+        }
+
+        ret
+    }
+}
 
 impl StatefulWidget for &TapeReaderWidget {
     type State = TapeReaderState;
@@ -47,19 +88,19 @@ impl StatefulWidget for &TapeReaderWidget {
         // TODO: This is probably not identity, but some function of height
         // state.set_page_size((code.height - 8) as usize);
 
-        let table = Table::new(state.rows(), widths)
+        let table = Table::new(self.rows(state), widths)
             .column_spacing(1)
             .style(Style::new().white())
             .block(Block::bordered())
-            .header(state.header_row())
+            .header(self.header_row())
             .row_highlight_style(Style::new().reversed())
             .column_highlight_style(Style::new().red())
             .cell_highlight_style(Style::new().blue())
             .highlight_symbol(">>");
 
-        Widget::render(state.header(), header, buf);
-        StatefulWidget::render(&table, tape_area, buf, &mut state.table_state());
-        Widget::render(state.footer(), footer, buf);
+        Widget::render(self.header(state), header, buf);
+        StatefulWidget::render(&table, tape_area, buf, &mut self.table_state(state));
+        Widget::render(self.footer(), footer, buf);
     }
 }
 

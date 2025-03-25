@@ -1,8 +1,5 @@
 use std::range::Range;
 
-// TODO: This should probably live under /ui/
-use ratatui::{prelude::Stylize, style::Style, text::Text, widgets::{Row, TableState}};
-
 use crate::{types::tape::{cursor::Cursor, cursorlike::Cursorlike, familiar::Familiar, tapelike::Tapelike, Tape}, Alteration};
 
 #[derive(Debug, Clone)]
@@ -65,48 +62,11 @@ impl TapeReaderState {
         self.tape_length / self.length // TODO: potential off-by-one
     }
 
-    pub fn table_state(&self) -> TableState {
-        TableState::default()
-            .with_selected(self.position_in_page())
+    pub fn header(&self) -> (usize, usize, usize, usize) {
+        (self.position, self.page(), self.total_pages(), self.tape_length)
     }
 
-    pub fn header_row(&self) -> Row {
-        Row::new(vec!["Address", "Instruction", "Hash"])
-            .style(Style::new().bold())
-    }
 
-    pub fn header(&self) -> Text {
-        Text::from(
-                // format!("{}, {}, {}, {:?}, {}, {}, {}",
-                //     self.position, self.position_in_page(), self.offset(), self.page_range(), self.page(), self.total_pages(), self.length
-                // )
-                format!("Tape: POS: {:#07X} ({}/{}), EOT: {:#06X}",
-                    self.position, self.page(), self.total_pages(), self.tape_length
-                )
-            )
-    }
-
-    pub fn footer(&self) -> Text {
-        Text::from("Footer here".to_string())
-    }
-
-    pub fn rows(&self) -> Vec<Row> {
-        let mut ret : Vec<Row> = self.context.clone().into_iter().enumerate().map(|(idx, e)| {
-            // we have the alteration + context from `state` proper, we need to prepare the context
-            // rows here, and add the header/footer rows (not sections) later.
-            Row::new(vec![
-                format!("{:#06X}", idx + self.offset()),
-                e.to_string(),
-                "Running Hash".to_string()
-            ])
-        }).collect();
-
-        for addr in ret.len()..self.length {
-            ret.push(Row::new(vec![format!("{:#06X}", self.offset() + addr)]));
-        }
-
-        ret
-    }
 }
 
 
