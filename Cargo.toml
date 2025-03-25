@@ -19,7 +19,7 @@ path="src/main.rs"
 
 [dependencies]
 
-async-trait = "0.1.87"
+async-trait = "0.1.88"
 clap = { version = "2.33", features = ["yaml"]}
 console-subscriber = "0.4.1"
 const-str = "0.6.2"
