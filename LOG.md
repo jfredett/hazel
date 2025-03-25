@@ -2750,3 +2750,18 @@ bytestream.
 
 Had to put things down, but came back, changed the line, and that was it, that was the whole bug. Still 3 broken tests
 remaining but very happy to not have to chase that one anymore.
+
+# 25-MAR-2025
+
+## 0012 - atm
+
+I've been babysitting a file upload most of the night, good time to kick on the playlist and hack.
+
+I got perft fixed up by finding a silly bug in how I reported `length` from the tape. It's a little ambiguous, but at
+least it works.
+
+I can now fail perft_4 in ~35s, wall-time for the unoptimized test binary, anyway. That's down from 'well over 3
+minutes' by a factor of 6 or so, not bad for a `HashMap` backed cache it only took me a full month to hack together. :)
+
+Next, spring cleaning. I'm going to live with the lack of tests because I'm going to move to rs-test, and start building
+some fixtures for more efficient testing.
