@@ -1,9 +1,8 @@
 use crate::game::chess::position::Position;
+use crate::notation::Square;
 use crate::Query;
 use crate::types::{Direction, Occupant, Piece};
 use crate::coup::rep::{Move, MoveType};
-use crate::notation::*;
-use crate::types::color::Color;
 
 
 // TODO: Remove the `color` parameter from all of these, it should come from the position metadata
@@ -57,7 +56,8 @@ pub fn en_passant(position: &Position) -> impl Iterator<Item = Move> {
     // TODO: is this just `self.our_pawn_attacks() & bitboard!(ep_square)`?
 
     let mut ret = vec![];
-    if let Some(ep_square) = position.metadata().en_passant {
+    if let Some(ep_file) = position.metadata().en_passant {
+        let ep_square = Square::from((position.hero().en_passant_rank(), ep_file));
         let color = position.hero();
         if let Some(sq) = ep_square.left_oblique(&!color) {
             if position.get(sq) == Occupant::Occupied(Piece::Pawn, color) {
@@ -81,7 +81,7 @@ pub fn promotions(position: &Position) -> impl Iterator<Item = Move> {
     let pawns = position.pawns_for(&color) & color.promotion_mask();
     let pawns = pawns.shift(color.pawn_direction()) & !position.all_blockers();
 
-    const promotion_options : [MoveType; 4] = [
+    const PROMOTION_OPTIONS : [MoveType; 4] = [
         MoveType::PROMOTION_ROOK,
         MoveType::PROMOTION_QUEEN,
         MoveType::PROMOTION_KNIGHT,
@@ -91,7 +91,7 @@ pub fn promotions(position: &Position) -> impl Iterator<Item = Move> {
 
     pawns.into_iter().flat_map(move |target_sq| {
         let source_sq = target_sq.shift((!color).pawn_direction()).unwrap();
-        promotion_options.map(|opt|
+        PROMOTION_OPTIONS.map(|opt|
             Move::new(source_sq, target_sq, opt)
         )
     })
@@ -104,8 +104,8 @@ pub fn promotion_captures(position: &Position) -> impl Iterator<Item = Move> {
     let advance = pawns.shift(color.pawn_direction());
     let east_attacks = advance.shift(Direction::E) & enemies;
     let west_attacks = advance.shift(Direction::W) & enemies;
-    
-    const promotion_options : [MoveType; 4] = [
+
+    const PROMOTION_OPTIONS : [MoveType; 4] = [
         MoveType::PROMOTION_CAPTURE_ROOK,
         MoveType::PROMOTION_CAPTURE_QUEEN,
         MoveType::PROMOTION_CAPTURE_KNIGHT,
@@ -114,12 +114,12 @@ pub fn promotion_captures(position: &Position) -> impl Iterator<Item = Move> {
 
     east_attacks.into_iter().flat_map(move |target_sq| {
         let source_sq = target_sq.shift((!color).pawn_direction()).unwrap().shift(Direction::W).unwrap();
-        promotion_options.map(|opt|
+        PROMOTION_OPTIONS.map(|opt|
             Move::new(source_sq, target_sq, opt)
         )
     }).chain(west_attacks.into_iter().flat_map(move |target_sq| {
         let source_sq = target_sq.shift((!color).pawn_direction()).unwrap().shift(Direction::E).unwrap();
-        promotion_options.map(|opt|
+        PROMOTION_OPTIONS.map(|opt|
             Move::new(source_sq, target_sq, opt)
         )
     }))
@@ -137,7 +137,8 @@ pub fn generate_moves(position: &Position) -> impl Iterator<Item = Move> {
 
 #[cfg(test)]
 mod tests {
-    use ben::BEN;
+    use crate::notation::ben::BEN;
+    use crate::notation::*;
     use crate::coup::rep::MoveType;
 
     use super::*;
@@ -145,10 +146,7 @@ mod tests {
     #[macro_export]
     macro_rules! assert_finds_moves {
         ($func_name:ident, $fen:expr, [ $($move:expr),* ]) => {
-            let mut position = Position::new(
-                BEN::new($fen),
-                vec![]
-            );
+            let position = Position::new(BEN::new($fen));
             let mut moves : Vec<Move> = $func_name(&position).collect();
             let mut expected_moves : Vec<Move> = vec![$($move),*];
 

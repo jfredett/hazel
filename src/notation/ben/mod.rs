@@ -71,7 +71,7 @@ impl Alter for BEN {
                 }
             },
             Alteration::Clear => { self.position = [0; 32]; },
-            Alteration::Assert(metadata) => { self.metadata = metadata; },
+            Alteration::Assert(_) | Alteration::Inform(_) => { self.metadata.alter_mut(alter); },
             _ => { }
         }
 
@@ -94,7 +94,7 @@ impl Debug for BEN {
 
 impl std::fmt::Display for BEN {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} {}", query::to_fen_position(self), self.metadata)
+        write!(f, "{}", query::to_fen_position(self))
     }
 }
 
@@ -109,12 +109,11 @@ impl BEN {
         ret
     }
 
-    pub fn to_alterations<'a>(&'a self) -> impl Iterator<Item = Alteration> + use<'a> {
+    pub fn to_alterations(&self) -> impl Iterator<Item = Alteration> {
         query::to_alterations(self)
     }
 
-    // TODO: Move this to Position, Position is how Hazel creates new positions, and BENs are
-    // created therefrom, later we can optimize if creating BENs directly is worth it.
+    // TODO: Move this to it's own function, it should produce a _Log_ of alteratons
     // TODO: Nom.
     fn compile(fen: &str) -> impl Iterator<Item = Alteration> {
         let mut alterations = vec![];
@@ -158,9 +157,8 @@ impl BEN {
 
         let mut metadata = PositionMetadata::default();
         metadata.parse(&mut chunks);
-        alterations.push(Alteration::Assert(metadata));
-
-        // metadata parsing please
+        let metadata_alterations : Vec<Alteration> = metadata.into_information();
+        alterations.extend(metadata_alterations);
 
         alterations.into_iter()
     }
@@ -206,6 +204,7 @@ impl BEN {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::constants::File;
     use crate::game::castle_rights::CastleRights;
     use crate::notation::*;
     use crate::types::Piece;
@@ -261,8 +260,9 @@ mod tests {
 
         let metadata = PositionMetadata {
             side_to_move: Color::BLACK,
+            in_check: false,
             castling: CastleRights::default(),
-            en_passant: Some(A1),
+            en_passant: Some(File::A),
             halfmove_clock: 0,
             fullmove_number: 1
         };

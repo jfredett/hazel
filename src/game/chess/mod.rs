@@ -78,10 +78,10 @@ mod tests {
     #[test]
     fn correctly_calculates_position_after_several_moves() {
         let mut game : ChessGame<PieceBoard> = ChessGame::default();
-        game.apply_mut(&Action::Setup(BEN::new(START_POSITION_FEN).into()))
+        game.apply_mut(&Action::Setup(BEN::new(START_POSITION_FEN)))
             .apply_mut(&Action::Make(Move::new(D2, D4, MoveType::DOUBLE_PAWN)));
 
-        let expected_fen = BEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 2");
+        let expected_fen = BEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1");
         let actual_fen : BEN = BEN::from(game);
 
         similar_asserts::assert_eq!(actual_fen, expected_fen);
@@ -103,7 +103,7 @@ mod tests {
         #[test]
         fn into_ben() {
             let mut game : ChessGame<PieceBoard> = ChessGame::default();
-            game.apply_mut(&Action::Setup(BEN::new(START_POSITION_FEN).into()));
+            game.apply_mut(&Action::Setup(BEN::new(START_POSITION_FEN)));
 
             let ben : BEN = game.clone().into();
             let expected_fen = BEN::new(START_POSITION_FEN);
@@ -122,7 +122,7 @@ mod tests {
             let action = Action::Make(Move::new(D2, D4, MoveType::DOUBLE_PAWN));
             let new_game = game.apply(&action);
             let actual_ben : BEN = new_game.into();
-            assert_eq!(actual_ben, BEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 2"));
+            assert_eq!(actual_ben, BEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1"));
         }
 
         #[test]
@@ -131,7 +131,7 @@ mod tests {
             let action = Action::Make(Move::new(D2, D4, MoveType::DOUBLE_PAWN));
             game.apply_mut(&action);
             let actual_ben : BEN = game.into();
-            assert_eq!(actual_ben, BEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 2"));
+            assert_eq!(actual_ben, BEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1"));
         }
     }
 }

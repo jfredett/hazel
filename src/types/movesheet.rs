@@ -3,7 +3,7 @@ use crate::{board::PieceBoard, constants::START_POSITION_FEN, coup::rep::Move, g
 #[derive(Clone, Debug)]
 pub enum MoveSheetEntry {
     Move(Move),
-    Branch 
+    Branch
 }
 
 #[derive(Clone, Default, Debug)]
@@ -167,7 +167,7 @@ mod tests {
         let rep = ChessGame::<PieceBoard>::from(sheet);
         let ben : BEN = rep.into();
 
-        assert_eq!(ben, BEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 2"));
+        assert_eq!(ben, BEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1"));
     }
 
     #[test]
@@ -179,7 +179,7 @@ mod tests {
         let game : ChessGame<PieceBoard> = ChessGame::<PieceBoard>::from(sheet);
         let actual_fen : BEN = game.into();
 
-        let expected_fen = BEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 2");
+        let expected_fen = BEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1");
 
         assert_eq!(actual_fen, expected_fen);
     }

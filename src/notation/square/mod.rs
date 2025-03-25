@@ -1,6 +1,4 @@
-use std::slice::SliceIndex;
-
-use crate::types::{Bitboard, Color};
+use crate::types::Color;
 
 mod constants;
 mod display_debug;

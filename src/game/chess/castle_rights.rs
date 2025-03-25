@@ -1,6 +1,6 @@
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 
-#[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub struct CastleRights {
     pub white_short: bool,
     pub white_long: bool,
@@ -8,6 +8,35 @@ pub struct CastleRights {
     pub black_long: bool,
 }
 
+impl Default for CastleRights {
+    fn default() -> Self {
+        CastleRights {
+            white_long: true,
+            white_short: true,
+            black_long: true,
+            black_short: true,
+        }
+    }
+}
+
+impl Debug for CastleRights {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut rights = String::default();
+        if self.white_short {
+            rights.push('K');
+        }
+        if self.white_long {
+            rights.push('Q');
+        }
+        if self.black_short {
+            rights.push('k');
+        }
+        if self.black_long {
+            rights.push('q');
+        }
+        write!(f, "{}", rights)
+    }
+}
 impl Display for CastleRights {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut rights = String::default();

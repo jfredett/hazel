@@ -1,7 +1,6 @@
 #![allow(dead_code, unused_imports)]
 
 use nom::{branch::alt, bytes::complete::tag, character::complete::char, combinator::opt, IResult};
-use tracing::{debug, instrument};
 
 use crate::{interface::Query, coup::rep::{Move, MoveType}, types::{Bitboard, Color, Occupant, Piece}};
 use crate::types::pextboard;
@@ -385,8 +384,7 @@ mod tests {
 
     #[test]
     fn new_works() {
-        let fen = BEN::new(START_POSITION_FEN);
-        let ben = BEN::from(fen);
+        let ben = BEN::new(START_POSITION_FEN);
         let san = SAN::new(ben);
         assert_eq!(san.context, ben);
         assert_eq!(san.source_piece, None);

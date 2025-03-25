@@ -1826,3 +1826,942 @@ The generator is _extremely_ slow right now. Well over 3 minutes to fail perft 4
 
 See you on the next branch.
 
+## 1132 - atm
+
+Why ATM?
+
+Because it's all about managing the Cache.
+
+This is going to focus on building some caching into the movegenerator, to hopefully speed us up a bit. I am going to
+avoid adding more rule implementation till after I've got the caching in place.
+
+The main bit of trickiness is going to be hiding the mutable bits so that `Position` transparently uses or populates the
+cache, while the caller only sees the immutable interface -- from their perspective `Position` is just a data object.
+
+I have a basic idea of how to do this. First, setting up some kind of `Zobrist` style hashing (or maybe BCH, I have a
+lot of reading to do) is obvious. Once I have that it should make the `unmake` step a lot faster (since it won't be
+recalculating from scratch each time.
+
+I'm not sure if I'm going to try setting up benchmarks just yet, but it would make it a bit easier to measure
+improvements. I think for now I can just go with wall time, bringing everything up to, say, `perft 5` to within a couple
+minutes would be ideal.
+
+Once I've got something relatively quick, I can finish the implementation for accuracy, then come back to refactor tests
+and add proper benchmarks.
+
+The cache itself will live on the MoveGenerator, and `Position` will have a borrowed reference to the `ATM`, which
+itself has a borrowed, mutable reference to the MoveGen. This _immutable_ reference will centralize all the cache
+retrieve/populate operations, so that multiple `Position` instances ask a single `ATM` for items from the
+`MoveGenerator` cache, and the `ATM` either populates or retrieves those items for the `Position`. This *should* mean
+that `Position` stays this fully immutable looking thing and `MoveGenerator` does all the mutation over time. Since
+`MoveGenerator` is eventually going to be wrapped up in a `Witch` and sent off to live on a thread, this means
+thread-local cache with an immutable interface for the caller, which would be pretty sweet.
+
+I've never tried to do anything like this in Rust, the closest I've come is the `Cursor` stuff on what I've come to
+think of as my "Log-unstructured-messy-tree" datastructure.
+
+It's on the list for a rewrite too.
+
+Anyway, this is the plan, it remains to see if it survives contact.
+
+
+# 27-FEB-2025
+
+## 0017 - atm
+
+My initial idea was to build something like the `Cursor` struct with `ATM`, and have a sort of type-agnostic cache, that
+I could then have each method use. The cache would be transparent to the caller, you ask for the board, you get it, if
+it's cached you pull it from there, if it's not you build it right then and cache it. More like memoization/transparent
+caching.
+
+That's not a great way to do this, with `make` and `unmake` in particular, I have a lot of opportunity for incremental
+updates and minimizing halfply-to-halfply work, so it makes sense to do opportunistic caching during this process, and
+manage when cache is updated more directly.
+
+Right now that cache is a HashMap, but there are smarter structures for this, and memory will be a concern quickly if I
+keep all positions.
+
+So I've opted for a much simpler global cache, centralizing all the cache logic in `Position` for now. Ideally the
+eventual model will be something like:
+
+* `Position` provides an API to talk about the position, it builds it's methods out of methods provided by
+`PositionInner`. It provides the pleasant API for implementing, e.g., movegen.
+
+* `PositionInner` provides the bitboard caclulation and has more memoization-adjacent caching via RwLocked bitboards,
+I'll probably build some custom wrapper around bitboard for that, not sure. Ideally most of the math gets pushed back
+here, and this can be a site for optimization of board querys.
+
+The `PositionInner` should ultimately ideally be `Copy`, just a big pile of bitboards and the like.
+
+I currently have the Alteration cached there as well, but I think I'd prefer that to be first-class on Position, since
+most of my incremental opportunities involve tooling around a Log of Alterations.
+
+To wit, another thing I've been sorely missing has been a good structure for a collection of alterations, and I realized
+as I was writing this that I have the perfect thing already built, that little `Log` structure backing `Variation` would
+work perfectly here, and it's `transaction` feature (which is moreso named for it's aspiration than it's actuality) may
+see some use.
+
+Finally, I'm pretty sure `ChessGame` is going to get factored away and replaced with `Position`, and I think that will
+net out to a much nicer flow than is currently there.
+
+# 27-FEB-2025
+
+## 2354 - atm
+
+make/unmake is such a drag, but I think the issue may be on the side of the `cached_alterations` (and more general
+alteration system). I'm currently just using a `Vec`, but it makes sense to have something closer to `Log`, except I
+don't want all the transaction stuff. Log initially was intended for branching trees of moves, this is something a bit
+simpler, and probably finite/ring-buffer-ish.
+
+I also sort of want to change how metadata is tracked, right now I have to `Assert` the whole metadata into the
+alteration stream (though technically it shouldn't be needed), ideally I would only flag when events happen that alter
+the metadata state; that would also make it easier to unwind (since I just update the `PositionMetadata` incrementally),
+but it unifies the whole system. This also makes zobrist-ing these guys pretty easy (and very amenable to SIMD
+calculation of the zobrist later).
+
+Ultimately what I want to do when doing `make/unmake` is something like:
+
+```
+make(mov):
+    push the move onto the stack
+    compile the move to alterations
+    apply each alteration to the zobrist of this position.
+    check cache:
+        if hit, load the contents
+        if miss,
+            use current contents and incrementally update the position,
+            populate the cache
+
+unmake:
+    unwind alterations until and including the previous START_TURN
+        apply each alteration to update the zobrist of the position
+    pop the move off the list
+    check cache for this position
+        if hit, copy contents.
+        if miss, populate the cache
+```
+
+In both cases, the `Move` is more of a convenience representation for the less compact but much simpler `Alteration`,
+which specifies how to update specific squares, and how metadata updates. In the current model I just dump all 4 bytes
+of `PositionMetadata` into the stream, but I'd prefer if things were a bit more incremental. Turns are already counted,
+but I need flags for at least:
+
+1. Losing Castle Rights (4 bits)
+2. Which is the EP file (if any, it's 3 bits for the file, absence can indicate no EP)
+3. 50 move rule reset (1 bit)
+
+We can calculate movecount and side-to-move from the pre-existing `StartTurn` variant.
+
+Eventually I want to be able to encode this to a bytestream, so it's handy to keep aligned to bytes. For now they can
+just be full variants, but eventually this will be represented as a bytestream that can be stored and gamestates
+recovered without any need to rule checking or any more advanced understanding of chess.
+
+Ideally the `make/unmake` will eventually only store partial alteration tapes, especially if they're finite, when we hit
+some threshold we can take the current zobrist (even in the middle of a partially-applied turn) and clear our buffer and
+continue. Essentially allowing us to `zobrist` whole alteration buffers in and out of cache.
+
+The structure I'm using now (a `Vec<Alteration>`) doesn't have the ability to seek around, and ultimately I need to seek
+through and do something on each alteration, so the whole thing is much more turing-machine than stack machine. The
+latter of which is how I've been considering it so far, but it's inconvenient since it's not a lot of stack bookkeeping
+and manually updating state.
+
+The `Log` datastructure is what I want, but I want to tweak how it works. I'm going to calculate two `Zobrist` values --
+one is the current actual position up to a `StartTurn` marker, this is the 'real' zobrist of the legal chess position.
+The other is a zobrist of the sum of all instructions in the buffer. When the buffer is filled, this zobrist is used to
+cache the state and then clear the cache, that hash is also stored in the tape as the 'previous' state, so unwinding is
+always possible. This hash can be computed incrementally along with the other hash. Once in cache, it may be possible to
+connect hashes together so that more chunks can be served from cache, but I've missed my exit.
+
+This `Tape` structure is really just responsible for managing the alterations, the `Position` will compile moves to it,
+and maintain it's own cache based on the zobrist it calculates.
+
+# 28-FEB-2025
+
+## 1836 - atm
+
+I'm starting to think about `Log`, `Tape`, `Cursor` and `Familiar` and I think I'm honing in on the API I want.
+
+I'm essentially dealing with two APIs.
+
+1. A 'thing what moves through a file' API, i.e Cursor/Familiar, both of which have file-like APIs to non-file things.
+2. A 'thing what stores variants of some enum', i.e., Log or Tape.
+
+A familiar in particular accrues state as it goes, while a cursor is a 'stateless' familiar.
+
+Realistically I don't care about the #2 thing as much as the #1. #2 is just for storing data and should be 'pretty dumb'
+most of the time, however, I do need to store it somewhere so that I can run my familiar over it to accrue whatever
+state it likes. Ultimately a familiar is a type:
+
+```rust
+struct Familiar<'a, F, E, S> where E : Invertible {
+    state: S,
+    source: &'a F<E>,
+    update: fn(&mut S, E)
+}
+```
+
+As the familiar is advanced or retreated, the update function is called with the `E` (entry) item or it's inverse if
+retreating. The `F` here is some arbitrary container, I don't think I can actually specify a type function as a type
+parameter but practically that's a nonissue since this is almost always either `Vec` (as in `Log` or a finite array (in
+the case of `Tape`). This parent structure is responsible for updating/writing things to the log, the familiar is
+responsible for interpreting it's contents and producing whatever items we like on demand.
+
+I think I want to extend this a bit, since familiars may be 'left behind' over time, they are responsible for
+incrementally updating themselves. When a cache-out happens (for `Tape`), their states should also be caught up, cached
+off, and put in the 'initial' state.
+
+These familiars are initially going to be useful for calculating various zobrist hashes of things for which we can
+zobrist. In particular, the `Tape` backend is made of `Alteration`s, which ultimately it what implements the zobrist
+hashing, so a familiar which is maintaining a hash as I edit the storage makes sense.
+
+Similarly, it makes sense to keep track of the hash at the position of the write head. Since we can just have a Familiar
+copy that when the need arises.
+
+I'm just tossing a function pointer in the above, but I suspect that should be some kind of trait. My thought was this
+is not really intended to be called outside the context of the familiar, and it's possible I'll want to build these
+dynamically, especially since these generic familiars will be able to interact with the existing `Variation` structure
+and the `Position` structure as well.
+
+# 4-MAR-2025
+
+## 0937 - atm
+
+I'm back to the perft bugs with the new `Tape` implementation. It's not perfect and needs a ton of sanding, but it's a
+much better and more complete start than I had.
+
+I think the next step is actually going to be wiring this into the UI, so I can manually walk around and watch the perft
+happen and try to catch the Tape misbehaving 'live'. The current bug is definitely just an `unmake` issue, but hard to
+guess from simple trace output, a `TapeWidget` would be helpful, as well as a better way to manage all the `Familiars`
+surrounding the Tape.
+
+I'm also not correctly processing metadata at the moment, the `Inform` blocks don't change the metadata.
+
+So basically, it still doesn't work, but it doesn't doesn't work as doesn'tly as it did didn't before.
+
+I'm going to try to do a little fix-in-place so I can maybe merge this branch before doing more UI stuff, as that's
+going to require building up the communication side of things, and movegen working would help a lot there.
+
+# 5-MAR-2025
+
+## 0058 - atm
+
+I'm working on the UI a bit to help get the perft bugs sorted out. I am running into an unfortunate design decision
+which leads to some unfortunate type stuff.
+
+Ideally I want a tape to be a static allocation, and have `Alterations` be encoded to some relatively small
+representation (maybe a u16). Encoding this in the type will make it (I hope) easy to tweak later to appease the memory
+gods. It's not premature optimization, it's optimizating prior to maturity.
+
+In any case, using a const generic seems natural, except that my `Familiar` type needs to borrow a reference to it, but
+that means it needs to name _the specific_ type, not just one of any size, though the reference will be the same for all
+of them.
+
+I'm not sure how to fix that, logically I think it's sound to drop the knowledge of the size of the tape here, but I
+can't think of a way to do that in the type system (mostly due to ignorance, I think it should be possible).
+
+I suppose I could push the generic into the method, which would possible make things easier, I think the easiest way to
+address it would be dynamic allocation, but that would set up a bit of a can of worms of how configuration will work. I
+still want it to be a single static allocation so I think that's probably the easiest thing.
+
+## 1022 - atm
+
+I found `dynamic-array`, which I'm going to use for now, I think at some point I'll probably want to implement it by
+hand, but for now I just want a dynamic array I don't have to think about.
+
+## 1435 - atm
+
+`dynamic-array` was drop in, which was nice, but I am straining against how I'm managing these `Familiar`s and I think I
+need to just bite the bullet and do the refactor. In concept it's straightforward, it's a common API for working with
+linear data on some kind of tape. `Everything is a file` extended into Hazel.
+
+
+```rust
+// Calculates a state based on the content of some tapelike. Importantly, the `cursor` should be _replacable_, so that
+// if a familiar runs off the end of a tape, and we have a continuation for that tape in cache, we can replace it's
+// cursor with a new one on the new tape and maintain the state. These should ultimately be sendable between threads, so
+// all their state is maintained internally in a thread-safe way.
+struct Familiar<T, S> {
+    cursor: Cursor<T>,
+    state: S
+}
+
+// A zipper-type over the Tapelike. Hides locking details from familiar, so that familiar can RW safely.
+// Eventually will tie into some kind of transaction tool to coordinate concurrent writes
+struct Cursor<T, E> where T : Tapelike<E> {
+    ref: Arc<RwLock<T>>,
+    position: usize
+}
+
+// Covers all the IO operations on the tape, without an explicit read/write head being maintained.
+trait Tapelike<T> {
+    // locking ranges is internal, ideally takes place transactionally (eventually)
+    fn cursor(&self) -> Cursor<Self, T>;
+    fn length(&self) -> usize;
+    fn read_address(&self, address: usize) -> Option<&T>;
+    fn read_range(&self, range: Range<usize>) -> Option<&[T]>;
+    fn write_address(&mut self, address: usize, data: &T);
+    fn write_range(&mut self, start: usize, data: &[T]);
+}
+
+fn conjure<S, E>(tape: &T) -> Familiar<E, S> where T : Tapelike<E>, S : Default {
+    Familiar {
+        cursor: tape.cursor(),
+        state: S::default()
+    }
+}
+```
+
+this is my rough sketch, I'm not sure I've got all the concurrency stuff right there but that's what compiler errors are
+for.
+
+## 1532 - atm
+
+Extending the above, the `Cursor` object would be able to access the whole `Tapelike` API, which makes me think maybe I
+should use an associated constant for the entry type, similar to Iterator, which is kind of what I'm aping here.
+
+# 6-MAR-2025
+
+## 1354 - atm
+
+Noticed a little bug, if you place two places to the same square in a row, it will happily 'place' the piece in the
+square, screw up the zobrist, and then move along. This is happening in the current (46da817) SHA, though I honestly
+don't know _why_ it's making multiple `place` commands there, it is. Maybe because it's initializing to zeroes and
+trying to read them as `None`s? IDK. Might be worthwhile to add an `Alteration::Noop` in the mix and get rid of the
+`Option` type entirely in `Tape`.
+
+Next steps are to continue refactoring, I realized that by adding some additional methods to the familiar, I can get the
+best of both worlds, update the state via the simple `Alter` code, then when the UI needs to read context data, it talks
+to the familiar, which can specialize the methods according to it's current position/state. This means that `Familiar`
+will proxy some of `Cursorlike` and `Tapelike` to the end user, but with the added context of the familiar's state,
+which I think should be plenty for what I need. I am going to aim to build up the `TapeReaderState` with the new
+familiar system and see how that fares.
+
+## 1936 - atm
+
+I was thinking a bit about `Zobrist` while organizing code, and I think I want to tweak the design. I'm planning to use
+`Zobrist` for much more than just position hashing, since I can certainly use them for `Tape` caching at least, and
+perhaps for other things as well. I also expect I'll want to use them primarily in the context of a Cache, so I want to
+tie those things together and also ensure the type system prevents using the wrong calculated hash, since they all look
+pretty much the same. I'd also like to be able to tweak the seed per cache, since the behavior is quite sensitive to
+what it is you're hashing.
+
+I'm thinking of taking a phantom type, at the very least, on both `Cache` and `Zobrist`. Cache will accept lookups only
+with matching type. I can also use that phantom type information to report back to the debug UI and log as telemetry
+about the hashes, which I can then use to start analyzing hash quality, which I think will be important. I think this
+will be a good way to implement things when I get to actually implementing a non-stub version of `Cache`.
+
+Unrelated, I need to put some kind of prelude module together, there is a set of common things (Square constants,
+macros, some types) that I simply need all the time, and more generally it'd be good to have some sort of toolbox module
+that just reexports all the stuff I need. I have been idling on splitting up the thing into multiple crates, LSP is
+getting quite slow and I think it's potentially due to project structure -- it's also just getting a bit messy, and some
+parts of the system are quite stable and unlikely to change until I get into the optimization loop later.
+
+## 1953 - atm
+
+I'm procrastinating, but I thought of a potentially interesting game/tool for teaching chess to children. My kid is
+almost four, and loves watching me play chess, despite constant protestation about not playing illegal moves. I've been
+thinking about how I will teach the game, and when it comes to teaching, my style is somewhat idiosyncratic. I dislike
+direct instruction and generic or trite metaphors. Rarely do these appeal to the actual individual learning in front of
+you, and they always seem to focus on creating a superficial understanding that does not really drive nor reward
+discovering better abstractions later.
+
+Take, for example, chess puzzles. I love them now, but hated them at first because they didn't make sense -- I didn't
+understand what they were aiming to reinforce or teach, because I was hung up on the idea that I was simply supposed to
+play 'well' and not 'accurately', puzzles reward accurate identification of tactical sequences and execution of those
+sequences ("combination"). By directing a student to a puzzle which has the full rules of chess enforced, probably with
+many pieces to consider, and then to expect them to just 'caclulate' leads to frustration. This is mitigated either by
+replacing the puzzle with simpler ones, which is demoralizing for many students (myself included); or by starting with
+trivial puzzles (which don't really help develop the muscles for real games, which is the typical goal of students
+(myself not included)) and progressively increasing difficulty, which delays the value of the puzzle and makes it hard
+to understand how it's helping; or by carefully walking them through the puzzle and emphasizing calculation and patience
+and how to look for tactics and so on. This is probably our best try, but it still leaves the game badly unbalanced, the
+amount of _work_ it takes to drag a student through the weight of all the possibilities is highly inefficient.
+
+The problem is not the student nor the teacher, it's the rules. There are two many of them to easily isolate tactics in
+a narrow space that makes calculation easy. Most small-piececount puzzles in chess are either trivial mates/forks, or
+pawn-and-piece endgames which are renowned for being calculation intense, as the branching factor shrinks, allowing a
+great deal of depth, paradoxically _increasing_ the number of positions that must be considered.
+
+The rules are also against us because the _best_ tactical positions are also the _narrowest_. These offer the most
+excitement, snatching victory from the jaws of utter defeat. A mate-or-be-mated position is _thrilling_, and excitement
+cements memory like nothing else. So we want to reduce the resistance and ensure early and frequent narrow wins. We, as
+teachers, can then slowly increase the difficulty and lower the win rate, and ultimately develop the mental muscles of
+our student.
+
+So what if we isolate tactics into smaller rulesets built around simpler games? Let's also try to make the game slightly
+asymmetric, such that the student's role is easier, we will rely on the skill differential to help balance the game.
+We'll also use an asymmetric clock, so that the stronger player has less time.
+
+The rules of the game are simple, the stronger player takes a king and piece of their choice (not a pawn). The student
+takes a piece assigned to them by the stronger player. The stronger player is given a clock, the student may be given a
+clock, depending on the stage of training.
+
+Student places their piece on the board.
+
+The teacher goes second and places both of their pieces on the board.
+
+The student must fork the teacher's pieces. As soon as this happens the game ends and the student wins. If the student's
+piece is captured, they lose. When the student wins, the teacher gains an increment on their clock and the game resets.
+When the teacher wins, they lose an increment. Play until you're done.
+
+The point of the game is just to practice recognizing fork configurations of these pieces on instinct. There is no
+attempt to teach deeper chess concepts, it's just lifting weights.
+
+I don't know if it's a good game, but I might make hazel play it someday.
+
+# 9-MAR-2025
+
+## 0034 - atm
+
+Working a bit more, I've got the tape widget kind of working, but the `Table` widget has some slightly strange behavior
+that I can't _quite_ say is it's fault, but I don't see where the issue is on my side.
+
+It's an easy problem to fix, though, DIY.
+
+I am starting to think that I should build my actual Widgets to be the payload of a Familiar, using a similar
+update-override, I could have a `Widgety` trait that adds an advance/retreat logic to update it's internal state, and
+then a parent widget can just manage advancing/retreating whatever widget needs said advancing/retreating.
+
+# 11-MAR-2025
+
+## 0042 - atm
+
+I'm finding it quite difficult to live with my, perhaps ill-adviced/anxiety-informed choice to try to avoid `Arc`/`Rc`
+for the `Cursor`/`Familiar` system, but I think I have met my match with the way things are going with the tape widget.
+
+After a brief diversion to get logging exposed in the UI, I now have an interactive way to debug the damn tape widget.
+
+I finally want to get it hooked up to the actual engine backend using the `Witch` actor system, but I'm running into a
+borrowing issue since I'm now in the multithreaded environment where it gets tricky to pass the data around to be used
+by both the engine and the various UI components. Since I want the UI to be able to expose parts of the engine directly
+for debugging, I don't want to rely on copying state across or otherwise processing it, I really want a reference as
+close as possible to the 'real' thing.
+
+I've been putting off using any kind of thread-safe stuff because I couldn't imagine what joint it would make sense to
+cut at in terms of thread safety. Too coarse and the system won't scale, too fine and the system won't perform. Polya
+says if you have a hard problem you can't solve, find a simpler one you can't solve; thus everything else up till now.
+
+I have already established one boundary, `Hazel` is the engine state struct, with `Witch` surrounding it and managing
+message passing. Hazel ultimately will contain a `Variation`, which encodes a multi-variation game structure as a flat
+file[1]. A `Familiar` on that structure will calculate some chosen `Position` based on the contents of the `Variation`
+at the chosen point. Similarly, `Position` compiles `Moves` and writes them to a `Tape`[2]. This tape also uses a
+`Familiar` to calculate the current boardstate, potentially jumping to specific states via Zobrist `Cache` hits.
+`PositionFamiliar`s, in particular, use `Bitboard`, the `Query` trait, and ultimately use the `Alter` trait and it's
+companion `Alteration` enum to specify incremental, reversible updates. Since `Cursor`s (and therefore `Familiar`s) can
+also read ranges of the underlying tape, eventually these Familiars can optimize across multiple `Alteration`s to
+minimize computation (e.g., the `PawnStructure` familiar might ignore all the non-pawn related alterations, and further
+use `simd` to apply multiple alterations at once where possible). All of this is provided via the `hazel` libary.
+
+`main.rs` is then just whatever is necessary to set up a `tokio` environment and run either the UI or just the UCI
+subsystem. The `UCI` subsytem uses the `UCIMessage` struct (which sucks) to send UCI messages to the engine via
+`WitchHazel`'s `MessageFor` trait implementors. Eventually each message will be it's own type and can contain whatever
+logic is needed to move hazel into the implied state in their various impls. Most will be ZSTs, but where natural types
+like `BEN` and such can be used. This will also make it easy to add custom commands to `Hazel`, which I need for the
+eventual database-y features I intend to add.
+
+The `Familiar`s in particular need to be self-contained little guys that ideally can be quickly transferred to any
+thread or client `Hazel` engine. They rely on the `Cursor` object, and ultimately I think that's the joint where I need
+to start cutting. `Cursor` presently relies on a simple borrowed reference to talk about it's target `Tapelike` object,
+but it should probably use an `Arc`.
+
+Additionally, I only have familiars that don't mutate the underlying variation, I don't know that I'll run into a need
+to have concurrent writes _just_ yet, and it's another joint in any case. I *think* there is some combination of `Arc`
+and `RwLock` that might make sense for cursor, but I need to think on it.
+
+I think this should also clean up the types a bit and avoid all the lifetime math I've been doing, since I can just
+clone an `Arc` around without the same anxiety that cloning a big `Tape` gives me.
+
+Once _all_ of that refactoring is done, I will _finally_ be able to finish the `TapeReader` widget, since it will rely on
+a `TapeFamiliar`[3] instead of this crazy reference lifetime rigamarole I've been trying to massage into shape.
+
+The remaining problems to solve I see are:
+
+1. Getting the UCI Implementation working (as always).
+2. Some mechanism for managing a familiars and states
+    - In particular, the `TapeReader` can only show it's own position, but I will want to be able to have the result of
+      other familiars operating on the tape simultaneously shown on a single widget.
+    - I also want to be able to independently manage a particular familiar (as in, the API wrapping a particular
+    state-object with a cursor onto some other object) with the actual cursor that 'powers' it. In this way I can better
+    batch different needs of the engine. If multiple lines all want to calculate through some particular position, I can
+    prioritize unblocking those threads dynamically. This is the plan, anyway.
+    - It will _also_ enable the UI to have a `Menagerie` of familiars it can then loan the state of to each of the
+    widgets.
+3. Hook up the `Board` widget to a syncronized `Familiar` with `TapeReader`, and we should get the engine's idea of the
+   current selected boardstate.
+4. Write some command that runs `perft` in the engine so we can watch it blow up.
+5. ...
+6. Well, I can't say profit, but it'll be cool to watch the pieces move around. Very `blinkenlights`, very cool.
+
+Anyway -- the point of this is _that's it_, that's the whole system I have conceived up to this point. I took time to
+work on `tabitha` trying to figure out that, and though I haven't finished her yet, she ended up not being totally
+necessary. There are a few missing types I didn't mention in there (`Square` is probably the only notable omission, but
+it's not really a type, just a notational convenience in the engine), but it covers the design as is. I am pretty close,
+I think, to getting that working and getting to at least step 1 (or 2) with a little more refactoring and a finished
+cache implementation, which should come quickly when I finish the debugging tool intended to fix it.
+
+Let's hope I don't go walkabout first.
+
+----
+
+[1] Variation presently uses an early iteration of the `Tapelike` interface and all that, it needs to be unified to this
+model and also to use the `Tape` structure, enhanced with some write-to-disk functionality added.
+
+[2] The same cache-to-disk functionality can be applied to any particular `Tape`, but with a target of an in-memory
+cache.
+
+[3] `type TapeFamiliar<S> = forall T : Tapelike, Familiar<T, S>` -- or whatever rust has for that, I think.
+
+
+## 1033 - atm
+
+Started working on the refactor, I decided to just go ahead an do an `Arc<RwLock<T>>` on `Cursor`, but not provide a
+write API for now. I think ultimately I'll want to put the write API on the cursor itself, but for now it mostly aids in
+sharing the already RwLock'd tape inside position. I am also going to `Arc` that `tape` instance in `Position`, which
+makes creating the cursor very easy (cursor just clones the `tape`, but the tape is owned by `Position`).
+
+## 1046 - atm
+
+I'm also ripping out all the hash calculation on `tape`, I'm going to manage this via familiars still, but I want them
+to exist outside tape itself, which should be agnostic with respect to it's contents.
+
+The only place where I'm a little hesitant is the `head_hash`, which is used for tape-level cache-out, but I think the
+cacheout can just calculate this at cache-out time from scratch (no incremental maintenance), since the array is small
+this works out to a pretty small number of operations done rarely, which I think is probably fine.
+
+## 2049 - atm
+
+I've found that, in fact, what I'm trying to do is impossible, and needs some additional state. In particular, I'm
+reinventing the `owning_ref` crate. Ultimately, I want to only allocate the underlying `Tape`'s memory _once_, living in
+an (eventually not `'static` `Cache` shared amongst threads and owned by the parent thread behind a tokio wrapper so
+that it is accessible across networked clients as well).
+
+I'm also starting to get frustrated with the compile time cycle. I think there are a few things to look into. First is
+[this](https://benw.is/posts/how-i-improved-my-rust-compile-times-by-seventy-five-percent) and it's followup to
+investigate. I'm already on nightly with all the stripes painted on the side, so I don't mind being experimental. I
+think `mold` was set up at least when I was still using the other shell framework, but I'll have to spend a cycle or two
+refactoring. I also suspect moving to a workspace and separating out some of the crates might mean I can cut some
+dependencies out and speed things up.
+
+Add it to the bucketlist.
+
+
+## 2119 - atm
+
+Okay, I think I've ended up on a rabbit trail. I'm also in a bit of a pickle with respect to the repo, I need to commit
+off some of the UI work, and then I think revert a bit and take a fresh stab at the Familiar/Cursor/Tape stuff.
+
+In particular, this arose while trying to get the `TapeReader` widget working, which was exhibiting extremely strange
+bugs, that ultimately were down to the scaffolded way I had wired it in re-building the widget every `draw` call.
+
+The idea was to connect it to the engine, which exposed issues with `tokio` and how the UI connects to the backend, and
+thus all this other work.
+
+I'm going to get the commits done, then start over on this setup. I think the rough heirarchy still makes sense, but I
+need to push some of the concurrency around and that requires a redesign.
+
+
+# 14-MAR-2025
+
+## 1056 - atm
+
+I got it working, mostly. The `Table` widget is not working as I'd expect, and in particular it seems to have very
+little correlation in the number of rows I fetch to the number of rows it renders. I think I may DIY this, I'm not
+entirely sure what I'm doing wrong, so building it myself might be an improvement. Also an opportunity to work out the
+remaining bugs with the thing. Mostly UX issues, a couple of weird UI bugs as well, and at least one `O(n)`-growing
+repeated call problem when you scroll past the end of the tape.
+
+Separately, I want to integrate a board representation and other diagnostic info before getting to the actual point,
+which is debugging `perft` and the game representation.
+
+I had to compromise a lot on the `Tapelike` design, mostly due to the way `Tape` don't have central
+allocation/management. Ultimately `Tape` should reside in some stable memory-space that I can easily refer to across the
+application. I'd even like if they were CoW and the '`TapeDeck`'[1]
+
+[1] Name pending, I went with `Tape` for the tame now, but it doesn't fit the rest of the naming scheme w/ familiars and
+stuff. `Tape` is a very Computer-Sciency name for it, I want something more like Computer Witchcraft, so this might get
+renamed.
+
+## 1538 - atm
+
+Continuing: Barring some naming stuff, once I have a situation where I'm storing `Tape`s in some broader allocation, I
+can share reference to subsections of `Tape` that way. Eventually I think the result will be some storage entity a la
+`Cache` that holds all the tapes and dynamically grabs the right 'section' of tape (identified by Zobrist of said tape)
+and dynamically creates a `Tape` with that content as needed. This will also allow the UI a stable reference to a
+section of tape.
+
+Ideally this thing is actually just a big `Vec` of larger contiguous chunks of memory, maybe adding some kind of `Jump`
+alteration to skip around to different subsections within the `Tape` (so long as the destination had a reversible
+`Landing` instruction, a la `COME FROM` in Intercal, of all things).
+
+I think getting a board/metadata rep connected is the next step, and then I can rig up an IO section for controlling the
+engine via uci commands. Once I can do that I should be able to get it hooked up to `perft` output.
+
+I will need to extend this to a nested reader at some point, connecting a variation-tape to a position-tape and warping
+everything around appropriately.
+
+I also really need to overhaul both how communication is handled via `Witch` (it's presently handled in a way to mimic a
+STDIO/UCI style thing, and I'd prefer to have most internal messages be a direct-response-over-a-oneshot-channel, which
+will avoid all sorts of race conditions if multiple clients are reading the engine simultaneously), and also refactor
+the UI to be a fully asynchronous update/event/draw loop. Ideally the drawing would be independent of the other two and
+support a high-sample-rate of the underlying state, so that the engine is not limited by the UI update speed, which I
+suspect will be the case in the current model.
+
+Last, I need to think about what columns make sense in the TapeReader, and also how to render alterations. I know for
+sure I need to add a `Inform/Assert(EnPassant(None))` at least for now to make the forward/reverse simple, but I suspect
+in the longer term I'll be able to elide much of the metadata alterations.
+
+For now, though, the tapereader basically works (mod bugs), and things are starting to look like how I want them.
+
+## 2352 - atm
+
+Just documenting some bugs w/ the tapereaderwidget:
+
+1. On first load, shows nothing, this is probably due to how it's initialized, but the unloaded state should be better
+   represented.
+2. After loading by pressing 'down', it loads and sits on 0x00001, can't scroll up to 0x00000.
+    - I can scroll to 0x00020 later, without issue, so it's just the 0th entry, not the first entry of a page
+3. 0x00049 is the actual end of tape, 0x0004A shows a null-place (`Place N @ a1` maps to `0` in all fields), so I'm
+   getting a null that's interpreted as an alteration even though there isn't an alteration there (or shouldn't be,
+   anyway).
+4. After scrolling past the end of the tape, it seems to have an O(n) increasing number of calls to the page_range
+   function, which is an issue only if I allow scrolling past the final page/scrolling arbitrarily far forward.
+
+Next tasks:
+
+1. Hook up and provide a gamestate representation attached to the current position. Board, FEN, at least.
+2. Input/output section routing to the engine.
+    - UCI messages should get rebuilt into `WitchHazel` messages, ideally with a oneshot return channel, but they also
+    need to obey the STDIO stuff as well which is going to use the `#write` method.
+    - Internal messages are more free, and the main ones I'm looking for are probably going to be something like
+    'load-from-file' and 'perft' to start. That'll make it possible to build the stockfish integration test I
+    described... way back in November...
+3. Make things look nicer.
+
+
+# 18-MAR-2025
+
+## 2343 - atm
+
+The end-of-tape-nullmove bug does introduce a secondary bug, where it overwrites the A1 square with a knight that does
+not unwind when you run back over it. I think I might just clamp the end of the tape so you can't scroll past the end.
+The way the tapereader work sucks in a lot of ways, but it is pretty cool to watch the pieces wiggle around.
+
+The UI is quite messy, and I need to wire up some more controls so I can make better use of the log widget, and also
+send messages into the system, then I should be able to get perft working in the UI.
+
+# 19-MAR-2025
+
+## 1600 - atm
+
+I really need to split this thing into multiple crates, if only so I can more easily skip all the UI tests which, owing
+to their 'compare to a text screenshot' approach, are pretty brittle when I start working on the UI.
+
+I'm back to working through some of the failed tests, going to hopefully get it back down to just perft failures before
+continuing with the UI debugging, ideally to minimize the number of moving bugs when I'm trying to squash the zobrist
+caching part of movegen, which is what this whole thing was supposed to be about in the first place.
+
+# 22-MAR-2025
+
+## 1227 - atm
+
+Setting up the input section, and I'm finding the layouts result in the Input-line is off the end of the screen, I'm not
+quite sure why as I'm using percentages for almost everything, might just be something with padding? not sure.
+
+Getting input wired up probably also comes with getting better event handling and widget-selection, which leads me
+further from the point of this branch, but I suppose I'm just committed to the UI stuff now. I'd rather not merge with
+broken tests.
+
+I did put a little work into the perft stuff, but I'm getting a bug where it unwinds too much and ends up running off
+the end of the tape. I think fixing that should get perft working back up to perft3.
+
+I have _no_ idea how I'm going to get the `perft-in-the-ui` working, I think I'll have to build a specific message +
+handler that sends position updates back to the UI as it runs, then the UI can render it and the perft can continue,
+it'll be quite slow, but this isn't intended for performance, but debugging. Something like a:
+
+```rust
+
+struct Perft {
+    initial: BEN,
+    depth: usize,
+    reply_to: TxChannel
+}
+
+impl Perft {
+    pub fn new(initial: impl Into<BEN>) -> (Box<Self>, RxChannel) {
+        // returns both the message to send and the callback channel
+        // UI then hands the callback channel to the UI widget, which 
+        // waits asynchronously for a message and updates when it recieves one.
+    }
+}
+
+```
+
+I'm a little concerned that this approach is going to rapidly devolve into a "Simply rebuild the entire UI to be fully
+async in all parts from the get-go", at which point I may abandon this till I can at least get the tests passing again
+and then take a better stab at refactoring. Before I do that level of work on the UI I want to at least (in no
+particular order yet):
+
+1. Split up the crates
+2. move to rs-test
+3. Unify the variation stuff under the new `familiar` system and remove the old implementation.
+
+Once that's done, I can move to a fully asynchronous UI which 'observes' the engine state over (ideally) a channel that
+is otherwise ignorant of the internals, this *should* allow the UI to work _as I upgrade the engine code_ via something
+like a hot-reload.
+
+My intent is to first support all of UCI, but quickly this will mean a custom protocol for communicating internal engine
+state to the UI asynchronously. Ultimately I want the UI to basically hold a finite buffer of updates and try to just
+'keep up' with the engine, discarding states it can't get too as it does so.
+
+Input will be collected, categorized, and then notifications sent to various subcomponents of the UI.
+
+# 23-MAR-2025
+
+## 1317 - atm
+
+I don't think there's going to be an easy way to get the debug frontend set up until I overhaul the UI heavily to be
+more async-first. Bear with me while I talk it out.
+
+Basically, in order to handle the input, I need to include some sort of 'focus' mechanism so I can still scroll through
+the tape, but also enter values, etc. In order to do this I need to:
+
+1. Track which subsection is chosen, easy -- I already have a modal enum I can just add another enum to tell me which
+   part of the UI I've got selected.
+2. Harder, I need to then hand off event handling to that subsection
+3. Harder still, I need to do this without interrupting the engine.
+
+This is doable if I move to a message-passing/multi-process setup, because then I can just have each subcomponent have a
+channel for event handling, etc. Getting there is it's own little project entirely though.
+
+So on that front, I think I'm going to try to do something a little crazy.
+
+I should be able to fix unmake by basically saying, "Recacluate the boardstate from the beginning of the tape each
+time." I don't think I'm at any risk of overwriting the end of the tape, and I can always make it bigger in the short
+term, but I think that might get all the calculations right at the expense of not actually caching out efficiently?
+
+Eventually I want to store the running-hash alongside the alteration in the tape, and I think that model will work a bit
+better anyway, most of my widget code is written at the tape level and not the position level, as well, and I think that
+might be wrong.
+
+I think I'm going to spend a few cycles trying to fix the code as is, if I can get it right, then I should be able to
+get the tests passing and back to working on the engine, I can follow through with my above plan for either the UI or
+the more general plan I set up on 14-MAR.
+
+# 24-MAR-2025
+
+## 1406 - atm
+
+I'm getting close to scrapping the current Position implementation. I think in order to move to the Familiar-based
+approach, it may be sensible to take that route, since it removes some of the internal hash calculation stuff and
+*should* result in a smoother experience. Right now I end up with a lot of little logical errors everywhere because
+multiple different codepaths are trying to keep track of a gamestate. I started extracting this (based on the
+`InnerPosition` struct), and I think this will make it easier to transfer state around (just send a quintessence and a
+reference-by-hash to the relevant tape.
+
+The ergonomics are such that I may try blanking the relevant tests, merging as-is, and then doing the split. I'm going
+to see how close I can get to working again, but I'm itching to do some sanding on this to get the rough spots down.
+
+## 1519 - atm
+
+There is definitely an errant cache hit, and naturally the easiest thing to do is to create a UI widget to see the
+internal state of the cache, but once again that returns me to the same problem of the UI side of things being pretty
+messy.
+
+
+```
+# In the `zobrist_is_same_for_transposition` test
+
+# ... before this, I construct a transposed version of the position. The final position is the same FEN, but the route
+# to get there is different
+
+2025-03-24T19:14:34.610727Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Making move: d2 (11) -> d4 (27) (QUIET) [0o026660]
+2025-03-24T19:14:34.610836Z DEBUG zobrist_is_same_for_transposition: hazel::game::chess::position: making: d2 (11) -> d4 (27) (QUIET) [0o026660]
+2025-03-24T19:14:34.610928Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Caching
+
+# Right here I get a cache hit but it's wrong, this has cached the position _after 1... d5_ as if it were the position
+# after 1. d4.
+2025-03-24T19:14:34.611145Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Cache hit Z|0x49B41FB4723326D3| -> "rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1"
+2025-03-24T19:14:34.611206Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Making move: g8 (62) -> f6 (45) (QUIET) [0o175320]
+2025-03-24T19:14:34.611249Z DEBUG zobrist_is_same_for_transposition: hazel::game::chess::position: making: g8 (62) -> f6 (45) (QUIET) [0o175320]
+2025-03-24T19:14:34.611292Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Caching
+2025-03-24T19:14:34.611397Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Cache hit Z|0x7AE74C1F751CA0F1| -> "rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq d6 0 2"
+2025-03-24T19:14:34.611442Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Making move: c1 (02) -> f4 (29) (QUIET) [0o004720]
+2025-03-24T19:14:34.611481Z DEBUG zobrist_is_same_for_transposition: hazel::game::chess::position: making: c1 (02) -> f4 (29) (QUIET) [0o004720]
+```
+
+Not yet sure why it's calculating the same hash for that position, I suspect it's probably some side-to-move malarky. I
+should be able to drop the `Turn` marker and instead use the fact that Assert/Inform wraps each move, that should mean I
+can do my STM on/off through those.
+
+I definitely could benefit from a Cache-browser widget for this, but I think getting into the Actor-y stuff seems most
+interesting right now anyway, so I'll probably pack this up and merge it if I can't fix this easily.
+
+## 1834 - atm
+
+I tweaked to remove the update on `Turn` and replaced it with full metadata updates on `Inform/Assert`, as I mentioned
+before. Doesn't solve the immediate problem but does resolve one of the hash_familiar tests.
+
+## 1953 - atm
+
+```
+2025-03-24T23:51:55.072518Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Making move: d2 (11) -> d4 (27) (QUIET) [0o026660]
+2025-03-24T23:51:55.072750Z DEBUG zobrist_is_same_for_transposition: hazel::game::chess::position: making: d2 (11) -> d4 (27) (QUIET) [0o026660]
+2025-03-24T23:51:55.072892Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Caching
+2025-03-24T23:51:55.073106Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Cache miss
+2025-03-24T23:51:55.073196Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Applying: Turn
+2025-03-24T23:51:55.073243Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Applying: Assert <w KQkq - 0 1>
+2025-03-24T23:51:55.073324Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position_metadata: My meta: w KQkq - 0 1, their meta: w KQkq - 0 1
+2025-03-24T23:51:55.073370Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Applying: Remove P @ d2
+2025-03-24T23:51:55.073430Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Applying: Place P @ d4
+2025-03-24T23:51:55.073472Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Applying: Inform <b KQkq d3 0 1>
+2025-03-24T23:51:55.073547Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: updated inner
+2025-03-24T23:51:55.073650Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Cache set Z|0x175357BEF46D03ED| -> "rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1"
+2025-03-24T23:51:55.073721Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Tape is: 0x42356324111111110000000000000000000000000000000077777777a89bc98a:w KQkq - 0 1
+PositionZobrist { current: Z|0xB2390A8808563F88|, position: Z|0x175357BEF46D03ED| }
+RwLock { data: 
+TAPE(head_hash: Z|0xB2390A8808563F88|, head: 0x27, hwm: 0x27)
+0x000000 | Clear | Z|0x0000000000000000|
+0x000001 | Place R @ a1 | Z|0xF8F96A2C09E4AF7E|
+0x000002 | Place N @ b1 | Z|0xEA58B07658FE5BEA|
+0x000003 | Place B @ c1 | Z|0x4929572CE96AC736|
+0x000004 | Place Q @ d1 | Z|0xD80F29D8B72E614D|
+0x000005 | Place K @ e1 | Z|0x407EFBE89EB626EA|
+0x000006 | Place B @ f1 | Z|0x82E8D8D87B2DF6B8|
+0x000007 | Place N @ g1 | Z|0x246E9B437DAE2756|
+0x000008 | Place R @ h1 | Z|0xDA8B17A14E032698|
+0x000009 | Place P @ a2 | Z|0xE13AC46130BCA406|
+0x00000A | Place P @ b2 | Z|0xC09F69247A322979|
+0x00000B | Place P @ c2 | Z|0x423E7386EE621B94|
+0x00000C | Place P @ d2 | Z|0x06F4427BB3BBFA4B|
+0x00000D | Place P @ e2 | Z|0xF7C662F78033FE6D|
+0x00000E | Place P @ f2 | Z|0x33FF1E11437B3BB5|
+0x00000F | Place P @ g2 | Z|0x4488A0019704DF24|
+0x000010 | Place P @ h2 | Z|0xF9569451BA88BDBE|
+0x000011 | Place p @ a7 | Z|0x560A2845D85A8564|
+0x000012 | Place p @ b7 | Z|0x174477C88AD15BCD|
+0x000013 | Place p @ c7 | Z|0x52788A0CCA3D5708|
+0x000014 | Place p @ d7 | Z|0x864346235FD05CED|
+0x000015 | Place p @ e7 | Z|0x44F8C4E79659D080|
+0x000016 | Place p @ f7 | Z|0x136DFFF91DDB872C|
+0x000017 | Place p @ g7 | Z|0x857658D3FD60A795|
+0x000018 | Place p @ h7 | Z|0x6E7BB19382E73A5A|
+0x000019 | Place r @ a8 | Z|0x18603AEEAAEC7478|
+0x00001A | Place n @ b8 | Z|0xA020A28F27D57B0A|
+0x00001B | Place b @ c8 | Z|0xBC72A17411A7839D|
+0x00001C | Place q @ d8 | Z|0x0FD353607E034BD1|
+0x00001D | Place k @ e8 | Z|0xF93226BEA0E8522A|
+0x00001E | Place b @ f8 | Z|0x5FD9F939C87C647E|
+0x00001F | Place n @ g8 | Z|0xB1484F2F5287B45C|
+0x000020 | Place r @ h8 | Z|0x816A59230F79B9AA|
+0x000021 | Inform <w KQkq - 0 1> | Z|0x175357BEF46D03ED|
+0x000022 | Turn | Z|0x175357BEF46D03ED|
+0x000023 | Assert <w KQkq - 0 1> | Z|0x816A59230F79B9AA|
+0x000024 | Remove P @ d2 | Z|0xC5A068DE52A05875|
+0x000025 | Place P @ d4 | Z|0x46776A46D78D19A7|
+0x000026 | Inform <b KQkq d3 0 1> | Z|0xB2390A8808563F88|
+END-OF-TAPE
+=================================
+, poisoned: false, .. }
+
+2025-03-24T23:51:55.074220Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Making move: d7 (51) -> d5 (35) (QUIET) [0o147060]
+2025-03-24T23:51:55.074287Z DEBUG zobrist_is_same_for_transposition: hazel::game::chess::position: making: d7 (51) -> d5 (35) (QUIET) [0o147060]
+2025-03-24T23:51:55.074354Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Caching
+2025-03-24T23:51:55.074452Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Cache miss
+2025-03-24T23:51:55.074500Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Applying: Turn
+2025-03-24T23:51:55.074530Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Applying: Assert <b KQkq d3 0 1>
+2025-03-24T23:51:55.074572Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position_metadata: My meta: b KQkq - 0 1, their meta: b KQkq d3 0 1
+2025-03-24T23:51:55.074642Z ERROR zobrist_is_same_for_transposition: hazel::game::chess::position_metadata: Incorrect metadata, Found: b KQkq d3 0 1, expected b KQkq - 0 1
+2025-03-24T23:51:55.074723Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Applying: Remove p @ d7
+2025-03-24T23:51:55.074760Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Applying: Place p @ d5
+2025-03-24T23:51:55.074793Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Applying: Inform <w KQkq d6 0 2>
+2025-03-24T23:51:55.074837Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: updated inner
+
+### Note the hash, 0xB239... this hash is associated with the move after 1... d5.
+2025-03-24T23:51:55.074911Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Cache set Z|0xB2390A8808563F88| -> "rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq d6 0 2" 
+
+
+2025-03-24T23:51:55.074985Z TRACE zobrist_is_same_for_transposition: hazel::game::chess::position: Tape is: 0x42356324111111110000000000000000000000000000000077777777a89bc98a:w KQkq - 0 1
+PositionZobrist { current: Z|0x75AB520EB7FCDCCB|, position: Z|0xB2390A8808563F88| }
+RwLock { data: 
+TAPE(head_hash: Z|0x75AB520EB7FCDCCB|, head: 0x2c, hwm: 0x2c)
+0x000000 | Clear | Z|0x0000000000000000|
+0x000001 | Place R @ a1 | Z|0xF8F96A2C09E4AF7E|
+0x000002 | Place N @ b1 | Z|0xEA58B07658FE5BEA|
+0x000003 | Place B @ c1 | Z|0x4929572CE96AC736|
+0x000004 | Place Q @ d1 | Z|0xD80F29D8B72E614D|
+0x000005 | Place K @ e1 | Z|0x407EFBE89EB626EA|
+0x000006 | Place B @ f1 | Z|0x82E8D8D87B2DF6B8|
+0x000007 | Place N @ g1 | Z|0x246E9B437DAE2756|
+0x000008 | Place R @ h1 | Z|0xDA8B17A14E032698|
+0x000009 | Place P @ a2 | Z|0xE13AC46130BCA406|
+0x00000A | Place P @ b2 | Z|0xC09F69247A322979|
+0x00000B | Place P @ c2 | Z|0x423E7386EE621B94|
+0x00000C | Place P @ d2 | Z|0x06F4427BB3BBFA4B|
+0x00000D | Place P @ e2 | Z|0xF7C662F78033FE6D|
+0x00000E | Place P @ f2 | Z|0x33FF1E11437B3BB5|
+0x00000F | Place P @ g2 | Z|0x4488A0019704DF24|
+0x000010 | Place P @ h2 | Z|0xF9569451BA88BDBE|
+0x000011 | Place p @ a7 | Z|0x560A2845D85A8564|
+0x000012 | Place p @ b7 | Z|0x174477C88AD15BCD|
+0x000013 | Place p @ c7 | Z|0x52788A0CCA3D5708|
+0x000014 | Place p @ d7 | Z|0x864346235FD05CED|
+0x000015 | Place p @ e7 | Z|0x44F8C4E79659D080|
+0x000016 | Place p @ f7 | Z|0x136DFFF91DDB872C|
+0x000017 | Place p @ g7 | Z|0x857658D3FD60A795|
+0x000018 | Place p @ h7 | Z|0x6E7BB19382E73A5A|
+0x000019 | Place r @ a8 | Z|0x18603AEEAAEC7478|
+0x00001A | Place n @ b8 | Z|0xA020A28F27D57B0A|
+0x00001B | Place b @ c8 | Z|0xBC72A17411A7839D|
+0x00001C | Place q @ d8 | Z|0x0FD353607E034BD1|
+0x00001D | Place k @ e8 | Z|0xF93226BEA0E8522A|
+0x00001E | Place b @ f8 | Z|0x5FD9F939C87C647E|
+0x00001F | Place n @ g8 | Z|0xB1484F2F5287B45C|
+0x000020 | Place r @ h8 | Z|0x816A59230F79B9AA|
+0x000021 | Inform <w KQkq - 0 1> | Z|0x175357BEF46D03ED|
+0x000022 | Turn | Z|0x175357BEF46D03ED|
+0x000023 | Assert <w KQkq - 0 1> | Z|0x816A59230F79B9AA|
+0x000024 | Remove P @ d2 | Z|0xC5A068DE52A05875|
+0x000025 | Place P @ d4 | Z|0x46776A46D78D19A7|
+0x000026 | Inform <b KQkq d3 0 1> | Z|0xB2390A8808563F88|
+
+### Note the hash here corresponds to the above, but is incorrect -- it should be further down, on 0x00002B
+
+0x000027 | Turn | Z|0xB2390A8808563F88|
+0x000028 | Assert <b KQkq d3 0 1> | Z|0x46776A46D78D19A7|
+0x000029 | Remove p @ d7 | Z|0x924CA66942601242|
+0x00002A | Place p @ d5 | Z|0xDF027ACAEE79DFDA|
+0x00002B | Inform <w KQkq d6 0 2> | Z|0x75AB520EB7FCDCCB|
+END-OF-TAPE
+=================================
+, poisoned: false, .. }
+```
+
+That wall of text shows the bug in real time. We can see that the Zobrist it's using is based on the start of the turn,
+not the end of it. So instead of caching the position associated _after applying_ the move, we associate the _updated
+position_ with the hash _prior to applying_ the move, which is an off-by-one, essentially. I could fix this by
+reintroducing the `end` command, or by instead ensuring I'm updating the position hash at the `Inform` step. In reverse,
+this will still work, since it will be examining `alter.inverse()`, which for `Assert` is `Inform`, and thus on the
+reverse it will still do the right thing cache-wise.
+
+I think I'm going to try to remove `Turn`, fewer tokens is better, since ultimately I want to encode this into a
+bytestream.
+
+## 2300 - atm
+
+Had to put things down, but came back, changed the line, and that was it, that was the whole bug. Still 3 broken tests
+remaining but very happy to not have to chase that one anymore.
+
+# 25-MAR-2025
+
+## 0012 - atm
+
+I've been babysitting a file upload most of the night, good time to kick on the playlist and hack.
+
+I got perft fixed up by finding a silly bug in how I reported `length` from the tape. It's a little ambiguous, but at
+least it works.
+
+I can now fail perft_4 in ~35s, wall-time for the unoptimized test binary, anyway. That's down from 'well over 3
+minutes' by a factor of 6 or so, not bad for a `HashMap` backed cache it only took me a full month to hack together. :)
+
+Next, spring cleaning. I'm going to live with the lack of tests because I'm going to move to rs-test, and start building
+some fixtures for more efficient testing.

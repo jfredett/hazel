@@ -1,7 +1,5 @@
-use ben::BEN;
-
 use crate::{
-    constants::File, game::position_metadata::PositionMetadata, notation::*, types::Occupant, util::charray::{Charray, Origin}
+    game::position_metadata::PositionMetadata, notation::*, types::Occupant, util::charray::{Charray, Origin}
 };
 
 use super::Alteration;
@@ -83,24 +81,28 @@ pub fn to_fen_position(board: &impl Query) -> String {
     }
 
     f.pop(); // remove the last slash
+
+    if let Some(meta) = board.try_metadata() {
+        f.push(' ');
+        f.push_str(&meta.to_string());
+    }
+
     f
 }
 
-pub fn to_alterations<'a, Q>(board: &'a Q) -> impl Iterator<Item = Alteration> + use<'a, Q> where Q : Query {
-    // this should do 'clear' and 'assert(metadata)', query should require metadata query
-    // functions? maybe optional?
-    
+pub fn to_alterations<Q>(board: &Q) -> impl Iterator<Item = Alteration> where Q : Query {
     let mut ret = vec![ Alteration::Clear];
-
-    if let Some(metadata) = board.try_metadata() {
-        ret.push(Alteration::Assert(metadata));
-    }
 
     ret.extend(
         Square::by_rank_and_file()
            .filter(|s| board.is_occupied(s))
            .map(|s| Alteration::place(s, board.get(s)) )
     );
+
+    if let Some(metadata) = board.try_metadata() {
+        let metadata_information : Vec<Alteration> = metadata.into_information();
+        ret.extend(metadata_information);
+    }
 
     ret.into_iter()
 }
@@ -137,6 +139,8 @@ mod tests {
     }
 
     mod to_fen_position {
+        use crate::notation::ben::BEN;
+
         use super::*;
 
         #[test]

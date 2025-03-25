@@ -68,8 +68,8 @@ const KING : &str = "K";
 const PAWN : &str = "P";
 
 
-const WHITE_SQUARE : ratatui::prelude::Color = Color::Rgb(0x80, 0x80, 0x80);
-const BLACK_SQUARE : ratatui::prelude::Color = Color::Rgb(0x40, 0x40, 0x40);
+const WHITE_SQUARE : ratatui::prelude::Color = Color::Rgb(0xA0, 0xA0, 0xA0);
+const BLACK_SQUARE : ratatui::prelude::Color = Color::Rgb(0x60, 0x60, 0x60);
 
 const BLACK_PIECE_WHITE_SQUARE : ratatui::prelude::Color = Color::Rgb(0x00, 0x00, 0x00);
 const BLACK_PIECE_BLACK_SQUARE : ratatui::prelude::Color = Color::Rgb(0x00, 0x00, 0x00);

@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use crate::engine::uci::UCIMessage;
-use crate::game::variation::Variation;
 use crate::types::witch::WitchHandle;
 use crate::game::chess::position::Position;
 
@@ -13,19 +12,19 @@ pub use state::*;
 pub use response::*;
 pub use messages::*;
 
+// NOTE: For now, I'm directly dealing with a `Position`, but I'd like to instead have Position be
+// a familiar over some Variation, which would be how the UCI stuff would get recorded, and
+// ultimately get output to PGN.
+
 #[derive(Default, PartialEq, Clone, Debug)]
 pub struct Hazel {
     /// The current state of the engine.
     state: State,
     /// The current position of the active game. If this is `None`, it means no game is currently
     /// being played.
+    /// TODO: Replace this with a familiar
+    /// TODO: Be able to share a cached version of this via an Arc.
     position: Option<Position>,
-    /// A Variation containing games loaded from some source, or saved from the current gamestate.
-    /// NOTE: This is not like the others. Maybe `Hazel` should focus on being just the UCI-related
-    /// bits, and then it can talk to a `WitchHazel` which is just the database bits?
-    /// 11-JAN-2025 0053 - This should be it's own witch, that acts as the 'database' end to which
-    /// the WitchHazel can hold a handle.
-    game: Variation,
     /// Options set by the UI or other external sources.
     options: HashMap<String, Option<String>>
 }

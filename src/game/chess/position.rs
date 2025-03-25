@@ -1,22 +1,116 @@
-use crate::{board::PieceBoard, constants::move_tables::{KING_ATTACKS, KNIGHT_MOVES}, coup::rep::Move, notation::{ben::BEN, Square}, types::{pextboard, Bitboard, Color, Direction, Occupant, Piece}, Alter, Alteration, Play, Query};
+use std::sync::Arc;
+use std::{fmt::Debug, sync::RwLock};
 
+use crate::types::tape::cursorlike::Cursorlike;
+use crate::types::tape::familiar::state::position_zobrist::PositionZobrist;
+use crate::types::tape::tapelike::Tapelike;
+use crate::{alter, query};
+use crate::constants::move_tables::{KNIGHT_MOVES, KING_ATTACKS};
+
+use crate::types::tape::{familiar, Tape};
+use crate::{board::PieceBoard, coup::{gen::cache::ATM, rep::Move}, notation::{ben::BEN, Square}, types::{pextboard, Bitboard, Color, Direction, Occupant, Piece}, Alter, Alteration, Query};
+use crate::types::zobrist::Zobrist;
+
+use crate::types::tape::familiar::{Familiar, Quintessence};
 use super::position_metadata::PositionMetadata;
+use crate::coup::gen::cache::Cache;
 
 
-#[derive(Debug, PartialEq, Clone)]
 pub struct Position {
     // necessaries
     pub initial: BEN,
-    pub moves: Vec<Move>,
     // caches
+    // FIXME: pub only for testing.
+    pub tape: Arc<RwLock<Tape>>,
+    inner: RwLock<InnerPosition>,
 
-    // Alteration Cache should be by piece and color, so I can selectively reconstruct bitboards
-    // from the alterations.
-    // The cache itself should live on a movegenerator, to which we should inject at run-time,
-    // since the movegen might be running in separate threads with thread-local caches, or even on
-    // different machines.
-    // Caches can be stored by zobrist, eventually I can have a metacache that can allow
-    // cross-thread cache lookups
+    // this should live on movegen?
+    atm: ATM<'static, InnerPosition>
+}
+
+// this should work like:
+//
+// 1. A familiar exists for inner position, we have it set to move by turn to the current write
+//    head
+// 2. familiar also calculates zobrists, lazily evaluates board/metadata/other stuff
+// 3. need some way to do 'a collection of alterables is also alterable' so I can add stuff freely
+//    to the familiar
+// 4. when updating, calculate zobrist first, check cache, and only update if needed.
+
+
+#[derive(Clone, Default, Debug, PartialEq)]
+pub struct InnerPosition {
+    // this should be a familiar, implementing `alter`, and then we store it's quintessence instead
+    // of the whole struct.
+    pub board: PieceBoard,
+    pub metadata: PositionMetadata,
+}
+
+impl InnerPosition {
+    pub fn new(board: PieceBoard, metadata: PositionMetadata) -> Self {
+        InnerPosition {
+            board,
+            metadata,
+        }
+    }
+}
+
+impl Query for InnerPosition {
+    fn get(&self, square: impl Into<Square>) -> Occupant {
+        self.board.get(square)
+    }
+
+    fn try_metadata(&self) -> Option<PositionMetadata> {
+        Some(self.metadata)
+    }
+}
+
+impl Clone for Position {
+    fn clone(&self) -> Self {
+        // FIXME: Ideally we'd actually just keep a reference to this cached thing instead of copying it
+        // all over creation
+        //
+        // OQ: with the `Arc` here on tape, and the explicit clone here, I'm asserting that
+        // '#clone' means "Create a _new copy_", which I think are the correct semantics but I'm
+        // not sure.
+        let new_inner = self.inner.read().unwrap().clone();
+        let new_tape = self.tape.read().unwrap().clone();
+
+        Position {
+            initial: self.initial,
+            tape: Arc::new(RwLock::new(new_tape)),
+            inner: RwLock::new(new_inner),
+            atm: self.atm
+        }
+    }
+}
+
+impl PartialEq for Position {
+    fn eq(&self, other: &Self) -> bool {
+        // NOTE: This is, very technically speaking, wrong.
+        //
+        // A zobrist is a 64 bit signature of a ~153 (19bytes + 1 bit) bit space (the number of
+        // reachable chess positions is around 10e46, which is about 2e153), which means that this
+        // has a nonzero (and indeed nontrivial) probability of collision. However, in any given
+        // exploration we are not likely to run into a situation where this collision hurts, and I
+        // have longer term plans to simply use a larger zobrist hash or BCH codes or something
+        // similar to avoid collisions.
+        //
+        // For reference, a BEN is 36 bytes, or about 50% efficient. This is 8 bytes (200%
+        // efficient) but with a nonzero, small error rate. BCH codes add a few bytes to lower that
+        // error rate, but this should be sufficient for the short term...
+        //
+        // He said, awaiting the inevitable point where this becomes a multi-day bughunt.
+        self.zobrist().position == other.zobrist().position
+    }
+}
+
+impl Debug for Position {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "{:?}", self.initial)?;
+        writeln!(f, "{:?}", self.zobrist())?;
+        writeln!(f, "{:?}", self.tape)
+    }
 }
 
 // adding a move should lazily update cached representations, we might get several moves at once.
@@ -36,50 +130,198 @@ impl Query for Position {
     }
 }
 
+lazy_static!(
+    pub static ref POSITION_CACHE : Cache<InnerPosition> = Cache::new();
+);
+
+
+impl From<Position> for BEN {
+    // TODO: This could probably be better managed by a familiar.
+    fn from(value: Position) -> Self {
+        let mut ben : BEN = alter::setup(query::to_alterations(&value.board()));
+        ben.set_metadata(value.metadata());
+        ben
+    }
+}
+
 
 impl Position {
-    pub fn new(fen: impl Into<BEN>, moves: Vec<Move>) -> Self {
+    pub fn new(fen: impl Into<BEN>) -> Self {
         let fen = fen.into();
+        let alters : Vec<Alteration> = fen.to_alterations().collect();
 
-        let mut metadata_cache = fen.metadata();
-        let mut alteration_cache : Vec<Alteration> = fen.to_alterations().collect();
+        let mut inner = InnerPosition::default();
+        let mut tape = Tape::default();
+        tape.write_all(&alters);
 
-        Self { initial: fen.into(), moves }
+        for alter in alters {
+            inner.board.alter_mut(alter);
+            inner.metadata.alter_mut(alter);
+        }
+
+        Self {
+            initial: fen,
+            inner: inner.into(),
+            tape: Arc::new(tape.into()),
+            atm: POSITION_CACHE.atm()
+        }
     }
 
+    pub fn conjure<S>(&self) -> Familiar<RwLock<Tape>, S> where S : Default {
+        familiar::conjure(self.tape.clone())
+    }
 
-    pub fn board(&self) -> PieceBoard {
-        self.current_boardstate().0
+    pub fn resummon<S>(&self, quintessence: &Quintessence<S>) -> Familiar<RwLock<Tape>, S> where S : Clone {
+        familiar::resummon_on(self.tape.clone(), quintessence)
+    }
+
+    pub fn with_moves(fen: impl Into<BEN>, moves: Vec<Move>) -> Self {
+        let mut ret = Self::new(fen);
+        for m in moves {
+            ret.make(m);
+        }
+        ret
+    }
+
+    pub fn zobrist(&self) -> PositionZobrist {
+        // TODO: this is not ideal, it should cache this somewhere, probably as a quintessence.
+        let mut fam : Familiar<RwLock<Tape>, PositionZobrist> = self.conjure();
+        fam.seek(self.tape.read().unwrap().writehead());
+        *fam.get()
     }
 
     pub fn metadata(&self) -> PositionMetadata {
-        self.current_boardstate().1
+        self.inner.read().unwrap().metadata
     }
 
-    pub fn current_boardstate(&self) -> (PieceBoard, PositionMetadata) {
-        let mut board = PieceBoard::default();
-        let mut meta = self.initial.metadata();
-
-        board.set_position(self.initial);
-
-        for mov in &self.moves {
-            let alterations = mov.compile(&board);
-            meta.update(mov, &board);
-            for alteration in alterations {
-                board.alter_mut(alteration);
-            }
-        }
-
-        (board, meta)
+    pub fn board(&self) -> PieceBoard {
+        self.inner.read().unwrap().board
     }
 
     pub fn make(&mut self, mov: Move) {
-        self.moves.push(mov);
-        // everything is computed on-demand, no cache yet, so this is all that's needed.
+        tracing::debug!("making: {:?}", mov);
+
+        let new_alterations: Vec<Alteration>;
+
+        {   // Incremental Update Calculation
+            // Inner is read-locked
+            let inner = self.inner.read().unwrap();
+            new_alterations = mov.new_compile(&inner.board, &inner.metadata)
+        }
+
+        {   // Write phase
+            // Tape is write-locked
+            let mut tape = self.tape.write().unwrap();
+            tape.write_all(&new_alterations);
+        }
+
+        // Cache Management
+        // Tape read-locked, this syncs the head to the 'end of the tape', which should match the 
+        // current write head position, which is presently at the end of the turn we just wrote.
+        let position_hash: Zobrist = self.zobrist().position;
+
+        // TODO: Ideally this is lazy, so we only update the board as we roll the associated
+        // boardfamiliar forward.
+        match self.atm.get(position_hash) {
+            Some(cached_inner) => {
+                // Atomic, TODO: Handle Result
+                tracing::trace!("Cache hit {:?} -> {:?}", position_hash, query::to_fen_position(&cached_inner));
+                _ = self.inner.replace(cached_inner.clone());
+            },
+            None => {
+                tracing::trace!("Cache miss");
+                // Inner is write-locked
+                let mut inner = self.inner.write().unwrap();
+                for alter in new_alterations {
+                    inner.board.alter_mut(alter);
+                    inner.metadata.alter_mut(alter);
+                }
+
+                tracing::trace!("Cache set {:?} -> {:?}", position_hash, query::to_fen_position(&inner.clone()));
+                self.atm.set(position_hash, inner.clone());
+            },
+        }
     }
 
+    // FIXME: this, if anything, should probably return a result type.
     pub fn unmake(&mut self) {
-        self.moves.pop();
+        tracing::debug!("Unmaking");
+
+        /*
+        * 1. For this to work better, it should use two familiars, a positionzobrist familiar and a
+        *    gamestate familiar
+        * 2. When unmaking, resummon the PZ (or maybe keep it live, idk, benchmark), send it to the
+        *    previous move and check cache.
+        * 3. Cache contains a GameState which can be assumed to be a Quintessence at the current
+        *    tape position, this gives us a tape-agnostic cache, so multiple positions can share
+        *    it. We use this to update our quintessence with a new on with this cache entry
+        *    (perhaps stored by zobrist + offset?)
+        * 4. If we cache miss, we grab our current quintessence and seek to the desired location.
+        * 5. If we then `make` a new move (overwriting the old), we jump the tape to the position
+        *    of the PZ familiar (which we've stored as a Quintessence of PZ on the position), and
+        *    write starting from there, resummoning the PZ familiar to calculate and cache the new
+        *    position.
+        *       - Not sure if I should be resetting the HWM to 'truncate' the tape when we finish
+        *       an unmake, maybe worth doing, it's more of an 'end of stack' marker, since this is
+        *       increasingly 'just a stack' in this usecase. I suspect it'll be more tape-y with
+        *       the variation side.
+        *
+        */
+
+        let mut unmoves = vec![];
+
+        { // Tape is write-locked
+            let mut tape = self.tape.write().unwrap();
+            loop { // this is inelegant, but hopefully effective.
+
+                if tape.at_bot() {
+                    // TODO: this probably should try to do cache magic in the tape first? IDK
+                    panic!("Cannot unwind from Beginning of Tape");
+                }
+
+                tape.step_backward();
+
+                let alter = tape.read();
+                unmoves.push(alter);
+
+                if matches!(alter, Alteration::Turn) {
+                    break;
+                }
+
+            }
+        }
+        tracing::trace!("Tape unlocked from write");
+
+        // FIXME: this causes a sync to the writehead, I don't love the spook, but I think it should
+        // work for now
+        let unmove_hash : Zobrist = self.zobrist().position;
+
+        // TODO: This is an exact copy of the above, mod the #inverse calls on `alter`. definitely
+        // could be extracted to something like `#withdraw_or_deposit(hash, &alters)`, unmake would
+        // just map-inverse first.
+        // TODO: I also think if the `Entry` type on Tape can be kept small enough, then the buffer
+        // size can be quite large, which might mean indexing is worthwhile, something to think
+        // about. I think that might be easier once I've moved to the generic familiar system I've
+        // been cooking.
+        match self.atm.get(unmove_hash) {
+            Some(cached_inner) => {
+                tracing::trace!("Unmake cache hit {:?}", unmove_hash);
+                // Atomic, TODO: Handle Result
+                _ = self.inner.replace(cached_inner.clone());
+            },
+            None => {
+                tracing::trace!("Unmake cache miss");
+                // Inner is write-locked
+                let mut inner = self.inner.write().unwrap();
+
+                for alter in unmoves {
+                    inner.metadata.alter_mut(alter.inverse());
+                    inner.board.alter_mut(alter.inverse());
+                }
+
+                self.atm.set(unmove_hash, inner.clone());
+            }
+        }
     }
 
     #[inline(always)]
@@ -103,47 +345,38 @@ impl Position {
         bb
     }
 
-
     pub fn all_pieces_of(&self, color: &Color) -> Bitboard {
-        self.find(|(sq, occ)| {
+        self.find(|(_sq, occ)| {
             occ.color() == Some(*color)
         })
     }
 
-    pub fn intervention_squares(&self) -> Bitboard {
-        todo!()
-    }
-
-    pub fn all_attacked_squares(&self, color: &Color) -> Bitboard {
-        todo!()
-    }
-
     pub fn pawns_for(&self, color: &Color) -> Bitboard {
-        self.find(|(sq, occ)| {
+        self.find(|(_sq, occ)| {
             *occ == Occupant::Occupied(Piece::Pawn, *color)
         })
     }
 
     pub fn knights_for(&self, color: &Color) -> Bitboard {
-        self.find(|(sq, occ)| {
+        self.find(|(_sq, occ)| {
             *occ == Occupant::Occupied(Piece::Knight, *color)
         })
     }
 
     pub fn rooks_for(&self, color: &Color) -> Bitboard {
-        self.find(|(sq, occ)| {
+        self.find(|(_sq, occ)| {
             *occ == Occupant::Occupied(Piece::Rook, *color)
         })
     }
 
     pub fn bishops_for(&self, color: &Color) -> Bitboard {
-        self.find(|(sq, occ)| {
+        self.find(|(_sq, occ)| {
             *occ == Occupant::Occupied(Piece::Bishop, *color)
         })
     }
 
     pub fn queens_for(&self, color: &Color) -> Bitboard {
-        self.find(|(sq, occ)| {
+        self.find(|(_sq, occ)| {
             *occ == Occupant::Occupied(Piece::Queen, *color)
         })
     }
@@ -154,7 +387,7 @@ impl Position {
     }
 
     pub fn all_blockers(&self) -> Bitboard {
-        self.find(|(sq, occ)| { occ.is_occupied() })
+        self.find(|(_sq, occ)| { occ.is_occupied() })
     }
 
     pub fn friendlies(&self) -> Bitboard {
@@ -165,6 +398,68 @@ impl Position {
         self.all_pieces_of(&self.villain())
     }
 
+    pub fn our_checks(&self) -> Bitboard {
+        // To calculate all the squares from which a piece of a given type might give a check to
+        // our king. Consider:
+        //
+        // 8 . . . . . . . .
+        // 7 . . . . . . . .
+        // 6 . . . . R . . .
+        // 5 . . . . . . . .
+        // 4 . . k . . . . .
+        // 3 . . . . . . . .
+        // 2 . . . . . . . .
+        // 1 . . . . . . . .
+        //   a b c d e f g h
+        //
+        // In this board, the critical check squares are:
+        //
+        // 1. All of the C file
+        // 2. All of the 4 rank
+        // 3. the A2-G8 diag up to E6, exclusive (rook of opposite color can't check us from
+        //    there), but the blocked squares are still interesting, so it might be worthwhile to
+        //    optionally have a blocker mask.
+        // 4. the A6-F1 diag
+        // 5. A3, A6, B2, B7, D2, D7, E3, E6 - the knight-moves around the king.
+        //
+        // In order for the king to be checked, a piece of the correct type must be present on the
+        // correct square, this calculates all the valid check squares, assuming that it is
+        // possible for an enemy piece to get there. It _does not ensure that_. That is, this table
+        // does not imply that there are moves which make put us in check, only that any of these
+        // squares have _a_ piece which _could_ check the king _if_ it were there.
+        self.our_assassin_squares(Piece::Bishop) |
+        self.our_assassin_squares(Piece::Rook) |
+        self.our_assassin_squares(Piece::Queen) |
+        self.our_assassin_squares(Piece::Knight) |
+        self.our_assassin_squares(Piece::Pawn)
+    }
+
+
+    /// Squares from which our king may be checked
+    pub fn our_assassin_squares(&self, piece: Piece) -> Bitboard {
+        let blockers = self.all_blockers();
+        let mask = match piece {
+            Piece::Knight => self.their_knight_moves(),
+            Piece::Bishop => self.their_bishop_moves() | self.their_queen_moves(),
+            Piece::Rook => self.their_rook_moves() | self.their_queen_moves(),
+            Piece::Queen => self.their_queen_moves(),
+            Piece::Pawn => {
+                let their_pawn_quiet_moves = self.their_pawn_advances() | self.their_pawn_double_advances();
+                let their_pawn_captures = self.their_pawn_attacks() & self.friendlies();
+
+                let their_pawn_moves = their_pawn_quiet_moves | their_pawn_captures;
+
+                let their_threatened_squares = their_pawn_moves.shift(self.their_pawn_direction());
+
+                // promotion checks
+                // capture promotion checks
+
+                their_threatened_squares.shift(Direction::E) | their_threatened_squares.shift(Direction::W)
+            }
+            Piece::King => { Bitboard::empty() /* Kings can't check kings. */ }
+        };
+        pextboard::attacks_for(piece, self.our_king(), blockers) & mask
+    }
 
     // ### OUR HERO'S MOVES, ATTACKS, AND THE LIKE ### //
 
@@ -181,13 +476,12 @@ impl Position {
     }
 
     pub fn our_king(&self) -> Square {
-        let res = self.find(|(sq, occ)| {
+        let res = self.find(|(_sq, occ)| {
             *occ == Occupant::Occupied(Piece::King, self.hero())
         }).all_set_squares();
         assert_eq!(res.len(), 1);
         res[0]
     }
-
 
     /// a bitboard showing the location of all our pawns
     pub fn our_pawns(&self) -> Bitboard {
@@ -202,6 +496,25 @@ impl Position {
     /// all squares attacked by at least one of our pawns
     pub fn our_pawn_attacks(&self) -> Bitboard {
         self.pawn_attacks_for(&self.hero())
+    }
+
+    pub fn our_pawn_advances(&self) -> Bitboard {
+        let blockers = self.all_blockers();
+        self.pawns_for(&self.hero()).shift(self.our_pawn_direction()) & !blockers
+    }
+
+    pub fn our_first_rank_pawns(&self) -> Bitboard {
+        self.pawns_for(&self.hero()) & self.our_pawn_rank()
+    }
+
+    pub fn our_pawn_rank(&self) -> Bitboard {
+        self.hero().pawn_mask()
+    }
+
+    pub fn our_pawn_double_advances(&self) -> Bitboard {
+        let blockers = self.all_blockers();
+        let first_advance = self.our_first_rank_pawns().shift(self.our_pawn_direction()) & !blockers;
+        first_advance.shift(self.our_pawn_direction()) &!blockers
     }
 
     /// Bitboard showing the location of all our knights
@@ -253,7 +566,7 @@ impl Position {
     }
 
     pub fn their_king(&self) -> Square {
-        let res = self.find(|(sq, occ)| {
+        let res = self.find(|(_sq, occ)| {
             *occ == Occupant::Occupied(Piece::King, self.villain())
         }).all_set_squares();
         assert_eq!(res.len(), 1);
@@ -276,6 +589,25 @@ impl Position {
         let advance = self.their_pawns().shift(self.their_pawn_direction());
         advance.shift(Direction::E) | advance.shift(Direction::W)
 
+    }
+
+    pub fn their_pawn_advances(&self) -> Bitboard {
+        let blockers = self.all_blockers();
+        self.pawns_for(&self.villain()).shift(self.their_pawn_direction()) & !blockers
+    }
+
+    pub fn their_first_rank_pawns(&self) -> Bitboard {
+        self.pawns_for(&self.villain()) & self.their_pawn_rank()
+    }
+
+    pub fn their_pawn_rank(&self) -> Bitboard {
+        self.villain().pawn_mask()
+    }
+
+    pub fn their_pawn_double_advances(&self) -> Bitboard {
+        let blockers = self.all_blockers();
+        let first_advance = self.their_first_rank_pawns().shift(self.their_pawn_direction()) & !blockers;
+        first_advance.shift(self.their_pawn_direction()) &!blockers
     }
 
     /// all squares attacked by at least one of their knights
@@ -328,8 +660,70 @@ mod tests {
     use crate::notation::*;
     use crate::coup::rep::MoveType;
 
+
+    mod make_unmake {
+        use super::*;
+
+        #[test]
+        #[tracing_test::traced_test]
+        fn make_unmake() {
+            let start = BEN::start_position();
+            let moves = vec![
+                Move::new(D2, D4, MoveType::DOUBLE_PAWN), Move::new(D7, D5, MoveType::DOUBLE_PAWN),
+                Move::new(C1, F4, MoveType::QUIET), Move::new(E7, E6, MoveType::QUIET)
+            ];
+
+            let mut p = Position::with_moves(start, moves);
+            let z_prior = p.zobrist();
+            let m = Move::new(E2, E3, MoveType::QUIET);
+
+            p.make(m);
+            p.unmake();
+
+            assert_eq!(z_prior.position, p.zobrist().position);
+        }
+
+        #[test]
+        #[tracing_test::traced_test]
+        fn unwinding_black_second_move_repro() {
+            let movs = vec![
+                Move::new(A2, A4, MoveType::DOUBLE_PAWN),
+                Move::new(A7, A5, MoveType::DOUBLE_PAWN),
+                Move::new(B2, B4, MoveType::DOUBLE_PAWN)
+            ];
+
+            let mut p = Position::with_moves(BEN::start_position(), movs);
+            let p_prior = p.clone();
+
+            p.make(Move::new(B7, B5, MoveType::DOUBLE_PAWN));
+
+            p.unmake();
+
+
+            assert_eq!(p_prior, p);
+        }
+
+        #[test]
+        #[tracing_test::traced_test]
+        fn perft_unwind_bug_repro() {
+            let movs = vec![
+                Move::new(A2, A4, MoveType::DOUBLE_PAWN),
+                Move::new(A7, A5, MoveType::DOUBLE_PAWN),
+            ];
+            let mut p = Position::with_moves(BEN::start_position(), movs);
+
+
+            let p_prior = p.clone();
+            p.make(Move::new(B2, B4, MoveType::DOUBLE_PAWN));
+            p.unmake();
+
+            assert_eq!(p_prior, p);
+        }
+    }
+
     mod gamestate {
         use super::*;
+
 
         #[test]
         fn kiwi() {
@@ -337,13 +731,13 @@ mod tests {
             let mut pb = PieceBoard::default();
             pb.set_position(kiwi);
 
-            let position = Position::new(kiwi, vec![]);
+            let position = Position::new(kiwi);
 
             assert_eq!(position.board(), pb);
             assert_eq!(position.metadata(), kiwi.metadata());
         }
 
-        // #[test] // I entered the moves wrong, I don't know where.
+        #[test] // I entered the moves wrong, I don't know where.
         fn d4() {
             let start = BEN::start_position();
             let target = BEN::new("rnbqk2r/pp2bppp/2p1pn2/3p4/3P1B2/3BPN2/PPP2PPP/RN1Q1RK1 b kq - 1 6");
@@ -359,10 +753,10 @@ mod tests {
             let mut pb = PieceBoard::default();
             pb.set_position(target);
 
-            let position = Position::new(start, moves);
+            let position = Position::with_moves(start, moves);
 
             assert_eq!(position.board(), pb);
-            assert_eq!(position.metadata(), start.metadata());
+            assert_eq!(position.metadata(), target.metadata());
         }
     }
 
@@ -374,7 +768,7 @@ mod tests {
 
             #[test]
             fn startpos() {
-                let pos = Position::new(BEN::start_position(), vec![]);
+                let pos = Position::new(BEN::start_position());
                 assert_eq!(pos.our_pawns(), Color::WHITE.pawn_mask());
             }
         }
@@ -384,13 +778,13 @@ mod tests {
 
             #[test]
             fn startpos_white() {
-                let pos = Position::new(BEN::start_position(), vec![]);
+                let pos = Position::new(BEN::start_position());
                 assert_eq!(pos.our_pawn_direction(), Direction::N);
             }
 
             #[test]
             fn startpos_black() {
-                let pos = Position::new(BEN::start_position(), vec![]);
+                let pos = Position::new(BEN::start_position());
                 assert_eq!(pos.their_pawn_direction(), Direction::S);
             }
         }
@@ -402,14 +796,14 @@ mod tests {
 
             #[test]
             fn startpos_white() {
-                let pos = Position::new(BEN::start_position(), vec![]);
+                let pos = Position::new(BEN::start_position());
                 let expected = *RANK_3;
                 assert_eq!(pos.our_pawn_attacks(), expected);
             }
 
             #[test]
             fn startpos_black() {
-                let mut pos = Position::new(BEN::start_position(), vec![]);
+                let pos = Position::new(BEN::start_position());
                 let expected = *RANK_6;
                 assert_eq!(pos.their_pawn_attacks(), expected);
             }
@@ -420,7 +814,7 @@ mod tests {
 
             #[test]
             fn startpos() {
-                let pos = Position::new(BEN::start_position(), vec![]);
+                let pos = Position::new(BEN::start_position());
                 assert_eq!(
                     pos.pawns_for(&Color::WHITE),
                     Color::WHITE.pawn_mask()
@@ -441,14 +835,14 @@ mod tests {
 
             #[test]
             fn startpos_white() {
-                let pos = Position::new(BEN::start_position(), vec![]);
+                let pos = Position::new(BEN::start_position());
                 let expected = Bitboard::from(C3) | Bitboard::from(A3) | Bitboard::from(F3) | Bitboard::from(H3);
                 assert_eq!(pos.our_knight_moves(), expected);
             }
 
             #[test]
             fn startpos_black() {
-                let pos = Position::new(BEN::start_position(), vec![]);
+                let pos = Position::new(BEN::start_position());
                 let expected = Bitboard::from(C6) | Bitboard::from(A6) | Bitboard::from(F6) | Bitboard::from(H6);
                 assert_eq!(pos.their_knight_moves(), expected);
             }
@@ -463,14 +857,14 @@ mod tests {
 
             #[test]
             fn white() {
-                let pos = Position::new(BEN::new("8/8/1k6/P1P1p3/3K4/8/8/8 w - - 0 1"), vec![]);
+                let pos = Position::new(BEN::new("8/8/1k6/P1P1p3/3K4/8/8/8 w - - 0 1"));
                 assert_eq!(pos.our_king_attacks(), Bitboard::from(E5));
                 assert_eq!(pos.their_king_attacks(),  Bitboard::from(A5) | Bitboard::from(C5));
             }
 
             #[test]
             fn black() {
-                let pos = Position::new(BEN::new("8/8/1k6/P1P1p3/3K4/8/8/8 b - - 0 1"), vec![]);
+                let pos = Position::new(BEN::new("8/8/1k6/P1P1p3/3K4/8/8/8 b - - 0 1"));
                 assert_eq!(pos.our_king_attacks(),  Bitboard::from(A5) | Bitboard::from(C5));
                 assert_eq!(pos.their_king_attacks(), Bitboard::from(E5));
             }
@@ -487,21 +881,21 @@ mod tests {
 
             #[test]
             fn light_square() {
-                let pos = Position::new(BEN::new("8/1b6/8/8/8/1B6/8/8 w - - 0 1"), vec![]);
+                let pos = Position::new(BEN::new("8/1b6/8/8/8/1B6/8/8 w - - 0 1"));
                 assert_eq!(pos.our_bishop_moves(), bitboard!(A4, A2, C4, C2, D1, D5, E6, F7, G8));
                 assert_eq!(pos.their_bishop_moves(),  bitboard!(A8, A6, C8, C6, D5, E4, F3, G2, H1));
             }
 
             #[test]
             fn dark_square() {
-                let pos = Position::new(BEN::new("8/2b5/8/8/8/2B5/8/8 w - - 0 1"), vec![]);
+                let pos = Position::new(BEN::new("8/2b5/8/8/8/2B5/8/8 w - - 0 1"));
                 assert_eq!(pos.our_bishop_moves(),  bitboard!(B2, D2, A1, E1, B4, A5, D4, E5, F6, G7, H8));
                 assert_eq!(pos.their_bishop_moves(), bitboard!(B8, D8, B6, A5, D6, E5, F4, G3, H2));
             }
 
             #[test]
             fn with_blocker() {
-                let pos = Position::new(BEN::new("8/2b5/8/4B3/8/8/8/8 w - - 0 1"), vec![]);
+                let pos = Position::new(BEN::new("8/2b5/8/4B3/8/8/8/8 w - - 0 1"));
                 assert_eq!(pos.our_bishop_moves(),  bitboard!(C7, D6, F6, G7, H8, D4, C3, B2, A1, F4, G3, H2));
                 assert_eq!(pos.their_bishop_moves(), bitboard!(B8, B6, D8, D6, E5, A5));
             }
@@ -518,7 +912,7 @@ mod tests {
 
             #[test]
             fn open_files() {
-                let pos = Position::new(BEN::new("8/2r5/8/4R3/8/8/8/8 w - - 0 1"), vec![]);
+                let pos = Position::new(BEN::new("8/2r5/8/4R3/8/8/8/8 w - - 0 1"));
                 assert_eq!(pos.our_rook_moves(), *RANK_5 ^ *E_FILE);
                 assert_eq!(pos.their_rook_moves(),  *RANK_7 ^ *C_FILE);
             }
@@ -526,7 +920,7 @@ mod tests {
 
             #[test]
             fn with_blocker() {
-                let pos = Position::new(BEN::new("8/1P1r1p2/8/8/1p1R1P2/8/8/8 w - - 0 1"), vec![]);
+                let pos = Position::new(BEN::new("8/1P1r1p2/8/8/1p1R1P2/8/8/8 w - - 0 1"));
                 assert_eq!(pos.our_rook_moves(),  (*RANK_4 ^ *D_FILE) & !bitboard!(A4, D8, G4, H4));
                 assert_eq!(pos.their_rook_moves(), bitboard!(D8, B7, C7, E7, F7, D6, D5, D4));
             }
@@ -542,7 +936,7 @@ mod tests {
 
             #[test]
             fn open_files() {
-                let pos = Position::new(BEN::new("8/2q5/8/4Q3/8/8/8/8 w - - 0 1"), vec![]);
+                let pos = Position::new(BEN::new("8/2q5/8/4Q3/8/8/8/8 w - - 0 1"));
                 assert_eq!(pos.our_queen_moves(), (*RANK_5 ^ *E_FILE) | (*A1_H8_DIAG ^ *B8_H2_DIAG) & !bitboard!(B8));
                 assert_eq!(pos.their_queen_moves(),  (*RANK_7 ^ *C_FILE) | bitboard!(B8, D8, B6, D6, A5, E5));
             }
@@ -550,7 +944,7 @@ mod tests {
 
             #[test]
             fn with_blocker() {
-                let pos = Position::new(BEN::new("8/1P1q1p2/8/8/1p1Q1P2/8/8/8 w - - 0 1"), vec![]);
+                let pos = Position::new(BEN::new("8/1P1q1p2/8/8/1p1Q1P2/8/8/8 w - - 0 1"));
                 assert_eq!(pos.our_queen_moves(), ((*RANK_4 ^ *D_FILE) | (*A1_H8_DIAG ^ *A7_G1_DIAG)) & !bitboard!(D8,A4, G4, H4));
                 assert_eq!(pos.their_queen_moves(), bitboard!(A4, B5, B7, C6, C7, C8, D4, D5, D6, D8, E6, E7, E8, F5, F7, G4, H3));
             }

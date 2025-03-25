@@ -1,16 +1,18 @@
 use crate::game::chess::position::Position;
 use crate::coup::rep::Move;
-use tracing::*;
 
 
-mod pawn;
+// TODO: Move this somewhere better, probably types?
+pub mod cache;
+
 mod check;
-mod slider;
-mod knight;
 mod king;
+mod knight;
+mod pawn;
+mod slider;
 
-#[derive(Debug)]
-struct MoveGenerator {
+#[derive(Debug, Default)]
+pub struct MoveGenerator {
     // This should actually just be passed into the generate_moves, and MoveGen is just for holding
     // caches.
     // TODO: Cache anything worth caching?
@@ -21,18 +23,19 @@ impl MoveGenerator {
         Self { }
     }
 
-    pub fn generate_moves(&self, position: &Position) -> impl Iterator<Item = Move> {
-        // TODO: Check cache for this position
-
+    pub fn generate_moves(&self, position: &Position) -> Vec<Move> {
         // TODO: Determine if we are in check
+        if check::is_in_check(position) {
+            return check::generate_moves(position).collect();
+        }
 
-        // TODO: Generate moves (maybe in parallel?
+        // TODO: in parallel?
         pawn::generate_moves(position).chain(
         knight::generate_moves(position)).chain(
         slider::bishop::generate_moves(position)).chain(
         slider::rook::generate_moves(position)).chain(
         slider::queen::generate_moves(position)).chain(
-        king::generate_moves(position))
+        king::generate_moves(position)).collect()
     }
 
     pub fn perft(&self, depth: usize, position: &mut Position) -> usize {
@@ -45,9 +48,29 @@ impl MoveGenerator {
 
             position.make(mov);
 
+            // if depth == 1 {
+            //     tracing::debug!("after-make {:?}: {} {}\n\n{}\n{:?}",
+            //         position.zobrist(),
+            //         crate::query::to_fen_position(&position.clone()),
+            //         position.metadata(),
+            //         crate::query::display_board(&position.board()),
+            //         position.tape
+            //     );
+            // }
+
             count += self.perft(depth - 1, position);
 
             position.unmake();
+
+            // if depth == 1 {
+            //     tracing::debug!("after-unmake {:?}: {} {}\n\n{}\n{:?}",
+            //         position.zobrist(),
+            //         crate::query::to_fen_position(&position.clone()),
+            //         position.metadata(),
+            //         crate::query::display_board(&position.board()),
+            //         position.tape
+            //     );
+           // }
         }
 
         count
@@ -65,9 +88,13 @@ mod tests {
         ($a:expr, $b:expr) => {
             if $a != $b {
                 if $a > $b {
-                    println!("Actual undercounts Expected by: {} - {} = {}", $a, $b, $a - $b);
+                    // FIXME: This might not quite be aligned, but the other side of the branch works on my
+                    // terminal at least
+                    println!("                               Actual - Expected = Overcount");
+                    println!("Actual undercounts Expected by: {:>6} - {:>8} = {:>9}", $a, $b, $a - $b);
                 } else {
-                    println!("Actual overcounts Expected by: {} - {} = {}", $b, $a, $b - $a);
+                    println!("                                Expected - Actual = Undercount");
+                    println!("Actual undercounts Expected by: {:>8} - {:>6} = {:>10}", $b, $a, $b - $a);
                 }
                 assert!(false);
             } else {
@@ -82,11 +109,10 @@ mod tests {
     }
 
     fn perft_start_position(depth: usize) -> usize {
-        perft_position(depth, &mut Position::new(BEN::start_position(), vec![]))
+        perft_position(depth, &mut Position::new(BEN::start_position()))
     }
 
     #[test]
-    #[tracing_test::traced_test]
     fn perft_1() {
         assert_no_difference!(perft_start_position(1), 20);
     }
@@ -101,14 +127,15 @@ mod tests {
         assert_no_difference!(perft_start_position(3), 8_902);
     }
 
+    #[allow(dead_code)] // off by 140 right now
     // #[test]
     fn perft_4() {
         assert_no_difference!(perft_start_position(4), 197_281);
     }
 
-    // #[test]
+    #[test]
     fn check_mate_position_has_zero_perft_at_any_depth() {
-        let count = perft_position(1, &mut Position::new(BEN::new("7k/6Q1/6K1/8/8/8/8/8 b - - 0 1"), vec![]));
+        let count = perft_position(1, &mut Position::new(BEN::new("7k/6Q1/6K1/8/8/8/8/8 b - - 0 1")));
         assert_eq!(count, 0);
 
     }

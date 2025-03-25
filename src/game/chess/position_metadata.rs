@@ -6,44 +6,63 @@
 // src/game/<other-abstract-game>/impl
 //
 // etc
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 use std::str::SplitWhitespace;
 
-use crate::interface::Query;
-use crate::constants::File;
-use crate::coup::rep::Move;
-use crate::game::chess::castle_rights::CastleRights;
-use crate::{notation::*, Alter, Alteration};
-use crate::types::{Color, Occupant, Piece};
+use crate::{constants::File, coup::rep::Move, game::chess::castle_rights::CastleRights, interface::Query, notation::*, query::display_board, types::{Color, Occupant, Piece}, Alter, Alteration};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct PositionMetadata {
     /// Color of the Current Player
-    pub side_to_move: Color, // u1
+    pub side_to_move: Color, // 'S': u1
+    pub in_check: bool, // '+': u1
     /// Bitfield of Castle Rights
-    pub castling: CastleRights, // u4
+    pub castling: CastleRights, // CCCC: u4
     /// The index of the square containing the en passant target square, or None if there is none
-    pub en_passant: Option<Square>, // u4 for flag + file, flag might be a halfmove clock of 0 after T1?
+    pub en_passant: Option<File>, // EEEE: u4 for flag + file, flag might be a halfmove clock of 0 after T1?
     /// The number of halfmoves since the last pawn advance or capture
-    pub halfmove_clock: u8, // u6 is enough
-    pub fullmove_number: u16, // u16
+    pub halfmove_clock: u8, // HHHHHH: u6 is enough
+    pub fullmove_number: u16, // F{16}: u16
     //
     // layout of the metadata:
     // 00000000 00000000 00000000 00000000
-    // CCCCEEEE HHHHHHSx FFFFFFFF FFFFFFFF
+    // CCCCEEEE HHHHHHS+ FFFFFFFF FFFFFFFF
 }
 
+impl From<PositionMetadata> for Vec<Alteration> {
+    fn from(pm: PositionMetadata) -> Vec<Alteration> {
+        Self::from(&pm)
+    }
+}
+
+// TODO: Remove this
+impl From<&PositionMetadata> for Vec<Alteration> {
+    fn from(pm: &PositionMetadata) -> Vec<Alteration> {
+        vec![Alteration::Assert(*pm)]
+    }
+}
 
 impl Alter for PositionMetadata {
     fn alter(&self, alteration: Alteration) -> Self {
-        let mut copy = self.clone();
+        let mut copy = *self;
         copy.alter_mut(alteration);
         copy
     }
 
     fn alter_mut(&mut self, alteration: Alteration) -> &mut Self {
         match alteration {
-            Alteration::Assert(new_metadata) => *self = new_metadata,
+            // Should I clear at End or Start? Maybe I can get rid of end... :/
+            Alteration::Turn => {
+                self.en_passant = None;
+            },
+            Alteration::Inform(new_metadata) => {
+                *self = new_metadata;
+            },
+            Alteration::Assert(check_metadata) => {
+                if *self != check_metadata {
+                    panic_or_trace(format!("Incorrect metadata, Found: {:?}, expected {:?}", check_metadata, self));
+                }
+            },
             Alteration::Clear => *self = Self::default(),
             _ => {}
         }
@@ -51,10 +70,16 @@ impl Alter for PositionMetadata {
     }
 }
 
+fn panic_or_trace(message: String) {
+    tracing::error!(message);
+    // #[cfg(test)] panic!("Failing");
+}
+
 impl Default for PositionMetadata {
     fn default() -> Self {
         Self {
             side_to_move: Color::WHITE,
+            in_check: false,
             castling: CastleRights {
                 white_short: true,
                 white_long: true,
@@ -68,20 +93,30 @@ impl Default for PositionMetadata {
     }
 }
 
-impl Display for PositionMetadata {
+impl Debug for PositionMetadata {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let ep_sq = match self.en_passant {
-            Some(sq) => sq.to_string(),
+            Some(file) => file.to_string().to_lowercase(),
             None => "-".to_string(),
         };
+        let ep_rank = if self.en_passant.is_some() { 
+            let r = self.side_to_move.en_passant_rank() + 1;
+            r.to_string()
+        } else { "".to_string() };
 
-        write!(f, "{} {} {} {} {}",
+        write!(f, "{} {} {}{} {} {}",
             self.side_to_move,
             self.castling,
             ep_sq,
+            ep_rank,
             self.halfmove_clock,
             self.fullmove_number,
         )
+    }
+}
+impl Display for PositionMetadata {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
     }
 }
 
@@ -93,10 +128,20 @@ const EP_FILE_MASK: u8   = 0b0000_0111;
 const EP_FILE_SHIFT: u8  = 0;
 const STM_MASK: u8       = 0b0000_0010;
 const STM_SHIFT: u8      = 1;
+const INCHECK_MASK: u8   = 0b0000_0001;
+const INCHECK_SHIFT: u8  = 0;
 const HMC_MASK: u8       = 0b1111_1100;
 const HMC_SHIFT: u8      = 2;
 
 impl PositionMetadata {
+    pub fn into_information(&self) -> Vec<Alteration> {
+        vec![Alteration::Inform(*self)]
+    }
+
+    pub fn into_assertions(&self) -> Vec<Alteration> {
+        vec![Alteration::Assert(*self)]
+    }
+
     pub fn parse(&mut self, parts: &mut SplitWhitespace<'_>) {
         let side_to_move = parts.next();
         let castling = parts.next();
@@ -129,16 +174,13 @@ impl PositionMetadata {
 
         let en_passant = match en_passant {
             Some("-") => None,
-            Some(square) => { 
-                let sq = Square::try_from(square);
-                match sq {
-                    Ok(sq) => Some(sq),
-                    Err(_) => None,
-                }
+            Some(square) => {
+                if let Ok(sq) = Square::try_from(square) {
+                    Some(File::from(sq.file()))
+                } else { None }
             },
             None => panic!("Invalid en passant square"),
         };
-
 
         self.side_to_move = side_to_move;
         self.castling = castling;
@@ -153,7 +195,7 @@ impl PositionMetadata {
         self.en_passant = None;
 
 
-        if self.side_to_move == Color::WHITE {
+        if self.side_to_move == Color::BLACK {
             self.fullmove_number += 1;
         }
         self.side_to_move = !self.side_to_move;
@@ -161,7 +203,7 @@ impl PositionMetadata {
         // rely on the color of the piece being moved, rather than reasoning about the side-to-move
         // or delaying it till the end.
 
-        let Occupant::Occupied(piece, color) = board.get(mov.source()) else { panic!("Move has no source piece"); };
+        let Occupant::Occupied(piece, color) = board.get(mov.source()) else { panic!("Move has no source piece: {:?}\n on: \n{}", mov, display_board(board)); };
 
 
         if mov.is_capture() || piece == Piece::Pawn {
@@ -190,11 +232,10 @@ impl PositionMetadata {
             Piece::Rook if source == A8 => { self.castling.black_long = false; }
             Piece::Rook => {}
             Piece::Pawn => {
-                if mov.is_double_pawn_push_for(color) {
-                    self.en_passant = match color {
-                        Color::BLACK => mov.target().up(),
-                        Color::WHITE => mov.target().down(),
-                    }
+                self.en_passant = if mov.is_double_pawn_push_for(color) {
+                    mov.target().shift(color.pawn_direction()).map(|target| File::from(target.file()))
+                } else {
+                    None
                 }
             }
             _ => {}
@@ -214,11 +255,12 @@ impl From<PositionMetadata> for u32 {
         b1 |= from << CASTLING_SHIFT;
         b1 |= match data.en_passant {
             None => 0,
-            Some(sq) => (1 << EP_FLAG_SHIFT) | ((sq.file() as u8) << EP_FILE_SHIFT),
+            Some(file) => (1 << EP_FLAG_SHIFT) | ((file as u8) << EP_FILE_SHIFT),
         };
 
         b2 |= (data.halfmove_clock) << HMC_SHIFT;
         b2 |= (data.side_to_move as u8) << STM_SHIFT;
+        b2 |= if data.in_check { INCHECK_MASK << INCHECK_SHIFT } else { 0 };
 
         let [b3, b4] = data.fullmove_number.to_ne_bytes();
 
@@ -239,25 +281,20 @@ impl From<u32> for PositionMetadata {
         // lowest bit. the LSB is unused.
         // Shifts again to kill unused bits.
         let halfmove_clock = (b2 & HMC_MASK) >> HMC_SHIFT;
+        let in_check = (b2 & INCHECK_MASK) >> INCHECK_SHIFT != 0;
         let side_to_move = Color::from((b2 & STM_MASK) >> STM_SHIFT);
 
         // b1 contains the Castling Information and EP square:
-        // magic numbers are just shifting off the unused portions.
         let castling = CastleRights::from((b1 & CASTLING_MASK) >> CASTLING_SHIFT);
 
         let en_passant = if (b1 & EP_FLAG_MASK) != 0 {
             let ep_file_data = (b1 & EP_FILE_MASK) >> EP_FILE_SHIFT;
-            let ep_file = File::from_index(ep_file_data as usize);
-
-            Some(match side_to_move {
-                // color is the _side to move_, so the EP square would be on the opposite side if
-                // it exists
-                Color::WHITE => A6.set_file(ep_file as usize),
-                Color::BLACK => A3.set_file(ep_file as usize),
-            })
+            Some(File::from_index(ep_file_data as usize))
         } else {
             None
         };
+
+
 
 
         // b3 and b4 contain the fullmove number as a u16
@@ -267,6 +304,7 @@ impl From<u32> for PositionMetadata {
 
         Self {
             side_to_move,
+            in_check,
             castling,
             en_passant,
             halfmove_clock,
@@ -282,30 +320,18 @@ mod tests {
     use super::*;
 
     use quickcheck::{Arbitrary, Gen};
-    use tracing::debug;
 
     impl Arbitrary for PositionMetadata {
         fn arbitrary(g: &mut Gen) -> Self {
-            let should_ep = bool::arbitrary(g);
             let color = Color::arbitrary(g);
-            let ep_square = if should_ep {
-                let file = File::arbitrary(g);
 
-                let sq = if color == Color::WHITE {
-                    A6.set_file(file as usize)
-                } else {
-                    A3.set_file(file as usize)
-                };
-
-                Some(sq)
-            } else {
-                None
-            };
-
+            // these are not necessarily _valid_ metadata states, they are simple _arbitrary_
+            // metadata states.
             Self {
                 side_to_move: color,
+                in_check: bool::arbitrary(g),
                 castling: CastleRights::arbitrary(g),
-                en_passant: ep_square,
+                en_passant: Option::<File>::arbitrary(g),
                 halfmove_clock: u8::arbitrary(g) % 64,
                 fullmove_number: u16::arbitrary(g),
             }
@@ -315,7 +341,7 @@ mod tests {
     #[test]
     fn ep_square_is_converts_to_u32_correctly() {
         let metadata = PositionMetadata {
-            en_passant: Some(G3),
+            en_passant: Some(File::G),
             ..Default::default()
         };
         let [mut b1, _, _, _] = u32::from(metadata).to_ne_bytes();
@@ -369,6 +395,7 @@ mod tests {
     fn to_and_from_u32() {
         let metadata = PositionMetadata {
             side_to_move: Color::WHITE,
+            in_check: false,
             castling: CastleRights {
                 white_short: true,
                 white_long: true,
@@ -390,6 +417,7 @@ mod tests {
     fn print() {
         let metadata = PositionMetadata {
             side_to_move: Color::WHITE,
+            in_check: false,
             castling: CastleRights {
                 white_short: true,
                 white_long: true,
@@ -415,7 +443,7 @@ mod tests {
         assert!(metadata.castling.white_long);
         assert!(metadata.castling.black_short);
         assert!(metadata.castling.black_long);
-        assert_eq!(metadata.en_passant, Some(E3));
+        assert_eq!(metadata.en_passant, Some(File::E));
         assert_eq!(metadata.halfmove_clock, 0);
         assert_eq!(metadata.fullmove_number, 1);
     }

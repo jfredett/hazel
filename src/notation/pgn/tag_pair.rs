@@ -55,7 +55,6 @@ mod tests {
 
 
     mod tagpairs {
-        use tracing::debug;
 
         use super::*;
 
