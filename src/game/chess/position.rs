@@ -178,7 +178,6 @@ impl Position {
     pub fn with_moves(fen: impl Into<BEN>, moves: Vec<Move>) -> Self {
         let mut ret = Self::new(fen);
         for m in moves {
-            tracing::trace!("Making move: {:?}", m);
             ret.make(m);
         }
         ret
@@ -219,7 +218,6 @@ impl Position {
         // Cache Management
         // Tape read-locked, this syncs the head to the 'end of the tape', which should match the 
         // current write head position, which is presently at the end of the turn we just wrote.
-        tracing::trace!("Caching");
         let position_hash: Zobrist = self.zobrist().position;
 
         // TODO: Ideally this is lazy, so we only update the board as we roll the associated
@@ -235,14 +233,11 @@ impl Position {
                 // Inner is write-locked
                 let mut inner = self.inner.write().unwrap();
                 for alter in new_alterations {
-                    tracing::trace!("Applying: {:?}", alter);
                     inner.board.alter_mut(alter);
                     inner.metadata.alter_mut(alter);
                 }
-                tracing::trace!("updated inner");
 
                 tracing::trace!("Cache set {:?} -> {:?}", position_hash, query::to_fen_position(&inner.clone()));
-                tracing::trace!("Tape is: {:?}", self);
                 self.atm.set(position_hash, inner.clone());
             },
         }
@@ -252,12 +247,31 @@ impl Position {
     pub fn unmake(&mut self) {
         tracing::debug!("Unmaking");
 
+        /*
+        * 1. For this to work better, it should use two familiars, a positionzobrist familiar and a
+        *    gamestate familiar
+        * 2. When unmaking, resummon the PZ (or maybe keep it live, idk, benchmark), send it to the
+        *    previous move and check cache.
+        * 3. Cache contains a GameState which can be assumed to be a Quintessence at the current
+        *    tape position, this gives us a tape-agnostic cache, so multiple positions can share
+        *    it. We use this to update our quintessence with a new on with this cache entry
+        *    (perhaps stored by zobrist + offset?)
+        * 4. If we cache miss, we grab our current quintessence and seek to the desired location.
+        * 5. If we then `make` a new move (overwriting the old), we jump the tape to the position
+        *    of the PZ familiar (which we've stored as a Quintessence of PZ on the position), and
+        *    write starting from there, resummoning the PZ familiar to calculate and cache the new
+        *    position.
+        *       - Not sure if I should be resetting the HWM to 'truncate' the tape when we finish
+        *       an unmake, maybe worth doing, it's more of an 'end of stack' marker, since this is
+        *       increasingly 'just a stack' in this usecase. I suspect it'll be more tape-y with
+        *       the variation side.
+        *
+        */
+
         let mut unmoves = vec![];
 
         { // Tape is write-locked
-            tracing::trace!("Unwinding tape");
             let mut tape = self.tape.write().unwrap();
-            tracing::trace!("Locked tape for write");
             loop { // this is inelegant, but hopefully effective.
 
                 if tape.at_bot() {
@@ -265,10 +279,10 @@ impl Position {
                     panic!("Cannot unwind from Beginning of Tape");
                 }
 
+                tape.step_backward();
+
                 let alter = tape.read();
                 unmoves.push(alter);
-
-                tape.step_backward();
 
                 if matches!(alter, Alteration::Turn) {
                     break;

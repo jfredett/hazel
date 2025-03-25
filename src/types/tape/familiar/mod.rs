@@ -111,7 +111,6 @@ impl<T, S> Cursorlike for Familiar<T, S> where T : Tapelike<Item = Alteration>, 
     }
 
     fn rewind(&mut self) {
-        tracing::trace!("rewinding");
         // NOTE: doing this backwards like this makes this an actual inverse of advance, `advance +
         // rewind` should generally be a noop -- but since state updates might not adhere to that,
         // we can't assume.

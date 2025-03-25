@@ -38,7 +38,6 @@ impl<T> Cursor<T> where T : Tapelike {
     }
 
     pub fn sync_to_writehead(&mut self) {
-        tracing::trace!("Seeking to {:#05X}", self.tape.writehead());
         self.seek(self.tape.writehead());
     }
 }
@@ -69,7 +68,6 @@ impl<T> Cursorlike for Cursor<T> where T : Tapelike {
     }
 
     fn rewind(&mut self) {
-        tracing::trace!("in cursor rewind"); 
         self.position -= 1;
     }
 }

@@ -81,7 +81,7 @@ impl Tapelike for Tape {
     type Item = Alteration;
 
     fn length(&self) -> usize {
-        self.hwm
+        self.data.len().into()
     }
 
     fn writehead(&self) -> usize {
@@ -417,9 +417,7 @@ mod tests {
     fn tape_can_write_addresses() {
         let mut tape = Tape::default();
         let alteration = Alteration::place(D4, Occupant::white_pawn());
-        tracing::trace!("{:?}", tape);
         tape.write_address(0, &alteration);
-        tracing::trace!("{:?}", tape);
 
         assert_eq!(tape.read_address(0), alteration);
     }
@@ -445,6 +443,8 @@ mod tests {
         ];
         tape.write_all(&alterations);
 
-        assert_eq!(tape.length(), alterations.len());
+        // NOTE: Length is the length of the tape, not the hwm, I don't think I was relying on that too
+        // much but it's a tripping hazard, needs documenting.
+        assert_eq!(tape.length(), DEFAULT_TAPE_SIZE.into());
     }
 }

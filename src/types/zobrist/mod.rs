@@ -308,9 +308,7 @@ mod tests {
                 Move::new(E2, E3, MoveType::QUIET),
             ];
             let p1 = Position::with_moves(BEN::start_position(), variation_1);
-            tracing::trace!("p1: {:?}", p1);
             let p2 = Position::with_moves(BEN::start_position(), variation_2);
-            tracing::trace!("p2: {:?}", p2);
 
             assert_eq!(p1.zobrist(), p2.zobrist());
         }

@@ -19,7 +19,6 @@ pub trait Cursorlike {
     fn rewind_until(&mut self, pred: impl Fn(&Self) -> bool) {
         // I think on rewind the check needs to come after, not before
         loop {
-            tracing::trace!("current pos: {:#04X}", self.position());
             self.rewind();
             // HACK: This feels bad, but it works.
             if pred(self) { self.rewind(); break; }

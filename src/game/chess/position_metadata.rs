@@ -59,7 +59,6 @@ impl Alter for PositionMetadata {
                 *self = new_metadata;
             },
             Alteration::Assert(check_metadata) => {
-                tracing::trace!("My meta: {:?}, their meta: {:?}", self, check_metadata);
                 if *self != check_metadata {
                     panic_or_trace(format!("Incorrect metadata, Found: {:?}, expected {:?}", check_metadata, self));
                 }

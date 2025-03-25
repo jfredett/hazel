@@ -113,28 +113,25 @@ mod tests {
     }
 
     #[test]
-    #[tracing_test::traced_test]
     fn perft_1() {
         assert_no_difference!(perft_start_position(1), 20);
     }
 
     #[test]
-    #[tracing_test::traced_test]
     fn perft_2() {
         assert_no_difference!(perft_start_position(2), 400);
     }
 
     #[test]
-    #[tracing_test::traced_test]
     fn perft_3() {
         assert_no_difference!(perft_start_position(3), 8_902);
     }
 
-    //#[test]
-    // #[tracing_test::traced_test]
-    // fn perft_4() {
-    //     assert_no_difference!(perft_start_position(4), 197_281);
-    // }
+    #[allow(dead_code)] // off by 140 right now
+    // #[test]
+    fn perft_4() {
+        assert_no_difference!(perft_start_position(4), 197_281);
+    }
 
     #[test]
     fn check_mate_position_has_zero_perft_at_any_depth() {
