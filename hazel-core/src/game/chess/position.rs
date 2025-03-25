@@ -8,6 +8,7 @@ use hazel_basic::piece::Piece;
 use hazel_basic::square::Square;
 use hazel_bitboard::bitboard::Bitboard;
 use hazel_bitboard::ColorMasks;
+use hazel_bitboard::constants::move_tables::{KING_ATTACKS, KNIGHT_MOVES};
 
 use crate::board::PieceBoard;
 use crate::coup::rep::Move;
@@ -15,7 +16,6 @@ use crate::notation::ben::BEN;
 use crate::types::tape::cursorlike::Cursorlike;
 use crate::types::tape::familiar::state::position_zobrist::PositionZobrist;
 use crate::types::tape::tapelike::Tapelike;
-use crate::constants::move_tables::{KNIGHT_MOVES, KING_ATTACKS};
 use crate::interface::{Alter, Query, Alteration};
 
 use crate::types::tape::{familiar, Tape};

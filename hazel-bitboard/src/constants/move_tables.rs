@@ -1,8 +1,8 @@
-use hazel_bitboard::bitboard::Bitboard;
+use crate::bitboard::Bitboard;
 use hazel_basic::direction::Direction;
-use crate::notation::*;
+use hazel_basic::square::*;
 
-// bitboard crate? maybe stays in core?
+use lazy_static::lazy_static;
 
 lazy_static! {
     /// A lookup table to convert a knight on a given index -> it's bitboard of moves
@@ -11,6 +11,7 @@ lazy_static! {
     // #*_knight_attacks in position
     pub static ref KNIGHT_MOVES: [Bitboard; 64] = {
         let mut out : [Bitboard; 64] = [Bitboard::empty(); 64];
+        #[allow(clippy::needless_range_loop)]
         for i in 0..64 {
                 let mut bb = Bitboard::empty();
                 bb.set(Square::new(i));
@@ -83,6 +84,8 @@ lazy_static! {
     // FIXME: BitOps aren't const yet, so this is as close as I could get
     pub static ref KING_ATTACKS : [Bitboard; 64] = {
         let mut arr = [Bitboard::empty(); 64];
+
+        #[allow(clippy::needless_range_loop)]
         for idx in 0..64 {
 
             let mut bb = Bitboard::empty();

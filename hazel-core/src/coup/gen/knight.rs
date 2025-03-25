@@ -1,4 +1,4 @@
-use crate::constants::move_tables::KNIGHT_MOVES;
+use hazel_bitboard::constants::move_tables::KNIGHT_MOVES;
 use crate::coup::rep::{Move, MoveType};
 use crate::game::position::Position;
 

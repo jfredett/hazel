@@ -1,6 +1,5 @@
 //! Various Constants and Tables
 
-pub mod move_tables;
 
 pub mod test;
 

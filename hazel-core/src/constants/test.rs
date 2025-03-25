@@ -25,7 +25,6 @@ pub const POS5_BUGCATCHER_FEN: &str = "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RN
 pub const POS6_STEVEN_FEN: &str = "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10";
 
 lazy_static! {
-
     /// Perft move counts in order of depth (vec[0] == depth 1)
     /// The coorespond to the similarly named _FEN constants.
     ///
