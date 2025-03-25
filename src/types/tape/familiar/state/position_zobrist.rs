@@ -10,7 +10,7 @@ impl Alter for PositionZobrist {
     fn alter_mut(&mut self, alter: Alteration) -> &mut Self {
         self.current.alter_mut(alter);
 
-        if matches!(alter, Alteration::Turn) {
+        if matches!(alter, Alteration::Inform(_)) {
             self.position = self.current;
         }
         self
