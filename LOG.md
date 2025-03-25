@@ -2765,3 +2765,38 @@ minutes' by a factor of 6 or so, not bad for a `HashMap` backed cache it only to
 
 Next, spring cleaning. I'm going to live with the lack of tests because I'm going to move to rs-test, and start building
 some fixtures for more efficient testing.
+
+## 1122 - spring-cleaning-1
+
+Started spring cleaning, this is phase 1, which is just getting the workspace going and starting to split out crates and
+cleanup dependencies. I've done the easiest split so far, into `-core` and `-ui` crates; and ran `cargo-udeps` to clear
+out unused dependencies. So far, I've brought a clean compile (measured by `cargo clean ; time cargo build`) from ~37s
+-> ~25s, about a 40% reduction.
+
+I'm going to continue splitting, but the overall workspace is going to look something like:
+
+
+```
+hazel/
+    hazel-core/
+        src/
+            lib.rs
+            some-module/
+                mod.rs      # Quickcheck properties in an embedded module "properties"
+                test.rs     # Unit tests for the module, driven by rstest fixtures
+        test/
+            # core-specific integration tests, driven by rstest
+    hazel-ui/
+        # similar layout to the above, but backed also by `insta`
+    hazel-*/            # other crates as needed
+    hooks/              # Profile hook programs
+    quals/              # Qualification tests, comparing to other engines, establishing Elo, etc.
+    benchmarks/         # Performance tests/data gathering
+    tests/              # Integration tests
+```
+
+I'm debating following `rust-gpu`'s example and putting the crates south of a `crates/` folder, but for the moment I
+don't mind just having them toplevel.
+
+Part of the work so far moved over some ratatui stuff to the ui crate, which changed some apis around, but so far it's
+mostly been mechanical.
