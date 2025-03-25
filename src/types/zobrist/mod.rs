@@ -271,7 +271,7 @@ mod tests {
         #[tracing_test::traced_test]
         fn zobrist_is_nonzero() {
             let p = Position::new(BEN::start_position());
-            assert_eq!(p.zobrist().position, Zobrist::empty());
+            assert_ne!(p.zobrist().position, Zobrist::empty());
             assert_ne!(p.zobrist().current, Zobrist::empty());
         }
 
