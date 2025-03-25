@@ -1,6 +1,22 @@
 [workspace]
 resolver = "2"
-members = ["hazel-core", "hazel-ui"]
+members = [
+    # Main libraries
+    "hazel-core",
+    "hazel-ui",
+
+    # Small binaries that act as a profiling hook
+    "hooks/pextboard",
+
+    # Cross-crate integration tests
+    #"tests/???",
+
+    # Benchmarks
+    #"benchmarks/???",
+
+    # Quals -- verify Hazel against other known-good engines for accuracy
+    #"quals/???",
+]
 
 [workspace.package]
 authors = ["Joe Fredette <jfredett@gmail.com>"]
