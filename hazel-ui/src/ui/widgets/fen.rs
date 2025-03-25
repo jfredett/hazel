@@ -1,6 +1,6 @@
 use ratatui::{buffer::Buffer, prelude::*, text::Text, widgets::Widget};
 
-use crate::notation::ben::BEN;
+use hazel::notation::ben::BEN;
 
 
 #[derive(Debug, Default)]
@@ -45,8 +45,7 @@ impl Widget for &FEN {
 
 #[cfg(test)]
 mod tests {
-    use crate::constants::START_POSITION_FEN;
-    use crate::board::simple::PieceBoard;
+    use hazel::constants::START_POSITION_FEN;
 
     use super::*;
 

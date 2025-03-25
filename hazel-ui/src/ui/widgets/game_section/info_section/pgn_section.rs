@@ -1,7 +1,7 @@
 use ratatui::layout::Direction;
 use ratatui::prelude::*;
 
-use crate::notation::pgn::PGN;
+use hazel::notation::pgn::PGN;
 use crate::ui::widgets::placeholder::Placeholder;
 
 lazy_static! {
@@ -82,7 +82,7 @@ impl Widget for &PGNSection {
 mod tests {
     use insta::assert_debug_snapshot;
 
-    use crate::notation::pgn::PGN;
+    use hazel::notation::pgn::PGN;
 
     use super::*;
 

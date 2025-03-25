@@ -1,5 +1,5 @@
 use ratatui::{buffer::Buffer, layout::{Constraint, Layout, Rect}, style::{Style, Stylize}, widgets::{Block, StatefulWidget, Table, Widget}};
-use crate::types::tape::familiar::state::tape_reader_state::TapeReaderState;
+use hazel::types::tape::familiar::state::tape_reader_state::TapeReaderState;
 
 #[derive(Default)]
 pub struct TapeReaderWidget {
@@ -65,14 +65,14 @@ impl StatefulWidget for &TapeReaderWidget {
 
 #[cfg(test)]
 mod tests {
-    use insta::assert_debug_snapshot;
-    use ratatui::{buffer::Buffer, style::Color};
+    // use insta::assert_debug_snapshot;
+    // use ratatui::{buffer::Buffer, style::Color};
 
-    use crate::{game::position::Position, notation::pgn::PGN};
+    // use hazel::{game::position::Position, notation::pgn::PGN};
 
-    use super::*;
+    // use super::*;
 
-    // FIXME: familiar refactor
+    // // FIXME: familiar refactor
     // #[test]
     // fn renders_as_expected() {
     //     let rect = Rect::new(0, 0, 64, 32);

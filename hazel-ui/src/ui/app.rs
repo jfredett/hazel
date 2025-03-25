@@ -3,7 +3,9 @@ use std::{collections::HashMap, fmt::Debug, sync::Mutex};
 use ratatui::{crossterm::event::{Event, KeyCode}, layout::{Constraint, Layout}, style::{Color, Style}, widgets::{StatefulWidget, Widget}, Frame};
 use tui_logger::{LevelFilter, TuiLoggerLevelOutput, TuiLoggerSmartWidget, TuiWidgetState};
 
-use crate::{board::PieceBoard, constants::START_POSITION_FEN, engine::{driver::{GetPosition, HazelResponse, WitchHazel}, uci::UCIMessage}, notation::ben::BEN, types::tape::{cursorlike::Cursorlike, familiar::{self, state::tape_reader_state::TapeReaderState, Quintessence}}, ui::widgets::tapereader::*};
+use hazel::{board::PieceBoard, constants::START_POSITION_FEN, engine::{driver::{GetPosition, HazelResponse, WitchHazel}, uci::UCIMessage}, notation::ben::BEN, types::tape::{cursorlike::Cursorlike, familiar::{self, state::tape_reader_state::TapeReaderState, Quintessence}}};
+
+use crate::ui::widgets::tapereader::TapeReaderWidget;
 
 use super::widgets::{board::Board, fen::FEN, input::Input, output::Output};
 
@@ -277,10 +279,7 @@ lazy_static! {
 
 
 #[cfg(test)]
-#[cfg_attr(test, mutants::skip)]
 mod tests {
-    use std::process::Termination;
-
     use ratatui::backend::TestBackend;
     use insta::assert_debug_snapshot;
     use ratatui::Terminal;

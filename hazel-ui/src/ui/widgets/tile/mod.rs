@@ -7,7 +7,7 @@ use super::fen::FEN;
 use super::game_section::GameSectionLayout;
 use super::placeholder::Placeholder;
 
-use crate::notation::pgn::PGN;
+use hazel::notation::pgn::PGN;
 
 lazy_static! {
     static ref LAYOUT : Layout = Layout::default()

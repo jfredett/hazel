@@ -1,17 +1,14 @@
-#![allow(unused_imports)]
+#[macro_use]
+extern crate lazy_static;
 
+#[cfg(test)]
+pub use tracing_test;
+
+pub mod ui;
 
 use hazel::engine::uci;
-use hazel::ui;
-
-use std::thread;
-use crossbeam::channel::Sender;
-use tracing_subscriber::EnvFilter;
-use tracing_subscriber::fmt;
-use tracing_subscriber::prelude::*;
 
 // NOTE: No need to mutation test the main wrapper.
-#[cfg_attr(test, mutants::skip)]
 #[tokio::main]
 async fn main() {
     tracing::info!("Welcome to Hazel.");

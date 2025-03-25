@@ -14,7 +14,6 @@ tracing-appender = "0.2"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 hazel-core = { path = "./hazel-core" }
 
-[workspace.dev-dependencies]
 
 [profile.bench]
 opt-level = 3

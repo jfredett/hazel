@@ -10,17 +10,15 @@ use ratatui::{
     Terminal,
 };
 
-mod model;
 mod app;
 mod widgets;
 
 use app::UI;
 use tui_logger::{init_logger, set_default_level, set_log_file, LevelFilter, TuiLoggerFile, TuiLoggerLevelOutput};
 
-use crate::engine::driver::WitchHazel;
+use hazel::engine::driver::WitchHazel;
 
 /// Boilerplate to get the app started.
-#[cfg_attr(test, mutants::skip)]
 pub async fn run() -> Result<(), Box<dyn Error>> {
     enable_raw_mode()?;
 
@@ -44,7 +42,6 @@ pub async fn run() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-#[cfg_attr(test, mutants::skip)]
 async fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut UI<'_>) -> io::Result<bool> {
     use tracing_subscriber::prelude::*;
 

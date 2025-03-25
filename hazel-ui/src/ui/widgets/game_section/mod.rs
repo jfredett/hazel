@@ -7,8 +7,8 @@ use ratatui::prelude::*;
 use board_section::BoardSection;
 use info_section::InfoSection;
 
-use crate::board::simple::PieceBoard;
-use crate::notation::pgn::PGN;
+use hazel::board::simple::PieceBoard;
+use hazel::notation::pgn::PGN;
 
 lazy_static! {
     static ref LAYOUT : Layout = Layout::default()

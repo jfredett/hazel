@@ -5,7 +5,6 @@ pub mod engine_io_section;
 pub mod game_section;
 
 // other widgets are more general use oriented.
-pub mod query;
 pub mod placeholder;
 pub mod tapereader;
 

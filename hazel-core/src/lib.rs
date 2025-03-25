@@ -40,7 +40,6 @@ pub mod interface;
 pub mod notation;
 #[macro_use]
 pub mod types;
-pub mod ui;
 pub mod util;
 
 // Import all the traits for everyone

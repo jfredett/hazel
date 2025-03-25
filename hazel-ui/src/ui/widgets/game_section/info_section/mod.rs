@@ -2,7 +2,7 @@ use ratatui::layout::Direction;
 use ratatui::prelude::*;
 use ratatui::widgets::Borders;
 
-use crate::notation::pgn::PGN;
+use hazel::notation::pgn::PGN;
 use crate::ui::widgets::placeholder::Placeholder;
 
 mod pgn_section;

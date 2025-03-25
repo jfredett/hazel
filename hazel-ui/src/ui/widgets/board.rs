@@ -1,10 +1,10 @@
 #![allow(unused_imports, dead_code)]
 
 use ratatui::prelude::*;
-use crate::board::simple::PieceBoard;
-use crate::Query;
-use crate::types::{self, Occupant, Piece};
-use crate::notation::*;
+use hazel::board::simple::PieceBoard;
+use hazel::Query;
+use hazel::types::{self, Occupant, Piece};
+use hazel::notation::*;
 
 use ratatui::widgets::{Table, Row};
 
