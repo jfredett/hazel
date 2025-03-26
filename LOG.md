@@ -2833,4 +2833,13 @@ and maybe removable.
 
 So far so good, phase 2 will be `rstest` and maybe some preliminary benchmarking work.
 
+## 2227 - spring-cleaning-1
 
+I'm settling in on the split, I'm favoring lots of little crates, perhaps to the point of overkill, but at the moment I
+prefer to overdo it and pare it back later, it has already paid dividends in terms of clarifying responsibility
+barriers, and in service to that I'm going to make a little diagram.
+
+<img src="./assets/hazel-crates.png" alt="a diagram showing the as-built and desired-design of hazel as a multi-crate
+workspace" width="1024">
+
+It's in `assets/hazel-crates.png` if that isn't rendering for whatever reason.
