@@ -417,6 +417,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "hazel-engine"
+version = "0.1.0"
+dependencies = [
+ "hazel-basic",
+ "hazel-bitboard",
+ "hazel-core",
+ "similar-asserts",
+ "tracing",
+ "tracing-appender",
+ "tracing-subscriber",
+ "tracing-test",
+]
+
+[[package]]
+name = "hazel-generator"
+version = "0.1.0"
+dependencies = [
+ "hazel-basic",
+ "hazel-bitboard",
+ "hazel-core",
+ "similar-asserts",
+ "tracing",
+ "tracing-appender",
+ "tracing-subscriber",
+ "tracing-test",
+]
+
+[[package]]
 name = "hazel-ui"
 version = "0.1.0"
 dependencies = [

@@ -2843,3 +2843,33 @@ barriers, and in service to that I'm going to make a little diagram.
 workspace" width="1024">
 
 It's in `assets/hazel-crates.png` if that isn't rendering for whatever reason.
+
+# 28-MAR-2025
+
+## 1945 - spring-cleaning-1
+
+I took a stab over on `spring-cleaning-1-parser-twig` at pulling out the `-parser` library, but ran into a number of
+issues of where things should be sorted; once I got everything detangled, I was left with some parser bugs and a bad
+taste; so I decided to rewind and try again.
+
+Along the way I found that the `-engine` components are probably going to be simpler to extract first, and then the
+parsers after. In particular it's difficult to have these crates cross boundaries too much before you enter a circular
+dependency hell.
+
+I'm going to keep working to split out mostly along module lines, if nothing else it's telling me where all the tight
+coupling is.
+
+Another thing I discovered is that the core representation (everything up to and including `coup::rep::Move`) really
+needs to 'stick together' -- the first logical split point I think is probably at `Position`. This is a place where
+[tabitha](https://github.com/jfredett/tabitha) would probably help, since I could see how different modules and structs
+tangle with each other.
+
+I also found that my more or less arbitrary use of From/Into is resulting in some weird semantics. I think the right way
+is to support converting _into_ primitive-ish types (the stuff in -basic), and then have other methods for converting
+those things into specific subclasses of a given type; e.g., `BEN` should have a `as_fen_string` method; but not a
+`From<String>` implementation. Whereas `(Rank, File)` should have a `From<Square>` implementation.
+
+Most of the time I'm asking for `anything squarelike`, not `anything BENlike`; though `impl Into<BEN>` is not uncommon,
+I prefer to lean on the _trait_ for that, via `impl Query`.
+
+I'll leave the twig up as it may be useful later, but I return to extracting other things now.

@@ -6,6 +6,8 @@ members = [
     "hazel-ui",
     "hazel-basic",
     "hazel-bitboard",
+    "hazel-generator",
+    "hazel-engine",
 
     # Small binaries that act as a profiling hook
     "hooks/pextboard",
@@ -33,7 +35,9 @@ tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 hazel-core = { path = "./hazel-core" }
 hazel-basic = { path = "./hazel-basic" }
 hazel-bitboard = { path = "./hazel-bitboard" }
-hazel-ui = { path = "./hazel-core" }
+hazel-ui = { path = "./hazel-ui" }
+hazel-generator = { path = "./hazel-generator" }
+hazel-engine = { path = "./hazel-engine" }
 # Dev dependencies to share
 mutants = "0.0.3"
 quickcheck = "1.0.3"
