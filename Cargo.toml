@@ -6,6 +6,7 @@ members = [
     "hazel-ui",
     "hazel-basic",
     "hazel-bitboard",
+    "hazel-engine",
 
     # Small binaries that act as a profiling hook
     "hooks/pextboard",
@@ -34,6 +35,7 @@ hazel-core = { path = "./hazel-core" }
 hazel-basic = { path = "./hazel-basic" }
 hazel-bitboard = { path = "./hazel-bitboard" }
 hazel-ui = { path = "./hazel-core" }
+hazel-parser = { path = "./hazel-parser" }
 # Dev dependencies to share
 mutants = "0.0.3"
 quickcheck = "1.0.3"

@@ -2843,3 +2843,44 @@ barriers, and in service to that I'm going to make a little diagram.
 workspace" width="1024">
 
 It's in `assets/hazel-crates.png` if that isn't rendering for whatever reason.
+
+This basically shows the plan, the goal is going to be to eventually 'evaporate' core into these other modules. It will
+push what is presently called `Tape` down along with the most basic representations into crates that should be easy to
+make almost entirely static.
+
+
+# 26-MAR-2025
+
+## 0921 - spring-cleaning-1
+
+I think there's going to be a _bit_ of backporting once I get hazel-parser building. These extra crates should, ideally,
+be mostly about extending the -core representation. `-parser` should just _extend_ the `BEN` type, at least, rather than
+providing it, since BEN is a pretty core tool I use throughout the rest of `hazel`. PGN and SAN are probably 'fine' to
+provide there, but BEN should live in `Core` because even if I don't parse them, I do build them pretty frequently.
+
+
+## 0953 - spring-cleaning-1
+
+I think I might rip out all the old variation stuff, just remove entirely for now. I know I want to overhaul it to use
+`Tape/Spell`, but it's presently causing some trouble separating `-parser` because there are two `BEN` representations.
+I could just push back some of the `BEN` rep to get it working, but not 100% sure how I want to approach just yet.
+
+This makes me wish I spent more time finishing [tabitha](https://github.com/jfredett/tabitha).
+
+## 1014 - spring-cleaning-1
+
+I realized a better way to deal with the re-export problem. I can feature-flag these extension-crates. `hazel-core` will
+provide the `toolbox`, which can conditionally include the extensions from their respective crates. This makes the
+re-export simple, the `hazel-representation` crate from the DD will just be `hazel`, the `-generator` and `-evaluator`
+and `-engine` all rely on it, albeit with potentially different features enabled/disabled. I think there'd be a final
+`witchhazel` crate which unifies everything into a single package, deals with configuration, the binary, etc.
+
+I'll update the diagram at some point, but I think that'll be better, and it makes things somewhat simpler overall.
+
+I might make a macro or something for writing extension methods; it's a bit wordy.
+
+## 1033 - spring-cleaning-1
+
+Thinking about refactoring `Variation`, it's going to poke the `PGN` parser pretty hard, since it's coupled to the old
+API. That's _fine_, I wouldn't hate taking the time to port this to the new version of `nom` anyway, maybe improve the
+organization a bit.

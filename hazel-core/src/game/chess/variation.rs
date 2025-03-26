@@ -69,13 +69,13 @@ impl Variation {
     // NOTE: I'm not in love with these methods. I would prefer to have some psuedo-atomic way to
     // do this in the PGN::parse side of things, but a pleasant way is not obvious and this better
     // matches the tokenization, so I'm going with it.
-    pub(crate) fn start_variation(&mut self) -> &mut Self {
+    pub fn start_variation(&mut self) -> &mut Self {
         self.record(Action::Variation(Delim::Start));
         self
     }
 
     // NOTE: see #start_variation
-    pub(crate) fn end_variation(&mut self) -> &mut Self {
+    pub fn end_variation(&mut self) -> &mut Self {
         self.record(Action::Variation(Delim::End));
         self
     }
