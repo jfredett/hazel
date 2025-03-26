@@ -7,6 +7,11 @@ members = [
     "hazel-basic",
     "hazel-bitboard",
     "hazel-engine",
+    "hazel-parser",
+
+    # Sub-projects.
+    "witch", # tokio based actor-y thing, mostly just screwing around
+    # "spell" # this is presently the `tape/familiar/quintessence` system, but still more generalized.
 
     # Small binaries that act as a profiling hook
     "hooks/pextboard",

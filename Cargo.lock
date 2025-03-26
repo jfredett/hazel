@@ -417,6 +417,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "hazel-engine"
+version = "0.1.0"
+dependencies = [
+ "mutants",
+ "quickcheck",
+ "quickcheck_macros",
+ "similar-asserts",
+ "tracing",
+ "tracing-subscriber",
+ "tracing-test",
+]
+
+[[package]]
+name = "hazel-parser"
+version = "0.1.0"
+dependencies = [
+ "hazel-basic",
+ "hazel-bitboard",
+ "hazel-core",
+ "mutants",
+ "nom",
+ "quickcheck",
+ "quickcheck_macros",
+ "similar-asserts",
+ "tracing",
+ "tracing-subscriber",
+ "tracing-test",
+]
+
+[[package]]
 name = "hazel-ui"
 version = "0.1.0"
 dependencies = [
@@ -1549,6 +1579,20 @@ name = "windows_x86_64_msvc"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
+
+[[package]]
+name = "witch"
+version = "0.1.0"
+dependencies = [
+ "mutants",
+ "nom",
+ "quickcheck",
+ "quickcheck_macros",
+ "similar-asserts",
+ "tracing",
+ "tracing-subscriber",
+ "tracing-test",
+]
 
 [[package]]
 name = "zerocopy"

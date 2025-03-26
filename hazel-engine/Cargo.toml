@@ -1,0 +1,23 @@
+[package]
+name = "hazel-engine"
+version = "0.1.0"
+authors = ["Joe Fredette <jfredett@gmail.com>"]
+description = "The actual game-playing part"
+edition = "2021"
+
+[lib]
+name="hazel_parser"
+bench = false
+path="src/lib.rs"
+
+
+[dependencies]
+tracing-subscriber.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+quickcheck.workspace = true
+mutants.workspace = true
+quickcheck_macros.workspace = true
+similar-asserts.workspace = true
+tracing-test.workspace = true
