@@ -10,8 +10,7 @@ impl Bitboard {
 
     #[cfg(not(target_feature = "bmi2"))]
     pub fn pext(&self, _mask: Bitboard) -> u64 {
-        // TODO: Write CPU-REQUIREMENTS
-        panic!("Hazel currently requires CPUs which support the BMI2 instruction set, see CPU-REQUIREMENTS from the README for details")
+        panic!("Hazel currently requires CPUs which support the BMI2 instruction set, see CPU-REQUIREMENTS for details")
     }
 
     /// The index of the first set bit, e.g.:
@@ -37,8 +36,7 @@ impl Bitboard {
 
     #[cfg(not(target_feature = "bmi1"))]
     pub fn first_index(&self) -> usize {
-        // TODO: Write CPU-REQUIREMENTS
-        panic!("Hazel currently requires CPUs which support the BMI1 instruction set, see CPU-REQUIREMENTS from the README for details")
+        panic!("Hazel currently requires CPUs which support the BMI1 instruction set, see CPU-REQUIREMENTS for details")
     }
 }
 

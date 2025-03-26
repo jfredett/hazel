@@ -1,4 +1,7 @@
-// TODO: sort out where these go? probably basic? maybe into the test fixture stuff?
+// TODO: move to the test fixture section
+// These should be refactored to be rs-test fixtures. That way I can scale perft across the various
+// other positions to chase out remaining bugs in movegen.
+
 
 use hazel_basic::color::Color;
 use hazel_basic::square::*;

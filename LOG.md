@@ -2811,3 +2811,26 @@ a delightfully decoupled thing. Ultimately this will mean there is a `hazel-repr
 interfaces, and then that should be replacable when I come up with better representations.
 
 He said, full of dumb hope.
+
+## 1727 - spring-cleaning-1
+
+Okay, two more crates split out, `hazel-bitboard` has all the pretty static bitboard related stuff, `hazel-basic` has
+all the piece/color/square/etc types.
+
+Next I think I'm going to start scaffolding the integration test crate, which can hold the last item in `-core`'s
+constants module. I'll then turn that module into a re-export module maybe, idk.
+
+I want to split the parser stuff as well, as that should reduce more of `-core`'s dependencies, but getting `-basic` and
+`-bitboard` extracted will make that process easier I think.
+
+The end of all this should be a `hazel::toolbox` module that I can import and get all the basic constants and types for
+doing 'normal' stuff in `hazel` the eventual `engine` crate will have the bits for running the game using the
+representation provided by that `toolbox` module.
+
+Separating the parser should eliminate the `nom` and similar deps. Separating the engine will probably involve
+separating out the `witch` thing to it's own crate as well, and hopefully that'll leave the `types` module pretty thin
+and maybe removable.
+
+So far so good, phase 2 will be `rstest` and maybe some preliminary benchmarking work.
+
+
