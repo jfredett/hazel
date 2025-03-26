@@ -45,7 +45,9 @@ pub type ATM<'a, E> = &'a Cache<E>;
 
 #[cfg(test)]
 mod tests {
-    use crate::{game::position::Position, notation::ben::BEN};
+    use hazel_basic::ben::BEN;
+
+    use crate::{game::position::Position};
 
     use super::*;
 

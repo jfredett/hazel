@@ -95,7 +95,7 @@ mod castling {
 }
 
 mod disambiguate {
-    use crate::Alter;
+    use crate::interface::Alter;
     use crate::board::PieceBoard;
 
     use super::*;
@@ -153,7 +153,7 @@ mod disambiguate {
 
 mod to_star {
     use crate::board::PieceBoard;
-    use crate::Alter;
+    use crate::interface::Alter;
 
     use super::*;
 
@@ -312,14 +312,10 @@ mod proxy_methods {
 
 
 mod compilation {
-    use ben::BEN;
+    use hazel_basic::ben::BEN;
+    use hazel_basic::position_metadata::PositionMetadata;
 
-    use crate::alteration::MetadataAssertion;
-    use crate::game::castle_rights::CastleRights;
-    use crate::game::position_metadata::PositionMetadata;
     use crate::board::simple::PieceBoard;
-    use crate::interface::Alter;
-    use crate::Alteration;
     use crate::coup::rep::MoveType;
 
     use super::*;

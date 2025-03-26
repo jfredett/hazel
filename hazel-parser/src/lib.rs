@@ -4,8 +4,6 @@ pub mod uci; // Canonical Move Notation, Universal Chess Interface uses 'Long Al
              // hazel calls it 'UCI' for short.
 pub mod san; // Standard Algebraic Notation
 
-// Board Notations
-pub mod ben;
 
 // Game Notations
 pub mod pgn;

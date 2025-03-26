@@ -1,5 +1,8 @@
 
-use crate::{coup::rep::Move, interface::play::Play, notation::ben::BEN, types::{log::cursor::Cursor, movesheet::MoveSheet}};
+use hazel_basic::ben::BEN;
+use hazel_basic::square::*;
+
+use crate::{coup::rep::Move, interface::play::Play, types::{log::cursor::Cursor, movesheet::MoveSheet}};
 use super::{action::Action, delim::Delim};
 
 // TODO: port this to the new system.
@@ -131,8 +134,7 @@ impl<'a> Familiar<'a> {
 
 #[cfg(test)]
 mod tests {
-
-    use crate::{board::PieceBoard, constants::START_POSITION_FEN, coup::rep::{Move, MoveType}, game::{chess::PositionMetadata, variation::Variation, ChessGame}, notation::*};
+    use crate::{board::PieceBoard, coup::rep::{Move, MoveType}, game::{variation::Variation, ChessGame}};
 
     use super::*;
 
@@ -177,7 +179,7 @@ mod tests {
 
 
     mod rewind {
-        use crate::constants::EMPTY_POSITION_FEN;
+        use hazel_basic::position_metadata::PositionMetadata;
 
         use super::*;
 
@@ -260,7 +262,7 @@ mod tests {
             familiar.advance_by(3);
             familiar.rewind_to_start();
 
-            let ben = BEN::new(EMPTY_POSITION_FEN);
+            let ben = BEN::empty();
             let mut expected_board = PieceBoard::default();
             expected_board.set_fen(ben);
 
@@ -296,6 +298,8 @@ mod tests {
     }
 
     mod advance {
+        use hazel_basic::position_metadata::PositionMetadata;
+
         use super::*;
 
         #[quickcheck]

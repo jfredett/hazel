@@ -1,4 +1,6 @@
-use crate::{board::PieceBoard, constants::START_POSITION_FEN, coup::rep::Move, game::{action::Action, ChessGame}, notation::ben::BEN, Alter, Play, Query};
+use hazel_basic::{ben::BEN, interface::{Alter, Query}};
+
+use crate::{board::PieceBoard, coup::rep::Move, game::{action::Action, ChessGame}, interface::Play};
 
 #[derive(Clone, Debug)]
 pub enum MoveSheetEntry {
@@ -18,7 +20,7 @@ impl MoveSheet {
         Self {
             line: Vec::new(),
             sheet: Vec::new(),
-            initial_state: BEN::new(START_POSITION_FEN)
+            initial_state: BEN::start_position()
         }
     }
 
@@ -110,7 +112,7 @@ impl<T> From<&MoveSheet> for ChessGame<T> where T : Alter + Query + Default + Cl
 mod tests {
     use crate::board::PieceBoard;
     use crate::coup::rep::MoveType;
-    use crate::notation::*;
+    use hazel_basic::square::*;
 
     use super::*;
 

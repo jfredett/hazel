@@ -1,4 +1,6 @@
-use crate::{board::PieceBoard, game::position_metadata::PositionMetadata, Alter};
+use hazel_basic::{interface::{Alter, Alteration}, position_metadata::PositionMetadata};
+
+use crate::board::PieceBoard;
 
 #[derive(Clone, Default, Debug, PartialEq)]
 pub struct GameState {
@@ -15,15 +17,14 @@ impl GameState {
     }
 }
 
-
 impl Alter for GameState {
-    fn alter(&self, mov: crate::Alteration) -> Self {
+    fn alter(&self, mov: Alteration) -> Self {
         let mut copy = self.clone();
         copy.alter_mut(mov);
         copy
     }
 
-    fn alter_mut(&mut self, mov: crate::Alteration) -> &mut Self {
+    fn alter_mut(&mut self, mov: Alteration) -> &mut Self {
         self.board.alter_mut(mov);
         self.metadata.alter_mut(mov);
         self

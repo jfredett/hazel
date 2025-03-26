@@ -1,11 +1,11 @@
 use hazel_basic::direction::Direction;
 use hazel_basic::occupant::Occupant;
 use hazel_basic::piece::Piece;
+use hazel_basic::square::*;
 use hazel_bitboard::ColorMasks;
 
 use crate::game::chess::position::Position;
-use crate::notation::Square;
-use crate::Query;
+use crate::interface::Query;
 use crate::coup::rep::{Move, MoveType};
 
 
@@ -141,9 +141,8 @@ pub fn generate_moves(position: &Position) -> impl Iterator<Item = Move> {
 
 #[cfg(test)]
 mod tests {
-    use crate::notation::ben::BEN;
-    use crate::notation::*;
     use crate::coup::rep::MoveType;
+    use hazel_basic::ben::BEN;
 
     use super::*;
 

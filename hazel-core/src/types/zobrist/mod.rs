@@ -1,14 +1,14 @@
 use std::fmt::Debug;
 
+use hazel_basic::castle_rights::CastleRights;
 use hazel_basic::color::Color;
 use hazel_basic::file::File;
 use hazel_basic::occupant::Occupant;
 use hazel_basic::piece::Piece;
 use hazel_basic::square::Square;
 
-use crate::game::castle_rights::CastleRights;
 use crate::interface::Alter;
-use crate::{Alteration, Query};
+use hazel_basic::interface::{Alteration, Query};
 
 pub struct ZobristTable<const SEED: u64>;
 
@@ -199,7 +199,7 @@ impl Zobrist {
     }
 
     pub fn new(query: &impl Query) -> Zobrist {
-        let alterations : Vec<Alteration> = crate::query::to_alterations(query).collect();
+        let alterations : Vec<Alteration> = crate::interface::query::to_alterations(query).collect();
         Zobrist::from(alterations.as_slice())
     }
 
@@ -216,7 +216,6 @@ impl Zobrist {
 mod tests {
 
     use crate::coup::rep::{Move, MoveType};
-    use crate::notation::ben::BEN;
     use crate::game::chess::position::Position;
 
     use super::*;
@@ -264,9 +263,9 @@ mod tests {
     }
 
     mod zobrist {
+        use hazel_basic::{ben::BEN, position_metadata::PositionMetadata};
         use quickcheck::{Arbitrary, Gen};
-
-        use crate::{game::position_metadata::PositionMetadata, notation::*};
+        use hazel_basic::square::*;
 
         use super::*;
 
@@ -314,25 +313,6 @@ mod tests {
             let p2 = Position::with_moves(BEN::start_position(), variation_2);
 
             assert_eq!(p1.zobrist(), p2.zobrist());
-        }
-
-
-        impl Arbitrary for Alteration {
-            fn arbitrary(g: &mut Gen) -> Alteration {
-                let variant : usize = usize::arbitrary(g) % 6;
-
-                let occupant = Occupant::Occupied(Piece::arbitrary(g), Color::arbitrary(g));
-
-                match variant {
-                    0 => Self::Place { square: Square::arbitrary(g), occupant },
-                    1 => Self::Remove { square: Square::arbitrary(g), occupant },
-                    2 => Self::Assert(PositionMetadata::arbitrary(g)),
-                    3 => Self::Clear,
-                    4 => Self::Lit(u8::arbitrary(g)),
-                    5 => Self::Inform(PositionMetadata::arbitrary(g)),
-                    _ => { unreachable!(); }
-                }
-            }
         }
 
         #[quickcheck]

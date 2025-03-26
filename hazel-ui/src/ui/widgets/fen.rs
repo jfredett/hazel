@@ -1,6 +1,6 @@
 use ratatui::{buffer::Buffer, prelude::*, text::Text, widgets::Widget};
 
-use hazel::notation::ben::BEN;
+use hazel_basic::ben::BEN;
 
 
 #[derive(Debug, Default)]
@@ -45,7 +45,7 @@ impl Widget for &FEN {
 
 #[cfg(test)]
 mod tests {
-    use hazel::constants::START_POSITION_FEN;
+    use hazel_basic::START_POSITION_FEN;
 
     use super::*;
 

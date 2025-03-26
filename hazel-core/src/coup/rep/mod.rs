@@ -20,14 +20,13 @@
 
 
 use crate::interface::{Alteration, Query};
-use crate::notation::*;
 use hazel_basic::file::File;
 use hazel_basic::piece::Piece;
 use hazel_basic::occupant::Occupant;
 use hazel_basic::color::Color;
+use hazel_basic::square::*;
 
 use serde::{Deserialize, Serialize};
-
 
 #[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Serialize, Deserialize)]
 pub struct Move(pub(crate) u16);

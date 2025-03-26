@@ -1,20 +1,14 @@
-use hazel::game::position_metadata::PositionMetadata;
-use hazel::Alteration;
-use hazel::notation::ben::BEN;
-use hazel_basic::color::Color;
-use hazel_basic::occupant::Occupant;
-use hazel_basic::piece::Piece;
-use hazel_basic::square::Square;
+use crate::{ben::BEN, color::Color, occupant::Occupant, piece::Piece, position_metadata::PositionMetadata, square::Square, START_POSITION_FEN};
+use crate::interface::{Alter, Alteration};
 
-pub trait BENCompilesToAlteration {
-    fn compile(fen: &str) -> impl Iterator<Item = Alteration>;
-}
+impl BEN {
+    pub fn to_alterations(&self) -> impl Iterator<Item = Alteration> {
+        crate::interface::query::to_alterations(self)
+    }
 
-impl BENCompilesToAlteration for BEN {
-    // FIXME: This is the only thing that needs to be in `-parser` for BEN.
-    // TODO: Move this to it's own function, it should produce a ~~Log~~, ~~Tape~~, _Spell_ of alteratons
-    // TODO: Nom.
-    fn compile(fen: &str) -> impl Iterator<Item = Alteration> {
+    // TODO: Nom would be nice here, but because I compile directly to alterations, it's hard to
+    // find the right place to run this, since `hazel-parser` is included in `core`.
+    pub fn compile(fen: &str) -> impl Iterator<Item = Alteration> {
         let mut alterations = vec![];
         let mut cursor = Square::by_rank_and_file();
         cursor.downward();
@@ -56,19 +50,23 @@ impl BENCompilesToAlteration for BEN {
 
         let mut metadata = PositionMetadata::default();
         metadata.parse(&mut chunks);
-        let metadata_alterations : Vec<Alteration> = metadata.into_information();
-        alterations.extend(metadata_alterations);
+        alterations.push(Alteration::inform(&metadata));
 
         alterations.into_iter()
     }
+
+    // This should be an extension called 'parse' and live in parser
+    pub fn new(pos: &str) -> Self {
+        let alterations = Self::compile(pos);
+        let mut ret = Self::empty();
+        for alter in alterations {
+            ret.alter_mut(alter);
+        }
+        ret
+    }
+
+    pub fn start_position() -> Self {
+        Self::new(START_POSITION_FEN)
+    }
 }
-
-
-#[cfg(test)]
-mod tests {
-    use quickcheck_macros::quickcheck;
-    use super::*;
-
-}
-
 

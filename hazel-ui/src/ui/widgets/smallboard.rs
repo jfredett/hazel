@@ -2,9 +2,9 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Widget, Block, Borders};
 use ratatui::buffer::Buffer;
 
-use hazel::Query;
+use hazel_basic::interface::Query;
 use hazel::board::simple::PieceBoard;
-use hazel::notation::*;
+use hazel_basic::square::*;
 
 /// 8x8 text-only no color board.
 #[derive(Default)]

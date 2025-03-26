@@ -1,4 +1,5 @@
 use hazel_bitboard::constants::move_tables::KNIGHT_MOVES;
+use hazel_basic::square::*;
 use crate::coup::rep::{Move, MoveType};
 use crate::game::position::Position;
 
@@ -29,12 +30,9 @@ pub fn generate_moves(position: &Position) -> impl Iterator<Item = Move> {
 
 #[cfg(test)]
 mod tests {
-    use ben::BEN;
-
-    use crate::notation::*;
+    use hazel_basic::ben::BEN;
 
     use super::*;
-
 
     #[test]
     fn test_position() {

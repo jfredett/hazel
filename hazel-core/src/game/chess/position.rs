@@ -1,10 +1,12 @@
 use std::sync::Arc;
 use std::{fmt::Debug, sync::RwLock};
 
+use hazel_basic::ben::BEN;
 use hazel_basic::color::Color;
 use hazel_basic::direction::Direction;
 use hazel_basic::occupant::Occupant;
 use hazel_basic::piece::Piece;
+use hazel_basic::position_metadata::PositionMetadata;
 use hazel_basic::square::Square;
 use hazel_bitboard::bitboard::Bitboard;
 use hazel_bitboard::ColorMasks;
@@ -12,7 +14,6 @@ use hazel_bitboard::constants::move_tables::{KING_ATTACKS, KNIGHT_MOVES};
 
 use crate::board::PieceBoard;
 use crate::coup::rep::Move;
-use crate::notation::ben::BEN;
 use crate::types::tape::cursorlike::Cursorlike;
 use crate::types::tape::familiar::state::position_zobrist::PositionZobrist;
 use crate::types::tape::tapelike::Tapelike;
@@ -22,7 +23,6 @@ use crate::types::tape::{familiar, Tape};
 use crate::types::zobrist::Zobrist;
 
 use crate::types::tape::familiar::{Familiar, Quintessence};
-use super::position_metadata::PositionMetadata;
 use crate::coup::gen::cache::{Cache, ATM};
 
 
@@ -148,7 +148,7 @@ lazy_static!(
 impl From<Position> for BEN {
     // TODO: This could probably be better managed by a familiar.
     fn from(value: Position) -> Self {
-        let mut ben : BEN = crate::alter::setup(crate::query::to_alterations(&value.board()));
+        let mut ben : BEN = crate::interface::alter::setup(crate::interface::query::to_alterations(&value.board()));
         ben.set_metadata(value.metadata());
         ben
     }
@@ -235,7 +235,7 @@ impl Position {
         match self.atm.get(position_hash) {
             Some(cached_inner) => {
                 // Atomic, TODO: Handle Result
-                tracing::trace!("Cache hit {:?} -> {:?}", position_hash, crate::query::to_fen_position(&cached_inner));
+                tracing::trace!("Cache hit {:?} -> {:?}", position_hash, crate::interface::query::to_fen_position(&cached_inner));
                 _ = self.inner.replace(cached_inner.clone());
             },
             None => {
@@ -247,7 +247,7 @@ impl Position {
                     inner.metadata.alter_mut(alter);
                 }
 
-                tracing::trace!("Cache set {:?} -> {:?}", position_hash, crate::query::to_fen_position(&inner.clone()));
+                tracing::trace!("Cache set {:?} -> {:?}", position_hash, crate::interface::query::to_fen_position(&inner.clone()));
                 self.atm.set(position_hash, inner.clone());
             },
         }

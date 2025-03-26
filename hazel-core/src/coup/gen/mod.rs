@@ -80,7 +80,7 @@ impl MoveGenerator {
 
 #[cfg(test)]
 mod tests {
-    use crate::notation::ben::BEN;
+    use hazel_basic::ben::BEN;
 
     use super::*;
 

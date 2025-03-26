@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use std::ops::Deref;
 use std::sync::{Arc, RwLock};
 
-use crate::{Alter, Alteration};
+use crate::interface::{Alter, Alteration};
 use crate::types::zobrist::Zobrist;
 
 use cursorlike::Cursorlike;
@@ -258,9 +258,8 @@ impl Deref for Tape {
 #[cfg(test)]
 mod tests {
     use cursorlike::Cursorlike;
-    use hazel_basic::{color::Color, file::File, occupant::Occupant, square::*};
+    use hazel_basic::{ben::BEN, color::Color, file::File, occupant::Occupant, position_metadata::PositionMetadata, square::*};
 
-    use crate::{game::position_metadata::PositionMetadata, notation::ben::BEN};
 
     use super::*;
 

@@ -1,3 +1,5 @@
+use hazel_basic::square::*;
+
 use super::*;
 
 impl Move {

@@ -1,23 +1,21 @@
 [package]
-name = "hazel-parser"
+name = "hazel-util"
 version = "0.1.0"
 authors = ["Joe Fredette <jfredett@gmail.com>"]
-description = "PGN, SAN, and UCI Parsers, amongst others"
+description = "Utility types"
 edition = "2021"
 
 [lib]
-name="hazel_parser"
+name="hazel_util"
 bench = false
 path="src/lib.rs"
 
 
 [dependencies]
-nom = "7.1.3"
-hazel-basic.workspace = true
-hazel-bitboard.workspace = true
-hazel-core.workspace = true
 tracing-subscriber.workspace = true
 tracing.workspace = true
+tokio = { version = "1.44.0", features = ["full"] }
+tokio-stream = "0.1.17"
 
 [dev-dependencies]
 quickcheck.workspace = true

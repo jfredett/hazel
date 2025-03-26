@@ -1,3 +1,4 @@
+use quickcheck::{Arbitrary, Gen};
 use std::fmt::{Debug, Display};
 
 #[derive(PartialEq, Eq, Clone, Copy)]
@@ -18,6 +19,18 @@ impl Default for CastleRights {
         }
     }
 }
+
+impl Arbitrary for CastleRights {
+    fn arbitrary(g: &mut Gen) -> Self {
+        CastleRights {
+            white_short: bool::arbitrary(g),
+            white_long: bool::arbitrary(g),
+            black_short: bool::arbitrary(g),
+            black_long: bool::arbitrary(g),
+        }
+    }
+}
+
 
 impl Debug for CastleRights {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -103,20 +116,8 @@ impl From<CastleRights> for u32 {
 
 #[cfg(test)]
 mod tests {
-    use quickcheck::{Arbitrary, Gen};
 
     use super::*;
-
-    impl Arbitrary for CastleRights {
-        fn arbitrary(g: &mut Gen) -> Self {
-            CastleRights {
-                white_short: bool::arbitrary(g),
-                white_long: bool::arbitrary(g),
-                black_short: bool::arbitrary(g),
-                black_long: bool::arbitrary(g),
-            }
-        }
-    }
 
 
     #[quickcheck]

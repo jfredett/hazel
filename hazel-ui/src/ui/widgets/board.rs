@@ -5,8 +5,8 @@ use hazel_basic::occupant::Occupant;
 use hazel_basic::piece::Piece;
 use ratatui::prelude::*;
 use hazel::board::simple::PieceBoard;
-use hazel::Query;
-use hazel::notation::*;
+use hazel_basic::interface::Query;
+use hazel_basic::square::*;
 
 use ratatui::widgets::{Table, Row};
 

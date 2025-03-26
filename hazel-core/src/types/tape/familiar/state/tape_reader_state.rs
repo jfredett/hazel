@@ -1,6 +1,8 @@
 use std::range::Range;
 
-use crate::{types::tape::{cursor::Cursor, cursorlike::Cursorlike, familiar::Familiar, tapelike::Tapelike, Tape}, Alteration};
+use hazel_basic::interface::Alteration;
+
+use crate::{types::tape::{cursor::Cursor, cursorlike::Cursorlike, familiar::Familiar, tapelike::Tapelike, Tape}};
 
 #[derive(Debug, Clone)]
 pub struct TapeReaderState {

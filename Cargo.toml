@@ -4,6 +4,7 @@ members = [
     # Main libraries
     "hazel-core",
     "hazel-ui",
+    "hazel-util",
     "hazel-basic",
     "hazel-bitboard",
     "hazel-engine",
@@ -39,7 +40,8 @@ tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 hazel-core = { path = "./hazel-core" }
 hazel-basic = { path = "./hazel-basic" }
 hazel-bitboard = { path = "./hazel-bitboard" }
-hazel-ui = { path = "./hazel-core" }
+hazel-ui = { path = "./hazel-ui" }
+hazel-util = { path = "./hazel-util" }
 hazel-parser = { path = "./hazel-parser" }
 # Dev dependencies to share
 mutants = "0.0.3"

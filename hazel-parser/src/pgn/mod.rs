@@ -7,7 +7,8 @@ mod tokenizer;
 use std::path::Path;
 use std::io::Error;
 
-use hazel::{game::{familiar::Familiar, variation::Variation}, notation::ben::BEN};
+use hazel::game::{familiar::Familiar, variation::Variation};
+use hazel_basic::ben::BEN;
 use nom::{branch::alt, bytes::complete::tag, character::complete::{multispace0, multispace1, newline, one_of}, combinator::opt, multi::{many0, many1}, sequence::delimited, IResult};
 use tokenizer::PGNToken;
 

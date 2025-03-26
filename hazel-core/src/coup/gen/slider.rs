@@ -1,5 +1,6 @@
 use hazel_basic::occupant::Occupant;
 use hazel_basic::piece::Piece;
+use hazel_basic::square::*;
 use hazel_bitboard::pextboard;
 use crate::game::position::Position;
 use crate::coup::rep::{Move, MoveType};
@@ -42,10 +43,8 @@ fn generate_slider_moves(position: &Position, piece: Piece) -> impl Iterator<Ite
 
 #[cfg(test)]
 mod tests {
+    use hazel_basic::ben::BEN;
     use itertools::Itertools;
-    use ben::BEN;
-
-    use crate::notation::*;
 
     use super::*;
 

@@ -1,4 +1,5 @@
-use crate::game::position_metadata::PositionMetadata;
+use hazel_basic::position_metadata::PositionMetadata;
+use hazel_basic::square::*;
 
 use super::*;
 
@@ -52,7 +53,61 @@ impl Move {
 
         // Information section
         let mut new_metadata = *metadata;
-        new_metadata.update(self, context);
+        {
+            // HACK: This is a direct inline, it should be factored down
+            let this = &mut new_metadata;
+            let mov = self;
+            let board = context;
+            // Clear the EP square, we'll re-set it if necessary later.
+            this.en_passant = None;
+
+
+            if this.side_to_move == Color::BLACK {
+                this.fullmove_number += 1;
+            }
+            this.side_to_move = !this.side_to_move;
+
+            // rely on the color of the piece being moved, rather than reasoning about the side-to-move
+            // or delaying it till the end.
+
+            let Occupant::Occupied(piece, color) = board.get(mov.source()) else { panic!("Move has no source piece: {:?}\n on: \n{}", mov, hazel_basic::interface::query::display_board(board)); };
+
+
+            if mov.is_capture() || piece == Piece::Pawn {
+                this.halfmove_clock = 0;
+            } else {
+                this.halfmove_clock += 1;
+            }
+
+            let source = mov.source();
+            match piece {
+                Piece::King => {
+                    match color  {
+                        Color::WHITE => {
+                            this.castling.white_short = false;
+                            this.castling.white_long = false;
+                        }
+                        Color::BLACK => {
+                            this.castling.black_short = false;
+                            this.castling.black_long = false;
+                        }
+                    }
+                }
+                Piece::Rook if source == H1 => { this.castling.white_short = false; }
+                Piece::Rook if source == H8 => { this.castling.black_short = false; }
+                Piece::Rook if source == A1 => { this.castling.white_long = false; }
+                Piece::Rook if source == A8 => { this.castling.black_long = false; }
+                Piece::Rook => {}
+                Piece::Pawn => {
+                    this.en_passant = if mov.is_double_pawn_push_for(color) {
+                        mov.target().shift(color.pawn_direction()).map(|target| File::from(target.file()))
+                    } else {
+                        None
+                    }
+                }
+                _ => {}
+            }
+        };
         ret.push(Alteration::Inform(new_metadata));
 
         // NOTE: Finer grained approach here...

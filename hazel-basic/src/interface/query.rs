@@ -1,10 +1,9 @@
-use hazel_basic::occupant::Occupant;
+use crate::{occupant::Occupant, position_metadata::PositionMetadata};
+use crate::square::*;
 
-use crate::{
-    game::position_metadata::PositionMetadata, notation::*, util::charray::{Charray, Origin}
-};
+use hazel_util::charray::{Charray, Origin};
 
-use super::Alteration;
+use super::{Alter, Alteration};
 
 /// implementing Query states that the implementor can provide the occupant of a square on the
 /// board using standard 'index' notation with the 0th square being a1 and the 63rd square being
@@ -26,7 +25,7 @@ pub trait Query {
     }
 }
 
-lazy_static! {
+lazy_static::lazy_static! {
     /// A Charray texture to display the empty board
     static ref TEXTURE: Vec<&'static str> = vec![
          "8 . . . . . . . .",
@@ -92,6 +91,21 @@ pub fn to_fen_position(board: &impl Query) -> String {
     f
 }
 
+pub fn convert_representation<T, U>(source: &T) -> U where T : Query, U: Alter + Default {
+    let mut ret = U::default();
+    let alters = to_alterations(source);
+    let meta = source.try_metadata().unwrap_or_default();
+
+    for alter in alters {
+        ret.alter_mut(alter);
+    }
+
+    ret.alter_mut(Alteration::inform(&meta));
+    ret
+}
+
+
+
 pub fn to_alterations<Q>(board: &Q) -> impl Iterator<Item = Alteration> where Q : Query {
     let mut ret = vec![ Alteration::Clear];
 
@@ -102,8 +116,7 @@ pub fn to_alterations<Q>(board: &Q) -> impl Iterator<Item = Alteration> where Q 
     );
 
     if let Some(metadata) = board.try_metadata() {
-        let metadata_information : Vec<Alteration> = metadata.into_information();
-        ret.extend(metadata_information);
+        ret.push(Alteration::inform(&metadata));
     }
 
     ret.into_iter()
@@ -112,12 +125,9 @@ pub fn to_alterations<Q>(board: &Q) -> impl Iterator<Item = Alteration> where Q 
 
 #[cfg(test)]
 mod tests {
-    use crate::board::simple::PieceBoard;
-    use crate::constants::POS2_KIWIPETE_FEN;
-
-
     use super::*;
 
+    /* FIXME: Move these to integration test land.
     #[test]
     fn display_test() {
         let mut p = PieceBoard::default();
@@ -141,8 +151,6 @@ mod tests {
     }
 
     mod to_fen_position {
-        use crate::notation::ben::BEN;
-
         use super::*;
 
         #[test]
@@ -185,4 +193,6 @@ mod tests {
             assert!(p.is_occupied(A2));
         }
     }
+
+    */
 }

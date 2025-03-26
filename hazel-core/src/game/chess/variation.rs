@@ -1,4 +1,6 @@
-use crate::notation::ben::BEN;
+use hazel_basic::ben::BEN;
+use hazel_basic::square::*;
+
 use crate::types::log::Log;
 use crate::{board::PieceBoard, coup::rep::Move};
 use crate::types::log::cursor::Cursor;
@@ -121,19 +123,13 @@ impl Variation {
         fam.advance_to_end();
         // TODO: Replace this with a generic 'FastRep' type alias that is optimized for this case
         let rep : ChessGame<PieceBoard> = fam.rep::<ChessGame<PieceBoard>>().clone();
-        let fen : BEN = rep.into();
+        let fen : BEN = hazel_basic::interface::query::convert_representation(&rep.rep);
         fen
     }
 
     pub(crate) fn get_cursor(&self) -> Cursor<Action<Move, BEN>> {
         self.log.raw_cursor()
     }
-
-    /*
-    pub(crate) fn get_writehead(&mut self) -> Log<Action>::WriteHead {
-        self.log.writehead()
-    }
-    */
 
     pub fn record(&mut self, action: Action<Move, BEN>) -> &mut Self {
         if self.halted { return self; }
@@ -150,8 +146,6 @@ mod tests {
     use game::delim::Delim;
 
     use crate::coup::rep::MoveType;
-    use crate::notation::*;
-    use crate::game::chess::PositionMetadata;
     use crate::*;
 
     use super::*;

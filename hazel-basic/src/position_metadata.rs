@@ -9,16 +9,12 @@
 use std::fmt::{Debug, Display};
 use std::str::SplitWhitespace;
 
-use hazel_basic::color::Color;
-use hazel_basic::file::File;
-use hazel_basic::occupant::Occupant;
-use hazel_basic::piece::Piece;
-use hazel_basic::square::*;
+use crate::color::Color;
+use crate::file::File;
+use crate::interface::{Alter, Alteration};
+use crate::square::*;
 
-use crate::coup::rep::Move;
-use crate::query::display_board;
-use crate::{Alter, Alteration, Query};
-
+use quickcheck::{Arbitrary, Gen};
 use super::castle_rights::CastleRights;
 
 
@@ -53,6 +49,23 @@ impl From<&PositionMetadata> for Vec<Alteration> {
     }
 }
 
+impl Arbitrary for PositionMetadata {
+    fn arbitrary(g: &mut Gen) -> Self {
+        let color = Color::arbitrary(g);
+
+        // these are not necessarily _valid_ metadata states, they are simple _arbitrary_
+        // metadata states.
+        Self {
+            side_to_move: color,
+            in_check: bool::arbitrary(g),
+            castling: CastleRights::arbitrary(g),
+            en_passant: Option::<File>::arbitrary(g),
+            halfmove_clock: u8::arbitrary(g) % 64,
+            fullmove_number: u16::arbitrary(g),
+        }
+    }
+}
+
 impl Alter for PositionMetadata {
     fn alter(&self, alteration: Alteration) -> Self {
         let mut copy = *self;
@@ -81,9 +94,11 @@ impl Alter for PositionMetadata {
     }
 }
 
+// FIXME: This is the only use of trace in this crate (so far); Ideally this could be removed and a
+// proper error type used instead.
 fn panic_or_trace(message: String) {
     tracing::error!(message);
-    // #[cfg(test)] panic!("Failing");
+    #[cfg(test)] panic!("Failing");
 }
 
 impl Default for PositionMetadata {
@@ -144,15 +159,8 @@ const INCHECK_SHIFT: u8  = 0;
 const HMC_MASK: u8       = 0b1111_1100;
 const HMC_SHIFT: u8      = 2;
 
+// TODO: Move this to -parsers?
 impl PositionMetadata {
-    pub fn into_information(&self) -> Vec<Alteration> {
-        vec![Alteration::Inform(*self)]
-    }
-
-    pub fn into_assertions(&self) -> Vec<Alteration> {
-        vec![Alteration::Assert(*self)]
-    }
-
     pub fn parse(&mut self, parts: &mut SplitWhitespace<'_>) {
         let side_to_move = parts.next();
         let castling = parts.next();
@@ -199,58 +207,6 @@ impl PositionMetadata {
 
         self.halfmove_clock = halfmove_clock.unwrap().parse().unwrap();
         self.fullmove_number = fullmove_number.unwrap().parse().unwrap();
-    }
-
-    pub fn update(&mut self, mov: &Move, board: &impl Query) {
-        // Clear the EP square, we'll re-set it if necessary later.
-        self.en_passant = None;
-
-
-        if self.side_to_move == Color::BLACK {
-            self.fullmove_number += 1;
-        }
-        self.side_to_move = !self.side_to_move;
-
-        // rely on the color of the piece being moved, rather than reasoning about the side-to-move
-        // or delaying it till the end.
-
-        let Occupant::Occupied(piece, color) = board.get(mov.source()) else { panic!("Move has no source piece: {:?}\n on: \n{}", mov, display_board(board)); };
-
-
-        if mov.is_capture() || piece == Piece::Pawn {
-            self.halfmove_clock = 0;
-        } else {
-            self.halfmove_clock += 1;
-        }
-
-        let source = mov.source();
-        match piece {
-            Piece::King => {
-                match color  {
-                    Color::WHITE => {
-                        self.castling.white_short = false;
-                        self.castling.white_long = false;
-                    }
-                    Color::BLACK => {
-                        self.castling.black_short = false;
-                        self.castling.black_long = false;
-                    }
-                }
-            }
-            Piece::Rook if source == H1 => { self.castling.white_short = false; }
-            Piece::Rook if source == H8 => { self.castling.black_short = false; }
-            Piece::Rook if source == A1 => { self.castling.white_long = false; }
-            Piece::Rook if source == A8 => { self.castling.black_long = false; }
-            Piece::Rook => {}
-            Piece::Pawn => {
-                self.en_passant = if mov.is_double_pawn_push_for(color) {
-                    mov.target().shift(color.pawn_direction()).map(|target| File::from(target.file()))
-                } else {
-                    None
-                }
-            }
-            _ => {}
-        }
     }
 }
 
@@ -329,25 +285,6 @@ impl From<u32> for PositionMetadata {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    use quickcheck::{Arbitrary, Gen};
-
-    impl Arbitrary for PositionMetadata {
-        fn arbitrary(g: &mut Gen) -> Self {
-            let color = Color::arbitrary(g);
-
-            // these are not necessarily _valid_ metadata states, they are simple _arbitrary_
-            // metadata states.
-            Self {
-                side_to_move: color,
-                in_check: bool::arbitrary(g),
-                castling: CastleRights::arbitrary(g),
-                en_passant: Option::<File>::arbitrary(g),
-                halfmove_clock: u8::arbitrary(g) % 64,
-                fullmove_number: u16::arbitrary(g),
-            }
-        }
-    }
 
     #[test]
     fn ep_square_is_converts_to_u32_correctly() {

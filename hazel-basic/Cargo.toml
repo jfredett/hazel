@@ -15,6 +15,10 @@ path="src/lib.rs"
 [dependencies]
 serde = { version = "1.0.203", features = ["derive"] }
 quickcheck.workspace = true
+hazel-util.workspace = true
+tracing-subscriber.workspace = true
+tracing.workspace = true
+lazy_static = "1.4.0"
 
 [dev-dependencies]
 quickcheck_macros.workspace = true

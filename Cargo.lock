@@ -375,11 +375,15 @@ dependencies = [
 name = "hazel-basic"
 version = "0.1.0"
 dependencies = [
+ "hazel-util",
+ "lazy_static",
  "mutants",
  "quickcheck",
  "quickcheck_macros",
  "serde",
  "similar-asserts",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -400,6 +404,7 @@ dependencies = [
  "dynamic-array",
  "hazel-basic",
  "hazel-bitboard",
+ "hazel-util",
  "itertools 0.14.0",
  "lazy_static",
  "mutants",
@@ -455,6 +460,7 @@ dependencies = [
  "hazel-basic",
  "hazel-bitboard",
  "hazel-core",
+ "hazel-parser",
  "insta",
  "lazy_static",
  "nom",
@@ -468,6 +474,21 @@ dependencies = [
  "tracing-subscriber",
  "tracing-test",
  "tui-logger",
+]
+
+[[package]]
+name = "hazel-util"
+version = "0.1.0"
+dependencies = [
+ "mutants",
+ "quickcheck",
+ "quickcheck_macros",
+ "similar-asserts",
+ "tokio",
+ "tokio-stream",
+ "tracing",
+ "tracing-subscriber",
+ "tracing-test",
 ]
 
 [[package]]

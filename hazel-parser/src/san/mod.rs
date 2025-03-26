@@ -1,17 +1,11 @@
 #![allow(dead_code, unused_imports)]
 
-use hazel_basic::{color::Color, occupant::Occupant, piece::Piece};
+use hazel::{coup::rep::{Move, MoveType}, interface::Query};
+use hazel_basic::{ben::BEN, color::Color, occupant::Occupant, piece::Piece, square::*};
 use hazel_bitboard::bitboard::Bitboard;
 use nom::{branch::alt, bytes::complete::tag, character::complete::char, combinator::opt, IResult};
 
-use hazel::{coup::rep::{Move, MoveType}, notation::*};
-use hazel::Query;
-
 use crate::pgn::parsers::*;
-
-
-use hazel::notation::ben::BEN;
-
 
 mod disambiguator;
 
@@ -375,10 +369,8 @@ impl TryFrom<SAN> for Move {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
-    use hazel::coup::rep::MoveType;
-    use hazel::{board::PieceBoard, constants::START_POSITION_FEN};
+    use hazel_basic::ben::BEN;
+    use hazel_basic::START_POSITION_FEN;
     use hazel::game::variation::Variation;
 
     use super::*;
@@ -387,7 +379,7 @@ mod tests {
 
     #[test]
     fn new_works() {
-        let ben = BEN::new(START_POSITION_FEN);
+        let ben = BEN::start_position();
         let san = SAN::new(ben);
         assert_eq!(san.context, ben);
         assert_eq!(san.source_piece, None);

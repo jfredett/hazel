@@ -15,6 +15,7 @@ path="src/lib.rs"
 [dependencies]
 hazel-basic.workspace = true
 hazel-bitboard.workspace = true
+hazel-util.workspace = true
 async-trait = "0.1.87"
 dynamic-array = "0.2.3"
 itertools = "0.14.0"

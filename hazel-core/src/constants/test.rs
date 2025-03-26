@@ -7,10 +7,6 @@ use hazel_basic::color::Color;
 use hazel_basic::square::*;
 use crate::coup::rep::{Move, MoveType};
 
-/// FEN for an empty board.
-pub const EMPTY_POSITION_FEN: &str = "8/8/8/8/8/8/8/8 w KQkq - 0 1";
-/// FEN for the starting position
-pub const START_POSITION_FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 /// FEN for a position in the london opening
 pub const LONDON_POSITION_FEN: &str = "r1bqk2r/pp2bppp/2n1pn2/2pp4/3P1B2/2P1PN1P/PP1N1PP1/R2QKB1R b KQkq - 0 7";
 /// FEN which includes an en passant move
