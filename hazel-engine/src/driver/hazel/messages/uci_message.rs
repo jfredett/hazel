@@ -1,6 +1,11 @@
 use async_trait::async_trait;
 
-use crate::{engine::{driver::{Hazel, HazelResponse}, uci::UCIMessage}, game::position::Position, notation::{ben::BEN, uci::UCI}, types::witch::{MessageFor, Witch}};
+use hazel::notation::uci::UCI;
+use hazel::types::witch::{MessageFor, Witch};
+use hazel::notation::ben::BEN;
+use hazel::game::position::Position;
+use crate::uci::UCIMessage;
+use crate::driver::{Hazel, HazelResponse};
 
 #[async_trait]
 impl<const BUF_SIZE: usize> MessageFor<Witch<BUF_SIZE, Hazel, HazelResponse>> for UCIMessage {
@@ -81,14 +86,12 @@ impl<const BUF_SIZE: usize> MessageFor<Witch<BUF_SIZE, Hazel, HazelResponse>> fo
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
-    use tokio::sync::{oneshot, Mutex};
-
     use super::*;
 
-
     mod uci_messages {
-        use crate::{constants::START_POSITION_FEN, engine::driver::GetState, types::witch::WitchHandle};
+        use crate::driver::GetState;
+        use hazel::types::witch::WitchHandle;
+        use hazel::constants::START_POSITION_FEN;
 
         use super::*;
 

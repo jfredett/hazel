@@ -2,8 +2,8 @@
 use std::io::{BufRead, BufReader, Write};
 use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
 
-use crate::engine::uci::UCIMessage;
-use crate::engine::Engine;
+use crate::uci::UCIMessage;
+use crate::Engine;
 
 #[derive(Debug)]
 pub struct Stockfish {
@@ -94,7 +94,7 @@ mod tests {
     use std::assert_matches::assert_matches;
 
     use super::*;
-    use crate::engine::uci::UCIMessage;
+    use crate::uci::UCIMessage;
 
     #[tokio::test]
     async fn stockfish_connects() {

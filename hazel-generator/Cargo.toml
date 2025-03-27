@@ -8,7 +8,7 @@ license.workspace = true
 repository.workspace = true
 
 [lib]
-name="hazel"
+name="hazel_generator"
 path="src/lib.rs"
 
 [dependencies]

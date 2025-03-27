@@ -16,7 +16,7 @@ mod widgets;
 use app::UI;
 use tui_logger::{init_logger, set_default_level, set_log_file, LevelFilter, TuiLoggerFile, TuiLoggerLevelOutput};
 
-use hazel::engine::driver::WitchHazel;
+use hazel_engine::driver::WitchHazel;
 
 /// Boilerplate to get the app started.
 pub async fn run() -> Result<(), Box<dyn Error>> {

@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use crate::engine::uci::UCIMessage;
-use crate::types::witch::WitchHandle;
-use crate::game::chess::position::Position;
+use crate::uci::UCIMessage;
+use hazel::types::witch::WitchHandle;
+use hazel::game::chess::position::Position;
 
 mod state;
 mod response;
@@ -37,8 +37,13 @@ impl Hazel {
 
 pub type WitchHazel<const BUF_SIZE: usize> = WitchHandle<BUF_SIZE, Hazel, HazelResponse>;
 
-impl<const BUF_SIZE: usize> WitchHazel<BUF_SIZE> {
-    pub async fn write_uci(&self, msg: UCIMessage) {
+#[allow(async_fn_in_trait)] // This is only going to be used in my code, and hopefully I'll be able to eliminate the extension trait soonish
+pub trait WitchHazelUnderstandsUCI {
+    async fn write_uci(&self, msg: UCIMessage);
+}
+
+impl<const BUF_SIZE: usize> WitchHazelUnderstandsUCI for WitchHazel<BUF_SIZE> {
+    async fn write_uci(&self, msg: UCIMessage) {
         self.send(Box::new(msg)).await;
     }
 }

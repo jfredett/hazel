@@ -4,8 +4,8 @@ use std::io;
 use std::io::BufRead;
 
 
-use crate::engine::uci::UCIMessage;
-use crate::engine::driver::{HazelResponse, WitchHazel};
+use crate::uci::UCIMessage;
+use crate::driver::{HazelResponse, WitchHazel};
 
 #[cfg_attr(test, mutants::skip)]
 pub async fn run() -> tokio::io::Result<()> {
@@ -51,8 +51,6 @@ where T: 'static + io::Read + Send + Unpin,
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     /// this tests the run_with_io function using a simulated STDIN/STDOUT and verifies the
     /// `isready` command will recieve a response of `readyok`
     #[tokio::test]

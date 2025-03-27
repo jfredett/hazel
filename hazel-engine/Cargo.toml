@@ -8,10 +8,12 @@ license.workspace = true
 repository.workspace = true
 
 [lib]
-name="hazel"
+name="hazel_engine"
 path="src/lib.rs"
 
 [dependencies]
+async-trait = "0.1.87"
+tokio = { version = "1.44.0", features = ["full"] }
 hazel-core.workspace = true
 hazel-basic.workspace = true
 hazel-bitboard.workspace = true
@@ -22,3 +24,4 @@ tracing-subscriber.workspace = true
 [dev-dependencies]
 similar-asserts.workspace = true
 tracing-test.workspace = true
+mutants.workspace = true

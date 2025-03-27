@@ -6,7 +6,7 @@ pub use tracing_test;
 
 pub mod ui;
 
-use hazel::engine::uci;
+use hazel_engine::uci;
 
 // NOTE: No need to mutation test the main wrapper.
 #[tokio::main]

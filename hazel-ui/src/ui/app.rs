@@ -3,7 +3,9 @@ use std::{collections::HashMap, fmt::Debug, sync::Mutex};
 use ratatui::{crossterm::event::{Event, KeyCode}, layout::{Constraint, Layout}, style::{Color, Style}, widgets::{StatefulWidget, Widget}, Frame};
 use tui_logger::{LevelFilter, TuiLoggerLevelOutput, TuiLoggerSmartWidget, TuiWidgetState};
 
-use hazel::{board::PieceBoard, constants::START_POSITION_FEN, engine::{driver::{GetPosition, HazelResponse, WitchHazel}, uci::UCIMessage}, notation::ben::BEN, types::tape::{cursorlike::Cursorlike, familiar::{self, state::tape_reader_state::TapeReaderState, Quintessence}}};
+use hazel::{board::PieceBoard, constants::START_POSITION_FEN, notation::ben::BEN, types::tape::{cursorlike::Cursorlike, familiar::{self, state::tape_reader_state::TapeReaderState, Quintessence}}};
+use hazel_engine::uci::UCIMessage;
+use hazel_engine::driver::{GetPosition, HazelResponse, WitchHazel};
 
 use crate::ui::widgets::tapereader::TapeReaderWidget;
 

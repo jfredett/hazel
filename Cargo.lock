@@ -420,10 +420,13 @@ dependencies = [
 name = "hazel-engine"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "hazel-basic",
  "hazel-bitboard",
  "hazel-core",
+ "mutants",
  "similar-asserts",
+ "tokio",
  "tracing",
  "tracing-appender",
  "tracing-subscriber",
@@ -453,6 +456,7 @@ dependencies = [
  "hazel-basic",
  "hazel-bitboard",
  "hazel-core",
+ "hazel-engine",
  "insta",
  "lazy_static",
  "nom",

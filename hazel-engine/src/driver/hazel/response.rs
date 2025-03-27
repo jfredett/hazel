@@ -1,4 +1,5 @@
-use crate::{engine::uci::UCIMessage, game::position::Position};
+use crate::uci::UCIMessage;
+use hazel::game::position::Position;
 
 use super::Hazel;
 
