@@ -5,25 +5,37 @@ use hazel_basic::color::Color;
 use hazel_basic::direction::Direction;
 use hazel_basic::occupant::Occupant;
 use hazel_basic::piece::Piece;
+use hazel_basic::position_metadata::PositionMetadata;
 use hazel_basic::square::Square;
+use hazel_basic::interface::{alter, query, Alter, Alteration, Query};
+use hazel_basic::zobrist::Zobrist;
 use hazel_bitboard::bitboard::Bitboard;
 use hazel_bitboard::ColorMasks;
 use hazel_bitboard::constants::move_tables::{KING_ATTACKS, KNIGHT_MOVES};
 
 use crate::board::PieceBoard;
 use crate::coup::rep::Move;
+use crate::extensions::query::to_fen_position;
 use crate::notation::ben::BEN;
 use crate::types::tape::cursorlike::Cursorlike;
 use crate::types::tape::familiar::state::position_zobrist::PositionZobrist;
 use crate::types::tape::tapelike::Tapelike;
-use crate::interface::{Alter, Query, Alteration};
 
 use crate::types::tape::{familiar, Tape};
-use crate::types::zobrist::Zobrist;
 
 use crate::types::tape::familiar::{Familiar, Quintessence};
-use super::position_metadata::PositionMetadata;
-use crate::coup::gen::cache::{Cache, ATM};
+
+
+// generator is supposed to depend on core, but I need to reference generator here to build
+// position efficiently.
+//
+// I think position -> engine?
+//
+// Except enging/gen/eval should all boil down to providing a single actor
+//
+// Except all I need here are cache/atm, which should be in util anyway, so time to pull out util
+use hazel_util::cache::Cache;
+use hazel_util::cache::atm::ATM;
 
 
 pub struct Position {
@@ -148,7 +160,7 @@ lazy_static!(
 impl From<Position> for BEN {
     // TODO: This could probably be better managed by a familiar.
     fn from(value: Position) -> Self {
-        let mut ben : BEN = crate::alter::setup(crate::query::to_alterations(&value.board()));
+        let mut ben : BEN = alter::setup(query::to_alterations(&value.board()));
         ben.set_metadata(value.metadata());
         ben
     }
@@ -235,7 +247,7 @@ impl Position {
         match self.atm.get(position_hash) {
             Some(cached_inner) => {
                 // Atomic, TODO: Handle Result
-                tracing::trace!("Cache hit {:?} -> {:?}", position_hash, crate::query::to_fen_position(&cached_inner));
+                tracing::trace!("Cache hit {:?} -> {:?}", position_hash, to_fen_position(&cached_inner));
                 _ = self.inner.replace(cached_inner.clone());
             },
             None => {
@@ -247,7 +259,7 @@ impl Position {
                     inner.metadata.alter_mut(alter);
                 }
 
-                tracing::trace!("Cache set {:?} -> {:?}", position_hash, crate::query::to_fen_position(&inner.clone()));
+                tracing::trace!("Cache set {:?} -> {:?}", position_hash, to_fen_position(&inner.clone()));
                 self.atm.set(position_hash, inner.clone());
             },
         }

@@ -1,7 +1,6 @@
 use std::fmt::{Display, Debug};
 
-use crate::interface::query::display_board;
-use crate::board::PieceBoard;
+use crate::{board::PieceBoard, extensions::query::display_board};
 
 
 impl Debug for PieceBoard {
@@ -22,7 +21,7 @@ impl Display for PieceBoard {
 mod tests {
     use super::*;
 
-    use crate::Query;
+    use hazel_basic::interface::Query;
     use hazel_basic::{piece::Piece, square::*};
     use crate::board::simple::Occupant;
 

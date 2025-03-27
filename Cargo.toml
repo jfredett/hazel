@@ -36,6 +36,7 @@ hazel-core = { path = "./hazel-core" }
 hazel-basic = { path = "./hazel-basic" }
 hazel-bitboard = { path = "./hazel-bitboard" }
 hazel-ui = { path = "./hazel-ui" }
+hazel-util = { path = "./hazel-util" }
 hazel-generator = { path = "./hazel-generator" }
 hazel-engine = { path = "./hazel-engine" }
 # Dev dependencies to share

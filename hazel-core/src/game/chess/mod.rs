@@ -1,17 +1,22 @@
 pub mod action;
-pub mod castle_rights;
 pub mod delim;
 pub mod familiar;
 pub mod position;
-pub mod position_metadata;
 pub mod reason;
 pub mod variation;
 
 use action::Action;
+use hazel_basic::color::Color;
+use hazel_basic::file::File;
+use hazel_basic::interface::{Alter, Query};
+use hazel_basic::occupant::Occupant;
+use hazel_basic::piece::Piece;
+use hazel_basic::position_metadata::PositionMetadata;
+use hazel_basic::square::*;
 
 use crate::coup::rep::Move;
-use crate::game::position_metadata::PositionMetadata;
-use crate::interface::{Alter, Query, Play};
+use crate::extensions::query::display_board;
+use crate::interface::play::Play;
 use crate::notation::ben::BEN;
 
 #[derive(Clone, Default)]
@@ -50,7 +55,62 @@ impl<T> Play for ChessGame<T> where T: Alter + Query + Default + Clone {
             Action::Make(mov) => {
                 let alts = mov.compile(&self.rep);
                 // Order matters, the metadata must be updated before the board
-                self.metadata.update(mov, &self.rep);
+                { // HACK: This has been hard-inlined to support the move of `PositionMetadata` to
+                    // -basics, it should be refactored before using. I'm pretty sure all this is
+                    // going to go away though, so not a huge deal.
+                    let this = &mut self.metadata;
+                    let mov: &Move = mov;
+                    let board = &self.rep;
+                    // Clear the EP square, we'll re-set it if necessary later.
+                    this.en_passant = None;
+
+
+                    if this.side_to_move == Color::BLACK {
+                        this.fullmove_number += 1;
+                    }
+                    this.side_to_move = !this.side_to_move;
+
+                    // rely on the color of the piece being moved, rather than reasoning about the side-to-move
+                    // or delaying it till the end.
+
+                    let Occupant::Occupied(piece, color) = board.get(mov.source()) else { panic!("Move has no source piece: {:?}\n on: \n{}", mov, display_board(board)); };
+
+
+                    if mov.is_capture() || piece == Piece::Pawn {
+                        this.halfmove_clock = 0;
+                    } else {
+                        this.halfmove_clock += 1;
+                    }
+
+                    let source = mov.source();
+                    match piece {
+                        Piece::King => {
+                            match color  {
+                                Color::WHITE => {
+                                    this.castling.white_short = false;
+                                    this.castling.white_long = false;
+                                }
+                                Color::BLACK => {
+                                    this.castling.black_short = false;
+                                    this.castling.black_long = false;
+                                }
+                            }
+                        }
+                        Piece::Rook if source == H1 => { this.castling.white_short = false; }
+                        Piece::Rook if source == H8 => { this.castling.black_short = false; }
+                        Piece::Rook if source == A1 => { this.castling.white_long = false; }
+                        Piece::Rook if source == A8 => { this.castling.black_long = false; }
+                        Piece::Rook => {}
+                        Piece::Pawn => {
+                            this.en_passant = if mov.is_double_pawn_push_for(color) {
+                                mov.target().shift(color.pawn_direction()).map(|target| File::from(target.file()))
+                            } else {
+                                None
+                            }
+                        }
+                        _ => {}
+                    }
+                };
                 for a in alts {
                     self.rep.alter_mut(a);
                 }

@@ -11,6 +11,3 @@ pub mod movesheet;
 
 // An Actor type, but with a fun name because no one can stop me.
 pub mod witch;
-
-// Zobrist Tables and types
-pub mod zobrist;

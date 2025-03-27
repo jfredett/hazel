@@ -1,4 +1,4 @@
-use crate::{coup::rep::{Move, MoveType}, game::position::Position};
+use hazel::{coup::rep::{Move, MoveType}, game::position::Position};
 
 pub fn generate_moves(position: &Position) -> impl Iterator<Item = Move> {
     // assumes we aren't in check, captures assume piece is not protected.
@@ -16,8 +16,7 @@ pub fn generate_moves(position: &Position) -> impl Iterator<Item = Move> {
 mod tests {
     use ben::BEN;
 
-    use crate::notation::*;
-
+    use hazel::{coup::rep::{Move, MoveType}, notation::*};
     use super::*;
 
     #[test]

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{Alter, Alteration};
+use hazel_basic::interface::{Alter, Alteration};
 
 use super::{cursor::Cursor, cursorlike::Cursorlike, tapelike::Tapelike};
 

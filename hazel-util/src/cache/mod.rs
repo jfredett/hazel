@@ -1,6 +1,13 @@
+// FIXME: This probably belongs in a -util crate or something like.
+
 use std::{collections::HashMap, sync::RwLock, fmt::Debug};
 
-use crate::types::zobrist::*;
+// where does zobrist live?
+use hazel_basic::zobrist::*;
+
+pub mod atm;
+
+pub use atm::*;
 
 #[derive(Default, Debug)]
 pub struct Cache<E> where E : Clone {
@@ -40,12 +47,13 @@ impl<E> Cache<E> where E : Clone + Debug + PartialEq {
     }
 }
 
-pub type ATM<'a, E> = &'a Cache<E>;
 
 
+/*
+*
 #[cfg(test)]
 mod tests {
-    use crate::{game::position::Position, notation::ben::BEN};
+    use hazel::{game::position::Position, notation::ben::BEN};
 
     use super::*;
 
@@ -68,3 +76,5 @@ mod tests {
         assert_eq!(cache.raw_storage().values().len(), 1);
     }
 }
+
+*/

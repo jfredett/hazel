@@ -400,6 +400,7 @@ dependencies = [
  "dynamic-array",
  "hazel-basic",
  "hazel-bitboard",
+ "hazel-util",
  "itertools 0.14.0",
  "lazy_static",
  "mutants",
@@ -410,7 +411,6 @@ dependencies = [
  "serde",
  "similar-asserts",
  "tokio",
- "tokio-stream",
  "tracing",
  "tracing-subscriber",
  "tracing-test",
@@ -440,6 +440,7 @@ dependencies = [
  "hazel-basic",
  "hazel-bitboard",
  "hazel-core",
+ "itertools 0.14.0",
  "similar-asserts",
  "tracing",
  "tracing-appender",
@@ -470,6 +471,22 @@ dependencies = [
  "tracing-subscriber",
  "tracing-test",
  "tui-logger",
+]
+
+[[package]]
+name = "hazel-util"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "hazel-basic",
+ "mutants",
+ "similar-asserts",
+ "tokio",
+ "tokio-stream",
+ "tracing",
+ "tracing-appender",
+ "tracing-subscriber",
+ "tracing-test",
 ]
 
 [[package]]

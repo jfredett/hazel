@@ -1,6 +1,6 @@
 [package]
-name = "hazel-generator"
-description = "Move generator subsystem for hazel"
+name = "hazel-util"
+description = "Utility datastructures, nursery for new hazel crates"
 version = "0.1.0"
 authors.workspace = true
 edition.workspace = true
@@ -8,18 +8,19 @@ license.workspace = true
 repository.workspace = true
 
 [lib]
-name="hazel_generator"
+name="hazel_util"
 path="src/lib.rs"
 
 [dependencies]
-hazel-core.workspace = true
 hazel-basic.workspace = true
-hazel-bitboard.workspace = true
+async-trait = "0.1.87"
+tokio-stream = "0.1.17"
+tokio = { version = "1.44.0", features = ["full"] }
 tracing.workspace = true
 tracing-appender.workspace = true
 tracing-subscriber.workspace = true
-itertools = "0.14.0"
 
 [dev-dependencies]
 similar-asserts.workspace = true
 tracing-test.workspace = true
+mutants.workspace = true

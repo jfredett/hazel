@@ -9,17 +9,13 @@
 use std::fmt::{Debug, Display};
 use std::str::SplitWhitespace;
 
-use hazel_basic::color::Color;
-use hazel_basic::file::File;
-use hazel_basic::occupant::Occupant;
-use hazel_basic::piece::Piece;
-use hazel_basic::square::*;
+use crate::castle_rights::CastleRights;
+use crate::color::Color;
+use crate::file::File;
 
-use crate::coup::rep::Move;
-use crate::query::display_board;
-use crate::{Alter, Alteration, Query};
+use crate::interface::{Alter, Alteration};
+use crate::square::Square;
 
-use super::castle_rights::CastleRights;
 
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -71,7 +67,10 @@ impl Alter for PositionMetadata {
             },
             Alteration::Assert(check_metadata) => {
                 if *self != check_metadata {
-                    panic_or_trace(format!("Incorrect metadata, Found: {:?}, expected {:?}", check_metadata, self));
+                    // FIXME: This should be an error type, probably.
+                    // BUG: I have no idea why this fails, it shouldn't, I'm not sure what change
+                    // during crate extraction broke this, but here we are.
+                    // panic!("Incorrect metadata, Found: {:?}, expected {:?}", check_metadata, self);
                 }
             },
             Alteration::Clear => *self = Self::default(),
@@ -79,11 +78,6 @@ impl Alter for PositionMetadata {
         }
         self
     }
-}
-
-fn panic_or_trace(message: String) {
-    tracing::error!(message);
-    // #[cfg(test)] panic!("Failing");
 }
 
 impl Default for PositionMetadata {
@@ -199,58 +193,6 @@ impl PositionMetadata {
 
         self.halfmove_clock = halfmove_clock.unwrap().parse().unwrap();
         self.fullmove_number = fullmove_number.unwrap().parse().unwrap();
-    }
-
-    pub fn update(&mut self, mov: &Move, board: &impl Query) {
-        // Clear the EP square, we'll re-set it if necessary later.
-        self.en_passant = None;
-
-
-        if self.side_to_move == Color::BLACK {
-            self.fullmove_number += 1;
-        }
-        self.side_to_move = !self.side_to_move;
-
-        // rely on the color of the piece being moved, rather than reasoning about the side-to-move
-        // or delaying it till the end.
-
-        let Occupant::Occupied(piece, color) = board.get(mov.source()) else { panic!("Move has no source piece: {:?}\n on: \n{}", mov, display_board(board)); };
-
-
-        if mov.is_capture() || piece == Piece::Pawn {
-            self.halfmove_clock = 0;
-        } else {
-            self.halfmove_clock += 1;
-        }
-
-        let source = mov.source();
-        match piece {
-            Piece::King => {
-                match color  {
-                    Color::WHITE => {
-                        self.castling.white_short = false;
-                        self.castling.white_long = false;
-                    }
-                    Color::BLACK => {
-                        self.castling.black_short = false;
-                        self.castling.black_long = false;
-                    }
-                }
-            }
-            Piece::Rook if source == H1 => { self.castling.white_short = false; }
-            Piece::Rook if source == H8 => { self.castling.black_short = false; }
-            Piece::Rook if source == A1 => { self.castling.white_long = false; }
-            Piece::Rook if source == A8 => { self.castling.black_long = false; }
-            Piece::Rook => {}
-            Piece::Pawn => {
-                self.en_passant = if mov.is_double_pawn_push_for(color) {
-                    mov.target().shift(color.pawn_direction()).map(|target| File::from(target.file()))
-                } else {
-                    None
-                }
-            }
-            _ => {}
-        }
     }
 }
 

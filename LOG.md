@@ -2873,3 +2873,59 @@ Most of the time I'm asking for `anything squarelike`, not `anything BENlike`; t
 I prefer to lean on the _trait_ for that, via `impl Query`.
 
 I'll leave the twig up as it may be useful later, but I return to extracting other things now.
+
+# 29-MAR-2025
+
+## 1002 - spring-cleaning-1
+
+Got `-engine` pulled out, started pulling on `-generator`, and found that it tangles a bit into the `Cache/ATM` thing,
+which can be extracted, but tangles (due to a shortcut) to the `Zobrist` type, and so I'm left with the question of
+'where should `Zobrist` go?' Zobrist currently depends on both `hazel_basic` types, which are easy to bring across, but
+also `Alter`, `Query`, and the like, and the `CastleRights` structure.
+
+I think `-basic` is rapidly coinciding with `-core`, and probably has a better name than either out there. I think there
+are these approaches:
+
+1. Make `Cache` key-agnostic, instead of doing any more reorganizing, just make it generic. Originally I had wanted the
+   key-building part to be transparent, but I don't really do that anymore, so making it fully generic may be worth it.
+2. Move `Zobrist` to `-util` or it's own crate, moving the various stuff it depends on in `-core` to `-basic`; this'd
+   mean `interface`, `PositionMetadata`, and `CastleRights` move to `-basic`, then `-core` would pull in and set
+   `HazelZobrist`, everything else would end up in the destination crate.
+
+After all this is done, it leaves:
+
+1. Board Representation
+2. Move Representation
+3. Position Representation
+4. GameState Representation
+3. some more types that are definitely moving out (log/tape/etc -> spell, witch -> witch, movesheet -> devnull)
+
+in `-core`, at which point I'm forced to ask, 'what is `-core` really? `-representation`', then `hazel-basic` ->
+`hazel-core`, and 
+
+I also am starting to lean towards having a `crates/` folder, something like:
+
+```
+assets/
+crates/
+    hazel/              # Main library
+        bitboard/       # bitboard/pextboards
+        core/           # core types, Square, Color, Direction, Occupant; but also interface stuff (Alter et al)
+        engine/         # Actor that integrates evaluator and generator and other stuff to play chess
+        evaluator/      # Actor that evaluates a set of positions as efficiently as possible.
+        generator/      # Actor that generates all moves for positions as efficiently as possible.
+        parser/         # Parsers for various chess storage formats (PGN, SAN, etc)
+        representation/ # Representation types for Boards, GameState, Moves, etc.
+        ui/             # A debugging TUI designed to view the internals of the engine in operation
+        util/           # Various utility types.
+    spell/              # Generic 'spell' type for reading/writing/running familiars
+    witch/              # Generic actor framework
+    witchhazel/         # Integration point for engine + ui, configuration management, etc.
+doc/
+hooks/
+quals/
+tests/
+```
+
+I'm inclined to push more things down into the core, since I do think a lot of those won't undergo too much movement
+once settled. `Alteration` is more or less 'done', and that is the most mobile of the bunch.

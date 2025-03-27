@@ -1,32 +1,10 @@
-use hazel_basic::occupant::Occupant;
+use hazel_basic::{interface::Query, occupant::Occupant, square::Square};
+use hazel_basic::square::*;
+use hazel_util::charray::{Charray, Origin};
 
-use crate::{
-    game::position_metadata::PositionMetadata, notation::*, util::charray::{Charray, Origin}
-};
-
-use super::Alteration;
-
-/// implementing Query states that the implementor can provide the occupant of a square on the
-/// board using standard 'index' notation with the 0th square being a1 and the 63rd square being
-/// h8.
-pub trait Query {
-    fn get(&self, square: impl Into<Square>) -> Occupant;
-    /// not every Query implementer will have metadata, that's okay, but if we have it we want to
-    /// be able to use it.
-    fn try_metadata(&self) -> Option<PositionMetadata> {
-        None
-    }
-
-    fn is_empty(&self, square: impl Into<Square>) -> bool {
-        self.get(square).is_empty()
-    }
-
-    fn is_occupied(&self, square: impl Into<Square>) -> bool {
-        self.get(square).is_occupied()
-    }
-}
-
-lazy_static! {
+// FIXME: This stuff is all representational/higher level extensions to the interface, I think they
+// can be moved up to -core/-representation
+lazy_static::lazy_static! {
     /// A Charray texture to display the empty board
     static ref TEXTURE: Vec<&'static str> = vec![
          "8 . . . . . . . .",
@@ -92,29 +70,14 @@ pub fn to_fen_position(board: &impl Query) -> String {
     f
 }
 
-pub fn to_alterations<Q>(board: &Q) -> impl Iterator<Item = Alteration> where Q : Query {
-    let mut ret = vec![ Alteration::Clear];
-
-    ret.extend(
-        Square::by_rank_and_file()
-           .filter(|s| board.is_occupied(s))
-           .map(|s| Alteration::place(s, board.get(s)) )
-    );
-
-    if let Some(metadata) = board.try_metadata() {
-        let metadata_information : Vec<Alteration> = metadata.into_information();
-        ret.extend(metadata_information);
-    }
-
-    ret.into_iter()
-}
 
 
+
+// FIXME: These are integration tests between PieceBoard <-> Query, they should live in ./tests/
 #[cfg(test)]
 mod tests {
     use crate::board::simple::PieceBoard;
     use crate::constants::POS2_KIWIPETE_FEN;
-
 
     use super::*;
 

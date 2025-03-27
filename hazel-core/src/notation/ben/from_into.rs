@@ -1,4 +1,6 @@
-use crate::{alter, game::ChessGame, query, Alter, Query};
+use hazel_basic::interface::{alter, Alter, query, Query};
+
+use crate::game::ChessGame;
 
 use super::*;
 

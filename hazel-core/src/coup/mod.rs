@@ -2,4 +2,3 @@
 //! reserved keyword in Rust, I'm using Coup instead.
 
 pub mod rep;
-pub mod gen;

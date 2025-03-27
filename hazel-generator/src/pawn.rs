@@ -1,12 +1,13 @@
+
+use hazel::coup::rep::{Move, MoveType};
+use hazel::game::chess::position::Position;
+
 use hazel_basic::direction::Direction;
+use hazel_basic::interface::Query;
 use hazel_basic::occupant::Occupant;
 use hazel_basic::piece::Piece;
+use hazel_basic::square::Square;
 use hazel_bitboard::ColorMasks;
-
-use crate::game::chess::position::Position;
-use crate::notation::Square;
-use crate::Query;
-use crate::coup::rep::{Move, MoveType};
 
 
 // TODO: Remove the `color` parameter from all of these, it should come from the position metadata
@@ -141,9 +142,9 @@ pub fn generate_moves(position: &Position) -> impl Iterator<Item = Move> {
 
 #[cfg(test)]
 mod tests {
-    use crate::notation::ben::BEN;
-    use crate::notation::*;
-    use crate::coup::rep::MoveType;
+    use hazel::notation::ben::BEN;
+    use hazel_basic::square::*;
+    use hazel::coup::rep::MoveType;
 
     use super::*;
 

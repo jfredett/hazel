@@ -1,4 +1,5 @@
-use crate::{types::zobrist::Zobrist, Alter, Alteration};
+use hazel_basic::{interface::{Alter, Alteration}, zobrist::Zobrist};
+
 
 #[derive(PartialEq, Debug, Default, Clone, Copy)]
 pub struct PositionZobrist {

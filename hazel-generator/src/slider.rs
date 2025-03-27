@@ -1,8 +1,8 @@
 use hazel_basic::occupant::Occupant;
 use hazel_basic::piece::Piece;
 use hazel_bitboard::pextboard;
-use crate::game::position::Position;
-use crate::coup::rep::{Move, MoveType};
+use hazel::game::position::Position;
+use hazel::coup::rep::{Move, MoveType};
 
 pub mod bishop {
 
@@ -45,7 +45,7 @@ mod tests {
     use itertools::Itertools;
     use ben::BEN;
 
-    use crate::notation::*;
+    use hazel::notation::*;
 
     use super::*;
 

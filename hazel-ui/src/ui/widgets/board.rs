@@ -1,13 +1,15 @@
 #![allow(unused_imports, dead_code)]
 
+
+use hazel::board::simple::PieceBoard;
+use hazel::notation::*;
+
+use hazel_basic::interface::Query;
 use hazel_basic::color;
 use hazel_basic::occupant::Occupant;
 use hazel_basic::piece::Piece;
-use ratatui::prelude::*;
-use hazel::board::simple::PieceBoard;
-use hazel::Query;
-use hazel::notation::*;
 
+use ratatui::prelude::*;
 use ratatui::widgets::{Table, Row};
 
 /// A widget what representeth a board in a 8x8 grid of 3x2 character cells. This is messy and bad

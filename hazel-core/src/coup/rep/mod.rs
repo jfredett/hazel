@@ -19,9 +19,8 @@
 // In any case, investigating const time for this code I think makes sense.
 
 
-use crate::interface::{Alteration, Query};
 use crate::notation::*;
-use hazel_basic::file::File;
+use hazel_basic::{file::File, interface::Query};
 use hazel_basic::piece::Piece;
 use hazel_basic::occupant::Occupant;
 use hazel_basic::color::Color;

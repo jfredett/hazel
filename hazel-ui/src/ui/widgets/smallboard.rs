@@ -2,7 +2,7 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Widget, Block, Borders};
 use ratatui::buffer::Buffer;
 
-use hazel::Query;
+use hazel_basic::interface::Query;
 use hazel::board::simple::PieceBoard;
 use hazel::notation::*;
 

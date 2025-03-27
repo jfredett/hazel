@@ -1,14 +1,12 @@
 use std::fmt::Debug;
 
-use hazel_basic::color::Color;
-use hazel_basic::file::File;
-use hazel_basic::occupant::Occupant;
-use hazel_basic::piece::Piece;
-use hazel_basic::square::Square;
-
-use crate::game::castle_rights::CastleRights;
-use crate::interface::Alter;
-use crate::{Alteration, Query};
+use crate::color::Color;
+use crate::file::File;
+use crate::occupant::Occupant;
+use crate::piece::Piece;
+use crate::square::Square;
+use crate::castle_rights::CastleRights;
+use crate::interface::{Alter, Alteration, Query};
 
 pub struct ZobristTable<const SEED: u64>;
 
@@ -136,7 +134,7 @@ impl Debug for Zobrist {
 // this should probably be killed
 impl From<&[Alteration]> for Zobrist {
     fn from(alterations: &[Alteration]) -> Zobrist {
-        *Zobrist::empty().update(alterations)
+        alterations.iter().fold(Zobrist::empty(), |acc, v| { acc.alter(*v) })
     }
 }
 
@@ -185,10 +183,6 @@ impl Alter for Zobrist {
     }
 }
 
-// pub fn zobrist_for(q: &impl Query) -> Zobrist {
-
-// }
-
 
 impl Zobrist {
     #[cfg(test)]
@@ -199,24 +193,19 @@ impl Zobrist {
     }
 
     pub fn new(query: &impl Query) -> Zobrist {
-        let alterations : Vec<Alteration> = crate::query::to_alterations(query).collect();
+        let alterations : Vec<Alteration> = crate::interface::query::to_alterations(query).collect();
         Zobrist::from(alterations.as_slice())
-    }
-
-    // Deprecate.
-    pub fn update(&mut self, alterations: &[Alteration]) -> &mut Self {
-        for alter in alterations {
-            self.alter_mut(*alter);
-        }
-        self
     }
 }
 
+
+/*
+// FIXME: These are largely tests for HazelZobrist, not Zobrist generally, move 'em to tests/?
 #[cfg(test)]
 mod tests {
 
     use crate::coup::rep::{Move, MoveType};
-    use crate::notation::ben::BEN;
+    use crate::ben::BEN;
     use crate::game::chess::position::Position;
 
     use super::*;
@@ -342,12 +331,13 @@ mod tests {
             if alteration == Alteration::Clear || alteration2 == Alteration::Clear { return true; }
             let mut z1 = Zobrist::empty();
             let mut z2 = Zobrist::empty();
-            z1.update(&[alteration2]);
-            z2.update(&[alteration2]);
+            z1.alter_mut(alteration2);
+            z2.alter_mut(alteration2);
 
             if z1 == Zobrist::empty() { return true; }
 
-            z1.update(&[alteration, alteration]);
+            z1.alter_mut(alteration);
+            ze.alter_mut(alteration);
 
             if z1 != Zobrist::empty() && z2 != Zobrist::empty() && z1 == z2 {
                 true
@@ -359,3 +349,4 @@ mod tests {
         }
     }
 }
+*/

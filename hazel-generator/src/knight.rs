@@ -1,6 +1,6 @@
 use hazel_bitboard::constants::move_tables::KNIGHT_MOVES;
-use crate::coup::rep::{Move, MoveType};
-use crate::game::position::Position;
+use hazel::coup::rep::{Move, MoveType};
+use hazel::game::position::Position;
 
 pub fn generate_moves(position: &Position) -> impl Iterator<Item = Move> {
     let knights = position.our_knights().into_iter().map(|sq| (sq, KNIGHT_MOVES[sq.index()]));
@@ -31,10 +31,9 @@ pub fn generate_moves(position: &Position) -> impl Iterator<Item = Move> {
 mod tests {
     use ben::BEN;
 
-    use crate::notation::*;
+    use hazel::notation::*;
 
     use super::*;
-
 
     #[test]
     fn test_position() {

@@ -1,8 +1,6 @@
 use std::fmt::{Debug, Display};
 
-use hazel_basic::{color::Color, file::File, occupant::Occupant, square::*};
-
-use crate::{coup::rep::MoveType, game::{castle_rights::CastleRights, position_metadata::PositionMetadata}};
+use crate::{occupant::Occupant, position_metadata::PositionMetadata, square::*};
 
 // NOTE: It's interesting to think about commutativity amongst - or more generally, the 'algebra'
 // of -- these alterations. In particular if I'm trying to build a final representation of
@@ -66,35 +64,6 @@ pub enum Alteration {
     Lit(u8),
     Turn,
     Clear,
-}
-
-#[derive(Clone, Copy, PartialEq, Debug)]
-pub enum MetadataAssertion {
-    CastleRights(CastleRights),
-    EnPassant(File),
-    SideToMove(Color),
-    InCheck,
-    MoveType(MoveType),
-    FiftyMoveCount(u8),
-    FullMoveCount(u16),
-}
-
-
-#[cfg(test)]
-impl quickcheck::Arbitrary for MetadataAssertion {
-    fn arbitrary(g: &mut quickcheck::Gen) -> MetadataAssertion {
-        let variant = usize::arbitrary(g) % 7;
-        match variant {
-            0 => { MetadataAssertion::CastleRights(CastleRights::arbitrary(g)) },
-            1 => { MetadataAssertion::EnPassant(File::arbitrary(g)) },
-            2 => { MetadataAssertion::InCheck },
-            3 => { MetadataAssertion::SideToMove(Color::arbitrary(g)) },
-            4 => { MetadataAssertion::FiftyMoveCount(u8::arbitrary(g) % 50) },
-            5 => { MetadataAssertion::FullMoveCount(u16::arbitrary(g)) },
-            6 => { MetadataAssertion::MoveType(MoveType::arbitrary(g)) },
-            _ => { unreachable!(); }
-        }
-    }
 }
 
 impl Debug for Alteration {
