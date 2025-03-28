@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 
 use crate::{driver::{Hazel, HazelResponse, State}};
-use hazel::types::witch::{MessageFor, Witch};
+use witch::{MessageFor, Witch};
 
 pub struct Initialization; /* {
     // this is where config file loading can go?

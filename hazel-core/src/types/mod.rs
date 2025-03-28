@@ -9,5 +9,3 @@ pub mod tape;
 // A type for storing a stack of moves while allowing for variations.
 pub mod movesheet;
 
-// An Actor type, but with a fun name because no one can stop me.
-pub mod witch;

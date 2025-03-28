@@ -9,6 +9,10 @@ members = [
     "hazel-generator",
     "hazel-engine",
 
+    # Extractable Libraries
+    #"spell",
+    "witch",
+
     # Small binaries that act as a profiling hook
     "hooks/pextboard",
 
@@ -39,6 +43,7 @@ hazel-ui = { path = "./hazel-ui" }
 hazel-util = { path = "./hazel-util" }
 hazel-generator = { path = "./hazel-generator" }
 hazel-engine = { path = "./hazel-engine" }
+witch = { path = "./witch" }
 # Dev dependencies to share
 mutants = "0.0.3"
 quickcheck = "1.0.3"

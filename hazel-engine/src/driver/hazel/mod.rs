@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::uci::UCIMessage;
-use hazel::types::witch::WitchHandle;
+use witch::WitchHandle;
 use hazel::game::chess::position::Position;
 
 mod state;

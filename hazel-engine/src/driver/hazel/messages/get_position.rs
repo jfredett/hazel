@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use hazel::types::witch::{MessageFor, Witch};
+use witch::{MessageFor, Witch};
 use crate::driver::{Hazel, HazelResponse};
 
 pub struct GetPosition;
