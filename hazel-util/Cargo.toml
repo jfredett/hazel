@@ -13,14 +13,7 @@ path="src/lib.rs"
 
 [dependencies]
 hazel-basic.workspace = true
-async-trait = "0.1.87"
 tokio-stream = "0.1.17"
 tokio = { version = "1.44.0", features = ["full"] }
-tracing.workspace = true
-tracing-appender.workspace = true
-tracing-subscriber.workspace = true
 
 [dev-dependencies]
-similar-asserts.workspace = true
-tracing-test.workspace = true
-mutants.workspace = true

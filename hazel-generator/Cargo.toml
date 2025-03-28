@@ -16,7 +16,6 @@ hazel-core.workspace = true
 hazel-basic.workspace = true
 hazel-bitboard.workspace = true
 tracing.workspace = true
-tracing-appender.workspace = true
 tracing-subscriber.workspace = true
 itertools = "0.14.0"
 

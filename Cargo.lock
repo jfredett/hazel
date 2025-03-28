@@ -401,9 +401,7 @@ dependencies = [
  "hazel-basic",
  "hazel-bitboard",
  "hazel-util",
- "itertools 0.14.0",
  "lazy_static",
- "mutants",
  "nom",
  "quickcheck",
  "quickcheck_macros",
@@ -425,12 +423,8 @@ dependencies = [
  "hazel-bitboard",
  "hazel-core",
  "mutants",
- "similar-asserts",
  "tokio",
  "tracing",
- "tracing-appender",
- "tracing-subscriber",
- "tracing-test",
 ]
 
 [[package]]
@@ -443,7 +437,6 @@ dependencies = [
  "itertools 0.14.0",
  "similar-asserts",
  "tracing",
- "tracing-appender",
  "tracing-subscriber",
  "tracing-test",
 ]
@@ -477,16 +470,9 @@ dependencies = [
 name = "hazel-util"
 version = "0.1.0"
 dependencies = [
- "async-trait",
  "hazel-basic",
- "mutants",
- "similar-asserts",
  "tokio",
  "tokio-stream",
- "tracing",
- "tracing-appender",
- "tracing-subscriber",
- "tracing-test",
 ]
 
 [[package]]
