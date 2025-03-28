@@ -13,7 +13,6 @@ pub type MessageForWitch<const BUF_SIZE: usize, S, R> = Box<dyn message_for::Mes
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tokio::sync::broadcast;
 
     // The simplest kind of message is a 0-length struct that tells the Witch to simply do a thing.
     mod simple_struct_messages {

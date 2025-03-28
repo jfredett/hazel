@@ -396,7 +396,6 @@ dependencies = [
 name = "hazel-core"
 version = "0.1.0"
 dependencies = [
- "async-trait",
  "dynamic-array",
  "hazel-basic",
  "hazel-bitboard",
@@ -412,7 +411,6 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "tracing-test",
- "witch",
 ]
 
 [[package]]
@@ -1592,11 +1590,8 @@ name = "witch"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "hazel-basic",
  "tokio",
- "tokio-stream",
  "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]
