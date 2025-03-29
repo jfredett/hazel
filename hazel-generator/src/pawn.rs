@@ -142,8 +142,8 @@ pub fn generate_moves(position: &Position) -> impl Iterator<Item = Move> {
 
 #[cfg(test)]
 mod tests {
-    use hazel::notation::ben::BEN;
     use hazel_basic::square::*;
+    use hazel_basic::ben::BEN;
     use hazel::coup::rep::MoveType;
 
     use super::*;

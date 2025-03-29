@@ -1,6 +1,6 @@
 use hazel_basic::{interface::{Alter, Alteration, Query}, occupant::Occupant, square::{RankFile, Square}};
 
-use crate::notation::ben::BEN;
+use hazel_basic::ben::BEN;
 
 pub mod display_debug;
 
@@ -101,7 +101,7 @@ impl Alter for PieceBoard {
 mod tests {
     use super::*;
     use hazel_basic::square::*;
-    use crate::notation::ben::BEN;
+    use hazel_basic::ben::BEN;
 
     mod get_set {
         use super::*;

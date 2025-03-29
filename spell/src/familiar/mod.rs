@@ -5,7 +5,6 @@ use hazel_basic::interface::{Alter, Alteration};
 use super::{cursor::Cursor, cursorlike::Cursorlike, tapelike::Tapelike};
 
 pub mod menagerie;
-pub mod state;
 
 /// Calculates a state based on the content of some tapelike. Importantly, the `cursor` should be _replacable_, so that
 /// if a familiar runs off the end of a tape, and we have a continuation for that tape in cache, we can replace it's

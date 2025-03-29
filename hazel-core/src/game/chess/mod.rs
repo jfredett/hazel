@@ -4,8 +4,10 @@ pub mod familiar;
 pub mod position;
 pub mod reason;
 pub mod variation;
+pub mod state;
 
 use action::Action;
+use hazel_basic::ben::BEN;
 use hazel_basic::color::Color;
 use hazel_basic::file::File;
 use hazel_basic::interface::{Alter, Query};
@@ -17,7 +19,6 @@ use hazel_basic::square::*;
 use crate::coup::rep::Move;
 use crate::extensions::query::display_board;
 use crate::interface::play::Play;
-use crate::notation::ben::BEN;
 
 #[derive(Clone, Default)]
 pub struct ChessGame<T> where T: Alter + Query + Default + Clone {

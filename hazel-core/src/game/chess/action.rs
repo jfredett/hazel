@@ -26,7 +26,7 @@ impl<T, S> Debug for Action<T, S> where T: Clone + PartialEq + Debug, S: Clone +
 
 #[cfg(test)]
 mod tests {
-    use ben::BEN;
+    use hazel_basic::ben::BEN;
 
     use super::*;
     use crate::{constants::START_POSITION_FEN, coup::rep::{Move, MoveType}, notation::*};

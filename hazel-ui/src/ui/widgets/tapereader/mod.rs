@@ -1,5 +1,5 @@
 use ratatui::{buffer::Buffer, layout::{Constraint, Layout, Rect}, style::{Style, Stylize}, text::Text, widgets::{Block, Row, StatefulWidget, Table, TableState, Widget}};
-use hazel::types::tape::familiar::state::tape_reader_state::TapeReaderState;
+use hazel::game::chess::state::tape_reader_state::TapeReaderState;
 
 #[derive(Default)]
 pub struct TapeReaderWidget {

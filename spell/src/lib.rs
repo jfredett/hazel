@@ -1,3 +1,5 @@
+#![feature(new_range_api)]
+
 use std::cmp;
 use std::fmt::Debug;
 use std::ops::Deref;
@@ -258,9 +260,7 @@ impl Deref for Tape {
 #[cfg(test)]
 mod tests {
     use cursorlike::Cursorlike;
-    use hazel_basic::{color::Color, file::File, occupant::Occupant, position_metadata::PositionMetadata, square::*};
-
-    use crate::notation::ben::BEN;
+    use hazel_basic::{ben::BEN, color::Color, file::File, occupant::Occupant, position_metadata::PositionMetadata, square::*};
 
     use super::*;
 

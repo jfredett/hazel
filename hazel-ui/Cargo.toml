@@ -16,6 +16,7 @@ hazel-core.workspace = true
 hazel-basic.workspace = true
 hazel-bitboard.workspace = true
 hazel-engine.workspace = true
+spell.workspace = true
 async-trait = "0.1.87"
 dynamic-array = "0.2.3"
 lazy_static = "1.4.0"

@@ -1,8 +1,6 @@
-use std::range::Range;
-
+// TODO: Move this back to hazel-core,
 use hazel_basic::interface::Alteration;
-
-use crate::types::tape::{cursor::Cursor, cursorlike::Cursorlike, familiar::Familiar, tapelike::Tapelike, Tape};
+use spell::{cursor::Cursor, cursorlike::Cursorlike, tapelike::Tapelike};
 
 #[derive(Debug, Clone)]
 pub struct TapeReaderState {
@@ -71,24 +69,8 @@ impl TapeReaderState {
 
 }
 
-
-impl Familiar<Tape, TapeReaderState> {
-    pub fn context_range(&self) -> Range<usize> {
-        let mut start = self.cursor.position();
-
-        if self.cursor.length() < start { return (start..start).into(); }
-
-        let distance_to_hwm = self.cursor.length() - start;
-        let end = if distance_to_hwm > self.state.length {
-            self.cursor.length()
-        } else {
-            start -= self.state.length - distance_to_hwm;
-            self.cursor.length()
-        };
-        (start..end).into()
-    }
-}
-
+/* TODO: This needs to exist in some way, probably by making `SpellState` a trait for Spell...
+* states.
 impl<T> Cursorlike for Familiar<T, TapeReaderState> where T : Tapelike<Item = Alteration> {
     fn advance(&mut self) {
         self.cursor.advance();
@@ -116,6 +98,7 @@ impl<T> Cursorlike for Familiar<T, TapeReaderState> where T : Tapelike<Item = Al
         self.cursor.rewind();
     }
 }
+*/
 
 
 // I want to break this down better:

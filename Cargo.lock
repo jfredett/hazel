@@ -407,6 +407,7 @@ dependencies = [
  "rand",
  "serde",
  "similar-asserts",
+ "spell",
  "tokio",
  "tracing",
  "tracing-subscriber",
@@ -457,6 +458,7 @@ dependencies = [
  "rand",
  "ratatui",
  "serde",
+ "spell",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -1091,6 +1093,16 @@ checksum = "c970269d99b64e60ec3bd6ad27270092a5394c4e309314b18ae3fe575695fbe8"
 dependencies = [
  "libc",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "spell"
+version = "0.1.0"
+dependencies = [
+ "dynamic-array",
+ "hazel-basic",
+ "tracing",
+ "tracing-test",
 ]
 
 [[package]]

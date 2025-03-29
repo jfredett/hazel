@@ -1,11 +1,16 @@
-use std::{collections::HashMap, fmt::Debug, sync::Mutex};
+use hazel::game::chess::state::tape_reader_state::TapeReaderState;
+use hazel::{board::PieceBoard, constants::START_POSITION_FEN};
+use hazel_basic::ben::BEN;
+use hazel_engine::driver::{GetPosition, HazelResponse, WitchHazel};
+use hazel_engine::uci::UCIMessage;
 
 use ratatui::{crossterm::event::{Event, KeyCode}, layout::{Constraint, Layout}, style::{Color, Style}, widgets::{StatefulWidget, Widget}, Frame};
-use tui_logger::{LevelFilter, TuiLoggerLevelOutput, TuiLoggerSmartWidget, TuiWidgetState};
 
-use hazel::{board::PieceBoard, constants::START_POSITION_FEN, notation::ben::BEN, types::tape::{cursorlike::Cursorlike, familiar::{self, state::tape_reader_state::TapeReaderState, Quintessence}}};
-use hazel_engine::uci::UCIMessage;
-use hazel_engine::driver::{GetPosition, HazelResponse, WitchHazel};
+use spell::{cursorlike::Cursorlike, familiar::{self, Quintessence}};
+
+use std::{collections::HashMap, fmt::Debug, sync::Mutex};
+
+use tui_logger::{LevelFilter, TuiLoggerLevelOutput, TuiLoggerSmartWidget, TuiWidgetState};
 
 use crate::ui::widgets::tapereader::TapeReaderWidget;
 
@@ -159,7 +164,7 @@ impl<'a> UI<'a> {
                     None => { pos.conjure() }
                 };
                 tracing::debug!(target="hazel::ui::update", "desired pos: {:#05X}", self.tapereader.desired_position);
-                fam.seek(self.tapereader.desired_position);
+                // BUG: pending `spellstate` trait move fam.seek(self.tapereader.desired_position);
                 self.tapereader_state = Some(familiar::dismiss(fam));
 
                 let mut fam = match &self.current_ben {

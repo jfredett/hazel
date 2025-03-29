@@ -13,14 +13,9 @@
 //! but this seemed the most natural way to do it to me, whether that's because I'm a genius or
 //! because I've seen it before, I don't know, but I'm very likely not a genius.
 
-use hazel_basic::{color::Color, interface::{Alter, Alteration, Query}, occupant::Occupant, piece::Piece, position_metadata::PositionMetadata};
+use crate::{color::Color, interface::{Alter, Alteration, Query}, occupant::Occupant, piece::Piece, position_metadata::PositionMetadata, square::Square};
 
-use crate::{constants::START_POSITION_FEN, extensions::query::to_fen_position};
-
-use super::Square;
 use std::fmt::{Debug, Formatter};
-
-mod from_into;
 
 #[derive(Default, PartialEq, Clone, Copy)]
 pub struct BEN {
@@ -97,7 +92,7 @@ impl Debug for BEN {
 
 impl std::fmt::Display for BEN {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", to_fen_position(self))
+        write!(f, "{}", crate::interface::query::to_fen_position(self))
     }
 }
 
@@ -113,7 +108,7 @@ impl BEN {
     }
 
     pub fn to_alterations(&self) -> impl Iterator<Item = Alteration> {
-        hazel_basic::interface::query::to_alterations(self)
+        crate::interface::query::to_alterations(self)
     }
 
     // TODO: Move this to it's own function, it should produce a _Log_ of alteratons
@@ -167,7 +162,7 @@ impl BEN {
     }
 
     pub fn start_position() -> Self {
-        Self::new(START_POSITION_FEN)
+        Self::new(crate::constants::START_POSITION_FEN)
     }
 
     pub fn empty() -> Self {
@@ -207,7 +202,8 @@ impl BEN {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use hazel_basic::{castle_rights::CastleRights, file::File, square::*};
+    use crate::{file::File, square::*};
+    use crate::castle_rights::CastleRights;
 
     #[quickcheck]
     fn alter_mut(square: Square, occupant: Occupant) {

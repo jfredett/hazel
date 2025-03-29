@@ -1,8 +1,10 @@
 use std::sync::Arc;
 use std::{fmt::Debug, sync::RwLock};
 
+use hazel_basic::ben::BEN;
 use hazel_basic::color::Color;
 use hazel_basic::direction::Direction;
+use hazel_basic::interface::query::to_fen_position;
 use hazel_basic::occupant::Occupant;
 use hazel_basic::piece::Piece;
 use hazel_basic::position_metadata::PositionMetadata;
@@ -12,18 +14,14 @@ use hazel_basic::zobrist::Zobrist;
 use hazel_bitboard::bitboard::Bitboard;
 use hazel_bitboard::ColorMasks;
 use hazel_bitboard::constants::move_tables::{KING_ATTACKS, KNIGHT_MOVES};
+use spell::cursorlike::Cursorlike as _;
+use spell::familiar::{Familiar, Quintessence};
+use spell::tapelike::Tapelike;
 
 use crate::board::PieceBoard;
 use crate::coup::rep::Move;
-use crate::extensions::query::to_fen_position;
-use crate::notation::ben::BEN;
-use crate::types::tape::cursorlike::Cursorlike;
-use crate::types::tape::familiar::state::position_zobrist::PositionZobrist;
-use crate::types::tape::tapelike::Tapelike;
-
-use crate::types::tape::{familiar, Tape};
-
-use crate::types::tape::familiar::{Familiar, Quintessence};
+use spell::Tape;
+use crate::game::state::position_zobrist::PositionZobrist;
 
 
 // generator is supposed to depend on core, but I need to reference generator here to build
@@ -36,7 +34,6 @@ use crate::types::tape::familiar::{Familiar, Quintessence};
 // Except all I need here are cache/atm, which should be in util anyway, so time to pull out util
 use hazel_util::cache::Cache;
 use hazel_util::cache::atm::ATM;
-
 
 pub struct Position {
     // necessaries
@@ -190,11 +187,11 @@ impl Position {
     }
 
     pub fn conjure<S>(&self) -> Familiar<RwLock<Tape>, S> where S : Default {
-        familiar::conjure(self.tape.clone())
+        spell::familiar::conjure(self.tape.clone())
     }
 
     pub fn resummon<S>(&self, quintessence: &Quintessence<S>) -> Familiar<RwLock<Tape>, S> where S : Clone {
-        familiar::resummon_on(self.tape.clone(), quintessence)
+        spell::familiar::resummon_on(self.tape.clone(), quintessence)
     }
 
     pub fn with_moves(fen: impl Into<BEN>, moves: Vec<Move>) -> Self {

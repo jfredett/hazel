@@ -78,7 +78,8 @@ impl MoveGenerator {
 
 #[cfg(test)]
 mod tests {
-    use hazel::notation::ben::BEN;
+
+    use hazel_basic::ben::BEN;
 
     use super::*;
 

@@ -1,6 +1,5 @@
+use hazel_basic::ben::BEN;
 use ratatui::{buffer::Buffer, prelude::*, text::Text, widgets::Widget};
-
-use hazel::notation::ben::BEN;
 
 
 #[derive(Debug, Default)]

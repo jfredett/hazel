@@ -1,6 +1,8 @@
 #![allow(clippy::unusual_byte_groupings, clippy::needless_range_loop)]
 
+pub mod ben;
 pub mod castle_rights;
+pub mod constants;
 pub mod color;
 pub mod direction;
 pub mod file;

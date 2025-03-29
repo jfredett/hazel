@@ -42,8 +42,8 @@ fn generate_slider_moves(position: &Position, piece: Piece) -> impl Iterator<Ite
 
 #[cfg(test)]
 mod tests {
+    use hazel_basic::ben::BEN;
     use itertools::Itertools;
-    use ben::BEN;
 
     use hazel::notation::*;
 

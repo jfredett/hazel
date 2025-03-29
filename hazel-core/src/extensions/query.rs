@@ -1,5 +1,4 @@
-use hazel_basic::{interface::Query, occupant::Occupant, square::Square};
-use hazel_basic::square::*;
+use hazel_basic::{interface::Query, square::Square};
 use hazel_util::charray::{Charray, Origin};
 
 // FIXME: This stuff is all representational/higher level extensions to the interface, I think they
@@ -35,49 +34,13 @@ pub fn display_board(board: &impl Query) -> String {
     charray.to_string()
 }
 
-pub fn to_fen_position(board: &impl Query) -> String {
-    let mut f = String::default();
-    let mut empty = 0;
-
-    for s in Square::by_rank_and_file().downward() {
-        let occ = board.get(s);
-        if matches!(occ, Occupant::Empty) {
-            empty += 1
-        } else {
-            if empty != 0 {
-                f.push_str(&empty.to_string());
-                empty = 0;
-            }
-            f.push_str(&occ.to_string());
-        }
-
-        if s.file() == 7 && s != A8 {
-            if empty != 0 {
-                f.push_str(&empty.to_string());
-                empty = 0;
-            }
-            f.push('/');
-        }
-    }
-
-    f.pop(); // remove the last slash
-
-    if let Some(meta) = board.try_metadata() {
-        f.push(' ');
-        f.push_str(&meta.to_string());
-    }
-
-    f
-}
-
-
-
 
 // FIXME: These are integration tests between PieceBoard <-> Query, they should live in ./tests/
 #[cfg(test)]
 mod tests {
     use crate::board::simple::PieceBoard;
     use crate::constants::POS2_KIWIPETE_FEN;
+    use hazel_basic::square::*;
 
     use super::*;
 
@@ -104,7 +67,8 @@ mod tests {
     }
 
     mod to_fen_position {
-        use crate::notation::ben::BEN;
+
+        use hazel_basic::ben::BEN;
 
         use super::*;
 
@@ -113,7 +77,7 @@ mod tests {
             let mut p = PieceBoard::default();
             p.set_startpos();
 
-            let actual = to_fen_position(&p);
+            let actual = hazel_basic::interface::query::to_fen_position(&p);
             let expected = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 
             assert_eq!(format!("{}", actual), expected);
@@ -124,7 +88,7 @@ mod tests {
             let mut p = PieceBoard::default();
             p.set_fen(BEN::new(POS2_KIWIPETE_FEN));
 
-            let actual = to_fen_position(&p);
+            let actual = hazel_basic::interface::query::to_fen_position(&p);
             let expected = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R";
 
             assert_eq!(format!("{}", actual), expected);

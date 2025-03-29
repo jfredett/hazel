@@ -2946,3 +2946,27 @@ how to sort things.
 
 I also need to refactor the old Variation-specific familiar and really Variation itself to a `Tape`/`Spell` based
 system, but I want to get the crate extracted and the name change performed first.
+
+## 1001 - spring-cleaning-1
+
+Couple remaining open refactoring jobs now:
+
+1. Cache needs to be refactored to a generic key, ultimately this will be a LRU cache with a generic key type.
+2. Spell needs to have Familiar refactored to rely on a trait
+3. Tape needs to be renamed to Spell
+4. Move `BEN` -> -basic
+    - This means figuring out the `to_fen_position` extension, which might be able to stay put? IDK. In theory
+        that means this can just be moved over and no api change, since query is already over there.
+5. FIXMEs, TODOs, and the like need an audit.
+6. Reorganize directory structure
+7. Rename -core to -representation
+8. rename -basic to -core
+9. Get all the tests uncommented (in place) and passing.
+
+Once all these are done (and I just want to audit tags for now, not necessarily do anything to resolve them unless it's
+very easy), I can get started on the test refactoring, which'll be spring-cleaning-2, I think.
+
+## 1517 - spring-cleaning-1
+
+Finished extracting `spell` and moving `ben` to `-basic`. Dependencies are already minimized, and I can see the end
+approaching. This ticks off #4 from above.

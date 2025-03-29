@@ -1,6 +1,6 @@
-use hazel_basic::interface::{Alter, Query};
+use hazel_basic::{ben::BEN, interface::{Alter, Query}};
 
-use crate::{board::PieceBoard, constants::START_POSITION_FEN, coup::rep::Move, game::{action::Action, ChessGame}, notation::ben::BEN, play::Play};
+use crate::{board::PieceBoard, constants::START_POSITION_FEN, coup::rep::Move, game::{action::Action, ChessGame}, play::Play};
 
 #[derive(Clone, Debug)]
 pub enum MoveSheetEntry {

@@ -1,3 +1,5 @@
+/* TODO: Move this back to core.
+*
 use crate::board::PieceBoard;
 use hazel_basic::{interface::{Alter, Alteration}, position_metadata::PositionMetadata};
 
@@ -36,3 +38,4 @@ impl Alter for GameState {
 mod tests {
 
 }
+*/

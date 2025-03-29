@@ -1,4 +1,6 @@
-use crate::{coup::rep::Move, game::action::Action, notation::ben::BEN};
+use hazel_basic::ben::BEN;
+
+use crate::{coup::rep::Move, game::action::Action};
 
 pub trait Play where Self: Clone {
     type Metadata: Clone;

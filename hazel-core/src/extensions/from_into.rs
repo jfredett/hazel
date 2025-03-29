@@ -1,8 +1,6 @@
-use hazel_basic::interface::{alter, Alter, query, Query};
+use hazel_basic::{ben::BEN, interface::{alter, query, Alter, Query}};
 
 use crate::game::ChessGame;
-
-use super::*;
 
 // this I think is probably closer to 'Position', but I'm not there yet.
 impl<Q> From<ChessGame<Q>> for BEN where Q : Query + Alter + Default + Clone {

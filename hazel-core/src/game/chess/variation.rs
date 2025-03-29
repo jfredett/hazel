@@ -1,4 +1,5 @@
-use crate::notation::ben::BEN;
+use hazel_basic::ben::BEN;
+
 use crate::types::log::Log;
 use crate::{board::PieceBoard, coup::rep::Move};
 use crate::types::log::cursor::Cursor;

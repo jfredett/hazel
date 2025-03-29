@@ -16,6 +16,7 @@ path="src/lib.rs"
 hazel-basic.workspace = true
 hazel-bitboard.workspace = true
 hazel-util.workspace = true
+spell.workspace = true
 dynamic-array = "0.2.3"
 lazy_static = "1.4.0"
 nom = "7.1.3"

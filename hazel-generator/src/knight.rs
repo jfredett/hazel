@@ -29,9 +29,9 @@ pub fn generate_moves(position: &Position) -> impl Iterator<Item = Move> {
 
 #[cfg(test)]
 mod tests {
-    use ben::BEN;
 
     use hazel::notation::*;
+    use hazel_basic::ben::BEN;
 
     use super::*;
 

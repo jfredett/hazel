@@ -1,5 +1,7 @@
 
-use crate::{coup::rep::Move, interface::play::Play, notation::ben::BEN, types::{log::cursor::Cursor, movesheet::MoveSheet}};
+use hazel_basic::ben::BEN;
+
+use crate::{coup::rep::Move, interface::play::Play, types::{log::cursor::Cursor, movesheet::MoveSheet}};
 use super::{action::Action, delim::Delim};
 
 // TODO: port this to the new system.

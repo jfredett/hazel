@@ -315,7 +315,8 @@ mod proxy_methods {
 
 
 mod compilation {
-    use ben::BEN;
+    use hazel_basic::ben;
+    use hazel_basic::ben::BEN;
     use hazel_basic::position_metadata::PositionMetadata;
 
     use crate::board::simple::PieceBoard;

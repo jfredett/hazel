@@ -1,13 +1,13 @@
 #![allow(dead_code, unused_imports)]
 
-use hazel_basic::{color::Color, interface::Query, occupant::Occupant, piece::Piece};
+use hazel_basic::{ben::BEN, color::Color, interface::Query, occupant::Occupant, piece::Piece};
 use hazel_bitboard::bitboard::Bitboard;
 use nom::{branch::alt, bytes::complete::tag, character::complete::char, combinator::opt, IResult};
 
 use crate::{coup::rep::{Move, MoveType}, notation::*};
 use crate::notation::pgn::parsers::*;
 
-use super::{ben::BEN, Square};
+use super::Square;
 
 
 mod disambiguator;

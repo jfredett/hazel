@@ -1,8 +1,8 @@
 use async_trait::async_trait;
 
 use hazel::notation::uci::UCI;
+use hazel_basic::ben::BEN;
 use witch::{MessageFor, Witch};
-use hazel::notation::ben::BEN;
 use hazel::game::position::Position;
 use crate::uci::UCIMessage;
 use crate::driver::{Hazel, HazelResponse};
