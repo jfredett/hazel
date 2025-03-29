@@ -33,6 +33,7 @@
                         cargo-mutants
                         cargo-nextest
                         cargo-insta
+                        cargo-udeps
                         clang
                         cloc
                         gnuplot

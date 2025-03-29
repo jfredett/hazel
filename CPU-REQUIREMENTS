@@ -1,0 +1,6 @@
+Hazel requires a CPU that supports the BMI1 and BMI2 instruction set for the `pextboard` feature, which allows fast
+calculation of sliding piece movement using CPU intrinsics. You can disable this by disabling the `bmi1` or `bmi2`
+features, but then Hazel won't work because I haven't written an alternative implementation. If you're reading this,
+it's probably because the engine panicked and told you to read this. I'm sorry for the excitement, but probably your CPU
+doesn't support those instruction sets, or you might need to tweak your build settings. You can use `lscpu` to see what
+your CPU supports, a bit of grepping should tell you.

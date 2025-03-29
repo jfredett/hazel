@@ -1,0 +1,29 @@
+---
+source: hazel-ui/src/ui/widgets/game_section/info_section/pgn_section.rs
+assertion_line: 103
+expression: buffer
+---
+Buffer {
+    area: Rect { x: 0, y: 0, width: 64, height: 16 },
+    content: [
+        " 1. e4 c6                        ┌─────────────────────────────┐",
+        " 2. d4 d5                        │         Placeholder         │",
+        " 3. d5 d5                        │         Placeholder         │",
+        " 4. c4 Nf6                       │         Placeholder         │",
+        " 5. Nc3 Nc6                      │         Placeholder         │",
+        " 6. Nf3 e6                       │         Placeholder         │",
+        " 7. Be2 Bd6                      │         Placeholder         │",
+        " 8. O-O dxc4                     │         Placeholder         │",
+        "                                 │         Placeholder         │",
+        "                                 │         Placeholder         │",
+        "                                 │         Placeholder         │",
+        "                                 │         Placeholder         │",
+        "                                 │         Placeholder         │",
+        "                                 │         Placeholder         │",
+        "                                 │         Placeholder         │",
+        "                                 └─────────────────────────────┘",
+    ],
+    styles: [
+        x: 0, y: 0, fg: White, bg: Black, underline: Reset, modifier: NONE,
+    ]
+}

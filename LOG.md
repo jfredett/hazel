@@ -2765,3 +2765,184 @@ minutes' by a factor of 6 or so, not bad for a `HashMap` backed cache it only to
 
 Next, spring cleaning. I'm going to live with the lack of tests because I'm going to move to rs-test, and start building
 some fixtures for more efficient testing.
+
+## 1122 - spring-cleaning-1
+
+Started spring cleaning, this is phase 1, which is just getting the workspace going and starting to split out crates and
+cleanup dependencies. I've done the easiest split so far, into `-core` and `-ui` crates; and ran `cargo-udeps` to clear
+out unused dependencies. So far, I've brought a clean compile (measured by `cargo clean ; time cargo build`) from ~37s
+-> ~25s, about a 40% reduction.
+
+I'm going to continue splitting, but the overall workspace is going to look something like:
+
+
+```
+hazel/
+    hazel-core/
+        src/
+            lib.rs
+            some-module/
+                mod.rs      # Quickcheck properties in an embedded module "properties"
+                test.rs     # Unit tests for the module, driven by rstest fixtures
+        test/
+            # core-specific integration tests, driven by rstest
+    hazel-ui/
+        # similar layout to the above, but backed also by `insta`
+    hazel-*/            # other crates as needed
+    hooks/              # Profile hook programs
+    quals/              # Qualification tests, comparing to other engines, establishing Elo, etc.
+    benchmarks/         # Performance tests/data gathering
+    tests/              # Integration tests
+```
+
+I'm debating following `rust-gpu`'s example and putting the crates south of a `crates/` folder, but for the moment I
+don't mind just having them toplevel.
+
+Part of the work so far moved over some ratatui stuff to the ui crate, which changed some apis around, but so far it's
+mostly been mechanical.
+
+## 1150 - spring-cleaning-1
+
+I tried to extract the `constants` module, but it tangles pretty tightly with other chunks of the system, and extracting
+them will be a little tricky. It's actually a little tricky to extract anything right now because it all
+cross-references pretty freely. I think the way out of that is to push more of the code to rely on the interfaces in
+`src/interface`, and have _that_ become `hazel-core`, and then the other hazel crates rely on the interface, and we have
+a delightfully decoupled thing. Ultimately this will mean there is a `hazel-representation` crate which implements the
+interfaces, and then that should be replacable when I come up with better representations.
+
+He said, full of dumb hope.
+
+## 1727 - spring-cleaning-1
+
+Okay, two more crates split out, `hazel-bitboard` has all the pretty static bitboard related stuff, `hazel-basic` has
+all the piece/color/square/etc types.
+
+Next I think I'm going to start scaffolding the integration test crate, which can hold the last item in `-core`'s
+constants module. I'll then turn that module into a re-export module maybe, idk.
+
+I want to split the parser stuff as well, as that should reduce more of `-core`'s dependencies, but getting `-basic` and
+`-bitboard` extracted will make that process easier I think.
+
+The end of all this should be a `hazel::toolbox` module that I can import and get all the basic constants and types for
+doing 'normal' stuff in `hazel` the eventual `engine` crate will have the bits for running the game using the
+representation provided by that `toolbox` module.
+
+Separating the parser should eliminate the `nom` and similar deps. Separating the engine will probably involve
+separating out the `witch` thing to it's own crate as well, and hopefully that'll leave the `types` module pretty thin
+and maybe removable.
+
+So far so good, phase 2 will be `rstest` and maybe some preliminary benchmarking work.
+
+## 2227 - spring-cleaning-1
+
+I'm settling in on the split, I'm favoring lots of little crates, perhaps to the point of overkill, but at the moment I
+prefer to overdo it and pare it back later, it has already paid dividends in terms of clarifying responsibility
+barriers, and in service to that I'm going to make a little diagram.
+
+<img src="./assets/hazel-crates.png" alt="a diagram showing the as-built and desired-design of hazel as a multi-crate
+workspace" width="1024">
+
+It's in `assets/hazel-crates.png` if that isn't rendering for whatever reason.
+
+# 27-MAR-2025
+
+## 1945 - spring-cleaning-1
+
+I took a stab over on `spring-cleaning-1-parser-twig` at pulling out the `-parser` library, but ran into a number of
+issues of where things should be sorted; once I got everything detangled, I was left with some parser bugs and a bad
+taste; so I decided to rewind and try again.
+
+Along the way I found that the `-engine` components are probably going to be simpler to extract first, and then the
+parsers after. In particular it's difficult to have these crates cross boundaries too much before you enter a circular
+dependency hell.
+
+I'm going to keep working to split out mostly along module lines, if nothing else it's telling me where all the tight
+coupling is.
+
+Another thing I discovered is that the core representation (everything up to and including `coup::rep::Move`) really
+needs to 'stick together' -- the first logical split point I think is probably at `Position`. This is a place where
+[tabitha](https://github.com/jfredett/tabitha) would probably help, since I could see how different modules and structs
+tangle with each other.
+
+I also found that my more or less arbitrary use of From/Into is resulting in some weird semantics. I think the right way
+is to support converting _into_ primitive-ish types (the stuff in -basic), and then have other methods for converting
+those things into specific subclasses of a given type; e.g., `BEN` should have a `as_fen_string` method; but not a
+`From<String>` implementation. Whereas `(Rank, File)` should have a `From<Square>` implementation.
+
+Most of the time I'm asking for `anything squarelike`, not `anything BENlike`; though `impl Into<BEN>` is not uncommon,
+I prefer to lean on the _trait_ for that, via `impl Query`.
+
+I'll leave the twig up as it may be useful later, but I return to extracting other things now.
+
+# 28-MAR-2025
+
+## 1002 - spring-cleaning-1
+
+Got `-engine` pulled out, started pulling on `-generator`, and found that it tangles a bit into the `Cache/ATM` thing,
+which can be extracted, but tangles (due to a shortcut) to the `Zobrist` type, and so I'm left with the question of
+'where should `Zobrist` go?' Zobrist currently depends on both `hazel_basic` types, which are easy to bring across, but
+also `Alter`, `Query`, and the like, and the `CastleRights` structure.
+
+I think `-basic` is rapidly coinciding with `-core`, and probably has a better name than either out there. I think there
+are these approaches:
+
+1. Make `Cache` key-agnostic, instead of doing any more reorganizing, just make it generic. Originally I had wanted the
+   key-building part to be transparent, but I don't really do that anymore, so making it fully generic may be worth it.
+2. Move `Zobrist` to `-util` or it's own crate, moving the various stuff it depends on in `-core` to `-basic`; this'd
+   mean `interface`, `PositionMetadata`, and `CastleRights` move to `-basic`, then `-core` would pull in and set
+   `HazelZobrist`, everything else would end up in the destination crate.
+
+After all this is done, it leaves:
+
+1. Board Representation
+2. Move Representation
+3. Position Representation
+4. GameState Representation
+3. some more types that are definitely moving out (log/tape/etc -> spell, witch -> witch, movesheet -> devnull)
+
+in `-core`, at which point I'm forced to ask, 'what is `-core` really? `-representation`', then `hazel-basic` ->
+`hazel-core`, and 
+
+I also am starting to lean towards having a `crates/` folder, something like:
+
+```
+assets/
+crates/
+    hazel/              # Main library
+        bitboard/       # bitboard/pextboards
+        core/           # core types, Square, Color, Direction, Occupant; but also interface stuff (Alter et al)
+        engine/         # Actor that integrates evaluator and generator and other stuff to play chess
+        evaluator/      # Actor that evaluates a set of positions as efficiently as possible.
+        generator/      # Actor that generates all moves for positions as efficiently as possible.
+        parser/         # Parsers for various chess storage formats (PGN, SAN, etc)
+        representation/ # Representation types for Boards, GameState, Moves, etc.
+        ui/             # A debugging TUI designed to view the internals of the engine in operation
+        util/           # Various utility types.
+    spell/              # Generic 'spell' type for reading/writing/running familiars
+    witch/              # Generic actor framework
+    witchhazel/         # Integration point for engine + ui, configuration management, etc.
+doc/
+hooks/
+quals/
+tests/
+```
+
+I'm inclined to push more things down into the core, since I do think a lot of those won't undergo too much movement
+once settled. `Alteration` is more or less 'done', and that is the most mobile of the bunch.
+
+# 29-MAR-2025
+
+## 0730 - spring-cleaning-1
+
+First things first, pretty sure I had dates wrong for previous log entries, so I adjusted.
+
+Second, I'm working on extracting `spell`, but it's more complicated because of the way I was managing specific state
+update stuff, basically because I'm not using an interface for state objects. In particular I have a number of impls for
+Familiar's which fix a particular generic parameter, which I can't do outside of the home crate; this is a good thing
+ultimately, but will make extraction harder.
+
+For now, I'm just cranking away at what errors I can resolve, and then once I've reduced to the minimum, I'll figure out
+how to sort things.
+
+I also need to refactor the old Variation-specific familiar and really Variation itself to a `Tape`/`Spell` based
+system, but I want to get the crate extracted and the name change performed first.

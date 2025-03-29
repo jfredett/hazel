@@ -1,0 +1,12 @@
+[Event "No Variations, No Halt"]
+[White "white"]
+[Black "black"]
+[Result "0-1"]
+[CurrentPosition "3r2k1/5rp1/p3Q2p/1p2Bp2/8/PP1q4/4RPbP/4K3 w - -"]
+[TimeControl "900+10"]
+
+1. e4 c6 2. d4 d5 3. exd5 cxd5 4. c4 Nf6 5. Nc3 Nc6 6. Nf3 e6 7. Be2 Bd6 8. O-O
+dxc4 9. Bxc4 O-O 10. b3 a6 11. Bd3 h6 12. Bc2 b5 13. Ne4 Nxe4 14. Bxe4 Bb7 15.
+Bc2 Nb4 16. Bb1 Qd7 17. a3 Nd5 18. Ne5 Qc7 19. Qd3 f5 20. Qg3 Qc3 21. Bd3 Qxd4
+22. Re1 Qxa1 23. Kf1 Bxe5 24. Qg6 Nf4 25. Bxf4 Qd4 26. Qxe6+ Rf7 27. Bxe5 Qxd3+
+28. Re2 Bxg2+ 29. Ke1 Rd8

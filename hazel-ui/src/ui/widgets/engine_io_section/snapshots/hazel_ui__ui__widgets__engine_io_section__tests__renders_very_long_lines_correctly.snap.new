@@ -1,0 +1,19 @@
+---
+source: hazel-ui/src/ui/widgets/engine_io_section/mod.rs
+assertion_line: 103
+expression: buffer
+---
+Buffer {
+    area: Rect { x: 0, y: 0, width: 27, height: 6 },
+    content: [
+        "┌─────────────────────────┐",
+        "│A line exceeding, the buf│",
+        "│fers shortened width, sho│",
+        "│uld be wrapped around.   │",
+        "└─────────────────────────┘",
+        "$>                         ",
+    ],
+    styles: [
+        x: 0, y: 0, fg: White, bg: Black, underline: Reset, modifier: NONE,
+    ]
+}
