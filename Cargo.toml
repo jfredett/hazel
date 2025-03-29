@@ -2,16 +2,16 @@
 resolver = "2"
 members = [
     # Main libraries
-    "hazel-core",
-    "hazel-ui",
-    "hazel-basic",
-    "hazel-bitboard",
-    "hazel-generator",
-    "hazel-engine",
+    "crates/hazel/core",
+    "crates/hazel/ui",
+    "crates/hazel/basic",
+    "crates/hazel/bitboard",
+    "crates/hazel/generator",
+    "crates/hazel/engine",
 
     # Extractable Libraries
-    "spell",
-    "witch",
+    "crates/spell",
+    "crates/witch",
 
     # Small binaries that act as a profiling hook
     "hooks/pextboard",
@@ -33,18 +33,19 @@ license = "AGPL v3"
 repository = "https://github.com/jfredett/hazel"
 
 [workspace.dependencies]
+hazel-core = { path = "./crates/hazel/core" }
+hazel-basic = { path = "./crates/hazel/basic" }
+hazel-bitboard = { path = "./crates/hazel/bitboard" }
+hazel-ui = { path = "./crates/hazel/ui" }
+hazel-util = { path = "./crates/hazel/util" }
+hazel-generator = { path = "./crates/hazel/generator" }
+hazel-engine = { path = "./crates/hazel/engine" }
+witch = { path = "./crates/witch" }
+spell = { path = "./crates/spell" }
+# Main Dependencies
 tracing = "0.1"
 tracing-appender = "0.2"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
-hazel-core = { path = "./hazel-core" }
-hazel-basic = { path = "./hazel-basic" }
-hazel-bitboard = { path = "./hazel-bitboard" }
-hazel-ui = { path = "./hazel-ui" }
-hazel-util = { path = "./hazel-util" }
-hazel-generator = { path = "./hazel-generator" }
-hazel-engine = { path = "./hazel-engine" }
-witch = { path = "./witch" }
-spell = { path = "./spell" }
 # Dev dependencies to share
 mutants = "0.0.3"
 quickcheck = "1.0.3"
