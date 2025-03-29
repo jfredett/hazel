@@ -2844,7 +2844,7 @@ workspace" width="1024">
 
 It's in `assets/hazel-crates.png` if that isn't rendering for whatever reason.
 
-# 28-MAR-2025
+# 27-MAR-2025
 
 ## 1945 - spring-cleaning-1
 
@@ -2874,7 +2874,7 @@ I prefer to lean on the _trait_ for that, via `impl Query`.
 
 I'll leave the twig up as it may be useful later, but I return to extracting other things now.
 
-# 29-MAR-2025
+# 28-MAR-2025
 
 ## 1002 - spring-cleaning-1
 
@@ -2929,3 +2929,20 @@ tests/
 
 I'm inclined to push more things down into the core, since I do think a lot of those won't undergo too much movement
 once settled. `Alteration` is more or less 'done', and that is the most mobile of the bunch.
+
+# 29-MAR-2025
+
+## 0730 - spring-cleaning-1
+
+First things first, pretty sure I had dates wrong for previous log entries, so I adjusted.
+
+Second, I'm working on extracting `spell`, but it's more complicated because of the way I was managing specific state
+update stuff, basically because I'm not using an interface for state objects. In particular I have a number of impls for
+Familiar's which fix a particular generic parameter, which I can't do outside of the home crate; this is a good thing
+ultimately, but will make extraction harder.
+
+For now, I'm just cranking away at what errors I can resolve, and then once I've reduced to the minimum, I'll figure out
+how to sort things.
+
+I also need to refactor the old Variation-specific familiar and really Variation itself to a `Tape`/`Spell` based
+system, but I want to get the crate extracted and the name change performed first.
