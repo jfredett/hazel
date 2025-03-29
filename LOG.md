@@ -2970,3 +2970,7 @@ very easy), I can get started on the test refactoring, which'll be spring-cleani
 
 Finished extracting `spell` and moving `ben` to `-basic`. Dependencies are already minimized, and I can see the end
 approaching. This ticks off #4 from above.
+
+## 1527 - spring-cleaning-1
+
+Reorganized the crates a bit, deeper directory structure but cleaner lines. Finishes #6 above.

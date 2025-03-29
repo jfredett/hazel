@@ -1,4 +1,4 @@
-#![feature(assert_matches, associated_type_defaults, const_for, const_trait_impl, let_chains, lock_value_accessors, new_range_api, stmt_expr_attributes)]
+#![feature(stmt_expr_attributes, lock_value_accessors)]
 // The Squares being consts means that sometimes when I use them as a reference, I trigger this
 // warning. I generally don't mind the temporary value being created, and in fact want it (see the
 // PositionMetadata to/from u32 impls for an example).
@@ -39,10 +39,11 @@ pub mod interface;
 pub mod notation;
 #[macro_use]
 pub mod types;
-pub mod util;
 
 // Import all the traits for everyone
 pub use interface::*;
+
+// TODO: Move this to the test crate(s)
 
 /// passes if the left is a subset of the right
 #[macro_export]
