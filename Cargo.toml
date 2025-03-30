@@ -17,7 +17,7 @@ members = [
     "hooks/pextboard",
 
     # Cross-crate integration tests
-    #"tests/???",
+    "tests",
 
     # Benchmarks
     #"benchmarks/???",

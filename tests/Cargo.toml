@@ -1,0 +1,23 @@
+[package]
+name = "hazel-test"
+version = "0.1.0"
+edition = "2021"
+authors = ["Joe Fredette <jfredett@gmail.com>"]
+description = "Integration and Acceptance test for the Witchhazel ecosystem"
+publish = false
+
+[dev-dependencies]
+hazel-core = { path = "../crates/hazel/core" }
+hazel-basic = { path = "../crates/hazel/basic" }
+hazel-bitboard = { path = "../crates/hazel/bitboard" }
+hazel-ui = { path = "../crates/hazel/ui" }
+hazel-util = { path = "../crates/hazel/util" }
+hazel-generator = { path = "../crates/hazel/generator" }
+hazel-engine = { path = "../crates/hazel/engine" }
+witch = { path = "../crates/witch" }
+spell = { path = "../crates/spell" }
+
+[[test]]
+name = "pieceboard-query"
+path = "pieceboard-query_test.rs"
+
