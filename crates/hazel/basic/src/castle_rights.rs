@@ -1,4 +1,5 @@
 use std::fmt::{Debug, Display};
+use quickcheck::{Arbitrary, Gen};
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub struct CastleRights {
@@ -15,6 +16,17 @@ impl Default for CastleRights {
             white_short: true,
             black_long: true,
             black_short: true,
+        }
+    }
+}
+
+impl Arbitrary for CastleRights {
+    fn arbitrary(g: &mut Gen) -> Self {
+        CastleRights {
+            white_short: bool::arbitrary(g),
+            white_long: bool::arbitrary(g),
+            black_short: bool::arbitrary(g),
+            black_long: bool::arbitrary(g),
         }
     }
 }
@@ -103,20 +115,9 @@ impl From<CastleRights> for u32 {
 
 #[cfg(test)]
 mod tests {
-    use quickcheck::{Arbitrary, Gen};
 
     use super::*;
 
-    impl Arbitrary for CastleRights {
-        fn arbitrary(g: &mut Gen) -> Self {
-            CastleRights {
-                white_short: bool::arbitrary(g),
-                white_long: bool::arbitrary(g),
-                black_short: bool::arbitrary(g),
-                black_long: bool::arbitrary(g),
-            }
-        }
-    }
 
 
     #[quickcheck]

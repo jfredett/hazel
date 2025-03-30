@@ -104,20 +104,4 @@ mod tests {
         b = Direction::NW.index_shift(b);
         assert_eq!(b, D5.index());
     }
-
-    // FIXME: Move this to the bitboard crate
-    // #[test]
-    // fn shift_by_shifts_by_given_amount() {
-    //     let mut b = Bitboard::empty();
-    //     b.set(D4); // Put a piece on d4.
-    //     assert!(b.is_set(D4)); // Put a piece on d4.
-    //     let bb_after_shift = b.shift_by(Direction::N, 2);
-
-    //     assert!(bb_after_shift.is_set(D6));
-
-    //     assert!(!bb_after_shift.is_set(D4));
-    //     assert!(!bb_after_shift.is_set(D5));
-    // }
-
-
 }

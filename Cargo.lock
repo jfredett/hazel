@@ -451,9 +451,13 @@ dependencies = [
  "hazel-core",
  "hazel-engine",
  "hazel-generator",
- "hazel-ui",
  "hazel-util",
+ "quickcheck",
+ "quickcheck_macros",
+ "similar-asserts",
  "spell",
+ "tracing",
+ "tracing-test",
  "witch",
 ]
 

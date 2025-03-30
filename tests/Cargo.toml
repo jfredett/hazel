@@ -6,18 +6,35 @@ authors = ["Joe Fredette <jfredett@gmail.com>"]
 description = "Integration and Acceptance test for the Witchhazel ecosystem"
 publish = false
 
+[dependencies]
+
+
 [dev-dependencies]
-hazel-core = { path = "../crates/hazel/core" }
-hazel-basic = { path = "../crates/hazel/basic" }
-hazel-bitboard = { path = "../crates/hazel/bitboard" }
-hazel-ui = { path = "../crates/hazel/ui" }
-hazel-util = { path = "../crates/hazel/util" }
-hazel-generator = { path = "../crates/hazel/generator" }
-hazel-engine = { path = "../crates/hazel/engine" }
-witch = { path = "../crates/witch" }
-spell = { path = "../crates/spell" }
+tracing.workspace = true
+quickcheck.workspace = true
+quickcheck_macros.workspace = true
+similar-asserts.workspace = true
+tracing-test.workspace = true
+hazel-core.workspace = true
+hazel-basic.workspace = true
+hazel-bitboard.workspace = true
+hazel-util.workspace = true
+hazel-generator.workspace = true
+hazel-engine.workspace = true
+witch.workspace = true
+spell.workspace = true
+
+
+## TODO: Figure out how to automate this.
+
+[[test]]
+name = "zobrist"
+path = "zobrist_test.rs"
 
 [[test]]
 name = "pieceboard-query"
 path = "pieceboard-query_test.rs"
 
+[[test]]
+name = "bitboard-file-conversion"
+path = "bitboard-file-conversion_test.rs"

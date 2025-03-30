@@ -9,6 +9,8 @@
 use std::fmt::{Debug, Display};
 use std::str::SplitWhitespace;
 
+use quickcheck::{Arbitrary, Gen};
+
 use crate::castle_rights::CastleRights;
 use crate::color::Color;
 use crate::file::File;
@@ -35,6 +37,25 @@ pub struct PositionMetadata {
     // 00000000 00000000 00000000 00000000
     // CCCCEEEE HHHHHHS+ FFFFFFFF FFFFFFFF
 }
+
+// TODO: Flag this
+impl Arbitrary for PositionMetadata {
+    fn arbitrary(g: &mut Gen) -> Self {
+        let color = Color::arbitrary(g);
+
+        // these are not necessarily _valid_ metadata states, they are simple _arbitrary_
+        // metadata states.
+        Self {
+            side_to_move: color,
+            in_check: bool::arbitrary(g),
+            castling: CastleRights::arbitrary(g),
+            en_passant: Option::<File>::arbitrary(g),
+            halfmove_clock: u8::arbitrary(g) % 64,
+            fullmove_number: u16::arbitrary(g),
+        }
+    }
+}
+
 
 impl From<PositionMetadata> for Vec<Alteration> {
     fn from(pm: PositionMetadata) -> Vec<Alteration> {
@@ -271,25 +292,6 @@ impl From<u32> for PositionMetadata {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    use quickcheck::{Arbitrary, Gen};
-
-    impl Arbitrary for PositionMetadata {
-        fn arbitrary(g: &mut Gen) -> Self {
-            let color = Color::arbitrary(g);
-
-            // these are not necessarily _valid_ metadata states, they are simple _arbitrary_
-            // metadata states.
-            Self {
-                side_to_move: color,
-                in_check: bool::arbitrary(g),
-                castling: CastleRights::arbitrary(g),
-                en_passant: Option::<File>::arbitrary(g),
-                halfmove_clock: u8::arbitrary(g) % 64,
-                fullmove_number: u16::arbitrary(g),
-            }
-        }
-    }
 
     #[test]
     fn ep_square_is_converts_to_u32_correctly() {

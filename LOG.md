@@ -2974,3 +2974,94 @@ approaching. This ticks off #4 from above.
 ## 1527 - spring-cleaning-1
 
 Reorganized the crates a bit, deeper directory structure but cleaner lines. Finishes #6 above.
+
+# 30-MAR-2025
+
+## 1514 - spring-cleaning-1
+
+I pulled out the integration test, and right now I think I'm just going to focus on moving tests into their own modules
+where it makes sense. Eventually most tests will not be co-located with the code-under-test, as I talked about before. I
+haven't brought in any new frameworks just yet, as I'm still determining what the best approach is going to be.
+
+Now that I've got everything else pulled out though, I think it's time to return to extracting the `parser` stuff, at
+which point I think `-core` is sufficiently gutted so as to be ready for the great renaming.
+
+I'm leaving the unused dependencies in place for the test crate for now, I suspect it'll be worthwhile to reduce it at
+some point.
+
+The only other item I need to actually _add_ to the list above is "10. move to a `nix run #ci` like `tabitha` has", I
+think that should greatly simplify my CI pipeline and make it easier to add in lints and git hooks and stuff later.
+
+So the current TODO list is:
+
+1. Cache needs to be refactored to a generic key, ultimately this will be a LRU cache with a generic key type.
+2. Spell needs to have Familiar refactored to rely on a SpellState trait
+3. Tape needs to be renamed to Spell
+4. [X] Move `BEN` -> -basic
+    - This means figuring out the `to_fen_position` extension, which might be able to stay put? IDK. In theory
+        that means this can just be moved over and no api change, since query is already over there.
+5. FIXMEs, TODOs, and the like need an audit.
+6. [X] Reorganize directory structure
+7. Rename -core to -representation
+8. rename -basic to -core
+9. Get all the tests uncommented (in place) and passing.
+10. nix run #ci
+
+I think #9 is the next port of call, I can use it as an opportunity to move some tests around as well.
+
+## 1536 - spring-cleaning-1
+
+One of the things I need to sit and think about is the way I convert between representations.
+
+I was reading a bit about the `fearless-simd` project. It uses ZSTs as 'tokens' representing the _capability_ of SIMD
+independent of the _implementation_ of SIMD, in a relatively 'low cost' sort of way to encode the _intent_ into the type
+system and then use it to determine an optimal implementation using whatever SIMD primitives are locally available. I
+think I'd like to try something similar at some point for my representations. A recurring frustration is the need to
+pick _a_ representation as 'canonical' when no such representation really deserves that title. Bitboards are useful
+sometimes, rank-file tuples others, strings others, it's not natural to pick any one. There is no good type to give the
+raw number or tuple-of-numbers that doesn't include generally unnecessary bound checking. Bitboards are fine for what
+they can do but quite limited in other ways, same with strings. Ideally I should be able to pick whatever representation
+is 'best' for the current situation, leaving the others behind, but I don't know what the 'best' rep is ahead of time.
+
+To square this (hah), I rely on `impl Into<Square>` frequently, but htis is also a representation with a downside. It
+says, "I _can become_ a _specific_ known implemnetation, but you will have to pay at least the `.into()` cost and maybe
+a second to convert it to the 'real' type you want." I can justfy paying _something_, but I hate paying it twice.
+
+Relying on `From/Into` also leads to a lot of weird situations where I can't rely on type inference to 'do the right
+thing' and guess the type correctly, leaving me to add annotations inconveniently.
+
+If I instead had something like `Square` as a collection of ZSTs, each with _constant_ implementations of what are now
+`From/Into`s, I could have an API like:
+
+```rust
+
+#[quickcheck] {
+    A1.bitboard().is_set(A1.rank(), A1.file()) == true
+}
+
+```
+
+Which isn't too bad, and it means that the actual type I'm passing around is a finite type family, something like:
+
+```rust
+// This presumes I can const-trait...
+trait Square {
+    const fn bitboard() -> Bitboard;
+    const fn rank() -> usize;
+    // ...
+
+}
+
+
+struct A1; impl Square for A1;
+// ...
+
+
+There aren't too many representations to target, but I could do similar things with `Piece`, `Color`, etc where it was
+needed. Essentially this is the same thing as how I tend to rely on `Query`, but where `Query` is really an open
+specification with a potentially unbounded number of implementors, `Square` is _really_ finite and basically will never
+be extended.
+
+Something to chew on, anyway.
+
+

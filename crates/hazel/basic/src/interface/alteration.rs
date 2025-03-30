@@ -1,6 +1,8 @@
 use std::fmt::{Debug, Display};
 
-use crate::{occupant::Occupant, position_metadata::PositionMetadata, square::*};
+use quickcheck::{Arbitrary, Gen};
+
+use crate::{color::Color, occupant::Occupant, piece::Piece, position_metadata::PositionMetadata, square::*};
 
 // NOTE: It's interesting to think about commutativity amongst - or more generally, the 'algebra'
 // of -- these alterations. In particular if I'm trying to build a final representation of
@@ -64,6 +66,25 @@ pub enum Alteration {
     Lit(u8),
     Turn,
     Clear,
+}
+
+// TODO: This should be flagged off so it only gets built when it's needed?
+impl Arbitrary for Alteration {
+    fn arbitrary(g: &mut Gen) -> Alteration {
+        let variant : usize = usize::arbitrary(g) % 6;
+
+        let occupant = Occupant::Occupied(Piece::arbitrary(g), Color::arbitrary(g));
+
+        match variant {
+            0 => Self::Place { square: Square::arbitrary(g), occupant },
+            1 => Self::Remove { square: Square::arbitrary(g), occupant },
+            2 => Self::Assert(PositionMetadata::arbitrary(g)),
+            3 => Self::Clear,
+            4 => Self::Lit(u8::arbitrary(g)),
+            5 => Self::Inform(PositionMetadata::arbitrary(g)),
+            _ => { unreachable!(); }
+        }
+    }
 }
 
 impl Debug for Alteration {

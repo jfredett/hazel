@@ -1,7 +1,8 @@
 use hazel_basic::color::Color;
+use hazel_basic::file::File;
 
 use crate::bitboard::Bitboard;
-use crate::constants::masks::{RANK_2, RANK_7};
+use crate::constants::masks::{FILE_MASKS, RANK_2, RANK_7};
 
 pub trait ColorMasks {
     /// a mask for the promotion rank
@@ -9,6 +10,17 @@ pub trait ColorMasks {
 
     // A mask for the starting rank for pawns
     fn pawn_mask(self) -> Bitboard;
+}
+
+pub trait AsBitboard {
+    fn as_bitboard(self) -> Bitboard;
+}
+
+impl AsBitboard for File {
+    fn as_bitboard(self) -> Bitboard {
+        FILE_MASKS[self as usize]
+    }
+
 }
 
 // Extend
