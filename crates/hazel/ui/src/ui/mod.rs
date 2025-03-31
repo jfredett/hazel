@@ -16,7 +16,7 @@ mod widgets;
 use app::UI;
 use tui_logger::{init_logger, set_default_level, set_log_file, LevelFilter, TuiLoggerFile, TuiLoggerLevelOutput};
 
-use hazel_engine::driver::WitchHazel;
+use hazel_engine::driver::hazel::WitchHazel;
 
 /// Boilerplate to get the app started.
 pub async fn run() -> Result<(), Box<dyn Error>> {
@@ -65,24 +65,24 @@ async fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut UI<'_>) -> io
     // Set the log files
     set_log_file(file_options);
 
-    tracing::debug!(target:"hazel::ui", "Logging to {}", dir.to_str().unwrap());
-    tracing::debug!(target:"hazel::ui", "Logging initialized");
+    tracing::debug!(target:"hazel_representation::ui", "Logging to {}", dir.to_str().unwrap());
+    tracing::debug!(target:"hazel_representation::ui", "Logging initialized");
 
     // do an initial draw so we don't blank-screen, this maybe should be a splash page?
-    tracing::info!(target:"hazel::ui", "initial draw");
+    tracing::info!(target:"hazel_representation::ui", "initial draw");
     terminal.draw(|f| app.render(f) )?;
 
     loop {
         if app.check_flag("exit") { return Ok(true); }
 
-        tracing::info!(target:"hazel::ui", "handling events");
+        tracing::info!(target:"hazel_representation::ui", "handling events");
         let event = event::read()?;
         app.handle_events(event);
 
-        tracing::info!(target:"hazel::ui", "updating");
+        tracing::info!(target:"hazel_representation::ui", "updating");
         app.update().await;
 
-        tracing::info!(target:"hazel::ui", "drawing");
+        tracing::info!(target:"hazel_representation::ui", "drawing");
         terminal.draw(|f| app.render(f) )?;
 
     }

@@ -7,7 +7,7 @@ use ratatui::prelude::*;
 use board_section::BoardSection;
 use info_section::InfoSection;
 
-use hazel::board::simple::PieceBoard;
+use hazel_representation::board::simple::PieceBoard;
 use hazel_parser::pgn::PGN;
 
 lazy_static! {

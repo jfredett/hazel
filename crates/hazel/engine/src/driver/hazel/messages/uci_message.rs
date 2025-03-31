@@ -3,9 +3,9 @@ use async_trait::async_trait;
 use hazel_parser::uci::UCI;
 use hazel_basic::ben::BEN;
 use witch::{MessageFor, Witch};
-use hazel::game::position::Position;
+use hazel_representation::game::position::Position;
 use crate::uci::UCIMessage;
-use crate::driver::{Hazel, HazelResponse};
+use crate::driver::hazel::{Hazel, HazelResponse};
 
 #[async_trait]
 impl<const BUF_SIZE: usize> MessageFor<Witch<BUF_SIZE, Hazel, HazelResponse>> for UCIMessage {
@@ -89,7 +89,7 @@ mod tests {
     use super::*;
 
     mod uci_messages {
-        use crate::driver::GetState;
+        use crate::driver::hazel::GetState;
         use witch::WitchHandle;
         use hazel_basic::constants::START_POSITION_FEN;
 

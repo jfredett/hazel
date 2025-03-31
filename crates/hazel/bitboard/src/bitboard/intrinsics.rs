@@ -15,7 +15,7 @@ impl Bitboard {
 
     /// The index of the first set bit, e.g.:
     /// ```
-    /// # use hazel::types::Bitboard;
+    /// # use hazel_representation::types::Bitboard;
     /// let mut b = Bitboard::empty();
     /// b.set_by_index(10);
     /// b.set_by_index(20);

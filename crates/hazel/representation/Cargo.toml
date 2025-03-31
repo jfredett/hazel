@@ -1,34 +1,32 @@
 [package]
-# This will be `hazel-representation` at some point
-name = "hazel-core"
+name = "hazel-representation"
 version = "0.1.0"
 authors = ["Joe Fredette <jfredett@gmail.com>"]
-description = "Main library for Chess Engine functions"
+description = "Contains representations of boards, games, and other high level concepts for abstract strategy games"
 edition = "2021"
 
 [lib]
-# this will be `hazel_representation`
-name="hazel"
+name="hazel_representation"
 bench = false
 path="src/lib.rs"
 
 [dependencies]
+dynamic-array.workspace = true
 hazel-basic.workspace = true
 hazel-bitboard.workspace = true
 hazel-util.workspace = true
+lazy_static.workspace = true
+rand.workspace = true
+serde.workspace = true
 spell.workspace = true
-dynamic-array = "0.2.3"
-lazy_static = "1.4.0"
-nom = "7.1.3"
-rand = "0.8.5"
-serde = { version = "1.0.203", features = ["derive"] }
-tokio = { version = "1.44.0", features = ["full"] }
+tokio.workspace = true
 tracing-subscriber.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]
+rand.workspace = true
 quickcheck.workspace = true
-# mutants.workspace = true
+mutants.workspace = true
 quickcheck_macros.workspace = true
 similar-asserts.workspace = true
 tracing-test.workspace = true

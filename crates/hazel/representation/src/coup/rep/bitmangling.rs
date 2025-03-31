@@ -16,7 +16,7 @@ impl Move {
     }
 
     /// ```
-    /// # use hazel::coup::rep::*;
+    /// # use hazel_representation::coup::rep::*;
     /// # use hazel_basic::square::*;
     /// // the move from d2 -> d4
     ///
@@ -28,7 +28,7 @@ impl Move {
     }
 
     /// ```
-    /// # use hazel::coup::rep::*;
+    /// # use hazel_representation::coup::rep::*;
     /// # use hazel_basic::square::*;
     /// // the move from d2 -> d4
     ///
@@ -40,7 +40,7 @@ impl Move {
 
     /// Gets the target index from the compact move representation
     /// ```
-    /// # use hazel::coup::rep::*;
+    /// # use hazel_representation::coup::rep::*;
     /// # use hazel_basic::square::*;
     ///
     /// // the move from d2 -> d4
@@ -55,7 +55,7 @@ impl Move {
 
     /// Gets the target index from the compact move representation
     /// ```
-    /// # use hazel::coup::rep::*;
+    /// # use hazel_representation::coup::rep::*;
     /// # use hazel_basic::square::*;
     ///
     /// // the move from d2 -> d4
@@ -70,7 +70,7 @@ impl Move {
 
     /// True if the move indicates a promotion
     /// ```
-    /// # use hazel::coup::rep::*;
+    /// # use hazel_representation::coup::rep::*;
     /// # use hazel_basic::square::*;
     ///
     /// // the move from d2 -> d4
@@ -88,7 +88,7 @@ impl Move {
     /// NOTE: Will return garbage for non-promotion moves. No checking is done ahead of time.
     ///
     /// ```
-    /// # use hazel::coup::rep::*;
+    /// # use hazel_representation::coup::rep::*;
     /// # use hazel_basic::square::*;
     /// # use hazel_basic::piece::Piece;
     ///
@@ -105,7 +105,7 @@ impl Move {
     /// Interprets the metadata bits when the piece is not a promotion. Use the provided `is_` functions
     /// on MoveType to interpret the data.
     /// ```
-    /// # use hazel::coup::rep::*;
+    /// # use hazel_representation::coup::rep::*;
     /// # use hazel_basic::square::*;
     /// # use hazel_basic::piece::Piece;
     ///

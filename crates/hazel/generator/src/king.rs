@@ -1,4 +1,4 @@
-use hazel::{coup::rep::{Move, MoveType}, game::position::Position};
+use hazel_representation::{coup::rep::{Move, MoveType}, game::position::Position};
 
 pub fn generate_moves(position: &Position) -> impl Iterator<Item = Move> {
     // assumes we aren't in check, captures assume piece is not protected.
@@ -15,7 +15,7 @@ pub fn generate_moves(position: &Position) -> impl Iterator<Item = Move> {
 #[cfg(test)]
 mod tests {
 
-    use hazel::coup::rep::{Move, MoveType};
+    use hazel_representation::coup::rep::{Move, MoveType};
     use hazel_basic::square::*;
     use hazel_basic::ben::BEN;
     use super::*;

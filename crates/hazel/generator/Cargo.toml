@@ -12,7 +12,7 @@ name="hazel_generator"
 path="src/lib.rs"
 
 [dependencies]
-hazel-core.workspace = true
+hazel-representation.workspace = true
 hazel-basic.workspace = true
 hazel-bitboard.workspace = true
 tracing.workspace = true

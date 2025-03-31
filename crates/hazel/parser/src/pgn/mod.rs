@@ -10,8 +10,8 @@ use std::io::Error;
 use hazel_basic::ben::BEN;
 use nom::{branch::alt, bytes::complete::tag, character::complete::{multispace0, multispace1, newline, one_of}, combinator::opt, multi::{many0, many1}, sequence::delimited, IResult};
 
-use hazel::game::familiar::Familiar;
-use hazel::{coup::rep::Move, game::variation::Variation};
+use hazel_representation::game::familiar::Familiar;
+use hazel_representation::{coup::rep::Move, game::variation::Variation};
 use crate::san::SAN;
 use crate::pgn::tokenizer::PGNToken;
 

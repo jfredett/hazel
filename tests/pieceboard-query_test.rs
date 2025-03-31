@@ -1,9 +1,9 @@
 mod fixtures;
-use hazel::board::simple::PieceBoard;
+use hazel_representation::board::simple::PieceBoard;
 
 use fixtures::POS2_KIWIPETE_FEN;
 
-use hazel::extensions::query::display_board;
+use hazel_representation::extensions::query::display_board;
 use hazel_basic::square::*;
 use hazel_basic::interface::Query;
 

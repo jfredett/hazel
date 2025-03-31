@@ -1,5 +1,5 @@
-use hazel::game::chess::position::Position;
-use hazel::coup::rep::Move;
+use hazel_representation::game::chess::position::Position;
+use hazel_representation::coup::rep::Move;
 
 
 // TODO: Move this somewhere better, probably types?

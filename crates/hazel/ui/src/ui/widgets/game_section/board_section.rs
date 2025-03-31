@@ -4,7 +4,7 @@ use ratatui::layout::Direction;
 use ratatui::prelude::*;
 use ratatui::widgets::Borders;
 
-use hazel::board::simple::PieceBoard;
+use hazel_representation::board::simple::PieceBoard;
 use crate::ui::widgets::placeholder::Placeholder;
 use crate::ui::widgets::board::Board;
 

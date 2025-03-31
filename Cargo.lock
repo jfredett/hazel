@@ -393,36 +393,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "hazel-core"
-version = "0.1.0"
-dependencies = [
- "dynamic-array",
- "hazel-basic",
- "hazel-bitboard",
- "hazel-util",
- "lazy_static",
- "nom",
- "quickcheck",
- "quickcheck_macros",
- "rand",
- "serde",
- "similar-asserts",
- "spell",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "tracing-test",
-]
-
-[[package]]
 name = "hazel-engine"
 version = "0.1.0"
 dependencies = [
  "async-trait",
  "hazel-basic",
  "hazel-bitboard",
- "hazel-core",
  "hazel-parser",
+ "hazel-representation",
  "mutants",
  "tokio",
  "tracing",
@@ -435,7 +413,7 @@ version = "0.1.0"
 dependencies = [
  "hazel-basic",
  "hazel-bitboard",
- "hazel-core",
+ "hazel-representation",
  "itertools 0.14.0",
  "similar-asserts",
  "tracing",
@@ -449,10 +427,30 @@ version = "0.1.0"
 dependencies = [
  "hazel-basic",
  "hazel-bitboard",
- "hazel-core",
- "itertools 0.14.0",
+ "hazel-representation",
  "nom",
+ "rand",
  "similar-asserts",
+ "tracing",
+]
+
+[[package]]
+name = "hazel-representation"
+version = "0.1.0"
+dependencies = [
+ "dynamic-array",
+ "hazel-basic",
+ "hazel-bitboard",
+ "hazel-util",
+ "lazy_static",
+ "mutants",
+ "quickcheck",
+ "quickcheck_macros",
+ "rand",
+ "serde",
+ "similar-asserts",
+ "spell",
+ "tokio",
  "tracing",
  "tracing-subscriber",
  "tracing-test",
@@ -464,9 +462,9 @@ version = "0.1.0"
 dependencies = [
  "hazel-basic",
  "hazel-bitboard",
- "hazel-core",
  "hazel-engine",
  "hazel-generator",
+ "hazel-representation",
  "hazel-util",
  "lazy_static",
  "quickcheck",
@@ -486,9 +484,9 @@ dependencies = [
  "dynamic-array",
  "hazel-basic",
  "hazel-bitboard",
- "hazel-core",
  "hazel-engine",
  "hazel-parser",
+ "hazel-representation",
  "insta",
  "lazy_static",
  "nom",
@@ -804,9 +802,7 @@ version = "1.0.0"
 dependencies = [
  "hazel-basic",
  "hazel-bitboard",
- "hazel-core",
  "rand",
- "tracing",
 ]
 
 [[package]]

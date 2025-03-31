@@ -1,6 +1,6 @@
 
-use hazel::coup::rep::{Move, MoveType};
-use hazel::game::chess::position::Position;
+use hazel_representation::coup::rep::{Move, MoveType};
+use hazel_representation::game::chess::position::Position;
 
 use hazel_basic::direction::Direction;
 use hazel_basic::interface::Query;
@@ -144,7 +144,7 @@ pub fn generate_moves(position: &Position) -> impl Iterator<Item = Move> {
 mod tests {
     use hazel_basic::square::*;
     use hazel_basic::ben::BEN;
-    use hazel::coup::rep::MoveType;
+    use hazel_representation::coup::rep::MoveType;
 
     use super::*;
 

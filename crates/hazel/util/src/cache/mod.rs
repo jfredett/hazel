@@ -53,7 +53,7 @@ impl<E> Cache<E> where E : Clone + Debug + PartialEq {
 *
 #[cfg(test)]
 mod tests {
-    use hazel::{game::position::Position, notation::ben::BEN};
+    use hazel_representation::{game::position::Position, notation::ben::BEN};
 
     use super::*;
 

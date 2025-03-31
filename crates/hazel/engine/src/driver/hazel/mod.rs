@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::uci::UCIMessage;
 use witch::WitchHandle;
-use hazel::game::chess::position::Position;
+use hazel_representation::game::chess::position::Position;
 
 mod state;
 mod response;

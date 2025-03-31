@@ -1,4 +1,3 @@
-// TODO: Move this back to hazel-core,
 use hazel_basic::interface::Alteration;
 use spell::{cursor::Cursor, cursorlike::Cursorlike, tapelike::Tapelike};
 

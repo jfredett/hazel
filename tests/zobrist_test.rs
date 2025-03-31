@@ -1,5 +1,5 @@
 use hazel_basic::zobrist::HazelZobrist;
-use hazel::{coup::rep::{Move, MoveType}, game::position::Position};
+use hazel_representation::{coup::rep::{Move, MoveType}, game::position::Position};
 use hazel_basic::{ben::BEN, zobrist::Zobrist};
 use hazel_basic::{color::Color, piece::Piece};
 use hazel_basic::zobrist::ZOBRIST_TABLE_SIZE;

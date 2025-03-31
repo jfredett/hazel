@@ -1,5 +1,5 @@
 use ratatui::{buffer::Buffer, layout::{Constraint, Layout, Rect}, style::{Style, Stylize}, text::Text, widgets::{Block, Row, StatefulWidget, Table, TableState, Widget}};
-use hazel::game::chess::state::tape_reader_state::TapeReaderState;
+use hazel_representation::game::chess::state::tape_reader_state::TapeReaderState;
 
 #[derive(Default)]
 pub struct TapeReaderWidget {
@@ -109,7 +109,7 @@ mod tests {
     // use insta::assert_debug_snapshot;
     // use ratatui::{buffer::Buffer, style::Color};
 
-    // use hazel::{game::position::Position, notation::pgn::PGN};
+    // use hazel_representation::{game::position::Position, notation::pgn::PGN};
 
     // use super::*;
 

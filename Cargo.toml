@@ -4,7 +4,7 @@ members = [
     # Main libraries
     "crates/hazel/basic",
     "crates/hazel/bitboard",
-    "crates/hazel/core",
+    "crates/hazel/representation",
     "crates/hazel/engine",
     "crates/hazel/generator",
     "crates/hazel/parser",
@@ -36,7 +36,7 @@ repository = "https://github.com/jfredett/hazel"
 [workspace.dependencies]
 hazel-basic = { path = "./crates/hazel/basic" }
 hazel-bitboard = { path = "./crates/hazel/bitboard" }
-hazel-core = { path = "./crates/hazel/core" }
+hazel-representation = { path = "./crates/hazel/representation" }
 hazel-engine = { path = "./crates/hazel/engine" }
 hazel-generator = { path = "./crates/hazel/generator" }
 hazel-parser = { path = "./crates/hazel/parser" }

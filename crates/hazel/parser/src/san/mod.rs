@@ -4,7 +4,7 @@ use hazel_basic::{ben::BEN, color::Color, interface::Query, occupant::Occupant, 
 use hazel_bitboard::bitboard::Bitboard;
 use nom::{branch::alt, bytes::complete::tag, character::complete::char, combinator::opt, IResult};
 
-use hazel::coup::rep::{Move, MoveType};
+use hazel_representation::coup::rep::{Move, MoveType};
 
 use crate::pgn::parsers::*;
 
@@ -374,7 +374,7 @@ impl TryFrom<SAN> for Move {
 mod tests {
     use super::*;
 
-    use hazel::game::variation::Variation;
+    use hazel_representation::game::variation::Variation;
     use crate::uci::UCI;
     use hazel_basic::constants::START_POSITION_FEN;
 

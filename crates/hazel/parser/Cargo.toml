@@ -12,14 +12,12 @@ name="hazel_parser"
 path="src/lib.rs"
 
 [dependencies]
-hazel-core.workspace = true
+hazel-representation.workspace = true
 hazel-basic.workspace = true
 hazel-bitboard.workspace = true
 tracing.workspace = true
-tracing-subscriber.workspace = true
-itertools.workspace = true
 nom.workspace = true
+rand.workspace = true
 
 [dev-dependencies]
 similar-asserts.workspace = true
-tracing-test.workspace = true

@@ -1,7 +1,7 @@
 #![allow(unused_imports, dead_code)]
 
 
-use hazel::board::simple::PieceBoard;
+use hazel_representation::board::simple::PieceBoard;
 
 use hazel_basic::interface::Query;
 use hazel_basic::color;

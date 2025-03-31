@@ -5,7 +5,8 @@ use std::io::BufRead;
 
 
 use crate::uci::UCIMessage;
-use crate::driver::{HazelResponse, WitchHazel};
+use crate::driver::hazel::WitchHazel;
+use crate::driver::hazel::HazelResponse;
 
 #[cfg_attr(test, mutants::skip)]
 pub async fn run() -> tokio::io::Result<()> {

@@ -12,7 +12,7 @@ name="hazel"
 path="src/main.rs"
 
 [dependencies]
-hazel-core.workspace = true
+hazel-representation.workspace = true
 hazel-basic.workspace = true
 hazel-bitboard.workspace = true
 hazel-engine.workspace = true

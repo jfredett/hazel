@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use crate::{driver::{Hazel, HazelResponse, State}};
+use crate::driver::hazel::{Hazel, HazelResponse, State};
 use witch::{MessageFor, Witch};
 
 pub struct Initialization; /* {

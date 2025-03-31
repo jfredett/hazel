@@ -7,7 +7,7 @@ impl Move {
 
     /// Creates a move from a given source and target index,
     /// ```
-    /// # use hazel::coup::rep::*;
+    /// # use hazel_representation::coup::rep::*;
     /// # use hazel_basic::square::*;
     /// // the move from d2 -> d4
     /// let m = Move::new(D2, D4, MoveType::QUIET);
@@ -39,7 +39,7 @@ impl Move {
     /// NOTE: do not use this internally, this is for testing convenience!
     ///
     /// ```
-    /// # use hazel::coup::rep::*;
+    /// # use hazel_representation::coup::rep::*;
     /// # use hazel_basic::square::*;
     /// # use hazel_basic::piece::Piece;
     /// // the move from d2 -> d4

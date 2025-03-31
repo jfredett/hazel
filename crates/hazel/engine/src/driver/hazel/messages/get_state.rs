@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 
 use witch::{MessageFor, Witch};
-use crate::driver::{Hazel, HazelResponse};
+use crate::driver::hazel::{Hazel, HazelResponse};
 
 pub struct GetState;
 

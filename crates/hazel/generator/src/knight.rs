@@ -1,6 +1,6 @@
 use hazel_bitboard::constants::move_tables::KNIGHT_MOVES;
-use hazel::coup::rep::{Move, MoveType};
-use hazel::game::position::Position;
+use hazel_representation::coup::rep::{Move, MoveType};
+use hazel_representation::game::position::Position;
 
 pub fn generate_moves(position: &Position) -> impl Iterator<Item = Move> {
     let knights = position.our_knights().into_iter().map(|sq| (sq, KNIGHT_MOVES[sq.index()]));

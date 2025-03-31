@@ -1,10 +1,11 @@
+#![allow(dead_code)] // see below
+
 // TODO: These should be refactored to be rs-test fixtures. That way I can scale perft across the various
 // other positions to chase out remaining bugs in movegen.
 
-
 use hazel_basic::color::Color;
 use hazel_basic::square::*;
-use hazel::coup::rep::{Move, MoveType};
+use hazel_representation::coup::rep::{Move, MoveType};
 
 /// FEN for an empty board.
 pub const EMPTY_POSITION_FEN: &str = "8/8/8/8/8/8/8/8 w KQkq - 0 1";

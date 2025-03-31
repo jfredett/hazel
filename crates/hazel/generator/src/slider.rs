@@ -1,8 +1,8 @@
 use hazel_basic::occupant::Occupant;
 use hazel_basic::piece::Piece;
 use hazel_bitboard::pextboard;
-use hazel::game::position::Position;
-use hazel::coup::rep::{Move, MoveType};
+use hazel_representation::game::position::Position;
+use hazel_representation::coup::rep::{Move, MoveType};
 
 pub mod bishop {
 
