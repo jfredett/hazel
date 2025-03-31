@@ -5,7 +5,7 @@ use super::*;
 ///
 /// ```
 /// # use hazel_bitboard::{bitboard, bitboard::Bitboard};
-/// # use hazel_basic::square::*;
+/// # use hazel_core::square::*;
 ///
 /// let bb = bitboard!("d4", "c6");
 /// assert!(bb.is_set(D4));

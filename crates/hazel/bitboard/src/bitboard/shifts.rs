@@ -1,6 +1,6 @@
 
-use hazel_basic::direction::{Direction, DIRECTION_INDEX_OFFSETS};
-use hazel_basic::file::{NOT_A_FILE, NOT_H_FILE};
+use hazel_core::direction::{Direction, DIRECTION_INDEX_OFFSETS};
+use hazel_core::file::{NOT_A_FILE, NOT_H_FILE};
 use crate::bitboard::Bitboard;
 
 impl Bitboard {
@@ -39,7 +39,7 @@ impl Bitboard {
 
 #[cfg(test)]
 mod test {
-    use hazel_basic::square::*;
+    use hazel_core::square::*;
 
     use super::*;
 

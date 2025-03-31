@@ -2,11 +2,11 @@
 use hazel_representation::coup::rep::{Move, MoveType};
 use hazel_representation::game::chess::position::Position;
 
-use hazel_basic::direction::Direction;
-use hazel_basic::interface::Query;
-use hazel_basic::occupant::Occupant;
-use hazel_basic::piece::Piece;
-use hazel_basic::square::Square;
+use hazel_core::direction::Direction;
+use hazel_core::interface::Query;
+use hazel_core::occupant::Occupant;
+use hazel_core::piece::Piece;
+use hazel_core::square::Square;
 use hazel_bitboard::ColorMasks;
 
 
@@ -142,8 +142,8 @@ pub fn generate_moves(position: &Position) -> impl Iterator<Item = Move> {
 
 #[cfg(test)]
 mod tests {
-    use hazel_basic::square::*;
-    use hazel_basic::ben::BEN;
+    use hazel_core::square::*;
+    use hazel_core::ben::BEN;
     use hazel_representation::coup::rep::MoveType;
 
     use super::*;

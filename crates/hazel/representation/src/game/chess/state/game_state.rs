@@ -1,7 +1,7 @@
 /* TODO: Move this back to core.
 *
 use crate::board::PieceBoard;
-use hazel_basic::{interface::{Alter, Alteration}, position_metadata::PositionMetadata};
+use hazel_core::{interface::{Alter, Alteration}, position_metadata::PositionMetadata};
 
 #[derive(Clone, Default, Debug, PartialEq)]
 pub struct GameState {

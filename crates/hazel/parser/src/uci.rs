@@ -1,7 +1,7 @@
 use std::convert::TryFrom;
-use hazel_basic::piece::Piece;
+use hazel_core::piece::Piece;
 
-use hazel_basic::square::*;
+use hazel_core::square::*;
 use hazel_representation::coup::rep::{Move, MoveType};
 
 /// Represents a move in UCI format.

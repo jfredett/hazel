@@ -29,7 +29,7 @@ impl Square {
     /// Relative Movement
     ///
     /// ```
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     /// assert_eq!(A1.up(), Some(A2));
     /// assert_eq!(A8.up(), None);
     /// ```
@@ -42,7 +42,7 @@ impl Square {
     }
 
     /// ```
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     /// assert_eq!(A8.down(), Some(A7));
     /// assert_eq!(A1.down(), None);
     /// ```
@@ -55,7 +55,7 @@ impl Square {
     }
 
     /// ```
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     /// assert_eq!(H1.starboard(), None);
     /// assert_eq!(A1.starboard(), Some(B1));
     /// ```
@@ -68,7 +68,7 @@ impl Square {
     }
 
     /// ```
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     /// assert_eq!(A1.port(), None);
     /// assert_eq!(H1.port(), Some(G1));
     /// ```
@@ -89,8 +89,8 @@ impl Square {
     /// I use marching terms here. Each command is the command to march in a particular direction.
     ///
     /// ```
-    /// # use hazel_basic::square::*;
-    /// # use hazel_basic::color::Color;
+    /// # use hazel_core::square::*;
+    /// # use hazel_core::color::Color;
     /// assert_eq!(A1.forward(&Color::WHITE), Some(A2));
     /// assert_eq!(H8.forward(&Color::WHITE), None);
     /// assert_eq!(A1.forward(&Color::BLACK), None);
@@ -108,8 +108,8 @@ impl Square {
     }
 
     /// ```
-    /// # use hazel_basic::square::*;
-    /// # use hazel_basic::color::Color;
+    /// # use hazel_core::square::*;
+    /// # use hazel_core::color::Color;
     /// assert_eq!(A1.backward(&Color::WHITE), None);
     /// assert_eq!(H8.backward(&Color::WHITE), Some(H7));
     /// assert_eq!(A1.backward(&Color::BLACK), Some(A2));
@@ -127,8 +127,8 @@ impl Square {
     }
 
     /// ```
-    /// # use hazel_basic::square::*;
-    /// # use hazel_basic::color::Color;
+    /// # use hazel_core::square::*;
+    /// # use hazel_core::color::Color;
     /// assert_eq!(A1.left(&Color::WHITE), None);
     /// assert_eq!(H1.left(&Color::WHITE), Some(G1));
     /// assert_eq!(A1.left(&Color::BLACK), Some(B1));
@@ -147,8 +147,8 @@ impl Square {
 
 
     /// ```
-    /// # use hazel_basic::square::*;
-    /// # use hazel_basic::color::Color;
+    /// # use hazel_core::square::*;
+    /// # use hazel_core::color::Color;
     /// assert_eq!(H1.right(&Color::WHITE), None);
     /// assert_eq!(A1.right(&Color::WHITE), Some(B1));
     /// assert_eq!(H1.right(&Color::BLACK), Some(G1));
@@ -176,7 +176,7 @@ impl Square {
     /// Here I use sailing terms for the directions, so I don't class with the marching terms.
     ///
     /// ```
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     ///
     /// assert_eq!(D1.port_quarter(), None);
     /// assert_eq!(D4.port_quarter(), Some(C3));
@@ -189,7 +189,7 @@ impl Square {
     }
 
     /// ```
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     ///
     /// assert_eq!(D4.starboard_quarter(), Some(E3));
     /// assert_eq!(D1.starboard_quarter(), None);
@@ -202,7 +202,7 @@ impl Square {
     }
 
     /// ```
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     ///
     /// assert_eq!(D8.port_bow(), None);
     /// assert_eq!(D4.port_bow(), Some(C5));
@@ -215,7 +215,7 @@ impl Square {
     }
 
     /// ```
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     ///
     /// assert_eq!(D4.starboard_bow(), Some(E5));
     /// assert_eq!(D8.starboard_bow(), None);
@@ -231,8 +231,8 @@ impl Square {
     ///
     /// Similarly for the relative movements, it is helpful to have the diagonal movements
     /// ```
-    /// # use hazel_basic::square::*;
-    /// # use hazel_basic::color::Color;
+    /// # use hazel_core::square::*;
+    /// # use hazel_core::color::Color;
     ///
     /// assert_eq!(H8.left_oblique(&Color::BLACK), None);
     /// assert_eq!(D5.left_oblique(&Color::BLACK), Some(E4));
@@ -247,8 +247,8 @@ impl Square {
     }
 
     /// ```
-    /// # use hazel_basic::square::*;
-    /// # use hazel_basic::color::Color;
+    /// # use hazel_core::square::*;
+    /// # use hazel_core::color::Color;
     ///
     /// assert_eq!(H1.right_oblique(&Color::WHITE), None);
     /// assert_eq!(D4.right_oblique(&Color::WHITE), Some(E5));
@@ -263,8 +263,8 @@ impl Square {
     }
 
     /// ```
-    /// # use hazel_basic::square::*;
-    /// # use hazel_basic::color::Color;
+    /// # use hazel_core::square::*;
+    /// # use hazel_core::color::Color;
     /// assert_eq!(H1.left_rear_oblique(&Color::BLACK), None);
     /// assert_eq!(D4.left_rear_oblique(&Color::BLACK), Some(E5));
     /// assert_eq!(D4.left_rear_oblique(&Color::WHITE), Some(C3));
@@ -278,8 +278,8 @@ impl Square {
     }
 
     /// ```
-    /// # use hazel_basic::square::*;
-    /// # use hazel_basic::color::Color;
+    /// # use hazel_core::square::*;
+    /// # use hazel_core::color::Color;
     /// assert_eq!(H1.right_rear_oblique(&Color::WHITE), None);
     /// assert_eq!(D4.right_rear_oblique(&Color::WHITE), Some(E3));
     /// assert_eq!(D4.right_rear_oblique(&Color::BLACK), Some(C5));

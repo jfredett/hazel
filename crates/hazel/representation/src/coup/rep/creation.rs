@@ -8,7 +8,7 @@ impl Move {
     /// Creates a move from a given source and target index,
     /// ```
     /// # use hazel_representation::coup::rep::*;
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     /// // the move from d2 -> d4
     /// let m = Move::new(D2, D4, MoveType::QUIET);
     /// assert_eq!(m.source(), D2);
@@ -40,8 +40,8 @@ impl Move {
     ///
     /// ```
     /// # use hazel_representation::coup::rep::*;
-    /// # use hazel_basic::square::*;
-    /// # use hazel_basic::piece::Piece;
+    /// # use hazel_core::square::*;
+    /// # use hazel_core::piece::Piece;
     /// // the move from d2 -> d4
     /// let m = Move::from_notation("d2", "d4", MoveType::DOUBLE_PAWN);
     ///

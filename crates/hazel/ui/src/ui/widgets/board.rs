@@ -3,11 +3,11 @@
 
 use hazel_representation::board::simple::PieceBoard;
 
-use hazel_basic::interface::Query;
-use hazel_basic::color;
-use hazel_basic::occupant::Occupant;
-use hazel_basic::piece::Piece;
-use hazel_basic::square::*;
+use hazel_core::interface::Query;
+use hazel_core::color;
+use hazel_core::occupant::Occupant;
+use hazel_core::piece::Piece;
+use hazel_core::square::*;
 
 use ratatui::prelude::*;
 use ratatui::widgets::{Table, Row};

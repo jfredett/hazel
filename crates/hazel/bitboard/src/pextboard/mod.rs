@@ -1,7 +1,7 @@
 mod nominal_attacks;
 mod select_subset;
 
-use hazel_basic::{square::*, direction::Direction, piece::Piece};
+use hazel_core::{square::*, direction::Direction, piece::Piece};
 use crate::bitboard::Bitboard;
 
 use lazy_static::lazy_static;

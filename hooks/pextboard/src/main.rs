@@ -1,5 +1,5 @@
-use hazel_basic::square::Square;
-use hazel_basic::piece::Piece;
+use hazel_core::square::Square;
+use hazel_core::piece::Piece;
 use hazel_bitboard::{bitboard::Bitboard, pextboard};
 
 /// This example is a Profile Hook for the PEXTBoard implementation. It simply executes random rook

@@ -1,6 +1,6 @@
 [package]
-name = "hazel-basic"
-description = "Basic types and enums for talking about chess"
+name = "hazel-core"
+description = "Core types and enums for talking about chess"
 version = "0.1.0"
 authors.workspace = true
 edition.workspace = true
@@ -8,7 +8,7 @@ license.workspace = true
 repository.workspace = true
 
 [lib]
-name="hazel_basic"
+name="hazel_core"
 bench = false
 path="src/lib.rs"
 

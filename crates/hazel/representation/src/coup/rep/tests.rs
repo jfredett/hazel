@@ -95,8 +95,8 @@ mod castling {
 }
 
 mod disambiguate {
-    use hazel_basic::interface::{Alter, Alteration};
-    use hazel_basic::square::*;
+    use hazel_core::interface::{Alter, Alteration};
+    use hazel_core::square::*;
     use crate::board::PieceBoard;
 
     use super::*;
@@ -154,8 +154,8 @@ mod disambiguate {
 
 mod to_star {
     use crate::board::PieceBoard;
-    use hazel_basic::interface::Alter;
-    use hazel_basic::interface::Alteration;
+    use hazel_core::interface::Alter;
+    use hazel_core::interface::Alteration;
 
     use super::*;
 
@@ -315,13 +315,13 @@ mod proxy_methods {
 
 
 mod compilation {
-    use hazel_basic::ben;
-    use hazel_basic::ben::BEN;
-    use hazel_basic::position_metadata::PositionMetadata;
+    use hazel_core::ben;
+    use hazel_core::ben::BEN;
+    use hazel_core::position_metadata::PositionMetadata;
 
     use crate::board::simple::PieceBoard;
-    use hazel_basic::interface::Alter;
-    use hazel_basic::interface::Alteration;
+    use hazel_core::interface::Alter;
+    use hazel_core::interface::Alteration;
     use crate::coup::rep::MoveType;
 
     use super::*;

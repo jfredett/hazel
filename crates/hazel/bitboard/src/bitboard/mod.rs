@@ -1,4 +1,4 @@
-use hazel_basic::square::*;
+use hazel_core::square::*;
 
 /// Standard 64 bit bitboards
 ///
@@ -67,7 +67,7 @@ impl Bitboard {
     ///
     /// ```
     /// # use hazel_bitboard::bitboard::Bitboard;
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     /// let mut b = Bitboard::empty();
     /// assert!(b.is_empty());
     /// b.set(A1);
@@ -81,7 +81,7 @@ impl Bitboard {
     ///
     /// ```
     /// # use hazel_bitboard::bitboard::Bitboard;
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     /// let mut b = Bitboard::empty();
     /// assert!(b.is_empty());
     /// b.set(A1);
@@ -106,7 +106,7 @@ impl Bitboard {
     ///
     /// ```
     /// # use hazel_bitboard::bitboard::Bitboard;
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     /// let mut b = Bitboard::empty();
     /// assert!(!b.is_set(A1));
     /// b.set(A1);
@@ -121,7 +121,7 @@ impl Bitboard {
     ///
     /// ```
     /// # use hazel_bitboard::bitboard::Bitboard;
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     /// let mut b = Bitboard::empty();
     /// b.set(A1);
     /// b.set(A2);
@@ -136,7 +136,7 @@ impl Bitboard {
     ///
     /// ```
     /// # use hazel_bitboard::bitboard::Bitboard;
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     /// let mut b = Bitboard::empty();
     /// assert!(!b.is_set(A1));
     /// b.set(A1);
@@ -158,7 +158,7 @@ impl Bitboard {
     /// unsets the bit at the given coordinates
     /// ```
     /// # use hazel_bitboard::bitboard::Bitboard;
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     /// let mut b = Bitboard::empty();
     /// assert!(!b.is_set(A1));
     /// b.flip(A1);
@@ -174,7 +174,7 @@ impl Bitboard {
     ///
     /// ```
     /// # use hazel_bitboard::bitboard::Bitboard;
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     /// let mut b = Bitboard::empty();
     /// b.set(A2);
     /// assert!(b.is_set(A2));
@@ -189,7 +189,7 @@ impl Bitboard {
     ///
     /// ```
     /// # use hazel_bitboard::bitboard::Bitboard;
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     /// let mut b = Bitboard::empty();
     /// assert_eq!(b.count(), 0);
     /// b.set(A1);

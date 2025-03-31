@@ -1,4 +1,4 @@
-use hazel_basic::ben::BEN;
+use hazel_core::ben::BEN;
 
 use crate::types::log::Log;
 use crate::{board::PieceBoard, coup::rep::Move};
@@ -151,7 +151,7 @@ mod tests {
     use game::delim::Delim;
 
     use crate::coup::rep::MoveType;
-    use hazel_basic::square::*;
+    use hazel_core::square::*;
     use crate::game::chess::PositionMetadata;
     use crate::*;
 

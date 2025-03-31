@@ -1,6 +1,6 @@
 #![allow(dead_code, unused_imports)]
 
-use hazel_basic::{ben::BEN, color::Color, interface::Query, occupant::Occupant, piece::Piece};
+use hazel_core::{ben::BEN, color::Color, interface::Query, occupant::Occupant, piece::Piece};
 use hazel_bitboard::bitboard::Bitboard;
 use nom::{branch::alt, bytes::complete::tag, character::complete::char, combinator::opt, IResult};
 
@@ -8,7 +8,7 @@ use hazel_representation::coup::rep::{Move, MoveType};
 
 use crate::pgn::parsers::*;
 
-use hazel_basic::square::*;
+use hazel_core::square::*;
 
 mod disambiguator;
 
@@ -376,7 +376,7 @@ mod tests {
 
     use hazel_representation::game::variation::Variation;
     use crate::uci::UCI;
-    use hazel_basic::constants::START_POSITION_FEN;
+    use hazel_core::constants::START_POSITION_FEN;
 
 
     #[test]

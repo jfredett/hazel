@@ -1,4 +1,4 @@
-use hazel_basic::square::Square;
+use hazel_core::square::Square;
 
 use super::*;
 
@@ -17,7 +17,7 @@ impl Move {
 
     /// ```
     /// # use hazel_representation::coup::rep::*;
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     /// // the move from d2 -> d4
     ///
     /// let m = Move::new(D2, D4, MoveType::DOUBLE_PAWN);
@@ -29,7 +29,7 @@ impl Move {
 
     /// ```
     /// # use hazel_representation::coup::rep::*;
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     /// // the move from d2 -> d4
     ///
     /// let m = Move::new(D2, D4, MoveType::DOUBLE_PAWN);
@@ -41,7 +41,7 @@ impl Move {
     /// Gets the target index from the compact move representation
     /// ```
     /// # use hazel_representation::coup::rep::*;
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     ///
     /// // the move from d2 -> d4
     ///
@@ -56,7 +56,7 @@ impl Move {
     /// Gets the target index from the compact move representation
     /// ```
     /// # use hazel_representation::coup::rep::*;
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     ///
     /// // the move from d2 -> d4
     ///
@@ -71,7 +71,7 @@ impl Move {
     /// True if the move indicates a promotion
     /// ```
     /// # use hazel_representation::coup::rep::*;
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     ///
     /// // the move from d2 -> d4
     /// let m1 = Move::new(D2, D4, MoveType::DOUBLE_PAWN);
@@ -89,8 +89,8 @@ impl Move {
     ///
     /// ```
     /// # use hazel_representation::coup::rep::*;
-    /// # use hazel_basic::square::*;
-    /// # use hazel_basic::piece::Piece;
+    /// # use hazel_core::square::*;
+    /// # use hazel_core::piece::Piece;
     ///
     /// // the move from d2 -> d4
     /// let m1 = Move::new(D2, D4, MoveType::DOUBLE_PAWN);
@@ -106,8 +106,8 @@ impl Move {
     /// on MoveType to interpret the data.
     /// ```
     /// # use hazel_representation::coup::rep::*;
-    /// # use hazel_basic::square::*;
-    /// # use hazel_basic::piece::Piece;
+    /// # use hazel_core::square::*;
+    /// # use hazel_core::piece::Piece;
     ///
     /// // the move from d2 -> d4
     /// let m1 = Move::new(D2, D4, MoveType::QUIET);

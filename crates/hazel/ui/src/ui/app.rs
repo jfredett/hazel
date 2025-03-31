@@ -1,7 +1,7 @@
 use hazel_representation::game::chess::state::tape_reader_state::TapeReaderState;
 use hazel_representation::board::PieceBoard;
-use hazel_basic::constants::START_POSITION_FEN;
-use hazel_basic::ben::BEN;
+use hazel_core::constants::START_POSITION_FEN;
+use hazel_core::ben::BEN;
 use hazel_engine::driver::hazel::{GetPosition, HazelResponse, WitchHazel};
 use hazel_engine::uci::UCIMessage;
 

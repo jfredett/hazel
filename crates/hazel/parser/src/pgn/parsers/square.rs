@@ -1,4 +1,4 @@
-use hazel_basic::file::File;
+use hazel_core::file::File;
 use nom::character::complete::one_of;
 
 use super::*;

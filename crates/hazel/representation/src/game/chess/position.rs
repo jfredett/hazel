@@ -1,16 +1,16 @@
 use std::sync::Arc;
 use std::{fmt::Debug, sync::RwLock};
 
-use hazel_basic::ben::BEN;
-use hazel_basic::color::Color;
-use hazel_basic::direction::Direction;
-use hazel_basic::interface::query::to_fen_position;
-use hazel_basic::occupant::Occupant;
-use hazel_basic::piece::Piece;
-use hazel_basic::position_metadata::PositionMetadata;
-use hazel_basic::square::Square;
-use hazel_basic::interface::{alter, query, Alter, Alteration, Query};
-use hazel_basic::zobrist::Zobrist;
+use hazel_core::ben::BEN;
+use hazel_core::color::Color;
+use hazel_core::direction::Direction;
+use hazel_core::interface::query::to_fen_position;
+use hazel_core::occupant::Occupant;
+use hazel_core::piece::Piece;
+use hazel_core::position_metadata::PositionMetadata;
+use hazel_core::square::Square;
+use hazel_core::interface::{alter, query, Alter, Alteration, Query};
+use hazel_core::zobrist::Zobrist;
 use hazel_bitboard::bitboard::Bitboard;
 use hazel_bitboard::ColorMasks;
 use hazel_bitboard::constants::move_tables::{KING_ATTACKS, KNIGHT_MOVES};
@@ -678,7 +678,7 @@ mod tests {
     use super::*;
     use crate::coup::rep::MoveType;
 
-    use hazel_basic::square::*;
+    use hazel_core::square::*;
     use hazel_bitboard::bitboard;
     use hazel_bitboard::constants::masks::*;
 
@@ -744,8 +744,8 @@ mod tests {
     }
 
     mod gamestate {
-        use hazel_basic::{ben::BEN, color::Color};
-        use hazel_basic::square::*;
+        use hazel_core::{ben::BEN, color::Color};
+        use hazel_core::square::*;
 
         use crate::{board::PieceBoard, coup::rep::{Move, MoveType}, game::position::Position};
 

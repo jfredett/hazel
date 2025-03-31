@@ -3,7 +3,7 @@
 use std::{collections::HashMap, sync::RwLock, fmt::Debug};
 
 // where does zobrist live?
-use hazel_basic::zobrist::*;
+use hazel_core::zobrist::*;
 
 pub mod atm;
 

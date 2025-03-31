@@ -2,15 +2,13 @@
 resolver = "2"
 members = [
     # Main libraries
-    "crates/hazel/basic",
     "crates/hazel/bitboard",
-    "crates/hazel/representation",
+    "crates/hazel/core",
     "crates/hazel/engine",
     "crates/hazel/generator",
     "crates/hazel/parser",
+    "crates/hazel/representation",
     "crates/hazel/ui",
-
-    # Extractable Libraries
     "crates/spell",
     "crates/witch",
 
@@ -34,7 +32,7 @@ license = "AGPL v3"
 repository = "https://github.com/jfredett/hazel"
 
 [workspace.dependencies]
-hazel-basic = { path = "./crates/hazel/basic" }
+hazel-core = { path = "./crates/hazel/core" }
 hazel-bitboard = { path = "./crates/hazel/bitboard" }
 hazel-representation = { path = "./crates/hazel/representation" }
 hazel-engine = { path = "./crates/hazel/engine" }

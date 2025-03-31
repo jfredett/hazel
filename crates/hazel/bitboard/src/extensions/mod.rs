@@ -1,5 +1,5 @@
-use hazel_basic::color::Color;
-use hazel_basic::file::File;
+use hazel_core::color::Color;
+use hazel_core::file::File;
 
 use crate::bitboard::Bitboard;
 use crate::constants::masks::{FILE_MASKS, RANK_2, RANK_7};

@@ -1,4 +1,4 @@
-use hazel_basic::{ben::BEN, interface::{alter, query, Alter, Query}};
+use hazel_core::{ben::BEN, interface::{alter, query, Alter, Query}};
 
 use crate::game::ChessGame;
 

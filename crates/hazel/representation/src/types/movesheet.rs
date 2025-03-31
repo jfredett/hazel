@@ -1,4 +1,4 @@
-use hazel_basic::{ben::BEN, interface::{Alter, Query}};
+use hazel_core::{ben::BEN, interface::{Alter, Query}};
 
 use crate::{board::PieceBoard, coup::rep::Move, game::{action::Action, ChessGame}, play::Play};
 
@@ -112,7 +112,7 @@ impl<T> From<&MoveSheet> for ChessGame<T> where T : Alter + Query + Default + Cl
 mod tests {
     use crate::board::PieceBoard;
     use crate::coup::rep::MoveType;
-    use hazel_basic::square::*;
+    use hazel_core::square::*;
 
     use super::*;
 

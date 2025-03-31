@@ -9,6 +9,6 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-hazel-basic.workspace = true
+hazel-core.workspace = true
 hazel-bitboard.workspace = true
 rand.workspace = true

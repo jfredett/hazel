@@ -1,4 +1,4 @@
-use hazel_basic::piece::Piece;
+use hazel_core::piece::Piece;
 use nom::character::complete::one_of;
 
 // TODO: Move this to extensions

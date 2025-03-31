@@ -3,7 +3,7 @@
 // TODO: To the bitboard crate
 
 use crate::bitboard::Bitboard;
-use hazel_basic::direction::Direction;
+use hazel_core::direction::Direction;
 
 use crate::bitboard;
 use lazy_static::lazy_static;

@@ -1,5 +1,5 @@
-use hazel_basic::occupant::Occupant;
-use hazel_basic::piece::Piece;
+use hazel_core::occupant::Occupant;
+use hazel_core::piece::Piece;
 use hazel_bitboard::pextboard;
 use hazel_representation::game::position::Position;
 use hazel_representation::coup::rep::{Move, MoveType};
@@ -42,10 +42,10 @@ fn generate_slider_moves(position: &Position, piece: Piece) -> impl Iterator<Ite
 
 #[cfg(test)]
 mod tests {
-    use hazel_basic::ben::BEN;
+    use hazel_core::ben::BEN;
     use itertools::Itertools;
 
-    use hazel_basic::square::*;
+    use hazel_core::square::*;
 
     use super::*;
 

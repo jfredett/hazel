@@ -1,4 +1,4 @@
-use hazel_basic::ben::BEN;
+use hazel_core::ben::BEN;
 
 use crate::{coup::rep::Move, game::action::Action};
 

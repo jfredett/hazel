@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 
 use hazel_parser::uci::UCI;
-use hazel_basic::ben::BEN;
+use hazel_core::ben::BEN;
 use witch::{MessageFor, Witch};
 use hazel_representation::game::position::Position;
 use crate::uci::UCIMessage;
@@ -91,7 +91,7 @@ mod tests {
     mod uci_messages {
         use crate::driver::hazel::GetState;
         use witch::WitchHandle;
-        use hazel_basic::constants::START_POSITION_FEN;
+        use hazel_core::constants::START_POSITION_FEN;
 
         use super::*;
 

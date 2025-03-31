@@ -1,4 +1,4 @@
-use hazel_basic::{interface::Query, square::Square};
+use hazel_core::{interface::Query, square::Square};
 use hazel_util::charray::{Charray, Origin};
 
 // FIXME: This stuff is all representational/higher level extensions to the interface, I think they

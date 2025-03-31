@@ -1,4 +1,4 @@
-use hazel_basic::interface::Alteration;
+use hazel_core::interface::Alteration;
 use spell::{cursor::Cursor, cursorlike::Cursorlike, tapelike::Tapelike};
 
 #[derive(Debug, Clone)]

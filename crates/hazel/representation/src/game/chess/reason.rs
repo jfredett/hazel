@@ -1,4 +1,4 @@
-use hazel_basic::color::Color;
+use hazel_core::color::Color;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Reason {

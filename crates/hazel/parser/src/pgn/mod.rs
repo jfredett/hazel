@@ -7,7 +7,7 @@ mod tokenizer;
 use std::path::Path;
 use std::io::Error;
 
-use hazel_basic::ben::BEN;
+use hazel_core::ben::BEN;
 use nom::{branch::alt, bytes::complete::tag, character::complete::{multispace0, multispace1, newline, one_of}, combinator::opt, multi::{many0, many1}, sequence::delimited, IResult};
 
 use hazel_representation::game::familiar::Familiar;
@@ -16,7 +16,7 @@ use crate::san::SAN;
 use crate::pgn::tokenizer::PGNToken;
 
 use crate::san::SANConversionError;
-use hazel_basic::square::Square;
+use hazel_core::square::Square;
 
 
 use tag_pair::*;

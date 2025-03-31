@@ -1,4 +1,4 @@
-use hazel_basic::ben::BEN;
+use hazel_core::ben::BEN;
 use ratatui::{buffer::Buffer, prelude::*, text::Text, widgets::Widget};
 
 
@@ -44,7 +44,7 @@ impl Widget for &FEN {
 
 #[cfg(test)]
 mod tests {
-    use hazel_basic::constants::START_POSITION_FEN;
+    use hazel_core::constants::START_POSITION_FEN;
 
     use super::*;
 

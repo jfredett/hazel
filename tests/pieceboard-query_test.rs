@@ -4,8 +4,8 @@ use hazel_representation::board::simple::PieceBoard;
 use fixtures::POS2_KIWIPETE_FEN;
 
 use hazel_representation::extensions::query::display_board;
-use hazel_basic::square::*;
-use hazel_basic::interface::Query;
+use hazel_core::square::*;
+use hazel_core::interface::Query;
 
 #[test]
 fn display_test() {
@@ -31,7 +31,7 @@ fn display_test() {
 
 mod to_fen_position {
 
-    use hazel_basic::ben::BEN;
+    use hazel_core::ben::BEN;
 
     use super::*;
 
@@ -40,7 +40,7 @@ mod to_fen_position {
         let mut p = PieceBoard::default();
         p.set_startpos();
 
-        let actual = hazel_basic::interface::query::to_fen_position(&p);
+        let actual = hazel_core::interface::query::to_fen_position(&p);
         let expected = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 
         assert_eq!(format!("{}", actual), expected);
@@ -51,7 +51,7 @@ mod to_fen_position {
         let mut p = PieceBoard::default();
         p.set_fen(BEN::new(POS2_KIWIPETE_FEN));
 
-        let actual = hazel_basic::interface::query::to_fen_position(&p);
+        let actual = hazel_core::interface::query::to_fen_position(&p);
         let expected = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R";
 
         assert_eq!(format!("{}", actual), expected);

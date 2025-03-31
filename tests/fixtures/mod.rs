@@ -3,8 +3,8 @@
 // TODO: These should be refactored to be rs-test fixtures. That way I can scale perft across the various
 // other positions to chase out remaining bugs in movegen.
 
-use hazel_basic::color::Color;
-use hazel_basic::square::*;
+use hazel_core::color::Color;
+use hazel_core::square::*;
 use hazel_representation::coup::rep::{Move, MoveType};
 
 /// FEN for an empty board.

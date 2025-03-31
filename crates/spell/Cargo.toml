@@ -14,7 +14,7 @@ path="src/lib.rs"
 [dependencies]
 tracing.workspace = true
 dynamic-array.workspace = true
-hazel-basic.workspace = true
+hazel-core.workspace = true
 
 [dev-dependencies]
 tracing-test.workspace = true

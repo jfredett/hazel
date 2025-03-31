@@ -1,4 +1,4 @@
-use hazel_basic::{interface::Alteration, position_metadata::PositionMetadata};
+use hazel_core::{interface::Alteration, position_metadata::PositionMetadata};
 
 use crate::extensions::query::display_board;
 

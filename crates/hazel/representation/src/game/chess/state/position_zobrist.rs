@@ -1,4 +1,4 @@
-use hazel_basic::{interface::{Alter, Alteration}, zobrist::Zobrist};
+use hazel_core::{interface::{Alter, Alteration}, zobrist::Zobrist};
 
 
 #[derive(PartialEq, Debug, Default, Clone, Copy)]

@@ -1,6 +1,6 @@
 use crate::bitboard::Bitboard;
-use hazel_basic::direction::Direction;
-use hazel_basic::square::*;
+use hazel_core::direction::Direction;
+use hazel_core::square::*;
 
 use lazy_static::lazy_static;
 

@@ -144,7 +144,7 @@ impl RankFile {
 
     /// Sets the iterator to go left to right, snaps the file to the leftmost value.
     /// ```
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     ///
     /// let mut a = RankFile::default();
     /// a.left_to_right();
@@ -160,7 +160,7 @@ impl RankFile {
 
     /// Sets the iterator to go right to left, snaps the file to the rightmost value.
     /// ```
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     ///
     /// let mut a = RankFile::default();
     /// a.right_to_left();
@@ -176,7 +176,7 @@ impl RankFile {
 
     /// Sets the iterator to go upward, snaps the rank to the bottommost value.
     /// ```
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     ///
     /// let mut a = RankFile::default();
     /// a.upward();
@@ -192,7 +192,7 @@ impl RankFile {
 
     /// Sets the iterator to go downward, snaps the rank to the topmost value.
     /// ```
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     ///
     /// let mut a = RankFile::default();
     /// a.downward();
@@ -208,7 +208,7 @@ impl RankFile {
 
     /// Sets the start square for the iterator
     /// ```
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     ///
     /// let mut a = RankFile::default();
     /// a.start_on(H1);
@@ -224,7 +224,7 @@ impl RankFile {
     /// Returns the current square of the iterator, generally not needed (the `PartialEq`
     /// implementation allows direct comparison with a `Square`).
     /// ```
-    /// # use hazel_basic::square::*;
+    /// # use hazel_core::square::*;
     ///
     /// let mut a = RankFile::default();
     /// a.start_on(H1);

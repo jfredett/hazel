@@ -1,5 +1,5 @@
 // Square Notations
-pub use hazel_basic::square; // Represent a Square as an index with 0 at a1 and 63 at h8
+pub use hazel_core::square; // Represent a Square as an index with 0 at a1 and 63 at h8
 // pub mod bitsquare; // Represent a Square as a bitboard with 1 at a1 and 2^63 at h8
 // pub mod coord; // Represent a Square as a coordinate with a file and rank
 

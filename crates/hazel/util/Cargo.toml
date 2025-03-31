@@ -12,7 +12,7 @@ name="hazel_util"
 path="src/lib.rs"
 
 [dependencies]
-hazel-basic.workspace = true
+hazel-core.workspace = true
 tokio-stream.workspace = true
 tokio.workspace = true
 

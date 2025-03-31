@@ -19,11 +19,11 @@
 // In any case, investigating const time for this code I think makes sense.
 
 
-use hazel_basic::square::*;
-use hazel_basic::{file::File, interface::Query};
-use hazel_basic::piece::Piece;
-use hazel_basic::occupant::Occupant;
-use hazel_basic::color::Color;
+use hazel_core::square::*;
+use hazel_core::{file::File, interface::Query};
+use hazel_core::piece::Piece;
+use hazel_core::occupant::Occupant;
+use hazel_core::color::Color;
 
 use serde::{Deserialize, Serialize};
 

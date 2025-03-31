@@ -12,7 +12,7 @@ path="src/lib.rs"
 
 [dependencies]
 dynamic-array.workspace = true
-hazel-basic.workspace = true
+hazel-core.workspace = true
 hazel-bitboard.workspace = true
 hazel-util.workspace = true
 lazy_static.workspace = true

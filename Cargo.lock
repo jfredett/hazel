@@ -372,7 +372,17 @@ dependencies = [
 ]
 
 [[package]]
-name = "hazel-basic"
+name = "hazel-bitboard"
+version = "0.1.0"
+dependencies = [
+ "hazel-core",
+ "lazy_static",
+ "quickcheck",
+ "quickcheck_macros",
+]
+
+[[package]]
+name = "hazel-core"
 version = "0.1.0"
 dependencies = [
  "mutants",
@@ -383,22 +393,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "hazel-bitboard"
-version = "0.1.0"
-dependencies = [
- "hazel-basic",
- "lazy_static",
- "quickcheck",
- "quickcheck_macros",
-]
-
-[[package]]
 name = "hazel-engine"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "hazel-basic",
  "hazel-bitboard",
+ "hazel-core",
  "hazel-parser",
  "hazel-representation",
  "mutants",
@@ -411,8 +411,8 @@ dependencies = [
 name = "hazel-generator"
 version = "0.1.0"
 dependencies = [
- "hazel-basic",
  "hazel-bitboard",
+ "hazel-core",
  "hazel-representation",
  "itertools 0.14.0",
  "similar-asserts",
@@ -425,8 +425,8 @@ dependencies = [
 name = "hazel-parser"
 version = "0.1.0"
 dependencies = [
- "hazel-basic",
  "hazel-bitboard",
+ "hazel-core",
  "hazel-representation",
  "nom",
  "rand",
@@ -439,8 +439,8 @@ name = "hazel-representation"
 version = "0.1.0"
 dependencies = [
  "dynamic-array",
- "hazel-basic",
  "hazel-bitboard",
+ "hazel-core",
  "hazel-util",
  "lazy_static",
  "mutants",
@@ -460,8 +460,8 @@ dependencies = [
 name = "hazel-test"
 version = "0.1.0"
 dependencies = [
- "hazel-basic",
  "hazel-bitboard",
+ "hazel-core",
  "hazel-engine",
  "hazel-generator",
  "hazel-representation",
@@ -482,8 +482,8 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "dynamic-array",
- "hazel-basic",
  "hazel-bitboard",
+ "hazel-core",
  "hazel-engine",
  "hazel-parser",
  "hazel-representation",
@@ -507,7 +507,7 @@ dependencies = [
 name = "hazel-util"
 version = "0.1.0"
 dependencies = [
- "hazel-basic",
+ "hazel-core",
  "tokio",
  "tokio-stream",
 ]
@@ -800,8 +800,8 @@ checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
 name = "pextboard-test"
 version = "1.0.0"
 dependencies = [
- "hazel-basic",
  "hazel-bitboard",
+ "hazel-core",
  "rand",
 ]
 
@@ -1133,7 +1133,7 @@ name = "spell"
 version = "0.1.0"
 dependencies = [
  "dynamic-array",
- "hazel-basic",
+ "hazel-core",
  "tracing",
  "tracing-test",
 ]

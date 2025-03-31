@@ -21,8 +21,8 @@ impl Display for PieceBoard {
 mod tests {
     use super::*;
 
-    use hazel_basic::interface::Query;
-    use hazel_basic::{piece::Piece, square::*};
+    use hazel_core::interface::Query;
+    use hazel_core::{piece::Piece, square::*};
     use crate::board::simple::Occupant;
 
 

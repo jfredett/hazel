@@ -1,5 +1,5 @@
-use hazel_basic::{file::File, piece::Piece};
-use hazel_basic::square::*;
+use hazel_core::{file::File, piece::Piece};
+use hazel_core::square::*;
 
 use crate::pgn::parsers::*;
 

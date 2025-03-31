@@ -1,9 +1,9 @@
-use hazel_basic::zobrist::HazelZobrist;
+use hazel_core::zobrist::HazelZobrist;
 use hazel_representation::{coup::rep::{Move, MoveType}, game::position::Position};
-use hazel_basic::{ben::BEN, zobrist::Zobrist};
-use hazel_basic::{color::Color, piece::Piece};
-use hazel_basic::zobrist::ZOBRIST_TABLE_SIZE;
-use hazel_basic::square::*;
+use hazel_core::{ben::BEN, zobrist::Zobrist};
+use hazel_core::{color::Color, piece::Piece};
+use hazel_core::zobrist::ZOBRIST_TABLE_SIZE;
+use hazel_core::square::*;
 use quickcheck_macros::quickcheck;
 
 mod zobrist_table {
@@ -53,7 +53,7 @@ mod zobrist_table {
 
 mod zobrist {
 
-    use hazel_basic::interface::{Alter, Alteration};
+    use hazel_core::interface::{Alter, Alteration};
 
     use super::*;
 
