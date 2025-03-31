@@ -3126,3 +3126,39 @@ a lot with getting the engine working correctly and saves me a ton of time tryin
 be, I can just focus on getting the suite to pass.
 
 That's enough for one day though, the rest of the renaming tomorrow I think, then on to refactoring.
+
+## 1005 - spring-cleaning-1
+
+```
+        FAIL [   0.017s] hazel-test::zobrist zobrist::zobrist_update_is_idempotent
+──── STDOUT:             hazel-test::zobrist zobrist::zobrist_update_is_idempotent
+
+running 1 test
+test zobrist::zobrist_update_is_idempotent ... FAILED
+
+failures:
+
+failures:
+    zobrist::zobrist_update_is_idempotent
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
+
+──── STDERR:             hazel-test::zobrist zobrist::zobrist_update_is_idempotent
+[tests/zobrist_test.rs:126:13] z1 = Z|0x0000000000000000|
+[tests/zobrist_test.rs:126:13] z2 = Z|0x0000000000000000|
+
+thread 'zobrist::zobrist_update_is_idempotent' panicked at /home/jfredett/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/quickcheck-1.0.3/src/tester.rs:165:28:
+[quickcheck] TEST FAILED. Arguments: (Assert <b Kk - 8 55390>, Assert <b Kk - 8 31393>)
+```
+
+This is an interesting failure, look at those metadata asserts resulting in a null. Very interesting. It is not
+particularly common, I assume this is a natural collision, and I'm mostly curious about what components of the thing
+it's sensitive too. This test is pretty simple, it takes two random alterations and then calculates:
+
+```rust
+z1 == z1 ^ z2 ^ z2
+```
+
+Verifying that the zobrist self-inverts, basically. I only log the values out, not the alterations, so I've changed
+that, but since the test is flaky, it's hard to reproduce, so I added additional logging and hopefully I'll catch one
+before too long.

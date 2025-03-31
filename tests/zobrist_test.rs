@@ -105,6 +105,11 @@ mod zobrist {
 
 
 
+    // BUG: This occasionally fails when it finds a collision, that's not necessarily a problem, so
+    // long as we can isolate which alteration instances cause it and then maybe tweak things to
+    // prevent it. So long as it's rare I don't think it's a problem.
+    //
+    // ... and a finger curls on the monkey's paw.
     #[quickcheck]
     fn zobrist_update_is_idempotent(alteration: Alteration, alteration2: Alteration) -> bool {
         // this is mostly to allow the non-zero checking later, which makes sure we are
@@ -123,6 +128,7 @@ mod zobrist {
         if z1 != Zobrist::empty() && z2 != Zobrist::empty() && z1 == z2 {
             true
         } else {
+            dbg!(alteration, alteration2);
             dbg!(z1, z2);
             false
         }
