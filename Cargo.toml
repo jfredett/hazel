@@ -41,7 +41,7 @@ tokio-util = { version = "0.7.14", features = ["io"] }
 tracing = "0.1"
 tracing-appender = "0.2"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
-tui-logger = { version = "0.15.0", features = ["tracing-support"] }
+tui-logger = { version = "0.17.0", features = ["tracing-support"] }
 yaml-rust = "0.4.1"
 
 [dev-dependencies]
