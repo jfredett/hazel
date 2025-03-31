@@ -24,33 +24,49 @@
             perSystem = { pkgs, system, ... }: let
                 rustpkg = (fenix.packages.${system}.fromManifestFile rust-manifest).completeToolchain;
                 fastchess = pkgs.callPackage ./nix/fastchess.nix { };
-            in {
-                devshells.default = {
-                    motd = ''Double double, toil and trouble.'';
-
-                    packages = with pkgs; [
-                        fastchess
+                deps = with pkgs; rec {
+                    dev = [
                         bacon
-                        cargo-llvm-cov
-                        cargo-mutants
-                        cargo-nextest
-                        cargo-insta
-                        cargo-udeps
-                        clang
                         cloc
                         gnuplot
                         imhex
-                        just
-                        libcxx
                         linuxKernel.packages.linux_6_6.perf
-                        mold
                         perf-tools
                         plantuml
                         timg
+                    ] ++ ci;
+                    ci = [
+                        cargo-insta
+                        cargo-llvm-cov
+                        cargo-mutants
+                        cargo-nextest
+                        cargo-udeps
+                        clang
+                        fastchess
+                        just
+                        libcxx
+                        mold
                         rustpkg
                         stockfish
                     ];
+                };
+            in {
+                packages = {
+                    inherit fastchess;
 
+                    ci = pkgs.writeShellApplication {
+                        name = "ci";
+                        runtimeInputs = deps.ci;
+                        text = /* bash */ ''
+                            just ci
+                        '';
+                    };
+
+
+                };
+                devshells.default = {
+                    motd = ''Double double, toil and trouble.'';
+                    packages = deps.dev;
                 };
             };
         };

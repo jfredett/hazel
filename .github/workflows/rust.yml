@@ -9,38 +9,26 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
+permissions:
+  contents: read
+
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
-    - name: Build
-      run: cargo build
-
-    - name: Install just
-      uses: extractions/setup-just@dd310ad5a97d8e7b41793f8ef055398d51ad4de6
-
-    - name: Install Nextest
-      uses: baptiste0928/cargo-install@v3
+    - uses: cachix/install-nix-action@v27
       with:
-        crate: cargo-nextest
+        nix_path: nixpkgs=channel:nixos-unstable
 
-    - name: Install Stockfish
-      run: sudo apt install -y stockfish
+    - name: Run tests
+      run: |
+        nix run .#ci --impure
 
-    - name: Install cargo-llvm-cov
-      uses: taiki-e/install-action@cargo-llvm-cov
-
-    - name: Run Tests
-      run: just ci
-
-    - name: Generate code coverage
-      run: just coverage
-
-    - name: Upload coverage to Codecov
+    - name: Upload coverage
       uses: codecov/codecov-action@v5
       with:
-        token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+        token: ${{ secrets.CODECOV_TOKEN }}
         files: .lcov
         fail_ci_if_error: false
