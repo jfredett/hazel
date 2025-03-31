@@ -23,11 +23,13 @@
 
             perSystem = { pkgs, system, ... }: let
                 rustpkg = (fenix.packages.${system}.fromManifestFile rust-manifest).completeToolchain;
+                fastchess = pkgs.callPackage ./nix/fastchess.nix { };
             in {
                 devshells.default = {
                     motd = ''Double double, toil and trouble.'';
 
                     packages = with pkgs; [
+                        fastchess
                         bacon
                         cargo-llvm-cov
                         cargo-mutants
