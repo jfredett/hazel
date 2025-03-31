@@ -3114,3 +3114,15 @@ interface/ # probably can just live in `game`
 ```
 
 That should simplify it a lot and I think I'm done reorganizing after that.
+
+## 0052 - spring-cleaning-1
+
+I went ahead and got `fastchess` installed via a derivation in `nix/fastchess.nix`. This'll build on the first entry,
+which sucks a bit, but maybe I can delay that later by hiding the `fastchess` acceptance tests working behind a flake
+app or something.
+
+Speaking of, the main purpose for `fastchess` is going to be the `UCI` compliance tool that just came out, that'll help
+a lot with getting the engine working correctly and saves me a ton of time trying to decipher what the semantics should
+be, I can just focus on getting the suite to pass.
+
+That's enough for one day though, the rest of the renaming tomorrow I think, then on to refactoring.
