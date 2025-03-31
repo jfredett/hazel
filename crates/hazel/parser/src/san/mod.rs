@@ -374,14 +374,14 @@ impl TryFrom<SAN> for Move {
 mod tests {
     use super::*;
 
-    use hazel::constants::START_POSITION_FEN;
     use hazel::game::variation::Variation;
     use crate::uci::UCI;
+    use hazel_basic::constants::START_POSITION_FEN;
 
 
     #[test]
     fn new_works() {
-        let ben = BEN::new(START_POSITION_FEN);
+        let ben = BEN::start_position();
         let san = SAN::new(ben);
         assert_eq!(san.context, ben);
         assert_eq!(san.source_piece, None);

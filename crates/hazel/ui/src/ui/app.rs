@@ -1,5 +1,6 @@
 use hazel::game::chess::state::tape_reader_state::TapeReaderState;
-use hazel::{board::PieceBoard, constants::START_POSITION_FEN};
+use hazel::board::PieceBoard;
+use hazel_basic::constants::START_POSITION_FEN;
 use hazel_basic::ben::BEN;
 use hazel_engine::driver::{GetPosition, HazelResponse, WitchHazel};
 use hazel_engine::uci::UCIMessage;

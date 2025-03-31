@@ -1,6 +1,6 @@
 use hazel_basic::{ben::BEN, interface::{Alter, Query}};
 
-use crate::{board::PieceBoard, constants::START_POSITION_FEN, coup::rep::Move, game::{action::Action, ChessGame}, play::Play};
+use crate::{board::PieceBoard, coup::rep::Move, game::{action::Action, ChessGame}, play::Play};
 
 #[derive(Clone, Debug)]
 pub enum MoveSheetEntry {
@@ -20,7 +20,7 @@ impl MoveSheet {
         Self {
             line: Vec::new(),
             sheet: Vec::new(),
-            initial_state: BEN::new(START_POSITION_FEN)
+            initial_state: BEN::start_position()
         }
     }
 

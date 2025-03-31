@@ -130,7 +130,7 @@ impl<T> Play for ChessGame<T> where T: Alter + Query + Default + Clone {
 #[cfg(test)]
 mod tests {
     use crate::board::PieceBoard;
-    use crate::{constants::START_POSITION_FEN, coup::rep::{Move, MoveType}, game::ChessGame};
+    use crate::{coup::rep::{Move, MoveType}, game::ChessGame};
     use hazel_basic::square::*;
 
     use super::*;
@@ -139,7 +139,7 @@ mod tests {
     #[test]
     fn correctly_calculates_position_after_several_moves() {
         let mut game : ChessGame<PieceBoard> = ChessGame::default();
-        game.apply_mut(&Action::Setup(BEN::new(START_POSITION_FEN)))
+        game.apply_mut(&Action::Setup(BEN::start_position()))
             .apply_mut(&Action::Make(Move::new(D2, D4, MoveType::DOUBLE_PAWN)));
 
         let expected_fen = BEN::new("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1");
@@ -164,10 +164,10 @@ mod tests {
         #[test]
         fn into_ben() {
             let mut game : ChessGame<PieceBoard> = ChessGame::default();
-            game.apply_mut(&Action::Setup(BEN::new(START_POSITION_FEN)));
+            game.apply_mut(&Action::Setup(BEN::start_position()));
 
             let ben : BEN = game.clone().into();
-            let expected_fen = BEN::new(START_POSITION_FEN);
+            let expected_fen = BEN::start_position();
 
             similar_asserts::assert_eq!(ben, expected_fen);
         }

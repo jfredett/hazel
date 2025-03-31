@@ -44,7 +44,7 @@ impl Widget for &FEN {
 
 #[cfg(test)]
 mod tests {
-    use hazel::constants::START_POSITION_FEN;
+    use hazel_basic::constants::START_POSITION_FEN;
 
     use super::*;
 

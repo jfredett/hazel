@@ -3081,3 +3081,36 @@ Something to chew on, anyway.
     re-enabled.
 10. nix run #ci
 11. -parser extraction
+
+# 31-MAR-2025
+
+## 0002 - spring-cleaning-1
+
+1. Cache needs to be refactored to a generic key, ultimately this will be a LRU cache with a generic key type.
+2. Spell needs to have Familiar refactored to rely on a SpellState trait
+3. Tape needs to be renamed to Spell
+4. [X] Move `BEN` -> -basic
+    - This means figuring out the `to_fen_position` extension, which might be able to stay put? IDK. In theory
+        that means this can just be moved over and no api change, since query is already over there.
+5. FIXMEs, TODOs, and the like need an audit.
+6. [X] Reorganize directory structure
+7. Rename -core to -representation
+8. rename -basic to -core
+9. [X] Get all the tests uncommented (in place) and passing.
+    - With caveats, there are still some tests pending a refactor, but I think I got everything that could be easily
+    re-enabled.
+10. nix run #ci
+11. [X] -parser extraction
+
+
+I think I might go ahead and merge this after a few final checks, and start `spring-cleaning-2`, maybe after the
+renames? In -core (right now), there is still:
+
+```
+types/log  # Goes away with the Familiar/Variation rewrite.
+coup/rep # should be renamed to `coup` and be a top level module
+game/* # needs heavy refactoring to use the new familiar system
+interface/ # probably can just live in `game`
+```
+
+That should simplify it a lot and I think I'm done reorganizing after that.

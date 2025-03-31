@@ -91,7 +91,7 @@ mod tests {
     mod uci_messages {
         use crate::driver::GetState;
         use witch::WitchHandle;
-        use hazel::constants::START_POSITION_FEN;
+        use hazel_basic::constants::START_POSITION_FEN;
 
         use super::*;
 

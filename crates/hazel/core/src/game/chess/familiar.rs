@@ -135,7 +135,7 @@ impl<'a> Familiar<'a> {
 mod tests {
 
     use hazel_basic::square::*;
-    use crate::{board::PieceBoard, constants::START_POSITION_FEN, coup::rep::{Move, MoveType}, game::{chess::PositionMetadata, variation::Variation, ChessGame}};
+    use crate::{board::PieceBoard, coup::rep::{Move, MoveType}, game::{chess::PositionMetadata, variation::Variation, ChessGame}};
 
     use super::*;
 
@@ -180,8 +180,6 @@ mod tests {
 
 
     mod rewind {
-        use crate::constants::EMPTY_POSITION_FEN;
-
         use super::*;
 
         #[quickcheck]
@@ -263,7 +261,7 @@ mod tests {
             familiar.advance_by(3);
             familiar.rewind_to_start();
 
-            let ben = BEN::new(EMPTY_POSITION_FEN);
+            let ben = BEN::empty();
             let mut expected_board = PieceBoard::default();
             expected_board.set_fen(ben);
 

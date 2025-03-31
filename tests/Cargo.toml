@@ -23,9 +23,11 @@ hazel-generator.workspace = true
 hazel-engine.workspace = true
 witch.workspace = true
 spell.workspace = true
+lazy_static.workspace = true
 
 
 ## TODO: Figure out how to automate this.
+## Maybe just combine them into one (or a few) test crates?
 
 [[test]]
 name = "zobrist"

@@ -468,6 +468,7 @@ dependencies = [
  "hazel-engine",
  "hazel-generator",
  "hazel-util",
+ "lazy_static",
  "quickcheck",
  "quickcheck_macros",
  "similar-asserts",

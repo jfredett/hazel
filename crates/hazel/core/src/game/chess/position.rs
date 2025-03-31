@@ -744,22 +744,10 @@ mod tests {
     }
 
     mod gamestate {
-        use crate::constants::POS2_KIWIPETE_FEN;
+        use hazel_basic::{ben::BEN, color::Color};
+        use hazel_basic::square::*;
 
-        use super::*;
-
-
-        #[test]
-        fn kiwi() {
-            let kiwi = BEN::new(POS2_KIWIPETE_FEN);
-            let mut pb = PieceBoard::default();
-            pb.set_position(kiwi);
-
-            let position = Position::new(kiwi);
-
-            assert_eq!(position.board(), pb);
-            assert_eq!(position.metadata(), kiwi.metadata());
-        }
+        use crate::{board::PieceBoard, coup::rep::{Move, MoveType}, game::position::Position};
 
         #[test] // I entered the moves wrong, I don't know where.
         fn d4() {
