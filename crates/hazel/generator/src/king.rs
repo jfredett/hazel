@@ -15,7 +15,8 @@ pub fn generate_moves(position: &Position) -> impl Iterator<Item = Move> {
 #[cfg(test)]
 mod tests {
 
-    use hazel::{coup::rep::{Move, MoveType}, notation::*};
+    use hazel::coup::rep::{Move, MoveType};
+    use hazel_basic::square::*;
     use hazel_basic::ben::BEN;
     use super::*;
 

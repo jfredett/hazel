@@ -4,11 +4,11 @@ use hazel_basic::{ben::BEN, color::Color, interface::Query, occupant::Occupant, 
 use hazel_bitboard::bitboard::Bitboard;
 use nom::{branch::alt, bytes::complete::tag, character::complete::char, combinator::opt, IResult};
 
-use crate::{coup::rep::{Move, MoveType}, notation::*};
-use crate::notation::pgn::parsers::*;
+use hazel::coup::rep::{Move, MoveType};
 
-use super::Square;
+use crate::pgn::parsers::*;
 
+use hazel_basic::square::*;
 
 mod disambiguator;
 
@@ -374,13 +374,9 @@ impl TryFrom<SAN> for Move {
 mod tests {
     use super::*;
 
-    use crate::coup::rep::MoveType;
-    use crate::{board::PieceBoard, constants::START_POSITION_FEN};
-    use crate::notation::*;
-    use crate::notation::uci::UCI;
-    use crate::game::variation::Variation;
-
-    use super::*;
+    use hazel::constants::START_POSITION_FEN;
+    use hazel::game::variation::Variation;
+    use crate::uci::UCI;
 
 
     #[test]

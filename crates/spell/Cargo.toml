@@ -13,7 +13,7 @@ path="src/lib.rs"
 
 [dependencies]
 tracing.workspace = true
-dynamic-array = "0.2.3"
+dynamic-array.workspace = true
 hazel-basic.workspace = true
 
 [dev-dependencies]

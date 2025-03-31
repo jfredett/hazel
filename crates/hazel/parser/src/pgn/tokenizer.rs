@@ -1,7 +1,7 @@
 use hazel_basic::color::Color;
 use nom::{branch::alt, bytes::complete::tag, character::complete::{char, alpha1, multispace0, newline, one_of}, combinator::opt, multi::many1, sequence::delimited, IResult};
 
-use crate::{game::reason::Reason};
+use hazel::game::reason::Reason;
 
 use super::TagPair;
 
@@ -186,7 +186,7 @@ mod tests {
             use super::*;
             #[test]
             fn imports_from_pgn_with_no_variations_and_halt() {
-                let (input, tokens) = PGNToken::tokenize_file("tests/fixtures/no-variations-and-no-halt.pgn").unwrap();
+                let (input, tokens) = PGNToken::tokenize_file("../../../tests/fixtures/no-variations-and-no-halt.pgn").unwrap();
                 let expected = [
                     PGNToken::GameStart,
                     PGNToken::TagPair(TagPair { name: "Event".to_string(), value: "No Variations, No Halt".to_string() }),
@@ -240,7 +240,7 @@ mod tests {
 
             #[test]
             fn imports_from_pgn_with_variations_and_no_halt() {
-                let (input, tokens) = PGNToken::tokenize_file("tests/fixtures/with-variations-no-halt.pgn").unwrap();
+                let (input, tokens) = PGNToken::tokenize_file("../../../tests/fixtures/with-variations-no-halt.pgn").unwrap();
                 let expected = [
                     PGNToken::GameStart,
                     PGNToken::TagPair(TagPair { name: "Event".to_string(), value: "With Variations".to_string() }),
@@ -273,7 +273,7 @@ mod tests {
 
             #[test]
             fn imports_from_pgn_with_variations_and_halt() {
-                let (input, tokens) = PGNToken::tokenize_file("tests/fixtures/with-variations-halts.pgn").unwrap();
+                let (input, tokens) = PGNToken::tokenize_file("../../../tests/fixtures/with-variations-halts.pgn").unwrap();
                 let expected = [
                     PGNToken::GameStart,
                     PGNToken::TagPair(TagPair { name: "Event".to_string(), value: "With Variations".to_string() }),
@@ -307,7 +307,7 @@ mod tests {
 
             #[test]
             fn imports_from_pgn_with_nested_variations_and_no_halt() {
-                let (input, tokens) = PGNToken::tokenize_file("tests/fixtures/with-nested-variations-no-halt.pgn").unwrap();
+                let (input, tokens) = PGNToken::tokenize_file("../../../tests/fixtures/with-nested-variations-no-halt.pgn").unwrap();
                 let expected = [
                     PGNToken::GameStart,
                     PGNToken::TagPair(TagPair { name: "Event".to_string(), value: "Nested Variations".to_string() }),
@@ -345,7 +345,7 @@ mod tests {
 
             #[test]
             fn imports_from_pgn_with_nested_variations_and_halt() {
-                let (input, tokens) = PGNToken::tokenize_file("tests/fixtures/with-nested-variations-halts.pgn").unwrap();
+                let (input, tokens) = PGNToken::tokenize_file("../../../tests/fixtures/with-nested-variations-halts.pgn").unwrap();
                 let expected = [
                     PGNToken::GameStart,
                     PGNToken::TagPair(TagPair { name: "Event".to_string(), value: "Nested Variations".to_string() }),
@@ -385,7 +385,7 @@ mod tests {
 
         #[test]
         fn imports_from_pgn_with_no_variations_and_halts() {
-            let (input, tokens) = PGNToken::tokenize_file("tests/fixtures/no-variations-and-halts.pgn").unwrap();
+            let (input, tokens) = PGNToken::tokenize_file("../../../tests/fixtures/no-variations-and-halts.pgn").unwrap();
 
             let expected = [
                 PGNToken::GameStart,

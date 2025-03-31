@@ -1,8 +1,8 @@
 use std::convert::TryFrom;
 use hazel_basic::piece::Piece;
 
-use crate::notation::square::*;
-use crate::coup::rep::{Move, MoveType};
+use hazel_basic::square::*;
+use hazel::coup::rep::{Move, MoveType};
 
 /// Represents a move in UCI format.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

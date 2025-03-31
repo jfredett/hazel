@@ -36,7 +36,6 @@ pub mod coup;
 pub mod extensions;
 pub mod game;
 pub mod interface;
-pub mod notation;
 #[macro_use]
 pub mod types;
 

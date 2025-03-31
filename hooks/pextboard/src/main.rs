@@ -1,4 +1,4 @@
-use hazel::notation::Square;
+use hazel_basic::square::Square;
 use hazel_basic::piece::Piece;
 use hazel_bitboard::{bitboard::Bitboard, pextboard};
 

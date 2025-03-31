@@ -2,12 +2,12 @@
 
 
 use hazel::board::simple::PieceBoard;
-use hazel::notation::*;
 
 use hazel_basic::interface::Query;
 use hazel_basic::color;
 use hazel_basic::occupant::Occupant;
 use hazel_basic::piece::Piece;
+use hazel_basic::square::*;
 
 use ratatui::prelude::*;
 use ratatui::widgets::{Table, Row};

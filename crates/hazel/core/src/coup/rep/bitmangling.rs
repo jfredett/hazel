@@ -1,3 +1,5 @@
+use hazel_basic::square::Square;
+
 use super::*;
 
 #[rustfmt::skip] pub const SOURCE_IDX_MASK   : u16   = 0b111111_000000_0_000;

@@ -3036,7 +3036,7 @@ If I instead had something like `Square` as a collection of ZSTs, each with _con
 ```rust
 
 #[quickcheck] {
-    A1.bitboard().is_set(A1.rank(), A1.file()) == true
+    A1.bitboard().is_set((A1.rank(), A1.file())) == true
 }
 
 ```
@@ -3055,7 +3055,7 @@ trait Square {
 
 struct A1; impl Square for A1;
 // ...
-
+```
 
 There aren't too many representations to target, but I could do similar things with `Piece`, `Color`, etc where it was
 needed. Essentially this is the same thing as how I tend to rely on `Query`, but where `Query` is really an open
@@ -3064,4 +3064,20 @@ be extended.
 
 Something to chew on, anyway.
 
+## 1620 (nice) - spring-cleaning-1
 
+1. Cache needs to be refactored to a generic key, ultimately this will be a LRU cache with a generic key type.
+2. Spell needs to have Familiar refactored to rely on a SpellState trait
+3. Tape needs to be renamed to Spell
+4. [X] Move `BEN` -> -basic
+    - This means figuring out the `to_fen_position` extension, which might be able to stay put? IDK. In theory
+        that means this can just be moved over and no api change, since query is already over there.
+5. FIXMEs, TODOs, and the like need an audit.
+6. [X] Reorganize directory structure
+7. Rename -core to -representation
+8. rename -basic to -core
+9. [X] Get all the tests uncommented (in place) and passing.
+    - With caveats, there are still some tests pending a refactor, but I think I got everything that could be easily
+    re-enabled.
+10. nix run #ci
+11. -parser extraction

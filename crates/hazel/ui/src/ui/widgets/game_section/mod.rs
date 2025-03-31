@@ -8,7 +8,7 @@ use board_section::BoardSection;
 use info_section::InfoSection;
 
 use hazel::board::simple::PieceBoard;
-use hazel::notation::pgn::PGN;
+use hazel_parser::pgn::PGN;
 
 lazy_static! {
     static ref LAYOUT : Layout = Layout::default()

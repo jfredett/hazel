@@ -19,7 +19,7 @@
 // In any case, investigating const time for this code I think makes sense.
 
 
-use crate::notation::*;
+use hazel_basic::square::*;
 use hazel_basic::{file::File, interface::Query};
 use hazel_basic::piece::Piece;
 use hazel_basic::occupant::Occupant;

@@ -134,7 +134,8 @@ impl<'a> Familiar<'a> {
 #[cfg(test)]
 mod tests {
 
-    use crate::{board::PieceBoard, constants::START_POSITION_FEN, coup::rep::{Move, MoveType}, game::{chess::PositionMetadata, variation::Variation, ChessGame}, notation::*};
+    use hazel_basic::square::*;
+    use crate::{board::PieceBoard, constants::START_POSITION_FEN, coup::rep::{Move, MoveType}, game::{chess::PositionMetadata, variation::Variation, ChessGame}};
 
     use super::*;
 

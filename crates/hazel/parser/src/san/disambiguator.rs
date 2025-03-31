@@ -1,6 +1,7 @@
 use hazel_basic::{file::File, piece::Piece};
 use hazel_basic::square::*;
-use crate::notation::pgn::parsers::*;
+
+use crate::pgn::parsers::*;
 
 use super::*;
 

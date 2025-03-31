@@ -29,7 +29,8 @@ mod tests {
     use hazel_basic::ben::BEN;
 
     use super::*;
-    use crate::{constants::START_POSITION_FEN, coup::rep::{Move, MoveType}, notation::*};
+    use hazel_basic::square::*;
+    use crate::{constants::START_POSITION_FEN, coup::rep::{Move, MoveType}};
 
     #[test]
     fn debug_formats_correctly() {

@@ -13,7 +13,7 @@ bench = false
 path="src/lib.rs"
 
 [dependencies]
-serde = { version = "1.0.203", features = ["derive"] }
+serde.workspace = true
 quickcheck.workspace = true
 
 [dev-dependencies]

@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use hazel::notation::uci::UCI;
+use hazel_parser::uci::UCI;
 use hazel_basic::ben::BEN;
 use witch::{MessageFor, Witch};
 use hazel::game::position::Position;

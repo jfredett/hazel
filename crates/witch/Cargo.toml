@@ -12,8 +12,8 @@ name="witch"
 path="src/lib.rs"
 
 [dependencies]
-tokio = { version = "1.44.0", features = ["full"] }
-async-trait = "0.1.87"
+tokio.workspace = true
+async-trait.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]

@@ -45,7 +45,7 @@ mod tests {
     use hazel_basic::ben::BEN;
     use itertools::Itertools;
 
-    use hazel::notation::*;
+    use hazel_basic::square::*;
 
     use super::*;
 

@@ -130,7 +130,8 @@ impl<T> Play for ChessGame<T> where T: Alter + Query + Default + Clone {
 #[cfg(test)]
 mod tests {
     use crate::board::PieceBoard;
-    use crate::{constants::START_POSITION_FEN, coup::rep::{Move, MoveType}, game::ChessGame, notation::*};
+    use crate::{constants::START_POSITION_FEN, coup::rep::{Move, MoveType}, game::ChessGame};
+    use hazel_basic::square::*;
 
     use super::*;
 

@@ -112,7 +112,7 @@ impl<T> From<&MoveSheet> for ChessGame<T> where T : Alter + Query + Default + Cl
 mod tests {
     use crate::board::PieceBoard;
     use crate::coup::rep::MoveType;
-    use crate::notation::*;
+    use hazel_basic::square::*;
 
     use super::*;
 

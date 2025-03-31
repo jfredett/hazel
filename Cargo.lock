@@ -422,6 +422,7 @@ dependencies = [
  "hazel-basic",
  "hazel-bitboard",
  "hazel-core",
+ "hazel-parser",
  "mutants",
  "tokio",
  "tracing",
@@ -436,6 +437,21 @@ dependencies = [
  "hazel-bitboard",
  "hazel-core",
  "itertools 0.14.0",
+ "similar-asserts",
+ "tracing",
+ "tracing-subscriber",
+ "tracing-test",
+]
+
+[[package]]
+name = "hazel-parser"
+version = "0.1.0"
+dependencies = [
+ "hazel-basic",
+ "hazel-bitboard",
+ "hazel-core",
+ "itertools 0.14.0",
+ "nom",
  "similar-asserts",
  "tracing",
  "tracing-subscriber",
@@ -471,6 +487,7 @@ dependencies = [
  "hazel-bitboard",
  "hazel-core",
  "hazel-engine",
+ "hazel-parser",
  "insta",
  "lazy_static",
  "nom",
