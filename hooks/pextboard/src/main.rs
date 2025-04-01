@@ -9,7 +9,8 @@ fn main() {
     let mut v = [Bitboard::empty(); 10];
     for i in 0..COUNT {
         let bb_in = rand::random::<u64>();
-        let sq = Square::new(rand::random::<usize>() % 64);
+        let sq_idx = rand::random::<u64>() % 64;
+        let sq = Square::new(sq_idx.try_into().unwrap());
         let blocks: Bitboard = Bitboard::new(bb_in);
 
         v[i % 10] = pextboard::attacks_for(Piece::Rook, sq, blocks);
