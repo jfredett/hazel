@@ -77,12 +77,13 @@ taghunt:
     @just _taghunt_count "BUG" "FIXME" "HACK" "NOTE" "TODO" "OQ"
 
 _taghunt TAG:
-    rg --glob \!Justfile --glob \!LOG.md {{TAG}} .
+    rg --glob \!Justfile --glob \!LOG.md --glob \!doc/ --glob \!assets/ {{TAG}} .
 
 _taghunt_count *TAGS:
     #!/usr/bin/env bash
     for tag in {{TAGS}}; do
-        echo -n "$tag=$(rg --glob \!Justfile $tag . | wc -l)<br/>"
+        result=$(rg --glob \!Justfile --glob \!LOG.md --glob \!doc/ --glob \!assets/ $tag . | wc -l)
+        echo -n "$tag=$result<br/>"
     done
     echo
 
