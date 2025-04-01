@@ -1,0 +1,23 @@
+[package]
+name = "hazel-parser"
+description = "Parsers for PGN, SAN, UCI, and others."
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+name="hazel_parser"
+path="src/lib.rs"
+
+[dependencies]
+hazel-representation.workspace = true
+hazel-core.workspace = true
+hazel-bitboard.workspace = true
+tracing.workspace = true
+nom.workspace = true
+rand.workspace = true
+
+[dev-dependencies]
+similar-asserts.workspace = true

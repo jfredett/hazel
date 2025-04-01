@@ -1,0 +1,24 @@
+[package]
+name = "hazel-generator"
+description = "Move generator subsystem for hazel"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+name="hazel_generator"
+path="src/lib.rs"
+
+[dependencies]
+hazel-representation.workspace = true
+hazel-core.workspace = true
+hazel-bitboard.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+itertools.workspace = true
+
+[dev-dependencies]
+similar-asserts.workspace = true
+tracing-test.workspace = true

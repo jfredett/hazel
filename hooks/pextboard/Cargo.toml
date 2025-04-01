@@ -1,0 +1,14 @@
+[package]
+name = "pextboard-test"
+description = "profile hook for pextboard implementation"
+version = "1.0.0"
+publish = false
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+hazel-core.workspace = true
+hazel-bitboard.workspace = true
+rand.workspace = true

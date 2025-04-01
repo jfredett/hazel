@@ -1,0 +1,21 @@
+[package]
+name = "hazel-bitboard"
+description = "A bitboard/pextboard type used by hazel"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+name="hazel_bitboard"
+bench = false
+path="src/lib.rs"
+
+[dependencies]
+hazel-core.workspace = true
+lazy_static.workspace = true
+
+[dev-dependencies]
+quickcheck.workspace = true
+quickcheck_macros.workspace = true

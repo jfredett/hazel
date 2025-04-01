@@ -65,14 +65,25 @@ mutants *ARGS:
     # cargo mutants -t 90 -j 8 -E 'bitboard' -E "intrinsics" -E "Mask" -E "tokio" -E "Stockfish" -E "ui" -E "PEXTBoard" --test-tool nextest -- --cargo-profile=mutants --all-targets {{ARGS}} -j 4
     cargo mutants -j 4 -E 'bitboard' -E "intrinsics" -E "Mask" -E "tokio" -E "Stockfish" -E "ui" -E "PEXTBoard" --test-tool nextest -- --cargo-profile=mutants --all-targets {{ARGS}} -j 4
 
+taghunt_to_file:
+    @mkdir -p target/
+    @just _taghunt "BUG" > target/BUG.tags
+    @just _taghunt "FIXME" > target/FIXME.tags
+    @just _taghunt "HACK" > target/HACK.tags
+    @just _taghunt "TODO" > target/TODO.tags
+    @just _taghunt "OQ" > target/OQ.tags
 
 taghunt:
-    @just _taghunt "BUG" "FIXME" "HACK" "NOTE" "TODO" "OQ"
+    @just _taghunt_count "BUG" "FIXME" "HACK" "NOTE" "TODO" "OQ"
 
-_taghunt *TAGS:
+_taghunt TAG:
+    rg --glob \!Justfile --glob \!LOG.md --glob \!doc/ --glob \!assets/ {{TAG}} .
+
+_taghunt_count *TAGS:
     #!/usr/bin/env bash
     for tag in {{TAGS}}; do
-        echo -n "$tag=$(rg --glob \!Justfile $tag . | wc -l)<br/>"
+        result=$(rg --glob \!Justfile --glob \!LOG.md --glob \!doc/ --glob \!assets/ $tag . | wc -l)
+        echo -n "$tag=$result<br/>"
     done
     echo
 

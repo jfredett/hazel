@@ -1,0 +1,511 @@
+# BUGs and HACKs
+
+These will be mostly turned to tickets; as I don't expect I'll work on them soon.
+
+- `./tests/fixtures/mod.rs:pub const POS5_BUGCATCHER_FEN: &str = "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8";`
+
+False positive
+
+- `./tests/fixtures/mod.rs:    pub static ref POS5_BUGCATCHER_COUNTS : Vec<usize> = vec![44, 1486, 62379, 2103487, 89941194];`
+
+False positive
+
+- `./tests/zobrist_test.rs:    // BUG: This occasionally fails when it finds a collision, that's not necessarily a problem, so`
+
+Real bug, I might make an Issue for this and hunt it down later. Some amount of collision is to be expected, this is not
+the best way to test for it. I probably need to build a proper test hook and really measure the rate of collision
+amongst seeds.
+
+Disposition: Removed, already fixed
+
+Nevermind, I just fixed it instead, the test was overcomplicate and just missing a `Zobrist` arbitrary impl.
+
+- `./crates/spell/src/tapelike.rs:10    // BUG: I *hate* this. I should be able to return a reference to an arbitrary range of a tape,`
+- `./crates/spell/src/lib.rs:18        // HACK: Gross.`
+
+This is more of a 'stinky design' issue, I think this is down to missing some kind of allocator/factory for
+Spells/Tapes, if such a thing existed, it could manage sharing subslices and the like in a safe way. 
+
+The second is related to the first in that it is a consequence of the same lack of factory
+
+Disposition: Enhancement Ticket, remove tag.
+
+- `./crates/hazel/parser/src/san/mod.rs:        // BUG: issue for pawn pushes is that we're using the disambiguator twice`
+
+This is a strange bug, need to promote it to a ticket.
+
+Disposition: Bug Ticket, remove tag.
+
+- `./crates/hazel/core/src/position_metadata.rs:                    // BUG: I have no idea why this fails, it shouldn't, I'm not sure what change`
+
+This is also strange, but I think it is mostly a semantics-of-the-alteration problem, I think I'm just going to leave it
+in place since I'm going to be tweaking this for a while.
+
+Disposition: leave tag
+
+- `./crates/hazel/core/src/square/movements.rs:    /// BUG : 14-Nov-2024 2336`
+- `./crates/hazel/core/src/square/movements.rs:    /// HACK: As if it weren't bad enough, the boolean parameter really makes me think some of this`
+- `./crates/hazel/core/src/square/movements.rs:        // HACK: I think this should be a method, probably on Color, but the name is taken for a`
+
+This I think is mostly used by the `SAN` stuff, I can _probably_ move that to `Position` at some point soon, maybe add
+that to P3. For now I'm just going to leave this in place.
+
+Disposition: leave tag
+
+- `./crates/hazel/representation/src/coup/rep/compilation.rs:                        // BUG: This doesn't let you promote to anything other than a queen, and`
+
+This is a shitty part of a shitty function that probably can and should be improved overall. For now it's 'good enough',
+it'll matter when I get to situations where promotion piece matters.
+
+Disposition: chore ticket
+
+- `./crates/spell/src/cursorlike.rs:            // HACK: This feels bad, but it works.`
+
+More semantics-of-the-tape issues, the extra rewind is ugly but harmless if it works.
+
+Disposition: leave tag
+
+- `./crates/hazel/ui/src/ui/widgets/tile/mod.rs:            // HACK: Obviously wrong, but pending loading up from a game/interacting with an engine`
+
+The entire UI is a hack at the moment, so I'm going to leave this until I come around to _really_ overhaul the UI, for
+real this time. No really.
+
+Disposition: leave tag
+
+- `./crates/hazel/representation/src/game/chess/mod.rs:                { // HACK: This has been hard-inlined to support the move of PositionMetadata to`
+- `./crates/hazel/representation/src/coup/rep/compilation.rs:        { // HACK: This has been hard inlined to make it possible to move PostionMetadata ->`
+
+Fix in both cases, no ticket. Just run through and get rid of the embeded scope, simplify where possible, etc.
+
+Disposition: Fix in place.
+
+- `./crates/hazel/representation/src/game/chess/familiar.rs:                    // FIXME: should this... do anything?`
+- `./crates/hazel/representation/src/game/chess/variation.rs:    //     // HACK: This is a prototype of sorts, eventually there should be a cursor that takes a`
+- `./crates/hazel/representation/src/game/chess/variation.rs:    // FIXME: This is fully subsumed by the position stuff, once I wire up varaition to tape and`
+- `./crates/hazel/representation/src/game/chess/variation.rs:    // FIXME: This is the current broken thing, I need to encode the assumptions wrt a variation`
+- `./crates/hazel/ui/src/ui/app.rs:                // BUG: pending `spellstate` trait move fam.seek(self.tapereader.desired_position);`
+- `./crates/hazel/ui/src/ui/widgets/tapereader/mod.rs:    // // FIXME: familiar refactor`
+- `./crates/hazel/representation/src/game/chess/variation.rs:    // TODO: This should return a proper Position, not a BEN, but Position didn't exist until`
+- `./crates/hazel/representation/src/game/chess/variation.rs:        // TODO: Replace this with a generic 'FastRep' type alias that is optimized for this case`
+- `./crates/hazel/representation/src/game/chess/variation.rs:    //         // TODO: Unify this with the From<ChessGame<Q>> impl somehow`
+- `./crates/hazel/representation/src/game/chess/familiar.rs:// TODO: port this to the new system.`
+- `./crates/hazel/representation/src/game/chess/familiar.rs:    // TODO: Temporarily fixing the types`
+
+This is broken functionality that I need to restore, it'll be fixed with the familiar refactor.
+
+Covered by the Variation/Familiar refactor
+
+Disposition: fix already planned, no action
+
+# FIXME
+
+Most of these will probably be 'leave in place' or 'fix in place', ideally mostly the latter. Goal is to classify them
+and try to group them so I can plan large changes to reduce them.
+
+- `./crates/witch/src/inner.rs:    // FIXME: Technically this duplicates WitchHandle#send, but IDK if I should rely on the extra`
+
+Disposition: leave tag
+
+I think the design of `Witch` is still so nascent, I know at some point the design will get more clear, but for the
+moment I'm just screwing around with the type system a bit so.
+
+- `./crates/spell/src/cursorlike.rs: // FIXME: I might just remove this trait altogether, and use Deref to allow easier access to the`
+- `./crates/spell/src/lib.rs:    // FIXME: I dislike this, I wish I was sending back something that didn't require an`
+
+This is about `Cursorlike`, which is another "I don't know how this should work" situation. I think with `Spell` being
+independent of centralized storage -- like ultimately `Spell` should just point at some region of memory and _have a
+cursor_, just one with write privilieges, it would then hand out RO copies of it's cursor to other cursors. The Cursor
+would be limited to a specific slice of memory owned by whatever `Codex` that the `Spell` is being pulled from. Still,
+none of that needs a `Cursorlike`, it just requires regular types. Since the writer should spawn a cursor to do it's
+reading, though I suppose they should have similar navigation commands? IDK, this may stay, it may go, not sure.
+
+The second is the same story in a different place.
+
+Disposition: leave tag, let it stew
+
+- `./crates/hazel/util/src/lib.rs:mod mask; // FIXME: I think this is WIP, which is why I left it private? I honestly don't remember.`
+
+This was a remove dispo, but I might use it for the `fastchess` thing so I can run the test as part of my suite easily?
+
+Disposition: leave, remove this whole thing if I don't use it for the fastchess work
+
+- `./crates/hazel/util/src/cache/mod.rs: // FIXME: This probably belongs in a -util crate or something like.`
+
+Disposition: Removed, already fixed.
+
+- `./crates/hazel/util/src/cache/mod.rs:        // FIXME: Don't love the clone here, would prefer to return the borrow and let the struct`
+
+Disposition: Cache refactor is a feature.
+
+This is similar to the Codex thing above, I want to loan these out, probably I need to return an Arc, but it's all part
+of the cache refactor.
+
+- `./crates/hazel/representation/src/extensions/query.rs: // FIXME: This stuff is all representational/higher level extensions to the interface, I think they`
+
+Disposition: removed, already fixed.
+
+- `./crates/hazel/bitboard/src/pextboard/mod.rs:        /* FIXME: Ply is deprecated, new movegen should replicate this test.`
+- `./crates/hazel/bitboard/src/pextboard/mod.rs:        /* FIXME: Ply is deprecated, new movegen should replicate this test.`
+- `./crates/hazel/bitboard/src/pextboard/mod.rs:        /* FIXME: Ply is deprecated, new movegen should replicate this test.`
+
+Disposition: leave
+
+these'll get fixed when I'm rstest refactoring.
+
+- `./crates/hazel/bitboard/src/constants/move_tables.rs:    // FIXME: This overcomputes, I really want this as moves per color and movetype and position, I`
+- `./crates/hazel/bitboard/src/constants/move_tables.rs:    // FIXME: BitOps aren't const yet, so this is as close as I could get`
+
+Disposition: 1 remove (wasn't using PAWN_MOVES anyway), and one downgrade to note, since I can't do anything about
+BitOps being `const`
+
+- `./crates/spell/src/familiar/mod.rs:    // FIXME: This shouldn't be pub, but I don't want to fight it now`
+- `./crates/spell/src/familiar/mod.rs:// FIXME: I like this idea but it makes the types weird. Need to redesign the interfaces for this I`
+
+I think these are related, the first is because I need to talk to the cursor, the second was an attempt to fix that.
+I'll probably get to it while refactoring `spell`. I think I'll make it a bug ticket.
+
+Disposition: Attach to the Spell ticket
+
+- `./crates/hazel/core/src/piece.rs: // FIXME: I couldn't get the formatting right w/ unicode, but I don't want to lose`
+
+Disposition: Removed, already fixed
+
+I just deleted them, they're in git history, no need to hoard.
+
+- `./crates/hazel/representation/src/coup/rep/mod.rs:    /// FIXME: Technically this could catch a two square move from, e.g., a rook or queen. So`
+
+Disposition: Bug ticket
+
+The ticket should ensure to create a test to catch the mentioned case.
+
+- `./crates/hazel/core/src/square/iterator/mod.rs:        // FIXME: Ideally this mode gets deprecated in favor of the RankFile iterator`
+
+Disposition: Chore ticket
+
+I just need to go through and deprecate all other methods
+
+- `./crates/hazel/core/src/square/iterator/mod.rs:                // FIXME: I don't like this API, pretty sure I'm doing something wrong with the`
+
+Disposition: removed, wontfix
+
+the API has grown on me.
+
+- `./crates/hazel/core/src/position_metadata.rs:                    // FIXME: This should be an error type, probably.`
+- `./crates/hazel/engine/src/uci/mod.rs:// TODO: Error type`
+- `./crates/witch/src/error.rs:// TODO: I'd love to unify all the errors from Witch down to a single type, but that is not`
+- `./crates/hazel/core/src/interface/alter.rs:    // TODO: Eventually this should probably return a result type.`
+- `./crates/hazel/core/src/interface/alter.rs:    // TODO: Eventually this should probably return a result type.`
+
+Disposition: Enhancment ticket, "Error Type"
+
+There aren't a ton of panics around, but getting some unified error system will pay dividends later I think.
+
+- `./crates/hazel/core/src/ben/mod.rs:    // FIXME: This feels like a bug. Probably where-ever I use this is a bug.`
+
+Disposition: removed, already fixed
+
+wasn't using it anymore, so no bugs.
+
+- `./crates/hazel/core/src/square/movements.rs:    // FIXME: Move to bitboard crate`
+
+Disposition: removed, already fixed
+
+I moved it.
+
+- `./crates/hazel/core/src/square/display_debug.rs:        // FIXME: This is probably easier than I'm making it.`
+
+Disposition: removed, already fixed
+
+Who cares, it works, and probably won't ever break or be in a hot path.
+
+- `./crates/hazel/representation/src/board/simple/mod.rs:    // FIXME: this should probably be a RO reference`
+
+Disposition: I think I mean it should just be 'a reference' here, and maybe so, but until it's a problem I think this is
+PMO, removed.
+
+- `./crates/hazel/generator/src/pawn.rs:    // FIXME: this might could be better, IDK. The unwraps should never fail since we slid things`
+
+Disposition: Enhancement ticket, post benchmarking/full functionality.
+
+I don't want to lose that it's bad, not that it's easy to do that, it's ugly; but I also can't touch it till other stuff
+is in place.
+
+- `./crates/hazel/ui/src/ui/widgets/game_section/mod.rs:    // FIXME: this should really take a "Thing that has a variation" and not necessarily a PGN.`
+
+Disposition: leave it
+
+The UI needs lots of work, and I'll get to it someday.
+
+- `./crates/hazel/representation/src/game/chess/mod.rs:    // FIXME: This is bad, I don't like it.`
+
+Disposition: leave it
+
+I think this whole type is going to vanish when I get variation/position all working nicely.
+
+- `./crates/hazel/representation/src/game/chess/position.rs:    // FIXME: pub only for testing.`
+- `./crates/hazel/representation/src/game/chess/position.rs:        // FIXME: Ideally we'd actually just keep a reference to this cached thing instead of copying it`
+- `./crates/hazel/representation/src/game/chess/position.rs:    // FIXME: this, if anything, should probably return a result type.`
+- `./crates/hazel/representation/src/game/chess/position.rs:        // FIXME: this causes a sync to the writehead, I don't love the spook, but I think it should`
+- `./crates/hazel/representation/src/game/chess/position.rs:    // FIXME: the searches are super inefficient and very ugly. A better world is possible, you`
+
+Spell Refactor, the `Codex`/Cursor design should make it easier to share these across threads.
+
+Disposition: Leave it
+
+- `./crates/hazel/generator/src/lib.rs:                    // FIXME: This might not quite be aligned, but the other side of the branch works on my`
+
+Disposition: downgrade to NOTE
+
+I think this could be improved, but I don't care enough to try. To be honest, the only thing I probably should do is
+move it to the test crate so it can be reimported as part of the test toolbox.
+
+- `./crates/hazel/representation/src/types/log/mod.rs:            // FIXME: I think this should actually not constrain the write head to the length of`
+- `./crates/hazel/representation/src/types/log/cursor.rs:        // FIXME: I think this should probably not be None, but I don't know what the convenient`
+- `./crates/hazel/representation/src/types/log/write_head.rs:    // FIXME: Should this be conditional?`
+- `./crates/hazel/representation/src/types/log/write_head.rs:    // FIXME: I think these are going to be necessary, but I haven't adapted the tests below to`
+
+Disposition: leave it
+
+I think this type is going away, but I agree with the sentiment, the `Spell` should be able to write backwards and
+forwards 'infinitely'. The `Codex` should shuffle memory around as needed.
+
+- `./crates/hazel/parser/src/pgn/tag_pair.rs:    pub(crate) name: String, // FIXME: Temporary pub(crate)`
+- `./crates/hazel/parser/src/pgn/tag_pair.rs:    pub(crate) value: String, // FIXME: Temporary pub(crate)`
+
+Disposition: leave them
+
+It sucks, I should fix it, might hit it in the test refactor, might not, not a big enough thing for a ticket, not enough
+to go try to fix it now (I could just extend in the test module? IDK...)
+
+- `./crates/hazel/engine/src/uci/mod.rs: /* FIXME: 4-JAN-2025 1110`
+- `./crates/hazel/engine/src/uci/mod.rs:                // FIXME: This kinda sucks, but I don't think it gets better without using an`
+- `./crates/hazel/engine/src/driver/hazel/messages/uci_message.rs:                // FIXME: This is all kinda wrong now.`
+- `./crates/hazel/engine/src/driver/hazel/messages/uci_message.rs:        // FIXME: This I think is not working as I refactor `Position``
+
+******************
+***YOU ARE HERE***
+******************
+
+Disposition: Enhancement - Better UCI parser/structure
+
+this might come with some of the `Witch` related stuff when I get to `hazel-engine` and `witchhazel`.
+
+- `./crates/hazel/parser/src/san/mod.rs:    // FIXME: I don't know if I want to detect an illegal move at the parser level.`
+- `./crates/hazel/parser/src/san/mod.rs:            // FIXME: I don't think this is a valid fen that would generate this move notation`
+
+Disposition: remove both.
+
+In the former, I guess I am, so I'll continue to do so till it becomes inconvenient
+
+For the latter, it obviously is, I think I meant "This is a weird notation", and indeed, it is.
+
+# TODO
+
+I suspect most of these will be left to picked up by already planned activity. I'll do another audit after P2 and see
+what's left. This pass will mostly be to clear out the ones I've already handled or aren't relevant anymore.
+
+- `./tests/fixtures/mod.rs:// TODO: These should be refactored to be rs-test fixtures. That way I can scale perft across the various`
+- `./tests/fixtures/mod.rs:    /// TODO: This is kinda lousy, build.rs and yaml is probably the right way to provide this info to the testing stuff.`
+
+these are fine for now, will get handled with the rstest refactor.
+
+Disposition: leave tag
+
+- `./tests/Cargo.toml:## TODO: Figure out how to automate this.`
+
+I think this'll be alright to leave, I don't know what the integration test crate will look like just yet. I suspect I
+might just do an integration crate, maybe then a crate for each acceptance test (e.g., a crate for the `fastchess` UCI
+suite, etc).
+
+Disposition: leave tag
+
+- `./crates/witch/src/lib.rs:        //TODO`
+
+This'll develop along with `Witch`, but I'll leave it for now. New message types will be aplenty I'm sure.
+
+Disposition: leave tag
+
+- `./crates/hazel/generator/src/pawn.rs: // TODO: Remove the `color` parameter from all of these, it should come from the position metadata`
+
+Disposition: removed, already fixed.
+
+- `./crates/hazel/generator/src/pawn.rs:    // TODO: is this just `self.our_pawn_attacks() & bitboard!(ep_square)`?`
+
+Disposition: leave tag -- this is an optimization pass, but it's not obvious without the comment.
+
+
+- `./crates/spell/src/lib.rs:// TODO: Configuration-by-file-or-engine-option.`
+- `./crates/spell/src/lib.rs:// TODO: probably instead of this, the RwLock should be hidden by the Cursor`
+- `./crates/spell/src/lib.rs:        // TODO: In principle this should be a single copy to a subslice, calculate the range as`
+- `./crates/spell/src/lib.rs:        // TODO: Cache this and advance on demand`
+- `./crates/spell/src/lib.rs:            // TODO: Actually cache out, this just blanks the buffer and recurses.`
+
+Disposition: leave tag -- part of the Spell refactor
+
+- `./crates/hazel/generator/src/lib.rs:// TODO: Move this somewhere better, probably types?`
+
+Disposition: removed, already fixed.
+
+- `./crates/hazel/generator/src/lib.rs:    // TODO: Cache anything worth caching?`
+- `./crates/hazel/generator/src/lib.rs:        // TODO: Determine if we are in check`
+- `./crates/hazel/generator/src/lib.rs:        // TODO: in parallel?`
+
+Disposition: Leave
+
+- `./crates/hazel/engine/src/driver/hazel/mod.rs:    /// TODO: Replace this with a familiar`
+- `./crates/hazel/engine/src/driver/hazel/mod.rs:    /// TODO: Be able to share a cached version of this via an Arc.`
+- `./crates/hazel/ui/src/main.rs:    // TODO: actually parse arguments`
+- `./crates/hazel/engine/src/uci/connection.rs:// TODO: This should be a config setting from a config file/option/etc.`
+
+Disposition: leave tags
+
+- `./crates/hazel/engine/src/uci/connection.rs:        // TODO: I have no idea how to test this with the current design. Trying to get a stream`
+
+Disposition: Promote to BUG, remove with a new Bug ticket.
+
+- `./crates/hazel/bitboard/src/bitboard/mod.rs:    // TODO: usize -> Square`
+
+Disposition: removed, not used anywhere.
+
+- `./crates/hazel/bitboard/src/pextboard/mod.rs:    // TODO: sq -> Square`
+
+Disposition: removed. I just don't need to do this, it works, no need to muck with it.
+
+- `./crates/hazel/bitboard/src/constants/masks.rs: // TODO: To the bitboard crate`
+- `./crates/hazel/parser/src/pgn/parsers/file.rs: // TODO: Move this to extension section`
+- `./crates/hazel/parser/src/pgn/parsers/piece.rs: // TODO: Move this to extensions`
+- `./crates/hazel/parser/src/pgn/parsers/square.rs:// TODO: Move this to extensions`
+
+Disposition: removed, already fixed.
+
+- `./crates/hazel/engine/src/driver/hazel/messages/uci_message.rs:                // TODO: push position onto the variation in place (creating a variation if necessary),`
+- `./crates/hazel/engine/src/driver/hazel/messages/uci_message.rs:                //     // TODO: Calculate the endgame if it's a checkmate, otherwise it's an abort`
+
+Disposition: leave it, when I get to UCI implementing, this'll get fixed.
+
+
+- `./crates/hazel/core/src/ben/mod.rs:    // TODO: Move this to it's own function, it should produce a _Log_ of alteratons`
+- `./crates/hazel/core/src/ben/mod.rs:    // TODO: Nom.`
+
+Disposition: leave it
+
+- `./crates/hazel/core/src/interface/alter.rs:// // TODO: Use this instead of the `compile` methods all over`
+- `./crates/hazel/core/src/interface/alteration.rs:// TODO: This should be flagged off so it only gets built when it's needed?`
+
+Disposition: Leave it, higher priorities, not enough for a ticket.
+
+- `./crates/hazel/core/src/position_metadata.rs:    // TODO: These should be quickcheck`
+- `./crates/hazel/core/src/position_metadata.rs:// TODO: Flag this`
+- `./crates/hazel/core/src/position_metadata.rs:// TODO: Remove this`
+- `./crates/hazel/core/src/position_metadata.rs:// TODO: This should be extracted to the toplevel. It's not really notation-specific, it's`
+- `./crates/hazel/core/src/square/movements.rs:    // TODO: These should all be in Square and shared for everything to use.`
+- `./crates/hazel/core/src/square/movements.rs:    /// TODO: I'm pretty sure this could be const.`
+
+Disposition: Leave
+
+- `./crates/hazel/core/src/zobrist/mod.rs:    // TODO: This comes up enough (or the equivalent (sq, occ)) that it probably should be it's own`
+
+Disposition: Enhancement? It's a refactor opportunity, anyway.
+
+- `./crates/hazel/core/src/zobrist/mod.rs: // TODO: Calculate this from the types, so when I add fairy pieces it should Just Work(tm)`
+
+Disposition: Enhancement
+
+- `./crates/hazel/parser/src/san/mod.rs:                        // TODO: Disambiguate blocked slider situations.`
+
+Disposition: this is a bug if it's real, bug ticket
+
+- `./crates/hazel/parser/src/san/mod.rs:        // TODO: Make the naming consistent`
+
+Disposition: chore 
+
+- `./crates/hazel/representation/src/game/chess/action.rs:// TODO: Constrain these then fix the debug impl`
+- `./crates/hazel/representation/src/game/chess/mod.rs:// TODO: Maybe wrap the constraint in it's own typeclass?`
+
+Disposition: Leave it, I think this type is going away
+
+- `./crates/hazel/ui/src/ui/app.rs:        // TODO: Maintain backlog`
+- `./crates/hazel/ui/src/ui/app.rs:        // TODO: This API kinda sucks, the getposition should send back something over a channel`
+- `./crates/hazel/ui/src/ui/widgets/smallboard.rs:    // TODO: This should be an actual From implementation, so I can build these from multiple`
+- `./crates/hazel/ui/src/ui/widgets/tapereader/mod.rs:        // TODO: This is probably not identity, but some function of height`
+- `./crates/hazel/ui/src/ui/widgets/tile/mod.rs:        // TODO: We always render at the same size, this will likely be wrong if the size is too`
+
+Disposition: Leave it,  UI is known to be pretty broken
+
+- `./crates/hazel/util/src/cache/mod.rs:        // TODO: Feature flag this or something, it should be excluded from a 'real' version of the`
+
+Disposition: Feature
+
+- `./crates/hazel/util/src/charray.rs:    /* TODO: This really needs to do math on the thing, so probably needs to be an external method`
+
+Dispostion: enhancement ticket, I don't need to transpose _yet_, but it could be handy for when I want to show from
+black's perspective or w/e
+
+- `./crates/hazel/representation/src/types/log/mod.rs:    // TODO: Extract this`
+- `./crates/hazel/representation/src/types/log/transaction.rs:// TODO: Change this to have a block-passing API?`
+
+Dispositon: leave it, these are getting refactored w/ Spell
+
+- `./crates/hazel/representation/src/game/chess/position.rs:// TODO: 22-FEB-2025 - Refactor the heck out of the 'slow' versions of these methods and figure out`
+- `./crates/hazel/representation/src/game/chess/position.rs:    // TODO: This could probably be better managed by a familiar.`
+- `./crates/hazel/representation/src/game/chess/position.rs:        // TODO: this is not ideal, it should cache this somewhere, probably as a quintessence.`
+- `./crates/hazel/representation/src/game/chess/position.rs:        // TODO: Ideally this is lazy, so we only update the board as we roll the associated`
+- `./crates/hazel/representation/src/game/chess/position.rs:                // Atomic, TODO: Handle Result`
+- `./crates/hazel/representation/src/game/chess/position.rs:                    // TODO: this probably should try to do cache magic in the tape first? IDK`
+- `./crates/hazel/representation/src/game/chess/position.rs:        // TODO: This is an exact copy of the above, mod the #inverse calls on `alter`. definitely`
+- `./crates/hazel/representation/src/game/chess/position.rs:        // TODO: I also think if the `Entry` type on Tape can be kept small enough, then the buffer`
+- `./crates/hazel/representation/src/game/chess/position.rs:                // Atomic, TODO: Handle Result`
+
+I think these will get addressed as I work on `Spell`, I'm inclined to just leave them.
+
+Disposition: leave tag
+
+- `./crates/hazel/representation/src/game/chess/state/tape_reader_state.rs:        // TODO: only fetch the range when we page over.`
+- `./crates/hazel/representation/src/game/chess/state/tape_reader_state.rs:    // TODO: Would be nice to have an 'overlap' between screens by a few (configurable number of?)`
+- `./crates/hazel/representation/src/game/chess/state/tape_reader_state.rs:        self.tape_length / self.length // TODO: potential off-by-one`
+- `./crates/hazel/representation/src/game/chess/state/tape_reader_state.rs:/* TODO: This needs to exist in some way, probably by making `SpellState` a trait for Spell...`
+
+Disposition: This is tightly coupled to both the Spell refactor _and_ the UI refactor, just leave them for now.
+
+- `./crates/hazel/representation/src/coup/rep/compilation.rs:    // TODO: Query metadata situation needs addressing, should have like, a gamestate trait?`
+
+Disposition: I do need to think about `Query`, returning an optional metadata kinda sucks, I think it'd be better to
+have something like a `Boardlike` and `Gamelike` trait? Every `Gamelike` is `Boardlike`, `PieceBoard` is boardlike,
+`Bitboard` is _not_ boardlike because it doesn't have piece information, but `Position` is both `Boardlike` and
+`Gamelike`.
+
+Aside, I think I prefer the `-like` suffix more than the 'Rust' style of no-suffix verbs (e.g., "Debug", "Display",
+"Ord" (short for order, I assume), "Eq" for equate (thus 'eek' and not 'ehk' is the right pronounciation, IMO), etc.
+I've considered `-able` as well, but I think `-like` captures what I'm trying to use it for, "Anything that's like a
+`type`"
+
+- `./crates/hazel/representation/src/coup/rep/compilation.rs:    /// TODO: Does not look for check states.`
+
+Disposition: 
+
+- `./crates/hazel/representation/src/coup/rep/move_type.rs:        // TODO: It may be faster to mask-and-cast the bits, they're arranged such that they correspond to the piece enum.`
+- `./crates/hazel/representation/src/game/chess/state/game_state.rs:/* TODO: Move this back to core.`
+- `./crates/hazel/representation/src/coup/rep/mod.rs:// TODO:`
+- `./crates/hazel/representation/src/coup/rep/mod.rs:    // TODO: Produce a UCI object`
+
+# OQ
+
+I think these are all just 'Leave open'
+
+- `./crates/spell/src/familiar/mod.rs: // OQ: I wonder if it makes sense to `deref` this down to it's state`
+
+The Deref stuff is all a little new to me, but it seems very foot-gun from my initial experiment.
+
+- `./crates/hazel/representation/src/game/chess/position.rs:        // OQ: with the `Arc` here on tape, and the explicit clone here, I'm asserting that`
+- `./crates/hazel/representation/src/game/chess/position.rs:    // OQ: How should I sort these? Position so far has been 'find the pieces on the board', but it`
+
+Position is going to get a lot of attention. It's interesting that I settled eventually on the same name as stockfish
+(which is _way_ smaller than I thought at 7kloc of C++, I've been steadfastly avoiding it until I settled on a design,
+and when I finally did download it recently I was surprised at how small it was. `hazel` has a wider scope, but I
+suspect all told the core engine stuff will be similar or slightly larger than stockfish. I'm guessing about half my
+code is test code, and half actual source. UI and Parsers are probably ~2-3k of the 13k in the repo, so I'd guess I'm
+right around 5kloc of rust for the main representation. At this point, there is just an evaluation and search algorithm
+to write, and some glue. I suspect the algorithms will take <1k and the glue will take more since that's where all the
+multithreading is happening.
+
+Since Stockfish is so short, maybe I'll try to midrash it at some point. Could be fun.

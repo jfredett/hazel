@@ -1,0 +1,32 @@
+[package]
+name = "hazel-representation"
+version = "0.1.0"
+authors = ["Joe Fredette <jfredett@gmail.com>"]
+description = "Contains representations of boards, games, and other high level concepts for abstract strategy games"
+edition = "2021"
+
+[lib]
+name="hazel_representation"
+bench = false
+path="src/lib.rs"
+
+[dependencies]
+dynamic-array.workspace = true
+hazel-core.workspace = true
+hazel-bitboard.workspace = true
+hazel-util.workspace = true
+lazy_static.workspace = true
+rand.workspace = true
+serde.workspace = true
+spell.workspace = true
+tokio.workspace = true
+tracing-subscriber.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+rand.workspace = true
+quickcheck.workspace = true
+mutants.workspace = true
+quickcheck_macros.workspace = true
+similar-asserts.workspace = true
+tracing-test.workspace = true

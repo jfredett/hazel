@@ -1,0 +1,37 @@
+[package]
+name = "hazel-ui"
+description = "UI for Hazel"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name="hazel"
+path="src/main.rs"
+
+[dependencies]
+hazel-representation.workspace = true
+hazel-core.workspace = true
+hazel-bitboard.workspace = true
+hazel-engine.workspace = true
+hazel-parser.workspace = true
+spell.workspace = true
+async-trait.workspace = true
+dynamic-array.workspace = true
+lazy_static.workspace = true
+nom.workspace = true
+rand.workspace = true
+ratatui.workspace = true
+serde.workspace = true
+tokio.workspace = true
+tokio-stream.workspace = true
+tui-logger.workspace = true
+tracing.workspace = true
+tracing-appender.workspace = true
+tracing-subscriber.workspace = true
+
+[dev-dependencies]
+insta.workspace = true
+tracing-test.workspace = true

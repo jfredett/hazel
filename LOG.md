@@ -2765,3 +2765,480 @@ minutes' by a factor of 6 or so, not bad for a `HashMap` backed cache it only to
 
 Next, spring cleaning. I'm going to live with the lack of tests because I'm going to move to rs-test, and start building
 some fixtures for more efficient testing.
+
+## 1122 - spring-cleaning-1
+
+Started spring cleaning, this is phase 1, which is just getting the workspace going and starting to split out crates and
+cleanup dependencies. I've done the easiest split so far, into `-core` and `-ui` crates; and ran `cargo-udeps` to clear
+out unused dependencies. So far, I've brought a clean compile (measured by `cargo clean ; time cargo build`) from ~37s
+-> ~25s, about a 40% reduction.
+
+I'm going to continue splitting, but the overall workspace is going to look something like:
+
+
+```
+hazel/
+    hazel-core/
+        src/
+            lib.rs
+            some-module/
+                mod.rs      # Quickcheck properties in an embedded module "properties"
+                test.rs     # Unit tests for the module, driven by rstest fixtures
+        test/
+            # core-specific integration tests, driven by rstest
+    hazel-ui/
+        # similar layout to the above, but backed also by `insta`
+    hazel-*/            # other crates as needed
+    hooks/              # Profile hook programs
+    quals/              # Qualification tests, comparing to other engines, establishing Elo, etc.
+    benchmarks/         # Performance tests/data gathering
+    tests/              # Integration tests
+```
+
+I'm debating following `rust-gpu`'s example and putting the crates south of a `crates/` folder, but for the moment I
+don't mind just having them toplevel.
+
+Part of the work so far moved over some ratatui stuff to the ui crate, which changed some apis around, but so far it's
+mostly been mechanical.
+
+## 1150 - spring-cleaning-1
+
+I tried to extract the `constants` module, but it tangles pretty tightly with other chunks of the system, and extracting
+them will be a little tricky. It's actually a little tricky to extract anything right now because it all
+cross-references pretty freely. I think the way out of that is to push more of the code to rely on the interfaces in
+`src/interface`, and have _that_ become `hazel-core`, and then the other hazel crates rely on the interface, and we have
+a delightfully decoupled thing. Ultimately this will mean there is a `hazel-representation` crate which implements the
+interfaces, and then that should be replacable when I come up with better representations.
+
+He said, full of dumb hope.
+
+## 1727 - spring-cleaning-1
+
+Okay, two more crates split out, `hazel-bitboard` has all the pretty static bitboard related stuff, `hazel-basic` has
+all the piece/color/square/etc types.
+
+Next I think I'm going to start scaffolding the integration test crate, which can hold the last item in `-core`'s
+constants module. I'll then turn that module into a re-export module maybe, idk.
+
+I want to split the parser stuff as well, as that should reduce more of `-core`'s dependencies, but getting `-basic` and
+`-bitboard` extracted will make that process easier I think.
+
+The end of all this should be a `hazel::toolbox` module that I can import and get all the basic constants and types for
+doing 'normal' stuff in `hazel` the eventual `engine` crate will have the bits for running the game using the
+representation provided by that `toolbox` module.
+
+Separating the parser should eliminate the `nom` and similar deps. Separating the engine will probably involve
+separating out the `witch` thing to it's own crate as well, and hopefully that'll leave the `types` module pretty thin
+and maybe removable.
+
+So far so good, phase 2 will be `rstest` and maybe some preliminary benchmarking work.
+
+## 2227 - spring-cleaning-1
+
+I'm settling in on the split, I'm favoring lots of little crates, perhaps to the point of overkill, but at the moment I
+prefer to overdo it and pare it back later, it has already paid dividends in terms of clarifying responsibility
+barriers, and in service to that I'm going to make a little diagram.
+
+<img src="./assets/hazel-crates.png" alt="a diagram showing the as-built and desired-design of hazel as a multi-crate
+workspace" width="1024">
+
+It's in `assets/hazel-crates.png` if that isn't rendering for whatever reason.
+
+# 27-MAR-2025
+
+## 1945 - spring-cleaning-1
+
+I took a stab over on `spring-cleaning-1-parser-twig` at pulling out the `-parser` library, but ran into a number of
+issues of where things should be sorted; once I got everything detangled, I was left with some parser bugs and a bad
+taste; so I decided to rewind and try again.
+
+Along the way I found that the `-engine` components are probably going to be simpler to extract first, and then the
+parsers after. In particular it's difficult to have these crates cross boundaries too much before you enter a circular
+dependency hell.
+
+I'm going to keep working to split out mostly along module lines, if nothing else it's telling me where all the tight
+coupling is.
+
+Another thing I discovered is that the core representation (everything up to and including `coup::rep::Move`) really
+needs to 'stick together' -- the first logical split point I think is probably at `Position`. This is a place where
+[tabitha](https://github.com/jfredett/tabitha) would probably help, since I could see how different modules and structs
+tangle with each other.
+
+I also found that my more or less arbitrary use of From/Into is resulting in some weird semantics. I think the right way
+is to support converting _into_ primitive-ish types (the stuff in -basic), and then have other methods for converting
+those things into specific subclasses of a given type; e.g., `BEN` should have a `as_fen_string` method; but not a
+`From<String>` implementation. Whereas `(Rank, File)` should have a `From<Square>` implementation.
+
+Most of the time I'm asking for `anything squarelike`, not `anything BENlike`; though `impl Into<BEN>` is not uncommon,
+I prefer to lean on the _trait_ for that, via `impl Query`.
+
+I'll leave the twig up as it may be useful later, but I return to extracting other things now.
+
+# 28-MAR-2025
+
+## 1002 - spring-cleaning-1
+
+Got `-engine` pulled out, started pulling on `-generator`, and found that it tangles a bit into the `Cache/ATM` thing,
+which can be extracted, but tangles (due to a shortcut) to the `Zobrist` type, and so I'm left with the question of
+'where should `Zobrist` go?' Zobrist currently depends on both `hazel_basic` types, which are easy to bring across, but
+also `Alter`, `Query`, and the like, and the `CastleRights` structure.
+
+I think `-basic` is rapidly coinciding with `-core`, and probably has a better name than either out there. I think there
+are these approaches:
+
+1. Make `Cache` key-agnostic, instead of doing any more reorganizing, just make it generic. Originally I had wanted the
+   key-building part to be transparent, but I don't really do that anymore, so making it fully generic may be worth it.
+2. Move `Zobrist` to `-util` or it's own crate, moving the various stuff it depends on in `-core` to `-basic`; this'd
+   mean `interface`, `PositionMetadata`, and `CastleRights` move to `-basic`, then `-core` would pull in and set
+   `HazelZobrist`, everything else would end up in the destination crate.
+
+After all this is done, it leaves:
+
+1. Board Representation
+2. Move Representation
+3. Position Representation
+4. GameState Representation
+3. some more types that are definitely moving out (log/tape/etc -> spell, witch -> witch, movesheet -> devnull)
+
+in `-core`, at which point I'm forced to ask, 'what is `-core` really? `-representation`', then `hazel-basic` ->
+`hazel-core`, and 
+
+I also am starting to lean towards having a `crates/` folder, something like:
+
+```
+assets/
+crates/
+    hazel/              # Main library
+        bitboard/       # bitboard/pextboards
+        core/           # core types, Square, Color, Direction, Occupant; but also interface stuff (Alter et al)
+        engine/         # Actor that integrates evaluator and generator and other stuff to play chess
+        evaluator/      # Actor that evaluates a set of positions as efficiently as possible.
+        generator/      # Actor that generates all moves for positions as efficiently as possible.
+        parser/         # Parsers for various chess storage formats (PGN, SAN, etc)
+        representation/ # Representation types for Boards, GameState, Moves, etc.
+        ui/             # A debugging TUI designed to view the internals of the engine in operation
+        util/           # Various utility types.
+    spell/              # Generic 'spell' type for reading/writing/running familiars
+    witch/              # Generic actor framework
+    witchhazel/         # Integration point for engine + ui, configuration management, etc.
+doc/
+hooks/
+quals/
+tests/
+```
+
+I'm inclined to push more things down into the core, since I do think a lot of those won't undergo too much movement
+once settled. `Alteration` is more or less 'done', and that is the most mobile of the bunch.
+
+# 29-MAR-2025
+
+## 0730 - spring-cleaning-1
+
+First things first, pretty sure I had dates wrong for previous log entries, so I adjusted.
+
+Second, I'm working on extracting `spell`, but it's more complicated because of the way I was managing specific state
+update stuff, basically because I'm not using an interface for state objects. In particular I have a number of impls for
+Familiar's which fix a particular generic parameter, which I can't do outside of the home crate; this is a good thing
+ultimately, but will make extraction harder.
+
+For now, I'm just cranking away at what errors I can resolve, and then once I've reduced to the minimum, I'll figure out
+how to sort things.
+
+I also need to refactor the old Variation-specific familiar and really Variation itself to a `Tape`/`Spell` based
+system, but I want to get the crate extracted and the name change performed first.
+
+## 1001 - spring-cleaning-1
+
+Couple remaining open refactoring jobs now:
+
+1. Cache needs to be refactored to a generic key, ultimately this will be a LRU cache with a generic key type.
+2. Spell needs to have Familiar refactored to rely on a trait
+3. Tape needs to be renamed to Spell
+4. Move `BEN` -> -basic
+    - This means figuring out the `to_fen_position` extension, which might be able to stay put? IDK. In theory
+        that means this can just be moved over and no api change, since query is already over there.
+5. FIXMEs, TODOs, and the like need an audit.
+6. Reorganize directory structure
+7. Rename -core to -representation
+8. rename -basic to -core
+9. Get all the tests uncommented (in place) and passing.
+
+Once all these are done (and I just want to audit tags for now, not necessarily do anything to resolve them unless it's
+very easy), I can get started on the test refactoring, which'll be spring-cleaning-2, I think.
+
+## 1517 - spring-cleaning-1
+
+Finished extracting `spell` and moving `ben` to `-basic`. Dependencies are already minimized, and I can see the end
+approaching. This ticks off #4 from above.
+
+## 1527 - spring-cleaning-1
+
+Reorganized the crates a bit, deeper directory structure but cleaner lines. Finishes #6 above.
+
+# 30-MAR-2025
+
+## 1514 - spring-cleaning-1
+
+I pulled out the integration test, and right now I think I'm just going to focus on moving tests into their own modules
+where it makes sense. Eventually most tests will not be co-located with the code-under-test, as I talked about before. I
+haven't brought in any new frameworks just yet, as I'm still determining what the best approach is going to be.
+
+Now that I've got everything else pulled out though, I think it's time to return to extracting the `parser` stuff, at
+which point I think `-core` is sufficiently gutted so as to be ready for the great renaming.
+
+I'm leaving the unused dependencies in place for the test crate for now, I suspect it'll be worthwhile to reduce it at
+some point.
+
+The only other item I need to actually _add_ to the list above is "10. move to a `nix run #ci` like `tabitha` has", I
+think that should greatly simplify my CI pipeline and make it easier to add in lints and git hooks and stuff later.
+
+So the current TODO list is:
+
+1. Cache needs to be refactored to a generic key, ultimately this will be a LRU cache with a generic key type.
+2. Spell needs to have Familiar refactored to rely on a SpellState trait
+3. Tape needs to be renamed to Spell
+4. [X] Move `BEN` -> -basic
+    - This means figuring out the `to_fen_position` extension, which might be able to stay put? IDK. In theory
+        that means this can just be moved over and no api change, since query is already over there.
+5. FIXMEs, TODOs, and the like need an audit.
+6. [X] Reorganize directory structure
+7. Rename -core to -representation
+8. rename -basic to -core
+9. Get all the tests uncommented (in place) and passing.
+10. nix run #ci
+
+I think #9 is the next port of call, I can use it as an opportunity to move some tests around as well.
+
+## 1536 - spring-cleaning-1
+
+One of the things I need to sit and think about is the way I convert between representations.
+
+I was reading a bit about the `fearless-simd` project. It uses ZSTs as 'tokens' representing the _capability_ of SIMD
+independent of the _implementation_ of SIMD, in a relatively 'low cost' sort of way to encode the _intent_ into the type
+system and then use it to determine an optimal implementation using whatever SIMD primitives are locally available. I
+think I'd like to try something similar at some point for my representations. A recurring frustration is the need to
+pick _a_ representation as 'canonical' when no such representation really deserves that title. Bitboards are useful
+sometimes, rank-file tuples others, strings others, it's not natural to pick any one. There is no good type to give the
+raw number or tuple-of-numbers that doesn't include generally unnecessary bound checking. Bitboards are fine for what
+they can do but quite limited in other ways, same with strings. Ideally I should be able to pick whatever representation
+is 'best' for the current situation, leaving the others behind, but I don't know what the 'best' rep is ahead of time.
+
+To square this (hah), I rely on `impl Into<Square>` frequently, but htis is also a representation with a downside. It
+says, "I _can become_ a _specific_ known implemnetation, but you will have to pay at least the `.into()` cost and maybe
+a second to convert it to the 'real' type you want." I can justfy paying _something_, but I hate paying it twice.
+
+Relying on `From/Into` also leads to a lot of weird situations where I can't rely on type inference to 'do the right
+thing' and guess the type correctly, leaving me to add annotations inconveniently.
+
+If I instead had something like `Square` as a collection of ZSTs, each with _constant_ implementations of what are now
+`From/Into`s, I could have an API like:
+
+```rust
+
+#[quickcheck] {
+    A1.bitboard().is_set((A1.rank(), A1.file())) == true
+}
+
+```
+
+Which isn't too bad, and it means that the actual type I'm passing around is a finite type family, something like:
+
+```rust
+// This presumes I can const-trait...
+trait Square {
+    const fn bitboard() -> Bitboard;
+    const fn rank() -> usize;
+    // ...
+
+}
+
+
+struct A1; impl Square for A1;
+// ...
+```
+
+There aren't too many representations to target, but I could do similar things with `Piece`, `Color`, etc where it was
+needed. Essentially this is the same thing as how I tend to rely on `Query`, but where `Query` is really an open
+specification with a potentially unbounded number of implementors, `Square` is _really_ finite and basically will never
+be extended.
+
+Something to chew on, anyway.
+
+## 1620 (nice) - spring-cleaning-1
+
+1. Cache needs to be refactored to a generic key, ultimately this will be a LRU cache with a generic key type.
+2. Spell needs to have Familiar refactored to rely on a SpellState trait
+3. Tape needs to be renamed to Spell
+4. [X] Move `BEN` -> -basic
+    - This means figuring out the `to_fen_position` extension, which might be able to stay put? IDK. In theory
+        that means this can just be moved over and no api change, since query is already over there.
+5. FIXMEs, TODOs, and the like need an audit.
+6. [X] Reorganize directory structure
+7. Rename -core to -representation
+8. rename -basic to -core
+9. [X] Get all the tests uncommented (in place) and passing.
+    - With caveats, there are still some tests pending a refactor, but I think I got everything that could be easily
+    re-enabled.
+10. nix run #ci
+11. -parser extraction
+
+# 31-MAR-2025
+
+## 0002 - spring-cleaning-1
+
+1. Cache needs to be refactored to a generic key, ultimately this will be a LRU cache with a generic key type.
+2. Spell needs to have Familiar refactored to rely on a SpellState trait
+3. Tape needs to be renamed to Spell
+4. [X] Move `BEN` -> -basic
+    - This means figuring out the `to_fen_position` extension, which might be able to stay put? IDK. In theory
+        that means this can just be moved over and no api change, since query is already over there.
+5. FIXMEs, TODOs, and the like need an audit.
+6. [X] Reorganize directory structure
+7. Rename -core to -representation
+8. rename -basic to -core
+9. [X] Get all the tests uncommented (in place) and passing.
+    - With caveats, there are still some tests pending a refactor, but I think I got everything that could be easily
+    re-enabled.
+10. nix run #ci
+11. [X] -parser extraction
+
+
+I think I might go ahead and merge this after a few final checks, and start `spring-cleaning-2`, maybe after the
+renames? In -core (right now), there is still:
+
+```
+types/log  # Goes away with the Familiar/Variation rewrite.
+coup/rep # should be renamed to `coup` and be a top level module
+game/* # needs heavy refactoring to use the new familiar system
+interface/ # probably can just live in `game`
+```
+
+That should simplify it a lot and I think I'm done reorganizing after that.
+
+## 0052 - spring-cleaning-1
+
+I went ahead and got `fastchess` installed via a derivation in `nix/fastchess.nix`. This'll build on the first entry,
+which sucks a bit, but maybe I can delay that later by hiding the `fastchess` acceptance tests working behind a flake
+app or something.
+
+Speaking of, the main purpose for `fastchess` is going to be the `UCI` compliance tool that just came out, that'll help
+a lot with getting the engine working correctly and saves me a ton of time trying to decipher what the semantics should
+be, I can just focus on getting the suite to pass.
+
+That's enough for one day though, the rest of the renaming tomorrow I think, then on to refactoring.
+
+## 1005 - spring-cleaning-1
+
+```
+        FAIL [   0.017s] hazel-test::zobrist zobrist::zobrist_update_is_idempotent
+──── STDOUT:             hazel-test::zobrist zobrist::zobrist_update_is_idempotent
+
+running 1 test
+test zobrist::zobrist_update_is_idempotent ... FAILED
+
+failures:
+
+failures:
+    zobrist::zobrist_update_is_idempotent
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
+
+──── STDERR:             hazel-test::zobrist zobrist::zobrist_update_is_idempotent
+[tests/zobrist_test.rs:126:13] z1 = Z|0x0000000000000000|
+[tests/zobrist_test.rs:126:13] z2 = Z|0x0000000000000000|
+
+thread 'zobrist::zobrist_update_is_idempotent' panicked at /home/jfredett/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/quickcheck-1.0.3/src/tester.rs:165:28:
+[quickcheck] TEST FAILED. Arguments: (Assert <b Kk - 8 55390>, Assert <b Kk - 8 31393>)
+```
+
+This is an interesting failure, look at those metadata asserts resulting in a null. Very interesting. It is not
+particularly common, I assume this is a natural collision, and I'm mostly curious about what components of the thing
+it's sensitive too. This test is pretty simple, it takes two random alterations and then calculates:
+
+```rust
+z1 == z1 ^ z2 ^ z2
+```
+
+Verifying that the zobrist self-inverts, basically. I only log the values out, not the alterations, so I've changed
+that, but since the test is flaky, it's hard to reproduce, so I added additional logging and hopefully I'll catch one
+before too long.
+
+## 1514 - spring-cleaning-1
+
+
+1. Cache needs to be refactored to a generic key, ultimately this will be a LRU cache with a generic key type.
+2. Spell needs to have Familiar refactored to rely on a SpellState trait
+3. Tape needs to be renamed to Spell
+5. FIXMEs, TODOs, and the like need an audit.
+4. [X] Move `BEN` -> -basic
+    - This means figuring out the `to_fen_position` extension, which might be able to stay put? IDK. In theory
+        that means this can just be moved over and no api change, since query is already over there.
+6. [X] Reorganize directory structure
+7. [X] Rename -core to -representation
+8. [X] rename -basic to -core
+9. [X] Get all the tests uncommented (in place) and passing.
+    - With caveats, there are still some tests pending a refactor, but I think I got everything that could be easily
+    re-enabled.
+10. [X] nix run #ci
+11. [X] -parser extraction
+
+I'm gonna rewrite my TODO list now in terms of phase 2.
+
+- Phase 1
+    * [ ] Tag audit
+- Phase 2
+    * [ ] Cache Refactor
+    * [ ] Variation Refactor to use Spell + Tape->Spell rename
+    * [ ] Better CI Pipeline
+    * [ ] Test Refactor
+    * [ ] Fastchess UCI test
+    * [ ] Benchmark harness
+
+I'll probably split _some_ of that out to a phase 3, but I don't know what yet. The UCI test from `fastchess` is a real
+windfall, so I definitely want to get that going quickly, but it's probably the most 'phase-3'-y of the bunch. The list
+is in rough order, but I rarely work in order.
+
+
+# 1-APR-2025
+
+## 0031 - spring-cleaning-1
+
+- Phase 1
+    * [X] Tag audit
+    * [ ] Complete ticket making from audit.
+    * [ ] Add additional tasks to P2 from audit (if any)
+    * [ ] Merge P1
+- Phase 2
+    * [ ] Cache Refactor
+    * [ ] Variation Refactor to use Spell + Tape->Spell rename
+    * [ ] Better CI Pipeline
+    * [ ] Test Refactor
+    * [ ] Fastchess UCI test
+    * [ ] Benchmark harness
+
+I'm gonna make a pile of issues because I don't really want to work on this stuff necessarily right now, but I knew
+there were only a few logical issues in all the tags that I just kept running into, so I wanted to gather them up.
+
+I don't love making issues, it feels uncomfortably organized and rational, and I strive to avoid any appearance of
+rationality.
+
+It is a good opportunity to play with a new vim plugin though, so I suppose that will have to sustain me through my
+discomfort.
+
+## 1003 - spring-cleaning-1
+
+- Phase 1
+    * [X] Tag audit
+    * [X] Complete ticket making from audit.
+    * [X] Add additional tasks to P2 from audit (if any)
+    * [ ] Merge P1
+- Phase 2
+    * [ ] Cache Refactor
+    * [ ] Variation Refactor to use Spell + Tape->Spell rename
+    * [ ] Better CI Pipeline
+    * [ ] Test Refactor
+    * [ ] Fastchess UCI test
+    * [ ] Benchmark harness
+
+Just need to merge, then start a new branch. I didn't see any tickets that _need_ to be done in P2. I need to go through
+one last time and remove all the things I said I'd remove, and then I should be ready to merge.

@@ -1,63 +1,69 @@
-[package]
-name = "hazel"
-version = "0.1.0"
+[workspace]
+resolver = "2"
+members = [
+    # Main libraries
+    "crates/hazel/bitboard",
+    "crates/hazel/core",
+    "crates/hazel/engine",
+    "crates/hazel/generator",
+    "crates/hazel/parser",
+    "crates/hazel/representation",
+    "crates/hazel/ui",
+    "crates/spell",
+    "crates/witch",
+
+    # Small binaries that act as a profiling hook
+    "hooks/pextboard",
+
+    # Cross-crate integration tests
+    "tests",
+
+    # Benchmarks
+    #"benchmarks/???",
+
+    # Quals -- verify Hazel against other known-good engines for accuracy
+    #"quals/???",
+]
+
+[workspace.package]
 authors = ["Joe Fredette <jfredett@gmail.com>"]
-description = "Chess Engine"
 edition = "2021"
+license = "AGPL v3"
+repository = "https://github.com/jfredett/hazel"
 
-[lib]
-name="hazel"
-bench = false
-path="src/lib.rs"
-
-[[bin]]
-name="hazel"
-path="src/main.rs"
-
-
-# I might featureflag some stuff, e.g., serde and that, to reduce compile times?
-
-[dependencies]
-
+[workspace.dependencies]
+hazel-core = { path = "./crates/hazel/core" }
+hazel-bitboard = { path = "./crates/hazel/bitboard" }
+hazel-representation = { path = "./crates/hazel/representation" }
+hazel-engine = { path = "./crates/hazel/engine" }
+hazel-generator = { path = "./crates/hazel/generator" }
+hazel-parser = { path = "./crates/hazel/parser" }
+hazel-ui = { path = "./crates/hazel/ui" }
+hazel-util = { path = "./crates/hazel/util" }
+spell = { path = "./crates/spell" }
+witch = { path = "./crates/witch" }
+# Main Dependencies
 async-trait = "0.1.87"
-clap = { version = "2.33", features = ["yaml"]}
-console-subscriber = "0.4.1"
-const-str = "0.6.2"
-crossbeam = "0.8.4"
 dynamic-array = "0.2.3"
 itertools = "0.14.0"
 lazy_static = "1.4.0"
 nom = "7.1.3"
-owning_ref = "0.4.1"
 rand = "0.8.5"
 ratatui = "0.29.0"
-rayon = "1.10.0"
 serde = { version = "1.0.203", features = ["derive"] }
-serde_json = "1.0.117"
-similar-asserts = "1.7.0"
 tokio = { version = "1.44.0", features = ["full"] }
 tokio-stream = "0.1.17"
-tokio-util = { version = "0.7.14", features = ["io"] }
 tracing = "0.1"
 tracing-appender = "0.2"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 tui-logger = { version = "0.15.0", features = ["tracing-support"] }
-yaml-rust = "0.4.1"
-
-[dev-dependencies]
-criterion = "0.5.1"
-criterion-macro = "0.4.0"
-insta = "1.42.2"
+# Dev dependencies to share
 mutants = "0.0.3"
 quickcheck = "1.0.3"
 quickcheck_macros = "1.0.0"
-similar-asserts = "1.6.1"
+insta = "1.42.2"
+similar-asserts = "1.7.0"
 tracing-test = "0.2.5"
-
-# Removing benchmarking temporarily
-#[[bench]]
-#name = "benchmarks"
-#harness = true
 
 [profile.bench]
 opt-level = 3
@@ -78,7 +84,6 @@ inherits = "test"
 debug = false
 debug-assertions = false
 opt-level = 3
-
 
 [profile.dev.package]
 insta.opt-level = 3
