@@ -3242,3 +3242,22 @@ discomfort.
 
 Just need to merge, then start a new branch. I didn't see any tickets that _need_ to be done in P2. I need to go through
 one last time and remove all the things I said I'd remove, and then I should be ready to merge.
+
+## 1025 - spring-cleaning-1
+
+- Phase 1
+    * [X] Tag audit
+    * [X] Complete ticket making from audit.
+    * [X] Add additional tasks to P2 from audit (if any)
+    * [X] Merge P1
+- Phase 2
+    * [ ] Cache Refactor
+    * [ ] Variation Refactor to use Spell + Tape->Spell rename
+    * [ ] Better CI Pipeline
+    * [ ] Test Refactor
+    * [ ] Fastchess UCI test
+    * [ ] Benchmark harness
+
+Phase 1 complete, now onto the real refactoring tasks. I'm going to start with Spell/Variation, as I think it's probably
+the longest pole of the bunch and will close two tickets if I'm efficient.
+
