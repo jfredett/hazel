@@ -30,11 +30,6 @@ The second is related to the first in that it is a consequence of the same lack 
 
 Disposition: Enhancement Ticket, remove tag.
 
-- `./crates/hazel/ui/src/ui/app.rs:                // BUG: pending `spellstate` trait move fam.seek(self.tapereader.desired_position);`
-
-This is broken functionality that I need to restore, it'll be fixed with the familiar refactor.
-
-Disposition: Leave in place until P2 removes it.
 
 - `./crates/hazel/parser/src/san/mod.rs:        // BUG: issue for pawn pushes is that we're using the disambiguator twice`
 
@@ -83,10 +78,16 @@ Fix in both cases, no ticket. Just run through and get rid of the embeded scope,
 
 Disposition: Fix in place.
 
+- `./crates/hazel/representation/src/game/chess/familiar.rs:                    // FIXME: should this... do anything?`
 - `./crates/hazel/representation/src/game/chess/variation.rs:    //     // HACK: This is a prototype of sorts, eventually there should be a cursor that takes a`
+- `./crates/hazel/representation/src/game/chess/variation.rs:    // FIXME: This is fully subsumed by the position stuff, once I wire up varaition to tape and`
+- `./crates/hazel/representation/src/game/chess/variation.rs:    // FIXME: This is the current broken thing, I need to encode the assumptions wrt a variation`
+- `./crates/hazel/ui/src/ui/app.rs:                // BUG: pending `spellstate` trait move fam.seek(self.tapereader.desired_position);`
 - `./crates/hazel/ui/src/ui/widgets/tapereader/mod.rs:    // // FIXME: familiar refactor`
 
-Covered by the Variation refactor
+This is broken functionality that I need to restore, it'll be fixed with the familiar refactor.
+
+Covered by the Variation/Familiar refactor
 
 Disposition: fix already planned, no action
 
@@ -184,6 +185,7 @@ Disposition: removed, wontfix
 the API has grown on me.
 
 - `./crates/hazel/core/src/position_metadata.rs:                    // FIXME: This should be an error type, probably.`
+- `./crates/hazel/engine/src/uci/mod.rs:// TODO: Error type`
 
 Disposition: Enhancment ticket, "Error Type"
 
@@ -213,29 +215,76 @@ Disposition: I think I mean it should just be 'a reference' here, and maybe so, 
 PMO, removed.
 
 - `./crates/hazel/generator/src/pawn.rs:    // FIXME: this might could be better, IDK. The unwraps should never fail since we slid things`
+
+Disposition: Enhancement ticket, post benchmarking/full functionality.
+
+I don't want to lose that it's bad, not that it's easy to do that, it's ugly; but I also can't touch it till other stuff
+is in place.
+
 - `./crates/hazel/ui/src/ui/widgets/game_section/mod.rs:    // FIXME: this should really take a "Thing that has a variation" and not necessarily a PGN.`
+
+Disposition: leave it
+
+The UI needs lots of work, and I'll get to it someday.
+
 - `./crates/hazel/representation/src/game/chess/mod.rs:    // FIXME: This is bad, I don't like it.`
-- `./crates/hazel/representation/src/game/chess/familiar.rs:                    // FIXME: should this... do anything?`
+
+Disposition: leave it
+
+I think this whole type is going to vanish when I get variation/position all working nicely.
+
 - `./crates/hazel/representation/src/game/chess/position.rs:    // FIXME: pub only for testing.`
 - `./crates/hazel/representation/src/game/chess/position.rs:        // FIXME: Ideally we'd actually just keep a reference to this cached thing instead of copying it`
 - `./crates/hazel/representation/src/game/chess/position.rs:    // FIXME: this, if anything, should probably return a result type.`
 - `./crates/hazel/representation/src/game/chess/position.rs:        // FIXME: this causes a sync to the writehead, I don't love the spook, but I think it should`
 - `./crates/hazel/representation/src/game/chess/position.rs:    // FIXME: the searches are super inefficient and very ugly. A better world is possible, you`
+
+Spell Refactor, the `Codex`/Cursor design should make it easier to share these across threads.
+
+Disposition: Leave it
+
 - `./crates/hazel/generator/src/lib.rs:                    // FIXME: This might not quite be aligned, but the other side of the branch works on my`
+
+Disposition: downgrade to NOTE
+
+I think this could be improved, but I don't care enough to try. To be honest, the only thing I probably should do is
+move it to the test crate so it can be reimported as part of the test toolbox.
+
 - `./crates/hazel/representation/src/types/log/mod.rs:            // FIXME: I think this should actually not constrain the write head to the length of`
-- `./crates/hazel/representation/src/game/chess/variation.rs:    // FIXME: This is the current broken thing, I need to encode the assumptions wrt a variation`
-- `./crates/hazel/representation/src/game/chess/variation.rs:    // FIXME: This is fully subsumed by the position stuff, once I wire up varaition to tape and`
-- `./crates/hazel/parser/src/pgn/tag_pair.rs:    pub(crate) name: String, // FIXME: Temporary pub(crate)`
-- `./crates/hazel/parser/src/pgn/tag_pair.rs:    pub(crate) value: String, // FIXME: Temporary pub(crate)`
 - `./crates/hazel/representation/src/types/log/cursor.rs:        // FIXME: I think this should probably not be None, but I don't know what the convenient`
 - `./crates/hazel/representation/src/types/log/write_head.rs:    // FIXME: Should this be conditional?`
 - `./crates/hazel/representation/src/types/log/write_head.rs:    // FIXME: I think these are going to be necessary, but I haven't adapted the tests below to`
-- `./crates/hazel/engine/src/uci/mod.rs:/* FIXME: 4-JAN-2025 1110`
+
+Disposition: leave it
+
+I think this type is going away, but I agree with the sentiment, the `Spell` should be able to write backwards and
+forwards 'infinitely'. The `Codex` should shuffle memory around as needed.
+
+- `./crates/hazel/parser/src/pgn/tag_pair.rs:    pub(crate) name: String, // FIXME: Temporary pub(crate)`
+- `./crates/hazel/parser/src/pgn/tag_pair.rs:    pub(crate) value: String, // FIXME: Temporary pub(crate)`
+
+Disposition: leave them
+
+It sucks, I should fix it, might hit it in the test refactor, might not, not a big enough thing for a ticket, not enough
+to go try to fix it now (I could just extend in the test module? IDK...)
+
+- `./crates/hazel/engine/src/uci/mod.rs: /* FIXME: 4-JAN-2025 1110`
 - `./crates/hazel/engine/src/uci/mod.rs:                // FIXME: This kinda sucks, but I don't think it gets better without using an`
 - `./crates/hazel/engine/src/driver/hazel/messages/uci_message.rs:                // FIXME: This is all kinda wrong now.`
 - `./crates/hazel/engine/src/driver/hazel/messages/uci_message.rs:        // FIXME: This I think is not working as I refactor `Position``
+
+Disposition: Enhancement - Better UCI parser/structure
+
+this might come with some of the `Witch` related stuff when I get to `hazel-engine` and `witchhazel`.
+
 - `./crates/hazel/parser/src/san/mod.rs:    // FIXME: I don't know if I want to detect an illegal move at the parser level.`
 - `./crates/hazel/parser/src/san/mod.rs:            // FIXME: I don't think this is a valid fen that would generate this move notation`
+
+Disposition: remove both.
+
+In the former, I guess I am, so I'll continue to do so till it becomes inconvenient
+
+For the latter, it obviously is, I think I meant "This is a weird notation", and indeed, it is.
 
 # TODO
 
@@ -274,7 +323,6 @@ Disposition: leave tag
 - `./crates/hazel/generator/src/lib.rs:        // TODO: in parallel?`
 - `./crates/hazel/engine/src/driver/hazel/mod.rs:    /// TODO: Replace this with a familiar`
 - `./crates/hazel/engine/src/driver/hazel/mod.rs:    /// TODO: Be able to share a cached version of this via an Arc.`
-- `./crates/hazel/engine/src/uci/mod.rs:// TODO: Error type`
 - `./crates/hazel/ui/src/main.rs:    // TODO: actually parse arguments`
 - `./crates/hazel/engine/src/uci/connection.rs:// TODO: This should be a config setting from a config file/option/etc.`
 - `./crates/hazel/engine/src/uci/connection.rs:        // TODO: I have no idea how to test this with the current design. Trying to get a stream`

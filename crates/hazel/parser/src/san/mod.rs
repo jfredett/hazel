@@ -287,7 +287,6 @@ impl SAN {
 pub enum SANConversionError {
     #[default] UnknownError,
     MissingSourceSq,
-    // FIXME: I don't know if I want to detect an illegal move at the parser level.
     MissingTargetPiece,
     MissingMoveType,
     IsAmbiguous(&'static str),
@@ -471,7 +470,6 @@ mod tests {
 
         #[test]
         fn parses_pawn_capture_with_disambiguator() {
-            // FIXME: I don't think this is a valid fen that would generate this move notation
             assert_parses!("a3xb4", Move::new(A3, B4, MoveType::CAPTURE), "8/8/8/8/1p6/P1P5/8/8 w - - 0 1");
         }
 

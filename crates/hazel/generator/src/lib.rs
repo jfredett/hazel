@@ -87,7 +87,7 @@ mod tests {
         ($a:expr, $b:expr) => {
             if $a != $b {
                 if $a > $b {
-                    // FIXME: This might not quite be aligned, but the other side of the branch works on my
+                    // NOTE: This might not quite be aligned, but the other side of the branch works on my
                     // terminal at least
                     println!("                               Actual - Expected = Overcount");
                     println!("Actual undercounts Expected by: {:>6} - {:>8} = {:>9}", $a, $b, $a - $b);
