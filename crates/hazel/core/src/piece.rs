@@ -59,28 +59,6 @@ pub const ASCII_PIECE_CHARS: [[char; PIECE_COUNT]; COLOR_COUNT] = [
     ['n', 'b', 'r', 'q', 'k', 'p'],
 ];
 
-// FIXME: I couldn't get the formatting right w/ unicode, but I don't want to lose
-// track of the unicode characters, so I'm keeping them here.
-#[allow(unused_variables)]
-pub const UNICODE_PIECE_CHARS: [[char; 6]; 2] = [
-    [
-        '\u{2658}', //'♘';
-        '\u{2657}', //'♗';
-        '\u{2656}', //'♖';
-        '\u{2655}', //'♕';
-        '\u{2659}', //'♙';
-        '\u{2654}', //'♔';
-    ],
-    [
-        '\u{265E}', //'♞';
-        '\u{265D}', //'♝';
-        '\u{265C}', //'♜';
-        '\u{265B}', //'♛';
-        '\u{265F}', //'♟︎';
-        '\u{265A}', //'♚';
-    ],
-];
-
 
 #[cfg(test)]
 mod test {

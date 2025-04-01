@@ -162,8 +162,6 @@ mod tests {
 
             #[test]
             fn by_rank_and_file() {
-                // FIXME: I don't like this API, pretty sure I'm doing something wrong with the
-                // `intoiter` thing.
                 let mut iter = Square::by_rank_and_file();
                 iter.upward().left_to_right().start_on(A2);
                 assert_eq!(iter, A2);

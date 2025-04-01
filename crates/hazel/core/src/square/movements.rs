@@ -645,18 +645,4 @@ mod tests {
         let square = square.0;
         square.port_bow().and_then(|x| x.starboard_bow()).and_then(|x| x.starboard_quarter()).and_then(|x| x.port_quarter()).unwrap() == square
     }
-
-    // FIXME: Move to bitboard crate
-    // #[quickcheck]
-    // fn bitboard_moves_match_square_moves(piece: Piece, color: Color, sq: Square) -> bool {
-    //     // Ignore Pawns, Kings, and Knights for now, so we can use the pextboard stuff
-    //     if piece == Piece::Pawn { return true; }
-    //     if piece == Piece::King { return true; }
-    //     if piece == Piece::Knight { return true; }
-
-    //     // this is a bitboard set with all the moves for a given piece
-    //     let bbmoves = pextboard::attacks_for(piece, sq, Bitboard::empty());
-
-    //     sq.moves_for(&piece, &color).all(|x| bbmoves.is_set(x))
-    // }
 }

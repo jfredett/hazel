@@ -30,58 +30,7 @@ lazy_static! {
         out
     };
 
-    /// A lookup table to convert a pawn on a given index -> it's bitboard of moves
-    // FIXME: This overcomputes, I really want this as moves per color and movetype and position, I
-    // think.
-    pub static ref PAWN_MOVES: [[Bitboard; 64]; 2] = {
-        let mut white_out = [Bitboard::empty(); 64];
-        let mut black_out = [Bitboard::empty(); 64];
-        // pawn moves, initial rank
-        for i in 8..17 {
-            let mut wbb = Bitboard::empty();
-            wbb.set(Square::new(i));
-            let mut bbb = Bitboard::empty();
-            bbb.set(Square::new(64-i));
-
-            wbb |= wbb.shift(Direction::N)
-                |  wbb.shift(Direction::N).shift(Direction::N)
-                |  wbb.shift(Direction::NE)
-                |  wbb.shift(Direction::NW);
-
-            bbb |= bbb.shift(Direction::S)
-                |  bbb.shift(Direction::S).shift(Direction::S)
-                |  bbb.shift(Direction::SE)
-                |  bbb.shift(Direction::SW);
-
-
-            white_out[i] = wbb;
-            black_out[64-i] = bbb;
-        }
-
-        // all other pawn moves
-        for i in 17..64 {
-            let mut wbb = Bitboard::empty();
-            wbb.set(Square::new(i));
-            let mut bbb = Bitboard::empty();
-            bbb.set(Square::new(64-i));
-
-            wbb |= wbb.shift(Direction::N)
-                |  wbb.shift(Direction::NE)
-                |  wbb.shift(Direction::NW);
-
-            bbb |= bbb.shift(Direction::S)
-                |  bbb.shift(Direction::SE)
-                |  bbb.shift(Direction::SW);
-
-            white_out[i] = wbb;
-            black_out[64-i] = bbb;
-        }
-
-
-        [ white_out, black_out ]
-    };
-
-    // FIXME: BitOps aren't const yet, so this is as close as I could get
+    // NOTE: BitOps aren't const yet, so this is as close as I could get
     pub static ref KING_ATTACKS : [Bitboard; 64] = {
         let mut arr = [Bitboard::empty(); 64];
 

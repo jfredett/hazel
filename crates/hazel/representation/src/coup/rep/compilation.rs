@@ -169,9 +169,6 @@ impl Move {
                         return Some(MoveType::PROMOTION_CAPTURE_QUEEN);
                     } else {
                         // Otherwise, we are just capturing as normal
-                        // BUG: This doesn't let you promote to anything other than a queen, and
-                        // in fact it is known that some positions promotion to a non-queen is the
-                        // only way to avoid a stalemate, so this is a bug.
                         return Some(MoveType::CAPTURE);
                     }
                 } else if self.target().backrank() {

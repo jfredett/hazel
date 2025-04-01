@@ -172,13 +172,6 @@ impl BEN {
         }
     }
 
-    // FIXME: This feels like a bug. Probably where-ever I use this is a bug.
-    pub fn with_default_metadata(fen: &str) -> Self {
-        let mut ret = Self::new(fen);
-        ret.set_metadata(PositionMetadata::default());
-        ret
-    }
-
     pub fn metadata(&self) -> PositionMetadata {
         self.metadata
     }

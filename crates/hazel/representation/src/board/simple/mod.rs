@@ -18,7 +18,6 @@ impl Default for PieceBoard {
 
 pub struct OccupantIterator<Q> where Q : Query {
     idx: RankFile,
-    // FIXME: this should probably be a RO reference
     source: Q
 }
 

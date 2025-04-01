@@ -1,5 +1,3 @@
-// FIXME: This probably belongs in a -util crate or something like.
-
 use std::{collections::HashMap, sync::RwLock, fmt::Debug};
 
 // where does zobrist live?

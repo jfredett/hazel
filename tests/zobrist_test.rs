@@ -103,35 +103,14 @@ mod zobrist {
         assert_eq!(p1.zobrist(), p2.zobrist());
     }
 
-
-
-    // BUG: This occasionally fails when it finds a collision, that's not necessarily a problem, so
-    // long as we can isolate which alteration instances cause it and then maybe tweak things to
-    // prevent it. So long as it's rare I don't think it's a problem.
-    //
-    // ... and a finger curls on the monkey's paw.
+    // This checks if z == z ^ a1 ^ a1
     #[quickcheck]
-    fn zobrist_update_is_idempotent(alteration: Alteration, alteration2: Alteration) -> bool {
-        // this is mostly to allow the non-zero checking later, which makes sure we are
-        // primarily testing interesting cases/disallow a potential null solution state
-        if alteration == Alteration::Clear || alteration2 == Alteration::Clear { return true; }
-        let mut z1 = Zobrist::empty();
-        let mut z2 = Zobrist::empty();
-        z1.alter_mut(alteration2);
-        z2.alter_mut(alteration2);
+    fn zobrist_update_is_idempotent_if_not_clear(zobrist: Zobrist, alteration: Alteration) -> bool {
+        // Clear resets the zobrist to 0, so it needs to be skipped for our test, it is the only
+        // exception to the idempotence rule.
+        if alteration == Alteration::Clear { return true; }
 
-        if z1 == Zobrist::empty() { return true; }
-
-        z1.alter_mut(alteration);
-        z2.alter_mut(alteration);
-
-        if z1 != Zobrist::empty() && z2 != Zobrist::empty() && z1 == z2 {
-            true
-        } else {
-            dbg!(alteration, alteration2);
-            dbg!(z1, z2);
-            false
-        }
+        zobrist.alter(alteration).alter(alteration) == zobrist
 
     }
 }

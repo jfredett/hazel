@@ -1,8 +1,6 @@
 use hazel_core::{interface::Query, square::Square};
 use hazel_util::charray::{Charray, Origin};
 
-// FIXME: This stuff is all representational/higher level extensions to the interface, I think they
-// can be moved up to -core/-representation
 lazy_static::lazy_static! {
     /// A Charray texture to display the empty board
     static ref TEXTURE: Vec<&'static str> = vec![

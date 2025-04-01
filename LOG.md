@@ -3162,3 +3162,39 @@ z1 == z1 ^ z2 ^ z2
 Verifying that the zobrist self-inverts, basically. I only log the values out, not the alterations, so I've changed
 that, but since the test is flaky, it's hard to reproduce, so I added additional logging and hopefully I'll catch one
 before too long.
+
+## 1514 - spring-cleaning-1
+
+
+1. Cache needs to be refactored to a generic key, ultimately this will be a LRU cache with a generic key type.
+2. Spell needs to have Familiar refactored to rely on a SpellState trait
+3. Tape needs to be renamed to Spell
+5. FIXMEs, TODOs, and the like need an audit.
+4. [X] Move `BEN` -> -basic
+    - This means figuring out the `to_fen_position` extension, which might be able to stay put? IDK. In theory
+        that means this can just be moved over and no api change, since query is already over there.
+6. [X] Reorganize directory structure
+7. [X] Rename -core to -representation
+8. [X] rename -basic to -core
+9. [X] Get all the tests uncommented (in place) and passing.
+    - With caveats, there are still some tests pending a refactor, but I think I got everything that could be easily
+    re-enabled.
+10. [X] nix run #ci
+11. [X] -parser extraction
+
+I'm gonna rewrite my TODO list now in terms of phase 2.
+
+- Phase 1
+    * [ ] Tag audit
+- Phase 2
+    * [ ] Cache Refactor
+    * [ ] Variation Refactor to use Spell + Tape->Spell rename
+    * [ ] Better CI Pipeline
+    * [ ] Test Refactor
+    * [ ] Fastchess UCI test
+    * [ ] Benchmark harness
+
+I'll probably split _some_ of that out to a phase 3, but I don't know what yet. The UCI test from `fastchess` is a real
+windfall, so I definitely want to get that going quickly, but it's probably the most 'phase-3'-y of the bunch. The list
+is in rough order, but I rarely work in order.
+

@@ -1,5 +1,7 @@
 use std::fmt::Debug;
 
+use quickcheck::Arbitrary;
+
 use crate::color::Color;
 use crate::file::File;
 use crate::occupant::Occupant;
@@ -117,6 +119,18 @@ impl<const SEED: u64> ZobristTable<SEED> {
 // this can be calculated on any `query`able, I think.
 #[derive(Eq, Hash, PartialEq, Ord, PartialOrd, Clone, Copy)]
 pub struct Zobrist(u64);
+
+impl Arbitrary for Zobrist {
+    fn arbitrary(g: &mut quickcheck::Gen) -> Self {
+        let mut z = Zobrist::empty();
+        let repeats = u8::arbitrary(g);
+        // It might be alright ot just use a random u64, but this feels better to me.
+        for _ in 0..repeats {
+            z.alter_mut(Alteration::arbitrary(g));
+        }
+        z
+    }
+}
 
 impl Default for Zobrist {
     fn default() -> Self {
