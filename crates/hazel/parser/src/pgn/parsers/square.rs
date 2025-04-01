@@ -3,8 +3,6 @@ use nom::character::complete::one_of;
 
 use super::*;
 
-// TODO: Move this to extensions
-
 pub trait SquareParsing {
     fn parse(input: &str) -> IResult<&str, Square>;
 }

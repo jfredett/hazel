@@ -3,7 +3,6 @@ use nom::character::complete::one_of;
 
 use super::*;
 
-// TODO: Move this to extension section
 pub trait FileParsing {
     fn parse(input: &str) -> IResult<&str, File>;
 }

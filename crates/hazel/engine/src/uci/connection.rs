@@ -56,7 +56,7 @@ mod tests {
     /// `isready` command will recieve a response of `readyok`
     #[tokio::test]
     async fn test_run_with_io() {
-        // TODO: I have no idea how to test this with the current design. Trying to get a stream
+        // BUG: I have no idea how to test this with the current design. Trying to get a stream
         // that I can see from two places turns out to be not straightforward.
         //
         // I'm pretty sure this all works, but it should be tested. I think the SyncIOBridge type

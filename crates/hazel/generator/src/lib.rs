@@ -2,7 +2,6 @@ use hazel_representation::game::chess::position::Position;
 use hazel_representation::coup::rep::Move;
 
 
-// TODO: Move this somewhere better, probably types?
 mod check;
 mod king;
 mod knight;

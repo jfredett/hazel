@@ -1,7 +1,5 @@
 //! various bitboard masks
 
-// TODO: To the bitboard crate
-
 use crate::bitboard::Bitboard;
 use hazel_core::direction::Direction;
 

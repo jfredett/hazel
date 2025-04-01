@@ -148,13 +148,6 @@ impl Bitboard {
         self.0 &= !(1 << square.into().index());
     }
 
-    // TODO: usize -> Square
-    /// Logically 'moves' a piece from the 'from' square to the 'to' square
-    pub fn move_piece(&mut self, from: usize, to: usize) {
-        self.unset(Square::new(from));
-        self.set(Square::new(to));
-    }
-
     /// unsets the bit at the given coordinates
     /// ```
     /// # use hazel_bitboard::bitboard::Bitboard;

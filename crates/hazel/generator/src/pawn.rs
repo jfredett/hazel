@@ -10,8 +10,6 @@ use hazel_core::square::Square;
 use hazel_bitboard::ColorMasks;
 
 
-// TODO: Remove the `color` parameter from all of these, it should come from the position metadata
-
 /// Finds all double-pawn pushes.
 pub fn double_pawn_moves(position: &Position) -> impl Iterator<Item = Move> {
     let color = position.hero();

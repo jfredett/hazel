@@ -84,6 +84,11 @@ Disposition: Fix in place.
 - `./crates/hazel/representation/src/game/chess/variation.rs:    // FIXME: This is the current broken thing, I need to encode the assumptions wrt a variation`
 - `./crates/hazel/ui/src/ui/app.rs:                // BUG: pending `spellstate` trait move fam.seek(self.tapereader.desired_position);`
 - `./crates/hazel/ui/src/ui/widgets/tapereader/mod.rs:    // // FIXME: familiar refactor`
+- `./crates/hazel/representation/src/game/chess/variation.rs:    // TODO: This should return a proper Position, not a BEN, but Position didn't exist until`
+- `./crates/hazel/representation/src/game/chess/variation.rs:        // TODO: Replace this with a generic 'FastRep' type alias that is optimized for this case`
+- `./crates/hazel/representation/src/game/chess/variation.rs:    //         // TODO: Unify this with the From<ChessGame<Q>> impl somehow`
+- `./crates/hazel/representation/src/game/chess/familiar.rs:// TODO: port this to the new system.`
+- `./crates/hazel/representation/src/game/chess/familiar.rs:    // TODO: Temporarily fixing the types`
 
 This is broken functionality that I need to restore, it'll be fixed with the familiar refactor.
 
@@ -186,6 +191,9 @@ the API has grown on me.
 
 - `./crates/hazel/core/src/position_metadata.rs:                    // FIXME: This should be an error type, probably.`
 - `./crates/hazel/engine/src/uci/mod.rs:// TODO: Error type`
+- `./crates/witch/src/error.rs:// TODO: I'd love to unify all the errors from Witch down to a single type, but that is not`
+- `./crates/hazel/core/src/interface/alter.rs:    // TODO: Eventually this should probably return a result type.`
+- `./crates/hazel/core/src/interface/alter.rs:    // TODO: Eventually this should probably return a result type.`
 
 Disposition: Enhancment ticket, "Error Type"
 
@@ -306,68 +314,129 @@ suite, etc).
 
 Disposition: leave tag
 
-- `./crates/witch/src/error.rs:// TODO: I'd love to unify all the errors from Witch down to a single type, but that is not`
-
-
 - `./crates/witch/src/lib.rs:        //TODO`
-- `./crates/hazel/generator/src/pawn.rs:// TODO: Remove the `color` parameter from all of these, it should come from the position metadata`
+
+This'll develop along with `Witch`, but I'll leave it for now. New message types will be aplenty I'm sure.
+
+Disposition: leave tag
+
+- `./crates/hazel/generator/src/pawn.rs: // TODO: Remove the `color` parameter from all of these, it should come from the position metadata`
+
+Disposition: removed, already fixed.
+
 - `./crates/hazel/generator/src/pawn.rs:    // TODO: is this just `self.our_pawn_attacks() & bitboard!(ep_square)`?`
+
+Disposition: leave tag -- this is an optimization pass, but it's not obvious without the comment.
+
+
 - `./crates/spell/src/lib.rs:// TODO: Configuration-by-file-or-engine-option.`
 - `./crates/spell/src/lib.rs:// TODO: probably instead of this, the RwLock should be hidden by the Cursor`
 - `./crates/spell/src/lib.rs:        // TODO: In principle this should be a single copy to a subslice, calculate the range as`
 - `./crates/spell/src/lib.rs:        // TODO: Cache this and advance on demand`
 - `./crates/spell/src/lib.rs:            // TODO: Actually cache out, this just blanks the buffer and recurses.`
+
+Disposition: leave tag -- part of the Spell refactor
+
 - `./crates/hazel/generator/src/lib.rs:// TODO: Move this somewhere better, probably types?`
+
+Disposition: removed, already fixed.
+
 - `./crates/hazel/generator/src/lib.rs:    // TODO: Cache anything worth caching?`
 - `./crates/hazel/generator/src/lib.rs:        // TODO: Determine if we are in check`
 - `./crates/hazel/generator/src/lib.rs:        // TODO: in parallel?`
+
+Disposition: Leave
+
 - `./crates/hazel/engine/src/driver/hazel/mod.rs:    /// TODO: Replace this with a familiar`
 - `./crates/hazel/engine/src/driver/hazel/mod.rs:    /// TODO: Be able to share a cached version of this via an Arc.`
 - `./crates/hazel/ui/src/main.rs:    // TODO: actually parse arguments`
 - `./crates/hazel/engine/src/uci/connection.rs:// TODO: This should be a config setting from a config file/option/etc.`
+
+Disposition: leave tags
+
 - `./crates/hazel/engine/src/uci/connection.rs:        // TODO: I have no idea how to test this with the current design. Trying to get a stream`
+
+Disposition: Promote to BUG, remove with a new Bug ticket.
+
 - `./crates/hazel/bitboard/src/bitboard/mod.rs:    // TODO: usize -> Square`
+
+Disposition: removed, not used anywhere.
+
 - `./crates/hazel/bitboard/src/pextboard/mod.rs:    // TODO: sq -> Square`
-- `./crates/hazel/bitboard/src/constants/masks.rs:// TODO: To the bitboard crate`
-- `./crates/hazel/parser/src/pgn/parsers/file.rs:// TODO: Move this to extension section`
-- `./crates/hazel/parser/src/pgn/parsers/piece.rs:// TODO: Move this to extensions`
+
+Disposition: removed. I just don't need to do this, it works, no need to muck with it.
+
+- `./crates/hazel/bitboard/src/constants/masks.rs: // TODO: To the bitboard crate`
+- `./crates/hazel/parser/src/pgn/parsers/file.rs: // TODO: Move this to extension section`
+- `./crates/hazel/parser/src/pgn/parsers/piece.rs: // TODO: Move this to extensions`
+- `./crates/hazel/parser/src/pgn/parsers/square.rs:// TODO: Move this to extensions`
+
+Disposition: removed, already fixed.
+
 - `./crates/hazel/engine/src/driver/hazel/messages/uci_message.rs:                // TODO: push position onto the variation in place (creating a variation if necessary),`
 - `./crates/hazel/engine/src/driver/hazel/messages/uci_message.rs:                //     // TODO: Calculate the endgame if it's a checkmate, otherwise it's an abort`
-- `./crates/hazel/parser/src/pgn/parsers/square.rs:// TODO: Move this to extensions`
-- `./crates/hazel/parser/src/san/mod.rs:                        // TODO: Disambiguate blocked slider situations.`
-- `./crates/hazel/parser/src/san/mod.rs:        // TODO: Make the naming consistent`
-- `./crates/hazel/ui/src/ui/app.rs:        // TODO: This API kinda sucks, the getposition should send back something over a channel`
-- `./crates/hazel/ui/src/ui/app.rs:        // TODO: Maintain backlog`
-- `./crates/hazel/core/src/square/movements.rs:    /// TODO: I'm pretty sure this could be const.`
-- `./crates/hazel/core/src/square/movements.rs:    // TODO: These should all be in Square and shared for everything to use.`
-- `./crates/hazel/ui/src/ui/widgets/smallboard.rs:    // TODO: This should be an actual From implementation, so I can build these from multiple`
-- `./crates/hazel/core/src/position_metadata.rs:// TODO: This should be extracted to the toplevel. It's not really notation-specific, it's`
-- `./crates/hazel/core/src/position_metadata.rs:// TODO: Flag this`
-- `./crates/hazel/core/src/position_metadata.rs:// TODO: Remove this`
-- `./crates/hazel/core/src/position_metadata.rs:    // TODO: These should be quickcheck`
-- `./crates/hazel/core/src/interface/alteration.rs:// TODO: This should be flagged off so it only gets built when it's needed?`
-- `./crates/hazel/ui/src/ui/widgets/tapereader/mod.rs:        // TODO: This is probably not identity, but some function of height`
-- `./crates/hazel/core/src/interface/alter.rs:    // TODO: Eventually this should probably return a result type.`
-- `./crates/hazel/core/src/interface/alter.rs:    // TODO: Eventually this should probably return a result type.`
-- `./crates/hazel/core/src/interface/alter.rs:// // TODO: Use this instead of the `compile` methods all over`
-- `./crates/hazel/util/src/cache/mod.rs:        // TODO: Feature flag this or something, it should be excluded from a 'real' version of the`
-- `./crates/hazel/util/src/charray.rs:    /* TODO: This really needs to do math on the thing, so probably needs to be an external method`
-- `./crates/hazel/ui/src/ui/widgets/tile/mod.rs:        // TODO: We always render at the same size, this will likely be wrong if the size is too`
+
+Disposition: leave it, when I get to UCI implementing, this'll get fixed.
+
+
 - `./crates/hazel/core/src/ben/mod.rs:    // TODO: Move this to it's own function, it should produce a _Log_ of alteratons`
 - `./crates/hazel/core/src/ben/mod.rs:    // TODO: Nom.`
-- `./crates/hazel/core/src/zobrist/mod.rs:// TODO: Calculate this from the types, so when I add fairy pieces it should Just Work(tm)`
+
+Disposition: leave it
+
+- `./crates/hazel/core/src/interface/alter.rs:// // TODO: Use this instead of the `compile` methods all over`
+- `./crates/hazel/core/src/interface/alteration.rs:// TODO: This should be flagged off so it only gets built when it's needed?`
+
+Disposition: Leave it, higher priorities, not enough for a ticket.
+
+- `./crates/hazel/core/src/position_metadata.rs:    // TODO: These should be quickcheck`
+- `./crates/hazel/core/src/position_metadata.rs:// TODO: Flag this`
+- `./crates/hazel/core/src/position_metadata.rs:// TODO: Remove this`
+- `./crates/hazel/core/src/position_metadata.rs:// TODO: This should be extracted to the toplevel. It's not really notation-specific, it's`
+
+- `./crates/hazel/core/src/square/movements.rs:    // TODO: These should all be in Square and shared for everything to use.`
+- `./crates/hazel/core/src/square/movements.rs:    /// TODO: I'm pretty sure this could be const.`
+
 - `./crates/hazel/core/src/zobrist/mod.rs:    // TODO: This comes up enough (or the equivalent (sq, occ)) that it probably should be it's own`
+
+Disposition: Enhancement? It's a refactor opportunity, anyway.
+
+- `./crates/hazel/core/src/zobrist/mod.rs:// TODO: Calculate this from the types, so when I add fairy pieces it should Just Work(tm)`
+
+Disposition: Enhancement
+
+- `./crates/hazel/parser/src/san/mod.rs:                        // TODO: Disambiguate blocked slider situations.`
+
+Disposition: this is a bug if it's real, bug ticket
+
+- `./crates/hazel/parser/src/san/mod.rs:        // TODO: Make the naming consistent`
+
+Disposition: chore 
+
 - `./crates/hazel/representation/src/game/chess/action.rs:// TODO: Constrain these then fix the debug impl`
-- `./crates/hazel/representation/src/game/chess/variation.rs:    // TODO: This should return a proper Position, not a BEN, but Position didn't exist until`
-- `./crates/hazel/representation/src/game/chess/variation.rs:        // TODO: Replace this with a generic 'FastRep' type alias that is optimized for this case`
-- `./crates/hazel/representation/src/game/chess/variation.rs:    //         // TODO: Unify this with the From<ChessGame<Q>> impl somehow`
 - `./crates/hazel/representation/src/game/chess/mod.rs:// TODO: Maybe wrap the constraint in it's own typeclass?`
 
-- `./crates/hazel/representation/src/game/chess/familiar.rs:// TODO: port this to the new system.`
-- `./crates/hazel/representation/src/game/chess/familiar.rs:    // TODO: Temporarily fixing the types`
+Disposition: Leave it, I think this type is going away
+
+- `./crates/hazel/ui/src/ui/app.rs:        // TODO: Maintain backlog`
+- `./crates/hazel/ui/src/ui/app.rs:        // TODO: This API kinda sucks, the getposition should send back something over a channel`
+- `./crates/hazel/ui/src/ui/widgets/smallboard.rs:    // TODO: This should be an actual From implementation, so I can build these from multiple`
+- `./crates/hazel/ui/src/ui/widgets/tapereader/mod.rs:        // TODO: This is probably not identity, but some function of height`
+- `./crates/hazel/ui/src/ui/widgets/tile/mod.rs:        // TODO: We always render at the same size, this will likely be wrong if the size is too`
+
+Disposition: Leave it,  UI is known to be pretty broken
+
+- `./crates/hazel/util/src/cache/mod.rs:        // TODO: Feature flag this or something, it should be excluded from a 'real' version of the`
+- `./crates/hazel/util/src/charray.rs:    /* TODO: This really needs to do math on the thing, so probably needs to be an external method`
+
+Dispostion: enhancement ticket, I don't need to transpose _yet_, but it could be handy for when I want to show from
+black's perspective or w/e
 
 - `./crates/hazel/representation/src/types/log/mod.rs:    // TODO: Extract this`
 - `./crates/hazel/representation/src/types/log/transaction.rs:// TODO: Change this to have a block-passing API?`
+
+Dispositon: leave it, these are getting refactored w/ Spell
+
 - `./crates/hazel/representation/src/game/chess/position.rs:// TODO: 22-FEB-2025 - Refactor the heck out of the 'slow' versions of these methods and figure out`
 - `./crates/hazel/representation/src/game/chess/position.rs:    // TODO: This could probably be better managed by a familiar.`
 - `./crates/hazel/representation/src/game/chess/position.rs:        // TODO: this is not ideal, it should cache this somewhere, probably as a quintessence.`
@@ -377,12 +446,34 @@ Disposition: leave tag
 - `./crates/hazel/representation/src/game/chess/position.rs:        // TODO: This is an exact copy of the above, mod the #inverse calls on `alter`. definitely`
 - `./crates/hazel/representation/src/game/chess/position.rs:        // TODO: I also think if the `Entry` type on Tape can be kept small enough, then the buffer`
 - `./crates/hazel/representation/src/game/chess/position.rs:                // Atomic, TODO: Handle Result`
+
+I think these will get addressed as I work on `Spell`, I'm inclined to just leave them.
+
+Disposition: leave tag
+
 - `./crates/hazel/representation/src/game/chess/state/tape_reader_state.rs:        // TODO: only fetch the range when we page over.`
 - `./crates/hazel/representation/src/game/chess/state/tape_reader_state.rs:    // TODO: Would be nice to have an 'overlap' between screens by a few (configurable number of?)`
 - `./crates/hazel/representation/src/game/chess/state/tape_reader_state.rs:        self.tape_length / self.length // TODO: potential off-by-one`
 - `./crates/hazel/representation/src/game/chess/state/tape_reader_state.rs:/* TODO: This needs to exist in some way, probably by making `SpellState` a trait for Spell...`
+
+Disposition: This is tightly coupled to both the Spell refactor _and_ the UI refactor, just leave them for now.
+
 - `./crates/hazel/representation/src/coup/rep/compilation.rs:    // TODO: Query metadata situation needs addressing, should have like, a gamestate trait?`
+
+Disposition: I do need to think about `Query`, returning an optional metadata kinda sucks, I think it'd be better to
+have something like a `Boardlike` and `Gamelike` trait? Every `Gamelike` is `Boardlike`, `PieceBoard` is boardlike,
+`Bitboard` is _not_ boardlike because it doesn't have piece information, but `Position` is both `Boardlike` and
+`Gamelike`.
+
+Aside, I think I prefer the `-like` suffix more than the 'Rust' style of no-suffix verbs (e.g., "Debug", "Display",
+"Ord" (short for order, I assume), "Eq" for equate (thus 'eek' and not 'ehk' is the right pronounciation, IMO), etc.
+I've considered `-able` as well, but I think `-like` captures what I'm trying to use it for, "Anything that's like a
+`type`"
+
 - `./crates/hazel/representation/src/coup/rep/compilation.rs:    /// TODO: Does not look for check states.`
+
+Disposition: 
+
 - `./crates/hazel/representation/src/coup/rep/move_type.rs:        // TODO: It may be faster to mask-and-cast the bits, they're arranged such that they correspond to the piece enum.`
 - `./crates/hazel/representation/src/game/chess/state/game_state.rs:/* TODO: Move this back to core.`
 - `./crates/hazel/representation/src/coup/rep/mod.rs:// TODO:`
@@ -390,6 +481,22 @@ Disposition: leave tag
 
 # OQ
 
-- `./crates/spell/src/familiar/mod.rs:// OQ: I wonder if it makes sense to `deref` this down to it's state`
+I think these are all just 'Leave open'
+
+- `./crates/spell/src/familiar/mod.rs: // OQ: I wonder if it makes sense to `deref` this down to it's state`
+
+The Deref stuff is all a little new to me, but it seems very foot-gun from my initial experiment.
+
 - `./crates/hazel/representation/src/game/chess/position.rs:        // OQ: with the `Arc` here on tape, and the explicit clone here, I'm asserting that`
 - `./crates/hazel/representation/src/game/chess/position.rs:    // OQ: How should I sort these? Position so far has been 'find the pieces on the board', but it`
+
+Position is going to get a lot of attention. It's interesting that I settled eventually on the same name as stockfish
+(which is _way_ smaller than I thought at 7kloc of C++, I've been steadfastly avoiding it until I settled on a design,
+and when I finally did download it recently I was surprised at how small it was. `hazel` has a wider scope, but I
+suspect all told the core engine stuff will be similar or slightly larger than stockfish. I'm guessing about half my
+code is test code, and half actual source. UI and Parsers are probably ~2-3k of the 13k in the repo, so I'd guess I'm
+right around 5kloc of rust for the main representation. At this point, there is just an evaluation and search algorithm
+to write, and some glue. I suspect the algorithms will take <1k and the glue will take more since that's where all the
+multithreading is happening.
+
+Since Stockfish is so short, maybe I'll try to midrash it at some point. Could be fun.

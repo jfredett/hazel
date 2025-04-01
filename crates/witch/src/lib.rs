@@ -43,7 +43,7 @@ mod tests {
     // the subset of Witches where the type of messages is also the type of responses, could be
     // sent _back_ with updated internal state.
     mod stateful_messages {
-        //TODO
+        // TODO
     }
 
     // Additionally, messages can update the _internal state of the Witch itself_.

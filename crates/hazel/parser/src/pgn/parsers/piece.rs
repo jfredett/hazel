@@ -1,8 +1,6 @@
 use hazel_core::piece::Piece;
 use nom::character::complete::one_of;
 
-// TODO: Move this to extensions
-
 use super::*;
 
 pub trait PieceParsing {

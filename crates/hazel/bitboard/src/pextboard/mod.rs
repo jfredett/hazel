@@ -171,7 +171,6 @@ impl<const SIZE: usize> PEXTBoard<SIZE> {
         }
     }
 
-    // TODO: sq -> Square
     fn calculate_block_and_attack_board_for<F>(sq: usize, nominal_attacks: Bitboard, attack_fn: F) -> Vec<(Bitboard, Bitboard)>
     where
         F: Fn(Bitboard, Bitboard) -> Bitboard,
