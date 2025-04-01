@@ -48,23 +48,6 @@ impl<const H: usize, const W: usize> Charray<H, W> {
         self.origin = origin;
     }
 
-    /* TODO: This really needs to do math on the thing, so probably needs to be an external method
-    pub fn transform(&self, origin: Origin) -> Self {
-        let mut new = Self {
-            origin,
-            data: [[0; W]; H],
-        };
-
-        for i in 0..H {
-            for j in 0..W {
-                new.set(i, j, self.get(i, j));
-            }
-        }
-
-        new
-    }
-    */
-
     pub fn with_texture(&self, texture: Vec<&str>) -> Self {
         let mut new = Self {
             origin: Origin::TopLeft, // for textures to load correctly, we need to start at the top
@@ -361,61 +344,6 @@ mod tests {
         assert_eq!(before, after);
     }
 
-    /*
-    mod transform {
-        use super::*;
-
-        fn transform_test(start: Origin, dest: Origin, prediction: &str) {
-            let mut charray = Charray::<4, 3>::new().transform(start);
-
-
-            charray.set(0, 0, b'1');
-            charray.set(1, 1, b'2');
-            charray.set(2, 2, b'3');
-            charray.set(3, 0, b'4');
-
-            assert_eq!(charray.get(0, 0), b'1');
-            assert_eq!(charray.get(1, 1), b'2');
-            assert_eq!(charray.get(2, 2), b'3');
-            assert_eq!(charray.get(3, 0), b'4');
-
-            let before = charray.to_string();
-
-            let transformed = charray.transform(dest);
-            let after = transformed.to_string();
-
-
-            assert_eq!(charray.get(0, 0), b'1');
-            assert_eq!(charray.get(1, 1), b'2');
-            assert_eq!(charray.get(2, 2), b'3');
-            assert_eq!(charray.get(3, 0), b'4');
-
-            assert_ne!(before, after);
-            assert_eq!(after, prediction);
-        }
-
-        #[test]
-        fn bottomleft_to_topleft() {
-            transform_test(Origin::BottomLeft, Origin::TopLeft, "1\0\0\0\n\02\0\0\n\0\03\0\n\0\0\04\n");
-        }
-
-        #[test]
-        fn bottomleft_to_bottomright() {
-            transform_test(Origin::BottomLeft, Origin::BottomRight, "\0\0\01\n\0\02\0\n\03\0\0\n4\0\0\0\n");
-        }
-
-        #[test]
-        fn bottomleft_to_topright() {
-            transform_test(Origin::BottomLeft, Origin::TopRight, "\0\0\01\n\0\02\0\n\03\0\0\n4\0\0\0\n");
-        }
-
-        #[test]
-        fn bottomleft_to_bottomleft() {
-            transform_test(Origin::BottomLeft, Origin::BottomLeft, "\0\03\0\n\02\0\0\n1\0\0\0\n\0\0\04\n");
-        }
-
-    }
-    */
 
     mod with_texture {
         use super::*;

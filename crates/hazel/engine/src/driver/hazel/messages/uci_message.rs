@@ -44,25 +44,6 @@ impl<const BUF_SIZE: usize> MessageFor<Witch<BUF_SIZE, Hazel, HazelResponse>> fo
                 witch.state.options.insert(name.clone(), value.clone());
             },
             UCIMessage::UCINewGame => {
-                // TODO: push position onto the variation in place (creating a variation if necessary),
-                // end the game as an abort.
-
-                // FIXME: This is all kinda wrong now.
-                //
-                // if witch.state.position.is_some() {
-                //     let pos = witch.state.position.clone().unwrap();
-                //     let init = pos.initial;
-                //     witch.state.game.setup(init);
-                //     for m in pos.moves.iter() {
-                //         witch.state.game.make(*m);
-                //     }
-                //     // TODO: Calculate the endgame if it's a checkmate, otherwise it's an abort
-                //     // for now, just going to say it's an abort.
-                //     witch.state.game.halt(Reason::Aborted);
-                //     witch.state.game.commit();
-                // }
-
-                // witch.state.position = None;
             },
             UCIMessage::Position(fen, moves) => {
                 let moves = moves.iter().map(|m| UCI::try_from(m).unwrap().into()).collect();
@@ -127,21 +108,6 @@ mod tests {
                 panic!("Expected Debug response");
             }
         }
-
-        // FIXME: This I think is not working as I refactor `Position`
-        // #[tokio::test]
-        // async fn uci_new_game() {
-        //     let w : WitchHandle<10, Hazel, HazelResponse> = WitchHandle::new().await;
-
-        //     w.send(Box::new(UCIMessage::Position(START_POSITION_FEN.to_string(), vec![]))).await;
-        //     w.send(Box::new(UCIMessage::UCINewGame)).await;
-        //     w.send(Box::new(GetState)).await;
-        //     if let Some(HazelResponse::Debug(result)) = w.read().await {
-        //         assert_eq!(result.position, None);
-        //     } else {
-        //         panic!("Expected Debug response");
-        //     }
-        // }
 
         #[tokio::test]
         async fn position() {

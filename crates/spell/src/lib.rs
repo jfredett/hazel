@@ -117,7 +117,6 @@ impl Tapelike for Tape {
             self.data.get(corrected_range_start..=corrected_range_end).unwrap()
         };
 
-        // HACK: Gross.
         dynamic_array::SmallArray::from_vec(data.to_vec())
     }
 

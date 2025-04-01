@@ -44,8 +44,6 @@ pub fn pawn_attacks(position: &Position) -> impl Iterator<Item = Move> {
     let east_attacks = advance.shift(Direction::E) & enemies;
     let west_attacks = advance.shift(Direction::W) & enemies;
 
-    // FIXME: this might could be better, IDK. The unwraps should never fail since we slid things
-    // to get there, and we're just unsliding, but I don't love this implementation
     east_attacks.into_iter().map(move |target_sq| {
         let source_sq = target_sq.shift((!color).pawn_direction()).unwrap().shift(Direction::W).unwrap();
         Move::new(source_sq, target_sq, MoveType::CAPTURE)

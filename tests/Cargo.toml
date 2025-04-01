@@ -30,6 +30,10 @@ lazy_static.workspace = true
 ## Maybe just combine them into one (or a few) test crates?
 
 [[test]]
+name = "cache"
+path = "cache_test.rs"
+
+[[test]]
 name = "zobrist"
 path = "zobrist_test.rs"
 

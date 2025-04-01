@@ -20,8 +20,8 @@ Disposition: Removed, already fixed
 
 Nevermind, I just fixed it instead, the test was overcomplicate and just missing a `Zobrist` arbitrary impl.
 
-- `./crates/spell/src/tapelike.rs:    // BUG: I *hate* this. I should be able to return a reference to an arbitrary range of a tape,`
-- `./crates/spell/src/lib.rs:        // HACK: Gross.`
+- `./crates/spell/src/tapelike.rs:10    // BUG: I *hate* this. I should be able to return a reference to an arbitrary range of a tape,`
+- `./crates/spell/src/lib.rs:18        // HACK: Gross.`
 
 This is more of a 'stinky design' issue, I think this is down to missing some kind of allocator/factory for
 Spells/Tapes, if such a thing existed, it could manage sharing subslices and the like in a safe way. 
@@ -29,7 +29,6 @@ Spells/Tapes, if such a thing existed, it could manage sharing subslices and the
 The second is related to the first in that it is a consequence of the same lack of factory
 
 Disposition: Enhancement Ticket, remove tag.
-
 
 - `./crates/hazel/parser/src/san/mod.rs:        // BUG: issue for pawn pushes is that we're using the disambiguator twice`
 
@@ -57,6 +56,8 @@ Disposition: leave tag
 
 This is a shitty part of a shitty function that probably can and should be improved overall. For now it's 'good enough',
 it'll matter when I get to situations where promotion piece matters.
+
+Disposition: chore ticket
 
 - `./crates/spell/src/cursorlike.rs:            // HACK: This feels bad, but it works.`
 
@@ -163,7 +164,7 @@ BitOps being `const`
 I think these are related, the first is because I need to talk to the cursor, the second was an attempt to fix that.
 I'll probably get to it while refactoring `spell`. I think I'll make it a bug ticket.
 
-Disposition: Convert both to a single bug ticket.
+Disposition: Attach to the Spell ticket
 
 - `./crates/hazel/core/src/piece.rs: // FIXME: I couldn't get the formatting right w/ unicode, but I don't want to lose`
 
@@ -281,6 +282,10 @@ to go try to fix it now (I could just extend in the test module? IDK...)
 - `./crates/hazel/engine/src/driver/hazel/messages/uci_message.rs:                // FIXME: This is all kinda wrong now.`
 - `./crates/hazel/engine/src/driver/hazel/messages/uci_message.rs:        // FIXME: This I think is not working as I refactor `Position``
 
+******************
+***YOU ARE HERE***
+******************
+
 Disposition: Enhancement - Better UCI parser/structure
 
 this might come with some of the `Witch` related stuff when I get to `hazel-engine` and `witchhazel`.
@@ -393,15 +398,16 @@ Disposition: Leave it, higher priorities, not enough for a ticket.
 - `./crates/hazel/core/src/position_metadata.rs:// TODO: Flag this`
 - `./crates/hazel/core/src/position_metadata.rs:// TODO: Remove this`
 - `./crates/hazel/core/src/position_metadata.rs:// TODO: This should be extracted to the toplevel. It's not really notation-specific, it's`
-
 - `./crates/hazel/core/src/square/movements.rs:    // TODO: These should all be in Square and shared for everything to use.`
 - `./crates/hazel/core/src/square/movements.rs:    /// TODO: I'm pretty sure this could be const.`
+
+Disposition: Leave
 
 - `./crates/hazel/core/src/zobrist/mod.rs:    // TODO: This comes up enough (or the equivalent (sq, occ)) that it probably should be it's own`
 
 Disposition: Enhancement? It's a refactor opportunity, anyway.
 
-- `./crates/hazel/core/src/zobrist/mod.rs:// TODO: Calculate this from the types, so when I add fairy pieces it should Just Work(tm)`
+- `./crates/hazel/core/src/zobrist/mod.rs: // TODO: Calculate this from the types, so when I add fairy pieces it should Just Work(tm)`
 
 Disposition: Enhancement
 
@@ -427,6 +433,9 @@ Disposition: Leave it, I think this type is going away
 Disposition: Leave it,  UI is known to be pretty broken
 
 - `./crates/hazel/util/src/cache/mod.rs:        // TODO: Feature flag this or something, it should be excluded from a 'real' version of the`
+
+Disposition: Feature
+
 - `./crates/hazel/util/src/charray.rs:    /* TODO: This really needs to do math on the thing, so probably needs to be an external method`
 
 Dispostion: enhancement ticket, I don't need to transpose _yet_, but it could be handy for when I want to show from

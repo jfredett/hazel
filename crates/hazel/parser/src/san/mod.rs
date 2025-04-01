@@ -192,7 +192,6 @@ impl SAN {
             }
         }
 
-        // BUG: issue for pawn pushes is that we're using the disambiguator twice
         let m = match self.disambiguator {
             Some(disambiguator) => {
                 match disambiguator {

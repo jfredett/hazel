@@ -130,7 +130,6 @@ mod tests {
     mod iterator {
         use super::*;
 
-        // FIXME: Ideally this mode gets deprecated in favor of the RankFile iterator
         mod standard {
             use super::*;
 

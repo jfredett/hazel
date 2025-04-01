@@ -22,18 +22,12 @@ impl<E> Cache<E> where E : Clone + Debug + PartialEq {
     }
 
     pub fn set(&self, zobrist: Zobrist, entry: E) {
-        // TODO: Feature flag this or something, it should be excluded from a 'real' version of the
-        // engine, but present for debugging.
-        {
-            let storage = self.storage.read().unwrap();
-            if storage.contains_key(&zobrist) {
-                let existing = storage.get(&zobrist).unwrap();
-                if *existing != entry {
-                }
-            }
-        }
         let mut storage = self.storage.write().unwrap();
         storage.insert(zobrist, entry);
+    }
+
+    pub fn size(&self) -> usize {
+        self.storage.read().unwrap().values().len()
     }
 
     pub fn new() -> Self {
@@ -45,34 +39,3 @@ impl<E> Cache<E> where E : Clone + Debug + PartialEq {
     }
 }
 
-
-
-/*
-*
-#[cfg(test)]
-mod tests {
-    use hazel_representation::{game::position::Position, notation::ben::BEN};
-
-    use super::*;
-
-    impl<E> Cache<E> where E : Clone {
-        fn raw_storage(&self) -> HashMap<Zobrist, E> {
-            self.storage.read().unwrap().clone()
-        }
-    }
-
-    #[test]
-    fn cache_test() {
-        let cache = Cache::new();
-
-        let p = Position::new(BEN::start_position());
-
-        assert_eq!(cache.raw_storage().values().len(), 0);
-        cache.get(p.zobrist().position);
-        assert_eq!(cache.raw_storage().values().len(), 0);
-        cache.set(p.zobrist().position, p);
-        assert_eq!(cache.raw_storage().values().len(), 1);
-    }
-}
-
-*/

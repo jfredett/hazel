@@ -3198,3 +3198,47 @@ I'll probably split _some_ of that out to a phase 3, but I don't know what yet. 
 windfall, so I definitely want to get that going quickly, but it's probably the most 'phase-3'-y of the bunch. The list
 is in rough order, but I rarely work in order.
 
+
+# 1-APR-2025
+
+## 0031 - spring-cleaning-1
+
+- Phase 1
+    * [X] Tag audit
+    * [ ] Complete ticket making from audit.
+    * [ ] Add additional tasks to P2 from audit (if any)
+    * [ ] Merge P1
+- Phase 2
+    * [ ] Cache Refactor
+    * [ ] Variation Refactor to use Spell + Tape->Spell rename
+    * [ ] Better CI Pipeline
+    * [ ] Test Refactor
+    * [ ] Fastchess UCI test
+    * [ ] Benchmark harness
+
+I'm gonna make a pile of issues because I don't really want to work on this stuff necessarily right now, but I knew
+there were only a few logical issues in all the tags that I just kept running into, so I wanted to gather them up.
+
+I don't love making issues, it feels uncomfortably organized and rational, and I strive to avoid any appearance of
+rationality.
+
+It is a good opportunity to play with a new vim plugin though, so I suppose that will have to sustain me through my
+discomfort.
+
+## 1003 - spring-cleaning-1
+
+- Phase 1
+    * [X] Tag audit
+    * [X] Complete ticket making from audit.
+    * [X] Add additional tasks to P2 from audit (if any)
+    * [ ] Merge P1
+- Phase 2
+    * [ ] Cache Refactor
+    * [ ] Variation Refactor to use Spell + Tape->Spell rename
+    * [ ] Better CI Pipeline
+    * [ ] Test Refactor
+    * [ ] Fastchess UCI test
+    * [ ] Benchmark harness
+
+Just need to merge, then start a new branch. I didn't see any tickets that _need_ to be done in P2. I need to go through
+one last time and remove all the things I said I'd remove, and then I should be ready to merge.
