@@ -3260,4 +3260,3 @@ one last time and remove all the things I said I'd remove, and then I should be 
 
 Phase 1 complete, now onto the real refactoring tasks. I'm going to start with Spell/Variation, as I think it's probably
 the longest pole of the bunch and will close two tickets if I'm efficient.
-

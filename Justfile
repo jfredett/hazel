@@ -87,3 +87,6 @@ _taghunt_count *TAGS:
     done
     echo
 
+uci-test:
+    cargo build
+    fastchess --compliance ./target/debug/hazel

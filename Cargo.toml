@@ -44,6 +44,7 @@ spell = { path = "./crates/spell" }
 witch = { path = "./crates/witch" }
 # Main Dependencies
 async-trait = "0.1.87"
+clap = { version = "4.5.35", features = ["derive"] }
 dynamic-array = "0.2.3"
 itertools = "0.14.0"
 lazy_static = "1.4.0"
