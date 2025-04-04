@@ -3260,3 +3260,29 @@ one last time and remove all the things I said I'd remove, and then I should be 
 
 Phase 1 complete, now onto the real refactoring tasks. I'm going to start with Spell/Variation, as I think it's probably
 the longest pole of the bunch and will close two tickets if I'm efficient.
+
+# 4-APR-2025
+
+## 1118 - spring-cleaning-2
+
+I roughed in the `fastchess` test the other day, though it's not passing (as expected), it's not passing for an unusual
+reason (it can't even start the STDIO interface, even though it works manually). I'm unsure if this is a Nix Issue, a
+Rust Issue, or a Fastchess Issue, but it's definitely not working.
+
+I'm also starting to solidify the structure I want for the `spell` crate, but it's certainly taking a little time to
+settle in my head. It's very rapidly approaching "oh, this is just a database" status, which is nice, I'd like to build
+a database, that sounds fun.
+
+I expect work to slow on this for a bit, while I figure some stuff out, I might start cranking away at the test refactor
+
+* [ ] Cache Refactor
+* [~] Variation Refactor to use Spell + Tape->Spell rename
+    - In progress
+* [ ] Better CI Pipeline
+* [ ] Test Refactor
+* [~] Fastchess UCI test
+    - I'd like to get this at least to the point where it can talk to the engine, even if the whole suite doesn't pass
+    for a little while.
+* [ ] Benchmark harness
+
+
