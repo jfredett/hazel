@@ -3286,3 +3286,19 @@ I expect work to slow on this for a bit, while I figure some stuff out, I might 
 * [ ] Benchmark harness
 
 
+# 5-APR-2025
+
+
+* [ ] Cache Refactor
+* [~] Variation Refactor to use Spell + Tape->Spell rename
+    - I'm settling on the design, I need to make a couple more diagrams and then get started on roughing it in.
+* [~] Better CI Pipeline
+    - `nix run '.#ci'` is working, which is the first bit, I'd like to get the various hooks automatically generating
+    `nix run`-ables as well.
+* [~] Test Refactor
+    - I loaded rstest, haven't pinned a version yet, I'm going to start using it on the `Variation/Spell` refactor
+    coming down the line
+* [~] Fastchess UCI test
+    - I'd like to get this at least to the point where it can talk to the engine, even if the whole suite doesn't pass
+    for a little while.
+* [ ] Benchmark harness
