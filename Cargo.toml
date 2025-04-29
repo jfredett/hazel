@@ -61,7 +61,7 @@ tui-logger = { version = "0.17.2", features = ["tracing-support"] }
 mutants = "0.0.3"
 quickcheck = "1.0.3"
 quickcheck_macros = "1.0.0"
-insta = "1.42.2"
+insta = "1.43.0"
 similar-asserts = "1.7.0"
 tracing-test = "0.2.5"
 
