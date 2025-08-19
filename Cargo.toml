@@ -43,7 +43,7 @@ hazel-util = { path = "./crates/hazel/util" }
 spell = { path = "./crates/spell" }
 witch = { path = "./crates/witch" }
 # Main Dependencies
-async-trait = "0.1.87"
+async-trait = "0.1.89"
 dynamic-array = "0.2.3"
 itertools = "0.14.0"
 lazy_static = "1.4.0"
